@@ -12,6 +12,8 @@ module.exports = {
    * @param options.minSquealsCount Filters users with more than the specified number of squeals
    **/
   getUserList: async (options) => {
+    //TODO quando facciamo la ricerca di uno user, se non è active non lo troviamo
+
     const pipeline = [];
 
     //TODO controllare che le date siano valide
@@ -144,6 +146,9 @@ module.exports = {
 
   */
   getUser: async (options) => {
+    //TODO quando facciamo la ricerca di uno user, se non è active non lo troviamo
+    //TODO modificare tutti gli if di formattazione con i regex
+    //TODO RIFARE ASSOLUTAMENTE
     const { identifier } = options;
     var data;
 
@@ -155,7 +160,7 @@ module.exports = {
       };
     }
     try {
-      //check weather the identifier is a valid ObjectId
+      //check wether the identifier is a valid ObjectId
       if (identifier.length == 24 && mongoose.isValidObjectId(identifier)) {
         data = await schema.User.findById(identifier);
         //or a username
@@ -187,6 +192,7 @@ module.exports = {
   deleteUser: async (options) => {
     //TODO decidere se cancellare anche i post e o i canali che ha creato
     // Check if the required fields are present
+
     const { identifier } = options;
     if (!identifier) {
       return {
@@ -198,9 +204,9 @@ module.exports = {
     try {
       //check weather the identifier is a valid ObjectId or a username
       if (identifier.length == 24 && mongoose.isValidObjectId(identifier)) {
-        deletedUser = await schema.User.findByIdAndDelete(identifier);
+        deletedUser = await schema.User.findById(identifier);
       } else if (identifier.length >= 4 && identifier.length <= 20) {
-        deletedUser = await schema.User.findOneAndDelete({ username: identifier });
+        deletedUser = await schema.User.findOne({ username: identifier });
       } else {
         //otherwise return an error
         return {
@@ -216,10 +222,41 @@ module.exports = {
         };
       }
       // return the result
+
+      //----------------------------------------------------------------------------------------------------------------------
+
+      // Trova tutti i squeal associati all'utente
+      const squealUtente = await schema.Squeal.find({ user_id: utenteId });
+
+      // Rimuovi i riferimenti del squeal dagli altri campi nel database
+      await Promise.all(
+        squealUtente.map(async (squeal) => {
+          // Rimuovi il riferimento del squeal dai campi "mentioned_in" di altri utenti
+          await schema.User.updateMany({}, { $pull: { mentioned_in: squeal._id } });
+
+          // Rimuovi il riferimento del squeal dall'array "arrayDiTweetDelCanale" di tutti i canali
+          await schema.Channel.updateMany({}, { $pull: { squeals: squeal._id } });
+
+          // Rimuovi il riferimento del squeal dai campi "squeals" di tutte le keywords
+          await schema.Keyword.updateMany({}, { $pull: { squeals: squeal._id } });
+
+          // Rimuovi tutti i squeal associati all'utente dal database
+          await schema.Squeal.deleteMany({ user_id: utenteId });
+        })
+      );
+      await schema.Squeal.updateMany({}, { $pull: { "recipients.users": deletedUser._id } });
+
+      // Rimuovi il profilo dell'utente dal database
+      // await Utente.findByIdAndRemove(utenteId);
+      await schema.User.findByIdAndUpdate(utenteId, { $set: { active: false } });
+      await schema.User.findByIdAndUpdate(utenteId, { $set: { username: deletedUser._id } });
+      // Gestisci eventuali errori
       return {
         status: 200,
         data: { message: "User deleted successfully" },
       };
+
+      //----------------------------------------------------------------------------------------------------------------------
     } catch (err) {
       // if an error occurs, return an error
       throw new Error("Failed to delete user. Please try again later.");

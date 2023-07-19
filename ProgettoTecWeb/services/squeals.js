@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const schema = require("./schemas");
+const { createKeyword } = require("./keywords");
+const usernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9_]{2,20}$/;
 
 module.exports = {
   /**
@@ -11,20 +13,6 @@ module.exports = {
    * @param options.minReactions Filter squeals with more than n total reactions
    */
   getSqueals: async (options) => {
-    // Implement your business logic here...
-    //
-    // Return all 2xx and 4xx as follows:
-    //
-    // return {
-    //   status: 'statusCode',
-    //   data: 'response'
-    // }
-
-    // If an error happens during your business logic implementation,
-    // you can throw it as follows:
-    //
-    // throw new Error('<Error message>');
-    // this will result in a 500
     const pipeline = [];
 
     //TODO controllare che le date siano valide
@@ -83,24 +71,7 @@ module.exports = {
    * @param options.squealInput.recipients Array of users, channels or keywords, with no limit and no impact on the quota.
    */
   createSqueal: async (options) => {
-    // Implement your business logic here...
-    //
-    // Return all 2xx and 4xx as follows:
-    //
-    // return {
-    //   status: 'statusCode',
-    //   data: 'response'
-    // }
-
-    // If an error happens during your business logic implementation,
-    // you can throw it as follows:
-    //
-    // throw new Error('<Error message>'); // this will result in a 500
-    /**/
-
-    //TODO
-    //una volta che ho aggiunto lo squeal al db e all'utente, devo aggiungerlo anche ai canali e agli utenti che lo hanno ricevuto
-
+    //TODO aggiungere lo squeal ai destinatari: User.squeals.mentionedIn
     var { user_id, content_type, content, is_scheduled, recipients } = options.squealInput;
     const validContentTypes = ["text", "image", "video", "position", "deleted"];
 
@@ -190,15 +161,11 @@ module.exports = {
 
     //check in the db if the user_id is valid
     let userExists;
-    console.log("user_id: " + user_id);
     if (user_id.length == 24 && mongoose.isValidObjectId(user_id)) {
-      console.log("user_id is a valid ObjectId");
       userExists = await schema.User.findById(user_id);
     } else if (user_id.length >= 4 && user_id.length <= 20) {
-      console.log("user_id is a valid username");
       userExists = await schema.User.findOne({ username: user_id });
     } else {
-      console.log("user_id is not valid");
       return {
         status: 400,
         data: { error: "Invalid 'user_id' parameter." },
@@ -242,8 +209,43 @@ module.exports = {
     //save the squeal in the db
     let result = await newSqueal.save();
 
-    //push teh squeal in the user squeals array
+    //push the squeal in the user squeals array
     await schema.User.findByIdAndUpdate(result.user_id, { $push: { "squeals.posted": result._id } });
+
+    //push the squeal in the users squeals.mentionedIn array
+    const userUpdatePromises = [];
+    for (const user of userResults) {
+      let promise = schema.User.findByIdAndUpdate(user, { $push: { "squeals.mentionedIn": result._id } });
+      userUpdatePromises.push(promise);
+    }
+    await Promise.all(userUpdatePromises);
+
+    //push the squeal in the channels squeals array
+    const channelUpdatePromises = [];
+    for (const channel of channelResults) {
+      let promise = schema.Channel.findByIdAndUpdate(channel._id, { $push: { squeals: result._id } });
+      channelUpdatePromises.push(promise);
+    }
+    await Promise.all(channelUpdatePromises);
+
+    //push the squeal in the keywords squeals array
+    const promises = keywords.map(async (keyword) => {
+      const existingKeyword = await schema.Keyword.findOne({ name: keyword });
+
+      if (existingKeyword) {
+        existingKeyword.squeals.push(result._id);
+        await existingKeyword.save();
+      } else {
+        const newKeyword = new schema.Keyword({
+          name: keyword,
+          squeals: [result._id],
+          created_at: new Date(),
+        });
+        await newKeyword.save();
+      }
+    });
+
+    await Promise.all(promises);
 
     return {
       status: result ? 201 : 400,
@@ -253,41 +255,40 @@ module.exports = {
 
   /**
    * Get a squeal object by ID or by id, or squeal HEX
-   * @param options.identifier Squeal's identifier, can be either id or HEX
+   * @param options.identifier Squeal's identifier, can be either id
    */
   getSqueal: async (options) => {
-    // Implement your business logic here...
-    //
-    // Return all 2xx and 4xx as follows:
-    //
-    // return {
-    //   status: 'statusCode',
-    //   data: 'response'
-    // }
+    const { identifier } = options;
 
-    // If an error happens during your business logic implementation,
-    // you can throw it as follows:
-    //
-    // throw new Error('<Error message>'); // this will result in a 500
+    //check if the identifier is specified
+    if (!identifier) {
+      return {
+        status: 400,
+        data: { error: "Missing 'identifier' parameter." },
+      };
+    }
 
-    var data = {
-        _id: "<string>",
-        content: "<object>",
-        content_type: "<string>",
-        created_at: "<date-time>",
-        hex_id: "<number>",
-        impressions: "<number>",
-        is_scheduled: "<boolean>",
-        reactions: "<object>",
-        recipients: "<array>",
-        user_id: "<string>",
-      },
-      status = "200";
-
-    return {
-      status: status,
-      data: data,
-    };
+    let data;
+    //check if the identifier is a valid ObjectId
+    if (identifier.length == 24 && mongoose.isValidObjectId(identifier)) {
+      data = await schema.Squeal.findById(identifier);
+    } else {
+      return {
+        status: 400,
+        data: { error: "Invalid 'identifier' parameter." },
+      };
+    }
+    if (data) {
+      return {
+        status: 200,
+        data: data,
+      };
+    } else {
+      return {
+        status: 404,
+        data: { error: "Squeal not found." },
+      };
+    }
   },
 
   /**
@@ -296,6 +297,7 @@ module.exports = {
    */
   deleteSqueal: async (options) => {
     //TODO decidere se eliminare i destinatari e o i canali
+    const replaceString = "[deleted squeal]";
     const { identifier } = options;
     let data;
     //check if the identifier is specified
@@ -307,13 +309,61 @@ module.exports = {
     }
 
     if (identifier.length == 24 && mongoose.isValidObjectId(identifier)) {
-      data = await schema.Squeal.findByIdAndUpdate(identifier, { $set: { content_type: "deleted", content: "[deleted]" } });
+      data = await schema.Squeal.findById(identifier);
     } else {
       return {
         status: 400,
         data: { error: "Invalid 'identifier' parameter." },
       };
     }
+
+    if (!data) {
+      return {
+        status: 404,
+        data: { error: "Squeal not found." },
+      };
+    }
+
+    //rimuovo lo squeal dai vari posti
+
+    //data.user_id rimane lo stesso perchè è il proprietario dello squeal
+    //1) data.recipients.users sono gli user destinatari e devo rimuovere lo squeal da ogni user.squeals.mentionedIn
+
+    const userUpdatePromises = [];
+
+    for (const user of data.recipients.users) {
+      let promise = schema.User.findByIdAndUpdate(user, { $pull: { "squeals.mentionedIn": data._id } });
+      userUpdatePromises.push(promise);
+    }
+    await Promise.all(userUpdatePromises);
+
+    //2) data.recipients.channels sono i canali destinatari e devo rimuovere lo squeal da ogni channel.squeals
+
+    const channelUpdatePromises = [];
+
+    for (const channel of data.recipients.channels) {
+      let promise = schema.Channel.findByIdAndUpdate(channel, { $pull: { squeals: data._id } });
+      channelUpdatePromises.push(promise);
+    }
+    await Promise.all(channelUpdatePromises);
+
+    //3) data.recipients.keywords sono le keywords destinatarie e devo rimuovere lo squeal da ogni keyword.squeals
+
+    const keywordUpdatePromises = [];
+
+    for (const keyword of data.recipients.keywords) {
+      let promise = schema.Keyword.findOneAndUpdate({ name: keyword }, { $pull: { squeals: data._id } });
+      keywordUpdatePromises.push(promise);
+    }
+    await Promise.all(keywordUpdatePromises);
+
+    data = await schema.Squeal.findByIdAndUpdate(identifier, {
+      $set: { content_type: "deleted", content: replaceString },
+      $set: { "recipients.users": [] },
+      $set: { "recipients.channels": [] },
+      $set: { "recipients.keywords": [] },
+    });
+
     return {
       status: 200,
       data: data,

@@ -50,20 +50,6 @@ module.exports = {
    * @param options.channelInput.name Channel's name
    */
   createChannel: async (options) => {
-    // Implement your business logic here...
-    //
-    // Return all 2xx and 4xx as follows:
-    //
-    // return {
-    //   status: 'statusCode',
-    //   data: 'response'
-    // }
-
-    // If an error happens during your business logic implementation,
-    // you can throw it as follows:
-    //
-    // throw new Error('<Error message>'); // this will result in a 500
-
     const { can_mute, creator, description, is_official, name } = options.channelInput;
 
     //TODO controllare i permessi per creare un canale dopo che abbiamo implementato l'autenticazione
@@ -124,14 +110,6 @@ module.exports = {
         data: { error: "name cannot be an ObjectId" },
       };
     }
-    const isNameDuplicate = await schema.Channel.findOne({ name: name });
-
-    if (isNameDuplicate) {
-      return {
-        status: 400,
-        data: { error: "name already exists" },
-      };
-    }
 
     if (!description) {
       return {
@@ -150,13 +128,33 @@ module.exports = {
       can_mute: can_mute || true,
       created_at: Date.now(),
     });
-
-    const data = await newChannel.save();
-
-    return {
-      status: 201,
-      data: data,
-    };
+    try {
+      const data = await newChannel.save();
+      schema.User.findByIdAndUpdate(creatorExists._id, { $push: { created_channels: data._id } }).exec();
+      return {
+        status: 201,
+        data: data,
+      };
+    } catch (err) {
+      if (err instanceof mongoose.Error.ValidationError) {
+        // validation error
+        const errorMessage = Object.values(err.errors)
+          .map((error) => error.message)
+          .join(", ");
+        return {
+          status: 400,
+          data: { error: errorMessage },
+        };
+      } else if (err.code == 11000) {
+        return {
+          status: 409,
+          data: { error: "Channel name already exists" },
+        };
+      } else {
+        console.error(err);
+        throw new Error("Failed to create channel");
+      }
+    }
   },
 
   /**
@@ -201,26 +199,52 @@ module.exports = {
    * @param options.identifier Channel's identifier, can be either id or name
    */
   deleteChannel: async (options) => {
-    // Implement your business logic here...
-    //
-    // Return all 2xx and 4xx as follows:
-    //
-    // return {
-    //   status: 'statusCode',
-    //   data: 'response'
-    // }
+    const { identifier } = options;
 
-    // If an error happens during your business logic implementation,
-    // you can throw it as follows:
-    //
-    // throw new Error('<Error message>'); // this will result in a 500
+    let channel;
+    if (identifier.length === 24 && mongoose.isValidObjectId(identifier)) {
+      channel = await schema.Channel.findById(identifier);
+    } else if (channelNameRegex.test(identifier)) {
+      channel = await schema.Channel.findOne({ name: identifier });
+    } else {
+      return {
+        status: 400,
+        data: { error: "Invalid identifier" },
+      };
+    }
+    if (!channel) {
+      return {
+        status: 404,
+        data: { error: "Channel not found" },
+      };
+    }
+    //remove the channel from the squeals recipients
+    const updateRecipientsPromises = [];
+    for (const squeal of channel.squeals) {
+      //remove the channel from the squeals
+      let promise = schema.Squeal.findByIdAndUpdate(squeal, { $pull: { "recipients.channels": channel._id } }).exec();
+      updateRecipientsPromises.push(promise);
+    }
+    const updatedSqueals = await Promise.all(updateRecipientsPromises);
 
-    var data = {},
-      status = "200";
+    //remove the channel from the users subscribed channels, the channel from the users muted channels,the channel from the users created channels
+    const updateSubscribedChannelsPromises = [];
+    for (const user of channel.subscribers) {
+      let promise = schema.User.findByIdAndUpdate(user, {
+        $pull: { subscribed_channels: channel._id },
+        $pull: { created_channels: channel._id },
+        $pull: { "preferences.muted_channels": channel._id },
+      }).exec();
+      updateSubscribedChannelsPromises.push(promise);
+    }
+    const updatedUser = await Promise.all(updateSubscribedChannelsPromises);
+
+    //remove the channel from the database
+    await schema.Channel.findByIdAndRemove(channel._id).exec();
 
     return {
-      status: status,
-      data: data,
+      status: 200,
+      data: { message: "Channel deleted" },
     };
   },
 };

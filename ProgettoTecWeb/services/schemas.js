@@ -26,12 +26,14 @@ const UserSchema = new mongoose.Schema({
     controversial_squeals: { type: Number, default: 0 },
   },
   subscribed_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
+  created_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
   profile_info: { type: String, default: "Hi there! I'm using Squealer, my new favourite social network!" },
   profile_picture: { type: String, default: "" },
   smm: { type: mongoose.Types.ObjectId, ref: "User" },
   preferences: {
     muted_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
   },
+  active: { type: Boolean, default: true },
 });
 
 const User = mongoose.model("User", UserSchema);
@@ -69,7 +71,7 @@ const Squeal = mongoose.model("Squeal", SquealSchema);
 const ChannelSchema = new mongoose.Schema({
   // _id: { type: mongoose.Types.ObjectId },
   creator: { type: mongoose.Types.ObjectId, ref: "User" },
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   description: { type: String, required: true },
   is_official: { type: Boolean, default: false },
   can_mute: { type: Boolean, default: true },
@@ -80,4 +82,13 @@ const ChannelSchema = new mongoose.Schema({
 
 const Channel = mongoose.model("Channel", ChannelSchema);
 
-module.exports = { User, Squeal, Channel };
+// Keyword
+const KeywordSchema = new mongoose.Schema({
+  // _id: { type: mongoose.Types.ObjectId },
+  name: { type: String, required: true, unique: true },
+  squeals: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
+  created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+});
+const Keyword = mongoose.model("Keyword", KeywordSchema);
+
+module.exports = { User, Squeal, Channel, Keyword };
