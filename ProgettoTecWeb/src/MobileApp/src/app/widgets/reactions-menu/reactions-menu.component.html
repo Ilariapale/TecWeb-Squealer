@@ -1,0 +1,27 @@
+<nav class="menu m-auto pt-2">
+  <button id="menu-toggler" class="menu-toggler m-auto pt-2" (mouseenter)="setMouseOverTrue()"
+    (mouseleave)="setMouseOverFalse()" [ngClass]="{'open' : isMouseOver}" title="reaction-menu" type="button"></button>
+
+  <img id="reactions_logo" src="../../assets/imgs/reactionsBW.png" alt="reactions menu picture">
+  <label for="menu-toggler"></label>
+  <ul (mouseenter)="setMouseOverTrue()" (mouseleave)="setMouseOverFalse()">
+    <li class="menu-item">
+      <a class="" href="#">🙅</a>
+    </li>
+    <li class="menu-item">
+      <a class="" href="#">👎</a>
+    </li>
+    <li class="menu-item">
+      <a class="" href="#">👍</a>
+    </li>
+    <li class="menu-item">
+      <a class="" href="#">😂</a>
+    </li>
+    <li class="menu-item">
+      <a class="" href="#">😍</a>
+    </li>
+    <li class="menu-item">
+      <a class="" href="#">🤮</a>
+    </li>
+  </ul>
+</nav>

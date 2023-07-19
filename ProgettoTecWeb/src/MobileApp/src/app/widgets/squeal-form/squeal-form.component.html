@@ -1,0 +1,21 @@
+<link href="https://fonts.googleapis.com/css?family=Asap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" />
+
+<div class="squeal-wrap">
+  <div class="squeal-header">
+    <img src="../../assets/imgs/logo.png" alt="" class="avatar" />
+    <div class="squeal-header-info">
+      Nickname<span>@username</span><span></span>
+      <form [formGroup]="squealForm" (ngSubmit)="createSqueal()">
+        <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
+          placeholder="Scrivi il tuo squeal"></textarea>
+        <button type="submit" class="submit-button">Send</button>
+      </form>
+    </div>
+  </div>
+  <div class="squeal-img-wrap">
+    <img src="" alt="img" class="squeal-img" />
+  </div>
+</div>
+
+<!-- I want the text input to be required to submit the form -->
