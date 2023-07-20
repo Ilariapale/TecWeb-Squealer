@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
-const schema = require("./schemas");
-const { createKeyword } = require("./keywords");
-const usernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9_]{2,20}$/;
+const { User, Squeal, Channel, Keyword, usernameRegex, channelNameRegex, officialChannelNameRegex, keywordRegex, mongooseObjectIdRegex } = require("./schemas");
 
 module.exports = {
   /**
@@ -13,6 +11,9 @@ module.exports = {
    * @param options.minReactions Filter squeals with more than n total reactions
    */
   getSqueals: async (options) => {
+    //TODO ogni volta che faccio una get di uno squeal devo incrementare il numero di impressions
+    //TODO le reaction sono solo un numero, non un array di users
+
     const pipeline = [];
 
     //TODO controllare che le date siano valide
@@ -47,7 +48,7 @@ module.exports = {
     }
 
     //execute the query
-    const data = await schema.Squeal.aggregate(pipeline).exec();
+    const data = await Squeal.aggregate(pipeline).exec();
     //check if the query returned any result
     if (data.length > 0) {
       return {
@@ -109,14 +110,14 @@ module.exports = {
     //CHECK FOR USERS
     const userPromises = users.map((user) => {
       let query;
-      if (user.length == 24 && mongoose.isValidObjectId(user)) {
+      if (mongooseObjectIdRegex.test(user)) {
         query = { _id: user };
-      } else if (user.length >= 4 && user.length <= 20) {
+      } else if (usernameRegex.test(user)) {
         query = { username: user };
       } else {
         return false;
       }
-      return schema.User.exists(query);
+      return User.exists(query);
     });
     const userResults = await Promise.all(userPromises);
     const allUserExist = userResults.every((exists) => exists); // true if all users exist
@@ -131,14 +132,14 @@ module.exports = {
     //CHECK FOR CHANNELS
     const channelPromises = channels.map((channel) => {
       let query;
-      if (channel.length == 24 && mongoose.isValidObjectId(channel)) {
+      if (mongooseObjectIdRegex.test(channel)) {
         query = { _id: channel };
-      } else if (channel.length >= 4 && channel.length <= 20) {
+      } else if (channelNameRegex.test(channel)) {
         query = { name: channel };
       } else {
         return false;
       }
-      return schema.Channel.exists(query);
+      return Channel.exists(query);
     });
 
     const channelResults = await Promise.all(channelPromises);
@@ -162,9 +163,9 @@ module.exports = {
     //check in the db if the user_id is valid
     let userExists;
     if (user_id.length == 24 && mongoose.isValidObjectId(user_id)) {
-      userExists = await schema.User.findById(user_id);
+      userExists = await User.findById(user_id);
     } else if (user_id.length >= 4 && user_id.length <= 20) {
-      userExists = await schema.User.findOne({ username: user_id });
+      userExists = await User.findOne({ username: user_id });
     } else {
       return {
         status: 400,
@@ -181,7 +182,7 @@ module.exports = {
     //create the hex_id from the length of the user squeals array
     hex_id = userExists?.squeals?.posted?.length || 0;
 
-    const newSqueal = new schema.Squeal({
+    const newSqueal = new Squeal({
       hex_id: hex_id,
       user_id: userExists._id,
       is_scheduled: is_scheduled || false,
@@ -193,29 +194,18 @@ module.exports = {
         keywords: keywords,
       },
       created_at: new Date(),
-      reactions: {
-        positive_reactions: 0,
-        negative_reaction: 0,
-        like: [],
-        laugh: [],
-        love: [],
-        dislike: [],
-        disagree: [],
-        disgust: [],
-      },
-      impressions: 0,
     });
 
     //save the squeal in the db
     let result = await newSqueal.save();
 
     //push the squeal in the user squeals array
-    await schema.User.findByIdAndUpdate(result.user_id, { $push: { "squeals.posted": result._id } });
+    await User.findByIdAndUpdate(result.user_id, { $push: { "squeals.posted": result._id } });
 
     //push the squeal in the users squeals.mentionedIn array
     const userUpdatePromises = [];
     for (const user of userResults) {
-      let promise = schema.User.findByIdAndUpdate(user, { $push: { "squeals.mentionedIn": result._id } });
+      let promise = User.findByIdAndUpdate(user, { $push: { "squeals.mentionedIn": result._id } });
       userUpdatePromises.push(promise);
     }
     await Promise.all(userUpdatePromises);
@@ -223,20 +213,20 @@ module.exports = {
     //push the squeal in the channels squeals array
     const channelUpdatePromises = [];
     for (const channel of channelResults) {
-      let promise = schema.Channel.findByIdAndUpdate(channel._id, { $push: { squeals: result._id } });
+      let promise = Channel.findByIdAndUpdate(channel._id, { $push: { squeals: result._id } });
       channelUpdatePromises.push(promise);
     }
     await Promise.all(channelUpdatePromises);
 
     //push the squeal in the keywords squeals array
     const promises = keywords.map(async (keyword) => {
-      const existingKeyword = await schema.Keyword.findOne({ name: keyword });
+      const existingKeyword = await Keyword.findOne({ name: keyword });
 
       if (existingKeyword) {
         existingKeyword.squeals.push(result._id);
         await existingKeyword.save();
       } else {
-        const newKeyword = new schema.Keyword({
+        const newKeyword = new Keyword({
           name: keyword,
           squeals: [result._id],
           created_at: new Date(),
@@ -271,7 +261,7 @@ module.exports = {
     let data;
     //check if the identifier is a valid ObjectId
     if (identifier.length == 24 && mongoose.isValidObjectId(identifier)) {
-      data = await schema.Squeal.findById(identifier);
+      data = await Squeal.findById(identifier);
     } else {
       return {
         status: 400,
@@ -309,7 +299,7 @@ module.exports = {
     }
 
     if (identifier.length == 24 && mongoose.isValidObjectId(identifier)) {
-      data = await schema.Squeal.findById(identifier);
+      data = await Squeal.findById(identifier);
     } else {
       return {
         status: 400,
@@ -332,7 +322,7 @@ module.exports = {
     const userUpdatePromises = [];
 
     for (const user of data.recipients.users) {
-      let promise = schema.User.findByIdAndUpdate(user, { $pull: { "squeals.mentionedIn": data._id } });
+      let promise = User.findByIdAndUpdate(user, { $pull: { "squeals.mentionedIn": data._id } });
       userUpdatePromises.push(promise);
     }
     await Promise.all(userUpdatePromises);
@@ -342,7 +332,7 @@ module.exports = {
     const channelUpdatePromises = [];
 
     for (const channel of data.recipients.channels) {
-      let promise = schema.Channel.findByIdAndUpdate(channel, { $pull: { squeals: data._id } });
+      let promise = Channel.findByIdAndUpdate(channel, { $pull: { squeals: data._id } });
       channelUpdatePromises.push(promise);
     }
     await Promise.all(channelUpdatePromises);
@@ -352,12 +342,12 @@ module.exports = {
     const keywordUpdatePromises = [];
 
     for (const keyword of data.recipients.keywords) {
-      let promise = schema.Keyword.findOneAndUpdate({ name: keyword }, { $pull: { squeals: data._id } });
+      let promise = Keyword.findOneAndUpdate({ name: keyword }, { $pull: { squeals: data._id } });
       keywordUpdatePromises.push(promise);
     }
     await Promise.all(keywordUpdatePromises);
 
-    data = await schema.Squeal.findByIdAndUpdate(identifier, {
+    data = await Squeal.findByIdAndUpdate(identifier, {
       $set: { content_type: "deleted", content: replaceString },
       $set: { "recipients.users": [] },
       $set: { "recipients.channels": [] },
@@ -368,5 +358,14 @@ module.exports = {
       status: 200,
       data: data,
     };
+  },
+
+  /**
+   * @param options.identifier Squeal's id
+   * @param options.updateSquealInlineReqJson.recipients
+   */
+  updateSqueal: async (options) => {
+    //TODO
+    const { identifier, updateSquealInlineReqJson } = options;
   },
 };

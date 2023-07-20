@@ -65,4 +65,21 @@ router.delete("/:identifier", async (req, res, next) => {
   }
 });
 
+router.patch("/:identifier", async (req, res, next) => {
+  let options = {
+    identifier: req.params.identifier,
+  };
+
+  options.updateChannelInlineReqJson = req.body;
+
+  try {
+    const result = await channels.updateChannel(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
 module.exports = router;

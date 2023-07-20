@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const schema = require("./schemas");
-
+const { User, Squeal, Channel, Keyword, usernameRegex, channelNameRegex, officialChannelNameRegex, keywordRegex, mongooseObjectIdRegex } = require("./schemas");
+const welcomeNotification = "Welcome to Squealer! Check out your first squeal by clicking on the notification.";
 //--------------------------------------------------------------------------
 
 module.exports = {
@@ -12,8 +12,6 @@ module.exports = {
    * @param options.minSquealsCount Filters users with more than the specified number of squeals
    **/
   getUserList: async (options) => {
-    //TODO quando facciamo la ricerca di uno user, se non è active non lo troviamo
-
     const pipeline = [];
 
     //TODO controllare che le date siano valide
@@ -52,26 +50,22 @@ module.exports = {
       }
       pipeline.push({ $match: { squeals: { $exists: true, $expr: { $size: sizeMatch } } } });
     }
-    if (pipeline.length == 0) {
-      //if no filters are specified, return all users
-      pipeline.push({ $match: {} });
-    }
+    pipeline.push({ $match: { isActive: true } });
 
     //execute the query
-    const data = await schema.User.aggregate(pipeline).exec();
+    const data = await User.aggregate(pipeline).exec();
     //check if the query returned any result
-    if (data.length > 0) {
-      return {
-        status: 200,
-        data: data,
-      };
-    } else {
-      //otherwise return an error
+    if (data.length <= 0) {
+      // return an error
       return {
         status: 404,
         data: { error: "No users found." },
       };
     }
+    return {
+      status: 200,
+      data: data,
+    };
   },
 
   /**
@@ -83,37 +77,65 @@ module.exports = {
 
   */
   createUser: async (options) => {
+    const { username, email, password } = options.userInput;
     // Check if the required fields are present
-    if (!options.userInput.username || !options.userInput.email || !options.userInput.password) {
+    if (!username || !email || !password) {
       return {
         status: 400,
         data: { error: "Username email and password are required" },
       };
     }
 
-    if (options.userInput.username.length < 4 || options.userInput.username.length > 20) {
+    if (!usernameRegex.test(username)) {
       return {
         status: 400,
-        data: { error: "Username must be between 4 and 20 characters" },
+        data: { error: "Username format is not valid" },
       };
     }
 
     // Create the object to save
-    const newUser = new schema.User({
-      username: options.userInput.username,
-      email: options.userInput.email,
-      password: options.userInput.password,
+    const newUser = new User({
+      username: username,
+      email: email,
+      password: password,
       created_at: Date.now(),
     });
 
     try {
       // Save the new user
-      const result = await newUser.save();
+      const user = await newUser.save();
+      if (!user) {
+        return {
+          status: 400,
+          data: { error: "Failed to create user" },
+        };
+      }
+      // Create the first squeal
+      const newSqueal = new Squeal({
+        hex_id: 0,
+        user_id: user._id,
+        content_type: "text",
+        content: "Welcome to Squealer!",
+        created_at: Date.now(),
+      });
+      const firstSqueal = await newSqueal.save();
+
+      // Add the first squeal to the user to array and notifications
+      const response = await User.findByIdAndUpdate(
+        user._id,
+        {
+          $push: { squeals: firstSqueal._id },
+          $push: {
+            notifications: { squeal_ref: firstSqueal._id, created_at: Date.now(), content: welcomeNotification },
+          },
+        },
+        { new: true }
+      );
 
       // return the result
       return {
-        status: result ? 201 : 400,
-        data: result ? { user: result } : { error: "Failed to create user" },
+        status: response ? 201 : 400,
+        data: response ? { user: response } : { error: "Failed to create user" },
       };
     } catch (error) {
       //Handling mongoose errors
@@ -146,8 +168,6 @@ module.exports = {
 
   */
   getUser: async (options) => {
-    //TODO quando facciamo la ricerca di uno user, se non è active non lo troviamo
-    //TODO modificare tutti gli if di formattazione con i regex
     //TODO RIFARE ASSOLUTAMENTE
     const { identifier } = options;
     var data;
@@ -161,16 +181,16 @@ module.exports = {
     }
     try {
       //check wether the identifier is a valid ObjectId
-      if (identifier.length == 24 && mongoose.isValidObjectId(identifier)) {
-        data = await schema.User.findById(identifier);
+      if (mongooseObjectIdRegex.test(identifier)) {
+        data = await User.findById(identifier);
         //or a username
-      } else if (identifier.length >= 4 && identifier.length <= 20) {
-        data = await schema.User.findOne({ username: identifier });
-        //otherwise return an error
+      } else if (usernameRegex.test(identifier)) {
+        data = await User.findOne({ username: identifier });
       } else {
+        //otherwise return an error
         return {
           status: 400,
-          data: { error: "Invalid identifier" },
+          data: { error: "User identifier is not valid" },
         };
       }
     } catch (err) {
@@ -203,10 +223,10 @@ module.exports = {
     var deletedUser;
     try {
       //check weather the identifier is a valid ObjectId or a username
-      if (identifier.length == 24 && mongoose.isValidObjectId(identifier)) {
-        deletedUser = await schema.User.findById(identifier);
-      } else if (identifier.length >= 4 && identifier.length <= 20) {
-        deletedUser = await schema.User.findOne({ username: identifier });
+      if (mongooseObjectIdRegex.test(identifier)) {
+        deletedUser = await User.findById(identifier);
+      } else if (usernameRegex.test(identifier)) {
+        deletedUser = await User.findOne({ username: identifier });
       } else {
         //otherwise return an error
         return {
@@ -226,30 +246,30 @@ module.exports = {
       //----------------------------------------------------------------------------------------------------------------------
 
       // Trova tutti i squeal associati all'utente
-      const squealUtente = await schema.Squeal.find({ user_id: utenteId });
+      const squealUtente = await Squeal.find({ user_id: utenteId });
 
       // Rimuovi i riferimenti del squeal dagli altri campi nel database
       await Promise.all(
         squealUtente.map(async (squeal) => {
           // Rimuovi il riferimento del squeal dai campi "mentioned_in" di altri utenti
-          await schema.User.updateMany({}, { $pull: { mentioned_in: squeal._id } });
+          await User.updateMany({}, { $pull: { mentioned_in: squeal._id } });
 
           // Rimuovi il riferimento del squeal dall'array "arrayDiTweetDelCanale" di tutti i canali
-          await schema.Channel.updateMany({}, { $pull: { squeals: squeal._id } });
+          await Channel.updateMany({}, { $pull: { squeals: squeal._id } });
 
           // Rimuovi il riferimento del squeal dai campi "squeals" di tutte le keywords
-          await schema.Keyword.updateMany({}, { $pull: { squeals: squeal._id } });
+          await Keyword.updateMany({}, { $pull: { squeals: squeal._id } });
 
           // Rimuovi tutti i squeal associati all'utente dal database
-          await schema.Squeal.deleteMany({ user_id: utenteId });
+          await Squeal.deleteMany({ user_id: utenteId });
         })
       );
-      await schema.Squeal.updateMany({}, { $pull: { "recipients.users": deletedUser._id } });
+      await Squeal.updateMany({}, { $pull: { "recipients.users": deletedUser._id } });
 
       // Rimuovi il profilo dell'utente dal database
       // await Utente.findByIdAndRemove(utenteId);
-      await schema.User.findByIdAndUpdate(utenteId, { $set: { active: false } });
-      await schema.User.findByIdAndUpdate(utenteId, { $set: { username: deletedUser._id } });
+      await User.findByIdAndUpdate(utenteId, { $set: { isActive: false } });
+      await User.findByIdAndUpdate(utenteId, { $set: { username: deletedUser._id } });
       // Gestisci eventuali errori
       return {
         status: 200,
@@ -288,10 +308,10 @@ module.exports = {
     try {
       let updatedUser;
       // Check if the identifier is a valid ObjectId or a username
-      if (identifier.length == 24 && mongoose.isValidObjectId(identifier)) {
-        updatedUser = await schema.User.findByIdAndUpdate(identifier, { $set: updateProfileInlineReqJson }, { new: true });
-      } else if (identifier.length >= 4 && identifier.length <= 20) {
-        updatedUser = await schema.User.findOneAndUpdate({ username: identifier }, { $set: updateProfileInlineReqJson }, { new: true });
+      if (mongooseObjectIdRegex.test(identifier)) {
+        updatedUser = await User.findByIdAndUpdate(identifier, { $set: updateProfileInlineReqJson }, { new: true });
+      } else if (usernameRegex.test(identifier)) {
+        updatedUser = await User.findOneAndUpdate({ username: identifier }, { $set: updateProfileInlineReqJson }, { new: true });
       } else {
         // Otherwise return an error
         return {

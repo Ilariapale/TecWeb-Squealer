@@ -1,5 +1,29 @@
 const mongoose = require("mongoose");
 
+//TODO aggiungere le chiamate per reagire ad uno squeal
+
+/**
+ * Usernames must contain 2 to 20 characters and can only consist of letters (both uppercase and lowercase), numbers, and underscores. The username must include at least one letter.
+ */
+const usernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9_]{2,20}$/;
+
+/**
+ * Channel names should be between 5 and 23 characters long and can only contain lowercase letters, numbers, and underscores.
+ */
+const channelNameRegex = /^[a-z0-9_]{5,23}$/;
+
+/**
+ * Official channel names should be between 5 and 23 characters long and can only contain uppercase letters, numbers, and underscores.
+ */
+const officialChannelNameRegex = /^[A-Z0-9_]{5,23}$/;
+
+/**
+ * Keywords should be between 4 and 20 characters long and can include both uppercase and lowercase letters, as well as numbers.
+ */
+const keywordRegex = /^[a-zA-Z0-9]{4,20}$/;
+
+const mongooseObjectIdRegex = /^[0-9a-fA-F]{24}$/;
+
 // User
 const UserSchema = new mongoose.Schema({
   //_id: { type: mongoose.Types.ObjectId },
@@ -33,7 +57,18 @@ const UserSchema = new mongoose.Schema({
   preferences: {
     muted_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
   },
-  active: { type: Boolean, default: true },
+  notifications: {
+    type: [
+      {
+        isUnseen: { type: Boolean, default: true },
+        created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+        content: { type: String, default: "" },
+        squeal_ref: { type: mongoose.Types.ObjectId, ref: "Squeal" },
+      },
+    ],
+    default: [],
+  },
+  isActive: { type: Boolean, default: true },
 });
 
 const User = mongoose.model("User", UserSchema);
@@ -55,14 +90,20 @@ const SquealSchema = new mongoose.Schema({
   reactions: {
     positive_reactions: { type: Number, default: 0 },
     negative_reaction: { type: Number, default: 0 },
-    like: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
-    laugh: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
-    love: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
-    dislike: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
-    disagree: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
-    disgust: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
+    like: { type: Number, default: 0 },
+    laugh: { type: Number, default: 0 },
+    love: { type: Number, default: 0 },
+    dislike: { type: Number, default: 0 },
+    disagree: { type: Number, default: 0 },
+    disgust: { type: Number, default: 0 },
   },
-  impressions: { type: Number },
+  impressions: { type: Number, default: 0 },
+});
+//TODO controllare se funziona
+SquealSchema.pre(["save", "findOneAndUpdate", "findByIdAndUpdate"], function (next) {
+  this.positive_reactions = this.reactions.like + this.reactions.laugh + this.reactions.love;
+  this.negative_reactions = this.reactions.dislike + this.reactions.disagree + this.reactions.disgust;
+  next();
 });
 
 const Squeal = mongoose.model("Squeal", SquealSchema);
@@ -91,4 +132,4 @@ const KeywordSchema = new mongoose.Schema({
 });
 const Keyword = mongoose.model("Keyword", KeywordSchema);
 
-module.exports = { User, Squeal, Channel, Keyword };
+module.exports = { User, Squeal, Channel, Keyword, usernameRegex, channelNameRegex, officialChannelNameRegex, keywordRegex, mongooseObjectIdRegex };

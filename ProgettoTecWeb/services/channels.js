@@ -1,8 +1,5 @@
 const mongoose = require("mongoose");
-const schema = require("./schemas");
-const channelNameRegex = /^[a-z0-9_]{5,23}$/;
-const officialChannelNameRegex = /^[A-Z0-9_]{5,23}$/;
-
+const { User, Squeal, Channel, Keyword, usernameRegex, channelNameRegex, officialChannelNameRegex, keywordRegex, mongooseObjectIdRegex } = require("./schemas");
 module.exports = {
   /**
    * Retrieve channels with optional filters
@@ -33,7 +30,7 @@ module.exports = {
       pipeline.push({ $match: {} });
     }
     console.log(pipeline);
-    const data = await schema.Channel.aggregate(pipeline).exec();
+    const data = await Channel.aggregate(pipeline).exec();
 
     return {
       status: 200,
@@ -62,13 +59,10 @@ module.exports = {
 
     let creatorExists;
     //Check if creator exists
-    if (creator.length == 24 && mongoose.isValidObjectId(creator)) {
-      console.log("creator is a valid ObjectId");
-      creatorExists = await schema.User.findById(creator);
-    } else if (creator.length >= 4 && creator.length <= 20) {
-      console.log("creator is a valid username");
-      creatorExists = await schema.User.findOne({ username: creator });
-      console.log("OK");
+    if (mongooseObjectIdRegex.test(creator)) {
+      creatorExists = await User.findById(creator);
+    } else if (usernameRegex.test(creator)) {
+      creatorExists = await User.findOne({ username: creator });
     } else {
       return {
         status: 400,
@@ -104,12 +98,6 @@ module.exports = {
         data: { error: "name format not valid" },
       };
     }
-    if (name.length === 24 && mongoose.isValidObjectId(name)) {
-      return {
-        status: 400,
-        data: { error: "name cannot be an ObjectId" },
-      };
-    }
 
     if (!description) {
       return {
@@ -120,7 +108,7 @@ module.exports = {
 
     //check if the name already exists in the database
 
-    const newChannel = new schema.Channel({
+    const newChannel = new Channel({
       creator: creatorExists._id,
       name: name,
       description: description,
@@ -130,7 +118,7 @@ module.exports = {
     });
     try {
       const data = await newChannel.save();
-      schema.User.findByIdAndUpdate(creatorExists._id, { $push: { created_channels: data._id } }).exec();
+      User.findByIdAndUpdate(creatorExists._id, { $push: { created_channels: data._id } }).exec();
       return {
         status: 201,
         data: data,
@@ -172,10 +160,10 @@ module.exports = {
     }
     if (identifier.length === 24 && mongoose.isValidObjectId(identifier)) {
       //it's an ObjectId
-      data = await schema.Channel.findById(identifier);
+      data = await Channel.findById(identifier);
     } else if (channelNameRegex.test(identifier)) {
       //it's a name
-      data = await schema.Channel.findOne({ name: identifier });
+      data = await Channel.findOne({ name: identifier });
     } else {
       return {
         status: 400,
@@ -203,9 +191,9 @@ module.exports = {
 
     let channel;
     if (identifier.length === 24 && mongoose.isValidObjectId(identifier)) {
-      channel = await schema.Channel.findById(identifier);
+      channel = await Channel.findById(identifier);
     } else if (channelNameRegex.test(identifier)) {
-      channel = await schema.Channel.findOne({ name: identifier });
+      channel = await Channel.findOne({ name: identifier });
     } else {
       return {
         status: 400,
@@ -222,7 +210,7 @@ module.exports = {
     const updateRecipientsPromises = [];
     for (const squeal of channel.squeals) {
       //remove the channel from the squeals
-      let promise = schema.Squeal.findByIdAndUpdate(squeal, { $pull: { "recipients.channels": channel._id } }).exec();
+      let promise = Squeal.findByIdAndUpdate(squeal, { $pull: { "recipients.channels": channel._id } }).exec();
       updateRecipientsPromises.push(promise);
     }
     const updatedSqueals = await Promise.all(updateRecipientsPromises);
@@ -230,7 +218,7 @@ module.exports = {
     //remove the channel from the users subscribed channels, the channel from the users muted channels,the channel from the users created channels
     const updateSubscribedChannelsPromises = [];
     for (const user of channel.subscribers) {
-      let promise = schema.User.findByIdAndUpdate(user, {
+      let promise = User.findByIdAndUpdate(user, {
         $pull: { subscribed_channels: channel._id },
         $pull: { created_channels: channel._id },
         $pull: { "preferences.muted_channels": channel._id },
@@ -240,11 +228,23 @@ module.exports = {
     const updatedUser = await Promise.all(updateSubscribedChannelsPromises);
 
     //remove the channel from the database
-    await schema.Channel.findByIdAndRemove(channel._id).exec();
+    await Channel.findByIdAndRemove(channel._id).exec();
 
     return {
       status: 200,
       data: { message: "Channel deleted" },
     };
+  },
+
+  /**
+   * @param options.identifier Channel's identifier, can be either the name or the id
+   * @param options.updateChannelInlineReqJson.creatorsToAdd
+   * @param options.updateChannelInlineReqJson.creatorsToRemove
+   * @param options.updateChannelInlineReqJson.isBlocked
+   * @param options.updateChannelInlineReqJson.newName
+   */
+  updateChannel: async (options) => {
+    //TODO
+    const { identifier, updateChannelInlineReqJson } = options;
   },
 };

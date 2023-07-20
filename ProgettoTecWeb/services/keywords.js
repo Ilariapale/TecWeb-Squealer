@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
-const schema = require("./schemas");
-const keywordRegex = /^[a-zA-Z0-9]{4,20}$/;
+const { User, Squeal, Channel, Keyword, usernameRegex, channelNameRegex, officialChannelNameRegex, keywordRegex, mongooseObjectIdRegex } = require("./schemas");
 
 module.exports = {
   /**
@@ -23,7 +22,7 @@ module.exports = {
       };
     }
 
-    const newKeyword = new schema.Keyword({
+    const newKeyword = new Keyword({
       created_at: new Date(),
       name: name,
     });
@@ -76,7 +75,7 @@ module.exports = {
         data: { error: "Invalid identifier" },
       };
     }
-    const data = await schema.Keyword.findOne({ name: identifier });
+    const data = await Keyword.findOne({ name: identifier });
     if (!data) {
       return {
         status: 404,
@@ -107,7 +106,7 @@ module.exports = {
         data: { error: "Invalid identifier" },
       };
     }
-    const data = await schema.Keyword.findOne({ name: identifier });
+    const data = await Keyword.findOne({ name: identifier });
     if (!data) {
       return {
         status: 404,
@@ -118,13 +117,13 @@ module.exports = {
     //delete the keyword from the squeals and from the db
     const updateSquealsPromises = [];
     for (const squeal of data.squeals) {
-      let promise = schema.Squeal.findByIdAndUpdate(squeal, { $pull: { "recipient.keywords": identifier } });
+      let promise = Squeal.findByIdAndUpdate(squeal, { $pull: { "recipient.keywords": identifier } });
       updateSquealsPromises.push(promise);
     }
     await Promise.all(updateSquealsPromises);
 
     //delete the keyword
-    await schema.Keyword.deleteOne({ name: identifier });
+    await Keyword.deleteOne({ name: identifier });
 
     return {
       status: 200,
