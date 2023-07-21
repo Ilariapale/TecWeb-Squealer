@@ -1,5 +1,6 @@
 const express = require("express");
 const users = require("../services/users");
+const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 const path = require("path");
 const { stringify } = require("querystring");
@@ -61,7 +62,8 @@ router.get("/:identifier", async (req, res, next) => {
   let options = {
     identifier: req.params.identifier,
   };
-
+  // res.cookie("username", "john_doe");
+  // console.log(req);
   try {
     const result = await users.getUser(options);
     res.status(result.status || 200).send(result.data);

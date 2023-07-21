@@ -1,21 +1,20 @@
 const mongoose = require("mongoose");
+const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
 const {
-  Notification,
-  User,
-  Squeal,
-  Channel,
-  Keyword,
+  jwt,
+  bcrypt,
   usernameRegex,
   channelNameRegex,
   officialChannelNameRegex,
   keywordRegex,
   mongooseObjectIdRegex,
+  securityLvl,
   findUser,
   findSqueal,
   findChannel,
   findKeyword,
   findNotification,
-} = require("./schemas");
+} = require("./utils");
 const welcomeNotification = "Welcome to Squealer! Check out your first squeal by clicking on the notification.";
 //--------------------------------------------------------------------------
 
@@ -107,11 +106,18 @@ module.exports = {
       };
     }
 
+    //-----------PASSWORD ENCRYPTION----------------
+
+    const salt = await bcrypt.genSalt(securityLvl);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    //------------------------------------------------
+
     // Create the object to save
     const newUser = new User({
       username: username,
       email: email,
-      password: password,
+      password: hashedPassword,
       created_at: Date.now(),
     });
 
@@ -129,7 +135,7 @@ module.exports = {
         hex_id: 0,
         user_id: user._id,
         content_type: "text",
-        content: "Welcome to Squealer!",
+        content: "Welcome to Squealer, " + user.username + "!",
         created_at: Date.now(),
       });
       const firstSqueal = await newSqueal.save();
@@ -155,7 +161,7 @@ module.exports = {
       // return the new user
       return {
         status: response ? 201 : 400,
-        data: response ? { user: response } : { error: "Failed to create user" },
+        data: response ? response : { error: "Failed to create user" },
       };
     } catch (error) {
       //Handling mongoose errors
@@ -190,7 +196,6 @@ module.exports = {
     //TODO RIFARE ASSOLUTAMENTE
     const { identifier } = options;
     var response;
-
     // Check if the required fields are present
     if (!identifier) {
       return {
@@ -236,24 +241,28 @@ module.exports = {
     var deletedUser;
     try {
       //check weather the identifier is a valid ObjectId or a username
-      if (mongooseObjectIdRegex.test(identifier)) {
-        deletedUser = await User.findById(identifier);
-      } else if (usernameRegex.test(identifier)) {
-        deletedUser = await User.findOne({ username: identifier });
-      } else {
-        //otherwise return an error
+      // if (mongooseObjectIdRegex.test(identifier)) {
+      //   deletedUser = await User.findById(identifier);
+      // } else if (usernameRegex.test(identifier)) {
+      //   deletedUser = await User.findOne({ username: identifier });
+      // } else {
+      //   //otherwise return an error
+      //   return {
+      //     status: 400,
+      //     data: { error: "Invalid identifier" },
+      //   };
+      // }
+
+      let response = await findUser(identifier);
+      if (response.status >= 300) {
+        //if the response is an error
         return {
-          status: 400,
-          data: { error: "Invalid identifier" },
+          status: response.status,
+          data: { error: response.error },
         };
       }
-      //check if the user exists, otherwise return an error
-      if (!deletedUser) {
-        return {
-          status: 404,
-          data: { error: "User not found." },
-        };
-      }
+
+      deletedUser = response.data;
 
       //----------------------------------------------------------------------------------------------------------------------
       // Removing all the references to the user from the other collections
@@ -279,7 +288,7 @@ module.exports = {
       );
       // remove the reference of the user from the "recipients.users" array of all the squeals
       await Squeal.updateMany({}, { $pull: { "recipients.users": deletedUser._id } });
-
+      await Channel.updateMany({});
       // trova tutte le notifiche associate all'utente
       const notifications = deletedUser.notifications;
 
@@ -292,8 +301,9 @@ module.exports = {
       );
 
       // Set the user as inactive and change the username to the _id
-      await User.findByIdAndUpdate(utenteId, { $set: { isActive: false }, $set: { username: deletedUser._id } });
-
+      //await User.findByIdAndUpdate(utenteId, { $set: { isActive: false }, $set: { username: deletedUser._id } });
+      //await User.findByIdAndRemove(deletedUser._id);
+      await deletedUser.deleteOne();
       return {
         status: 200,
         data: { message: "User deleted successfully" },

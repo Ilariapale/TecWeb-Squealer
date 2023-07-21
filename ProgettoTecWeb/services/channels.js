@@ -1,10 +1,6 @@
 const mongoose = require("mongoose");
+const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
 const {
-  Notification,
-  User,
-  Squeal,
-  Channel,
-  Keyword,
   usernameRegex,
   channelNameRegex,
   officialChannelNameRegex,
@@ -15,7 +11,7 @@ const {
   findChannel,
   findKeyword,
   findNotification,
-} = require("./schemas");
+} = require("./utils");
 module.exports = {
   /**
    * Retrieve channels with optional filters
@@ -40,12 +36,9 @@ module.exports = {
     if (isOfficial) {
       pipeline.push({ $match: { is_official: isOfficial } });
     }
+    pipeline.push({ $match: { isBlocked: false } });
 
-    if (pipeline.length == 0) {
-      //if no filters are specified, return all channels
-      pipeline.push({ $match: {} });
-    }
-    console.log(pipeline);
+    //console.log(pipeline);
     const data = await Channel.aggregate(pipeline).exec();
 
     return {
@@ -73,24 +66,16 @@ module.exports = {
       };
     }
 
-    let creatorExists;
     //Check if creator exists
-    if (mongooseObjectIdRegex.test(creator)) {
-      creatorExists = await User.findById(creator);
-    } else if (usernameRegex.test(creator)) {
-      creatorExists = await User.findOne({ username: creator });
-    } else {
+    let response = await findUser(creator);
+    if (response.status >= 300) {
+      //if the response is an error
       return {
-        status: 400,
-        data: { error: "Invalid identifier" },
+        status: response.status,
+        data: { error: response.error },
       };
     }
-    if (!creatorExists) {
-      return {
-        status: 400,
-        data: { error: "Creator does not exists" },
-      };
-    }
+    let creatorExists = response.data;
 
     if (!name) {
       return {
@@ -106,13 +91,17 @@ module.exports = {
       };
     }
 
-    if (!channelNameRegex.test(name)) {
-      //TODO controllare il regexp nel caso sia un canale ufficiale
+    if (!channelNameRegex.test(name) && !officialChannelNameRegex.test(name)) {
       //check if the name is lowercase, alphanumeric and between 5 and 23 characters
       return {
         status: 400,
         data: { error: "name format not valid" },
       };
+    }
+
+    if (officialChannelNameRegex.test(name)) {
+      //devi avere i permessi
+      //TODO permessi
     }
 
     if (!description) {
@@ -125,7 +114,7 @@ module.exports = {
     //check if the name already exists in the database
 
     const newChannel = new Channel({
-      creator: creatorExists._id,
+      creators: [creatorExists._id],
       name: name,
       description: description,
       is_official: is_official || false,
@@ -174,27 +163,19 @@ module.exports = {
         data: { error: "Channel identifier is required." },
       };
     }
-    if (identifier.length === 24 && mongoose.isValidObjectId(identifier)) {
-      //it's an ObjectId
-      data = await Channel.findById(identifier);
-    } else if (channelNameRegex.test(identifier)) {
-      //it's a name
-      data = await Channel.findOne({ name: identifier });
-    } else {
+
+    let response = await findChannel(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
       return {
-        status: 400,
-        data: { error: "Invalid identifier" },
+        status: response.status,
+        data: { error: response.error },
       };
     }
-    if (!data) {
-      return {
-        status: 404,
-        data: { error: "Channel not found" },
-      };
-    }
+
     return {
-      status: 200,
-      data: data,
+      status: response.status,
+      data: response.data,
     };
   },
 
@@ -205,24 +186,33 @@ module.exports = {
   deleteChannel: async (options) => {
     const { identifier } = options;
 
-    let channel;
+    // if (mongooseObjectIdRegex.test(identifier)) {
+    //   channel = await Channel.findById(identifier);
+    // } else if (channelNameRegex.test(identifier)) {
+    //   channel = await Channel.findOne({ name: identifier });
+    // } else {
+    //   return {
+    //     status: 400,
+    //     data: { error: "Invalid identifier" },
+    //   };
+    // }
+    // if (!channel) {
+    //   return {
+    //     status: 404,
+    //     data: { error: "Channel not found" },
+    //   };
+    // }
 
-    if (mongooseObjectIdRegex.test(identifier)) {
-      channel = await Channel.findById(identifier);
-    } else if (channelNameRegex.test(identifier)) {
-      channel = await Channel.findOne({ name: identifier });
-    } else {
+    let response = await findChannel(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
       return {
-        status: 400,
-        data: { error: "Invalid identifier" },
+        status: response.status,
+        data: { error: response.error },
       };
     }
-    if (!channel) {
-      return {
-        status: 404,
-        data: { error: "Channel not found" },
-      };
-    }
+    let channel = response.data;
+
     //remove the channel from the squeals recipients
     const updateRecipientsPromises = [];
     for (const squeal of channel.squeals) {
@@ -255,27 +245,38 @@ module.exports = {
 
   /**
    * @param options.identifier Channel's identifier, can be either the name or the id
-   * @param options.updateChannelInlineReqJson.creatorsToAdd
-   * @param options.updateChannelInlineReqJson.creatorsToRemove
+   * @param options.updateChannelInlineReqJson.creatorsArray
    * @param options.updateChannelInlineReqJson.isBlocked
    * @param options.updateChannelInlineReqJson.newName
+   * @param options.updateChannelInlineReqJson.newDescription
    */
   updateChannel: async (options) => {
-    //TODO
-    //TODO fare in modo che nella ricerca dei canali, i canali bloccati non escano
     const { identifier } = options;
-    const { creatorsToAdd, creatorsToRemove, isBlocked, newName } = options.updateChannelInlineReqJson;
+    const { creatorsArray, isBlocked, newName, newDescription } = options.updateChannelInlineReqJson;
 
-    let channel;
-    if (mongooseObjectIdRegex.test(identifier)) {
-      //it's an ObjectId
-    } else if (channelNameRegex.test(identifier)) {
-      //it's a name
-    } else {
+    let response = await findChannel(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
       return {
-        status: 400,
-        data: { error: "Invalid identifier" },
+        status: response.status,
+        data: { error: response.error },
       };
     }
+    let channel = response.data;
+
+    if (!creatorsArray && !isBlocked && !newName && !newDescription) {
+      return {
+        status: 400,
+        data: { error: "No update parameters specified" },
+      };
+    }
+
+    channel.name = newName || channel.name;
+    channel.creators = creatorsArray || channel.creators;
+    channel.description = newDescription || channel.description;
+    //TODO controllare se funziona
+    typeof isBlocked !== "undefinded" ? (channel.isBlocked = isBlocked) : null;
+
+    channel.save();
   },
 };

@@ -1,5 +1,6 @@
 const express = require("express");
 const squeals = require("../services/squeals");
+const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
 router.get("/", async (req, res, next) => {
@@ -75,6 +76,23 @@ router.patch("/:identifier", async (req, res, next) => {
 
   try {
     const result = await squeals.updateSqueal(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
+router.patch("/:identifier/reactions", async (req, res, next) => {
+  let options = {
+    identifier: req.params.identifier,
+  };
+
+  options.updateSquealReactionsReqJson = req.body;
+
+  try {
+    const result = await squeals.updateSquealReactions(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     return res.status(500).send({

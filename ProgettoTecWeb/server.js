@@ -1,3 +1,6 @@
+//TODO cookies
+//TODO immagini
+
 const express = require("express"),
   cookieParser = require("cookie-parser"),
   db = require("./db"),
@@ -33,7 +36,7 @@ app.use(cookieParser());
 app.use(upload.array());
 app.use(express.static("public"));
 
-app.use(cookieParser());
+//app.use(cookieParser());
 
 require("./routes")(app);
 

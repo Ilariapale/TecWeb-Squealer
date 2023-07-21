@@ -1,10 +1,6 @@
 const mongoose = require("mongoose");
+const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
 const {
-  Notification,
-  User,
-  Squeal,
-  Channel,
-  Keyword,
   usernameRegex,
   channelNameRegex,
   officialChannelNameRegex,
@@ -15,7 +11,7 @@ const {
   findChannel,
   findKeyword,
   findNotification,
-} = require("./schemas");
+} = require("./utils");
 module.exports = {
   /**
    * Retrieve squeals with optional filters
@@ -28,54 +24,60 @@ module.exports = {
   getSqueals: async (options) => {
     //TODO ogni volta che faccio una get di uno squeal devo incrementare il numero di impressions
     //TODO le reaction sono solo un numero, non un array di users
+    try {
+      const pipeline = [];
 
-    const pipeline = [];
+      //TODO controllare che le date siano valide
+      if (options.contentType) {
+        pipeline.push({ $match: { content_type: options.contentType } });
+      }
 
-    //TODO controllare che le date siano valide
-    if (options.contentType) {
-      pipeline.push({ $match: { content_type: options.contentType } });
-    }
+      //check if the request has specified createdAfter or createdBefore
+      if (options.createdAfter) {
+        pipeline.push({ $match: { created_at: { $gte: new Date(options.createdAfter) } } });
+      }
 
-    //check if the request has specified createdAfter or createdBefore
-    if (options.createdAfter) {
-      pipeline.push({ $match: { created_at: { $gte: new Date(options.createdAfter) } } });
-    }
+      if (options.createdBefore) {
+        pipeline.push({ $match: { created_at: { $lte: new Date(options.createdBefore) } } });
+      }
+      //check if the request has specified isScheduled
+      if (options.isScheduled) {
+        pipeline.push({ $match: { is_scheduled: options.isScheduled } });
+      }
 
-    if (options.createdBefore) {
-      pipeline.push({ $match: { created_at: { $lte: new Date(options.createdBefore) } } });
-    }
-    //check if the request has specified isScheduled
-    if (options.isScheduled) {
-      pipeline.push({ $match: { is_scheduled: options.isScheduled } });
-    }
+      if (pipeline.length == 0) {
+        pipeline.push({ $match: {} });
+      }
+      //check if the request has specified minReactions
+      if (options.minReactions) {
+        if (options.minReactions < 0) {
+          //return an error if the minReactions is negative
+          return {
+            status: 400,
+            data: { error: "minReactions must be a positive integer" },
+          };
+        } else {
+          pipeline.push({ $match: { reactions: { $exists: true, $expr: { $gte: { $size: "$reactions" }, $gte: options.minReactions } } } });
+        }
+      }
 
-    //check if the request has specified minReactions
-    if (options.minReactions) {
-      if (options.minReactions < 0) {
-        //return an error if the minReactions is negative
+      //execute the query
+      const data = await Squeal.aggregate(pipeline).exec();
+      //check if the query returned any result
+      if (data.length > 0) {
         return {
-          status: 400,
-          data: { error: "minReactions must be a positive integer" },
+          status: 200,
+          data: data,
         };
       } else {
-        pipeline.push({ $match: { reactions: { $exists: true, $expr: { $gte: { $size: "$reactions" }, $gte: options.minReactions } } } });
+        //otherwise return an error
+        return {
+          status: 404,
+          data: { error: "No squeal found." },
+        };
       }
-    }
-
-    //execute the query
-    const data = await Squeal.aggregate(pipeline).exec();
-    //check if the query returned any result
-    if (data.length > 0) {
-      return {
-        status: 200,
-        data: data,
-      };
-    } else {
-      //otherwise return an error
-      return {
-        status: 404,
-        data: { error: "No squeal found." },
-      };
+    } catch (err) {
+      console.log(err);
     }
   },
 
@@ -251,10 +253,9 @@ module.exports = {
     });
 
     await Promise.all(promises);
-
     return {
       status: result ? 201 : 400,
-      data: result ? { squeal: result } : { error: "Failed to create squeal" },
+      data: result ? result : { error: "Failed to create squeal" },
     };
   },
 
@@ -437,7 +438,7 @@ module.exports = {
 
     return {
       status: result ? 200 : 400,
-      data: result ? { squeal: result } : { error: "Failed to update squeal" },
+      data: result ? result : { error: "Failed to update squeal" },
     };
   },
 };

@@ -1,10 +1,6 @@
 const mongoose = require("mongoose");
+const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
 const {
-  Notification,
-  User,
-  Squeal,
-  Channel,
-  Keyword,
   usernameRegex,
   channelNameRegex,
   officialChannelNameRegex,
@@ -15,7 +11,7 @@ const {
   findChannel,
   findKeyword,
   findNotification,
-} = require("./schemas");
+} = require("./utils");
 module.exports = {
   /**
    * Create a new keyword
@@ -78,28 +74,36 @@ module.exports = {
    */
   getKeyword: async (options) => {
     const { identifier } = options;
-    if (!identifier) {
+    // if (!identifier) {
+    //   return {
+    //     status: 400,
+    //     data: { error: "Keyword identifier is required." },
+    //   };
+    // }
+    // if (!keywordRegex.test(identifier)) {
+    //   return {
+    //     status: 400,
+    //     data: { error: "Invalid identifier" },
+    //   };
+    // }
+    // const data = await Keyword.findOne({ name: identifier });
+    // if (!data) {
+    //   return {
+    //     status: 404,
+    //     data: { error: "Keyword not found" },
+    //   };
+    // }
+    let response = await findKeyword(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
       return {
-        status: 400,
-        data: { error: "Keyword identifier is required." },
-      };
-    }
-    if (!keywordRegex.test(identifier)) {
-      return {
-        status: 400,
-        data: { error: "Invalid identifier" },
-      };
-    }
-    const data = await Keyword.findOne({ name: identifier });
-    if (!data) {
-      return {
-        status: 404,
-        data: { error: "Keyword not found" },
+        status: response.status,
+        data: { error: response.error },
       };
     }
     return {
-      status: 200,
-      data: { keyword: data },
+      status: response.status,
+      data: response.data,
     };
   },
 
