@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
-const { User, Squeal, Channel, Keyword, usernameRegex, channelNameRegex, officialChannelNameRegex, keywordRegex, mongooseObjectIdRegex } = require("./schemas");
+const {
+  Notification,
+  User,
+  Squeal,
+  Channel,
+  Keyword,
+  usernameRegex,
+  channelNameRegex,
+  officialChannelNameRegex,
+  keywordRegex,
+  mongooseObjectIdRegex,
+  findUser,
+  findSqueal,
+  findChannel,
+  findKeyword,
+  findNotification,
+} = require("./schemas");
 const welcomeNotification = "Welcome to Squealer! Check out your first squeal by clicking on the notification.";
 //--------------------------------------------------------------------------
 
@@ -69,13 +85,11 @@ module.exports = {
   },
 
   /**
-  * Create a new user
-
-  * @param options.userInput.email Email used at sign up
-  * @param options.userInput.password Account password
-  * @param options.userInput.username Unique identifier of any given account
-
-  */
+   * Create a new user
+   * @param options.userInput.email Email used at sign up
+   * @param options.userInput.password Account password
+   * @param options.userInput.username Unique identifier of any given account
+   */
   createUser: async (options) => {
     const { username, email, password } = options.userInput;
     // Check if the required fields are present
@@ -110,7 +124,7 @@ module.exports = {
           data: { error: "Failed to create user" },
         };
       }
-      // Create the first squeal
+      // Create the first squeal and save it
       const newSqueal = new Squeal({
         hex_id: 0,
         user_id: user._id,
@@ -120,19 +134,25 @@ module.exports = {
       });
       const firstSqueal = await newSqueal.save();
 
-      // Add the first squeal to the user to array and notifications
+      //create the notification and save it
+      const newNotification = new Notification({
+        squeal_ref: firstSqueal._id,
+        created_at: Date.now(),
+        content: welcomeNotification,
+      });
+      const notification = await newNotification.save();
+
+      // Update the user with the new squeal and the new notification
       const response = await User.findByIdAndUpdate(
         user._id,
         {
           $push: { squeals: firstSqueal._id },
-          $push: {
-            notifications: { squeal_ref: firstSqueal._id, created_at: Date.now(), content: welcomeNotification },
-          },
+          $push: { notifications: notification._id },
         },
         { new: true }
       );
 
-      // return the result
+      // return the new user
       return {
         status: response ? 201 : 400,
         data: response ? { user: response } : { error: "Failed to create user" },
@@ -163,14 +183,13 @@ module.exports = {
   },
 
   /**
-  * Get a user object by ID or by username, or user profile
-  * @param options.identifier User's identifier, can be either username or userId 
-
-  */
+   * Get a user object by ID or by username, or user profile
+   * @param options.identifier User's identifier, can be either username or userId
+   */
   getUser: async (options) => {
     //TODO RIFARE ASSOLUTAMENTE
     const { identifier } = options;
-    var data;
+    var response;
 
     // Check if the required fields are present
     if (!identifier) {
@@ -180,17 +199,12 @@ module.exports = {
       };
     }
     try {
-      //check wether the identifier is a valid ObjectId
-      if (mongooseObjectIdRegex.test(identifier)) {
-        data = await User.findById(identifier);
-        //or a username
-      } else if (usernameRegex.test(identifier)) {
-        data = await User.findOne({ username: identifier });
-      } else {
-        //otherwise return an error
+      response = await findUser(identifier);
+      if (response.status >= 300) {
+        //if the response is an error
         return {
-          status: 400,
-          data: { error: "User identifier is not valid" },
+          status: response.status,
+          data: { error: response.error },
         };
       }
     } catch (err) {
@@ -200,15 +214,14 @@ module.exports = {
 
     return {
       status: 200,
-      data: data,
+      data: response.data,
     };
   },
 
   /**
-  * 
-  * @param options.identifier User's identifier, can be either username or userId 
-
-  */
+   *  Delete a user object by ID or by username
+   * @param options.identifier User's identifier, can be either username or userId
+   */
   deleteUser: async (options) => {
     //TODO decidere se cancellare anche i post e o i canali che ha creato
     // Check if the required fields are present
@@ -241,36 +254,46 @@ module.exports = {
           data: { error: "User not found." },
         };
       }
-      // return the result
 
       //----------------------------------------------------------------------------------------------------------------------
+      // Removing all the references to the user from the other collections
 
-      // Trova tutti i squeal associati all'utente
-      const squealUtente = await Squeal.find({ user_id: utenteId });
+      const postedSqueals = deletedUser.squeals.posted;
+      const scheduledSqueals = deletedUser.squeals.scheduled;
 
-      // Rimuovi i riferimenti del squeal dagli altri campi nel database
       await Promise.all(
-        squealUtente.map(async (squeal) => {
-          // Rimuovi il riferimento del squeal dai campi "mentioned_in" di altri utenti
-          await User.updateMany({}, { $pull: { mentioned_in: squeal._id } });
+        //squeal by squeal
+        postedSqueals.map(async (squeal) => {
+          // Remove the reference of the squeal from the "squeals" array of all the users
+          await User.updateMany({}, { $pull: { mentioned_in: squeal } });
 
-          // Rimuovi il riferimento del squeal dall'array "arrayDiTweetDelCanale" di tutti i canali
-          await Channel.updateMany({}, { $pull: { squeals: squeal._id } });
+          // Remove the reference of the squeal from the "squeals" array of all the channels
+          await Channel.updateMany({}, { $pull: { squeals: squeal } });
 
-          // Rimuovi il riferimento del squeal dai campi "squeals" di tutte le keywords
-          await Keyword.updateMany({}, { $pull: { squeals: squeal._id } });
+          // Remove the reference of the squeal from the "squeals" array of all the keywords
+          await Keyword.updateMany({}, { $pull: { squeals: squeal } });
 
-          // Rimuovi tutti i squeal associati all'utente dal database
-          await Squeal.deleteMany({ user_id: utenteId });
+          // Remove the squeal from the database
+          await Squeal.findByIdAndRemove(squeal);
         })
       );
+      // remove the reference of the user from the "recipients.users" array of all the squeals
       await Squeal.updateMany({}, { $pull: { "recipients.users": deletedUser._id } });
 
-      // Rimuovi il profilo dell'utente dal database
-      // await Utente.findByIdAndRemove(utenteId);
-      await User.findByIdAndUpdate(utenteId, { $set: { isActive: false } });
-      await User.findByIdAndUpdate(utenteId, { $set: { username: deletedUser._id } });
-      // Gestisci eventuali errori
+      // trova tutte le notifiche associate all'utente
+      const notifications = deletedUser.notifications;
+
+      await Promise.all(
+        // Notification by notification
+        notifications.map(async (notification) => {
+          // Remove the notification from the database
+          await Notification.findByIdAndRemove(notification);
+        })
+      );
+
+      // Set the user as inactive and change the username to the _id
+      await User.findByIdAndUpdate(utenteId, { $set: { isActive: false }, $set: { username: deletedUser._id } });
+
       return {
         status: 200,
         data: { message: "User deleted successfully" },

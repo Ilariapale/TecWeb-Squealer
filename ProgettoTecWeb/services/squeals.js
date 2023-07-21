@@ -1,6 +1,21 @@
 const mongoose = require("mongoose");
-const { User, Squeal, Channel, Keyword, usernameRegex, channelNameRegex, officialChannelNameRegex, keywordRegex, mongooseObjectIdRegex } = require("./schemas");
-
+const {
+  Notification,
+  User,
+  Squeal,
+  Channel,
+  Keyword,
+  usernameRegex,
+  channelNameRegex,
+  officialChannelNameRegex,
+  keywordRegex,
+  mongooseObjectIdRegex,
+  findUser,
+  findSqueal,
+  findChannel,
+  findKeyword,
+  findNotification,
+} = require("./schemas");
 module.exports = {
   /**
    * Retrieve squeals with optional filters
@@ -314,11 +329,11 @@ module.exports = {
       };
     }
 
-    //rimuovo lo squeal dai vari posti
+    //Remove the squeal from the every reference
 
-    //data.user_id rimane lo stesso perchè è il proprietario dello squeal
-    //1) data.recipients.users sono gli user destinatari e devo rimuovere lo squeal da ogni user.squeals.mentionedIn
+    //data.user_id stays the same
 
+    //1) data.recipients.users are the target users and I have to remove the squeal from each user.squeals.mentionedIn
     const userUpdatePromises = [];
 
     for (const user of data.recipients.users) {
@@ -327,7 +342,7 @@ module.exports = {
     }
     await Promise.all(userUpdatePromises);
 
-    //2) data.recipients.channels sono i canali destinatari e devo rimuovere lo squeal da ogni channel.squeals
+    //2) data.recipients.channels are the target channels and I have to remove the squeal from each channel.squeals
 
     const channelUpdatePromises = [];
 
@@ -354,6 +369,9 @@ module.exports = {
       $set: { "recipients.keywords": [] },
     });
 
+    //4) cancello le notifiche che avevano come squeal_ref lo squeal cancellato
+    await Notification.deleteMany({ squeal_ref: identifier });
+
     return {
       status: 200,
       data: data,
@@ -362,10 +380,64 @@ module.exports = {
 
   /**
    * @param options.identifier Squeal's id
-   * @param options.updateSquealInlineReqJson.recipients
+   * @param options.updateSquealInlineReqJson.recipients Array of users and channels (no keywords allowed)
+   * @param options.updateSquealInlineReqJson.reactions
    */
   updateSqueal: async (options) => {
     //TODO
-    const { identifier, updateSquealInlineReqJson } = options;
+    const { identifier } = options;
+    const { recipients, reactions } = options.updateSquealInlineReqJson;
+
+    //check if the identifier is specified
+    if (!identifier) {
+      return {
+        status: 400,
+        data: { error: "Missing 'identifier' parameter." },
+      };
+    }
+
+    //check if the squeal exists
+    let squealExists;
+    if (mongooseObjectIdRegex.test(identifier)) {
+      squealExists = await Squeal.findById(identifier);
+    } else {
+      return {
+        status: 400,
+        data: { error: "Invalid 'identifier' parameter." },
+      };
+    }
+
+    if (!squealExists) {
+      return {
+        status: 404,
+        data: { error: "Squeal not found." },
+      };
+    }
+
+    //check if the recipients are specified
+    if (recipients) {
+      //replace the old recipients with the new ones
+      const { users, channels } = JSON.parse(recipients);
+      squealExists.recipients.users = users || [];
+      squealExists.recipients.channels = channels || [];
+    }
+
+    if (reactions) {
+      //replace the old reaction numbers with the new ones
+      squealExists.reactions.like = reactions.like || squealExists.reactions.like;
+      squealExists.reactions.love = reactions.love || squealExists.reactions.love;
+      squealExists.reactions.laugh = reactions.laugh || squealExists.reactions.laugh;
+      squealExists.reactions.dislike = reactions.dislike || squealExists.reactions.dislike;
+      squealExists.reactions.disgust = reactions.disgust || squealExists.reactions.disgust;
+      squealExists.reactions.disagree = reactions.disagree || squealExists.reactions.disagree;
+    }
+
+    //save the squeal in the db
+    let result = await squealExists.save();
+
+    return {
+      status: result ? 200 : 400,
+      data: result ? { squeal: result } : { error: "Failed to update squeal" },
+    };
   },
 };

@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
-const { User, Squeal, Channel, Keyword, usernameRegex, channelNameRegex, officialChannelNameRegex, keywordRegex, mongooseObjectIdRegex } = require("./schemas");
+const {
+  Notification,
+  User,
+  Squeal,
+  Channel,
+  Keyword,
+  usernameRegex,
+  channelNameRegex,
+  officialChannelNameRegex,
+  keywordRegex,
+  mongooseObjectIdRegex,
+  findUser,
+  findSqueal,
+  findChannel,
+  findKeyword,
+  findNotification,
+} = require("./schemas");
 module.exports = {
   /**
    * Retrieve channels with optional filters
@@ -190,7 +206,8 @@ module.exports = {
     const { identifier } = options;
 
     let channel;
-    if (identifier.length === 24 && mongoose.isValidObjectId(identifier)) {
+
+    if (mongooseObjectIdRegex.test(identifier)) {
       channel = await Channel.findById(identifier);
     } else if (channelNameRegex.test(identifier)) {
       channel = await Channel.findOne({ name: identifier });
@@ -245,6 +262,20 @@ module.exports = {
    */
   updateChannel: async (options) => {
     //TODO
-    const { identifier, updateChannelInlineReqJson } = options;
+    //TODO fare in modo che nella ricerca dei canali, i canali bloccati non escano
+    const { identifier } = options;
+    const { creatorsToAdd, creatorsToRemove, isBlocked, newName } = options.updateChannelInlineReqJson;
+
+    let channel;
+    if (mongooseObjectIdRegex.test(identifier)) {
+      //it's an ObjectId
+    } else if (channelNameRegex.test(identifier)) {
+      //it's a name
+    } else {
+      return {
+        status: 400,
+        data: { error: "Invalid identifier" },
+      };
+    }
   },
 };

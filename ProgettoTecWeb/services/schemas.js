@@ -24,6 +24,15 @@ const keywordRegex = /^[a-zA-Z0-9]{4,20}$/;
 
 const mongooseObjectIdRegex = /^[0-9a-fA-F]{24}$/;
 
+// Notification
+const NotificationSchema = new mongoose.Schema({
+  isUnseen: { type: Boolean, default: true },
+  created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+  content: { type: String, default: "" },
+  squeal_ref: { type: mongoose.Types.ObjectId, ref: "Squeal" },
+});
+const Notification = mongoose.model("Notification", NotificationSchema);
+
 // User
 const UserSchema = new mongoose.Schema({
   //_id: { type: mongoose.Types.ObjectId },
@@ -58,14 +67,7 @@ const UserSchema = new mongoose.Schema({
     muted_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
   },
   notifications: {
-    type: [
-      {
-        isUnseen: { type: Boolean, default: true },
-        created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
-        content: { type: String, default: "" },
-        squeal_ref: { type: mongoose.Types.ObjectId, ref: "Squeal" },
-      },
-    ],
+    type: [{ type: mongoose.Types.ObjectId, ref: "Notification" }],
     default: [],
   },
   isActive: { type: Boolean, default: true },
@@ -91,11 +93,11 @@ const SquealSchema = new mongoose.Schema({
     positive_reactions: { type: Number, default: 0 },
     negative_reaction: { type: Number, default: 0 },
     like: { type: Number, default: 0 },
-    laugh: { type: Number, default: 0 },
     love: { type: Number, default: 0 },
+    laugh: { type: Number, default: 0 },
     dislike: { type: Number, default: 0 },
-    disagree: { type: Number, default: 0 },
     disgust: { type: Number, default: 0 },
+    disagree: { type: Number, default: 0 },
   },
   impressions: { type: Number, default: 0 },
 });
@@ -119,6 +121,7 @@ const ChannelSchema = new mongoose.Schema({
   created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
   squeals: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
   subscribers: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
+  isBlocked: { type: Boolean, default: false },
 });
 
 const Channel = mongoose.model("Channel", ChannelSchema);
@@ -132,4 +135,127 @@ const KeywordSchema = new mongoose.Schema({
 });
 const Keyword = mongoose.model("Keyword", KeywordSchema);
 
-module.exports = { User, Squeal, Channel, Keyword, usernameRegex, channelNameRegex, officialChannelNameRegex, keywordRegex, mongooseObjectIdRegex };
+//FINDERS
+
+async function findUser(identifier) {
+  let response = {};
+  if (mongooseObjectIdRegex.test(identifier)) {
+    //it's a mongoose ObjectId
+    response.data = await User.findById(identifier);
+  } else if (usernameRegex.test(identifier)) {
+    //it's a username
+    response.data = await User.findOne({ username: identifier });
+  } else {
+    response.error = "Invalid identifier";
+    response.status = 400;
+    return response;
+  }
+  if (!response.data) {
+    response.error = "User not found";
+    response.status = 404;
+  } else {
+    response.error = "";
+    response.status = 200;
+  }
+  return response;
+}
+
+async function findSqueal(identifier) {
+  let response = {};
+  if (mongooseObjectIdRegex.test(identifier)) {
+    //it's a mongoose ObjectId
+    response.data = await Squeal.findById(identifier);
+  } else {
+    response.error = "Invalid identifier";
+    response.status = 400;
+    return response;
+  }
+  if (!response.data) {
+    response.error = "Squeal not found";
+    response.status = 404;
+  } else {
+    response.error = "";
+    response.status = 200;
+  }
+  return response;
+}
+
+async function findChannel(identifier) {
+  let response = {};
+  if (mongooseObjectIdRegex.test(identifier)) {
+    //it's a mongoose ObjectId
+    response.data = await Channel.findById(identifier);
+  } else if (channelNameRegex.test(identifier)) {
+    //it's a channel name
+    response.data = await Channel.findOne({ name: identifier });
+  } else {
+    response.error = "Invalid identifier";
+    response.status = 400;
+    return response;
+  }
+  if (!response.data) {
+    response.error = "Channel not found";
+    response.status = 404;
+  } else {
+    response.error = "";
+    response.status = 200;
+  }
+  return response;
+}
+
+async function findKeyword(identifier) {
+  let response = {};
+  if (keywordRegex.test(identifier)) {
+    //it's a keyword
+    response.data = await Keyword.findOne({ name: identifier });
+  } else {
+    response.error = "Invalid identifier";
+    response.status = 400;
+  }
+  if (!response.data) {
+    response.error = "Keyword not found";
+    response.status = 404;
+  } else {
+    response.error = "";
+    response.status = 200;
+  }
+  return response;
+}
+
+async function findNotification(identifier) {
+  let response = {};
+  if (mongooseObjectIdRegex.test(identifier)) {
+    //it's a mongoose ObjectId
+    response.data = await Notification.findById(identifier);
+  } else {
+    response.error = "Invalid identifier";
+    response.status = 400;
+    return response;
+  }
+  if (!response.data) {
+    response.error = "Notification not found";
+    response.status = 404;
+  } else {
+    response.error = "";
+    response.status = 200;
+  }
+  return response;
+}
+
+module.exports = {
+  Notification,
+  User,
+  Squeal,
+  Channel,
+  Keyword,
+  usernameRegex,
+  channelNameRegex,
+  officialChannelNameRegex,
+  keywordRegex,
+  mongooseObjectIdRegex,
+  findUser,
+  findSqueal,
+  findChannel,
+  findKeyword,
+  findNotification,
+};
