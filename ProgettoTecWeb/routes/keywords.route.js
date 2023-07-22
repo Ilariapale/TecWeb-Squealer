@@ -3,20 +3,9 @@ const keywords = require("../services/keywords");
 const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
-router.post("/", async (req, res, next) => {
-  let options = {};
-
-  options.keywordInput = req.body;
-
-  try {
-    const result = await keywords.createKeyword(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
-  }
-});
+//^^^ ---------------- NO AUTH ---------------- ^^^
+router.use(verifyToken);
+//vvv ----------------- AUTH ------------------ vvv
 
 router.get("/:identifier", async (req, res, next) => {
   let options = {
@@ -25,6 +14,21 @@ router.get("/:identifier", async (req, res, next) => {
 
   try {
     const result = await keywords.getKeyword(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
+router.post("/", async (req, res, next) => {
+  let options = {};
+
+  options.keywordInput = req.body;
+
+  try {
+    const result = await keywords.createKeyword(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     return res.status(500).send({

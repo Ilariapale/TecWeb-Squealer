@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const config = require("../config");
 
 const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
 /**
@@ -25,23 +26,6 @@ const keywordRegex = /^[a-zA-Z0-9]{4,20}$/;
 const mongooseObjectIdRegex = /^[0-9a-fA-F]{24}$/;
 
 const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-
-const securityLvl = 10;
-
-//middleware for token verification
-function verifyToken(req, res, next) {
-  const token = req.headers.authorization;
-  if (!token) {
-    return res.status(401).json({ error: "Token mancante." });
-  }
-  jwt.verify(token, "chiave_segreta", (err, decodedToken) => {
-    if (err) {
-      return res.status(401).json({ error: "Token non valido o scaduto." });
-    }
-    req.userId = decodedToken.userId;
-    next();
-  });
-}
 
 //FINDERS
 async function findUser(identifier) {
@@ -155,6 +139,34 @@ async function findNotification(identifier) {
   return response;
 }
 
+//TOKEN FUNCTIONS
+function generateToken(userId) {
+  const payload = { userId };
+  const secretKey = config.secretKey; // Sostituisci con una chiave segreta robusta e casuale
+
+  // Crea il token con una data di scadenza (1 ora in questo esempio)
+  const token = jwt.sign(payload, secretKey, { expiresIn: config.tokenExpireTime });
+
+  return token;
+}
+
+function verifyToken(req, res, next) {
+  console.log("Token needed");
+  const token = req.headers.authorization;
+  if (!token) {
+    return res.status(401).json({ error: "Missing Token" });
+  }
+  jwt.verify(token, config.secretKey, (err, decodedToken) => {
+    if (err) {
+      return res.status(401).json({ error: "Invalid or expired " });
+    }
+    console.log("Token valido");
+    console.log(decodedToken);
+    req.userId = decodedToken.userId;
+    next();
+  });
+}
+
 module.exports = {
   jwt,
   bcrypt,
@@ -164,6 +176,8 @@ module.exports = {
   findChannel,
   findKeyword,
   findNotification,
+  verifyToken,
+  generateToken,
   usernameRegex,
   channelNameRegex,
   officialChannelNameRegex,

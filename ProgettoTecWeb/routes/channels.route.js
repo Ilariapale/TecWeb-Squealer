@@ -3,6 +3,45 @@ const channels = require("../services/channels");
 const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
+router.get("/official", async (req, res, next) => {
+  //TODO canali ufficiali
+  let options = {
+    name: req.query.name,
+    createdAfter: req.query.createdAfter,
+    createdBefore: req.query.createdBefore,
+    isOfficial: req.query.isOfficial,
+  };
+
+  try {
+    const result = await channels.getChannels(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
+router.get("/official/:identifier", async (req, res, next) => {
+  //TODO canali ufficiali
+  let options = {
+    identifier: req.params.identifier,
+  };
+
+  try {
+    const result = await channels.getChannel(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
+//^^^ ---------------- NO AUTH ---------------- ^^^
+router.use(verifyToken);
+//vvv ----------------- AUTH ------------------ vvv
+
 router.get("/", async (req, res, next) => {
   let options = {
     name: req.query.name,
@@ -21,13 +60,13 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
-  let options = {};
-
-  options.channelInput = req.body;
+router.get("/:identifier", async (req, res, next) => {
+  let options = {
+    identifier: req.params.identifier,
+  };
 
   try {
-    const result = await channels.createChannel(options);
+    const result = await channels.getChannel(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     return res.status(500).send({
@@ -36,13 +75,13 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.get("/:identifier", async (req, res, next) => {
-  let options = {
-    identifier: req.params.identifier,
-  };
+router.post("/", async (req, res, next) => {
+  let options = {};
+
+  options.channelInput = req.body;
 
   try {
-    const result = await channels.getChannel(options);
+    const result = await channels.createChannel(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
     return res.status(500).send({

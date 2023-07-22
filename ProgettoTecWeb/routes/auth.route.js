@@ -7,7 +7,12 @@ router.post("/", async (req, res, next) => {
   const { username, password } = req.body;
   try {
     const result = await auth.login({ username, password });
-    res.status(result.status).send(result.data);
+    if (result.status === 200 && result.data.token) {
+      // Se l'autenticazione ha avuto successo e il token è presente nei dati
+      // Imposta l'intestazione Authorization nella risposta
+      res.setHeader("Authorization", `Bearer ${result.data.token}`);
+    }
+    res.status(result.status).json({ message: "User successfully logged in" });
   } catch (err) {
     return res.status(500).send({
       error: err || "Something went wrong.",

@@ -26,6 +26,24 @@ const { stringify } = require("querystring");
    });
  }
 */
+router.post("/", async (req, res, next) => {
+  // Crea un oggetto `options` con i dati
+  const options = { userInput: req.body };
+  try {
+    // Esegue la chiamata all'API `users.createUser`
+    const result = await users.createUser(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    // Registra l'errore
+    console.error(err);
+    return res.status(500).send(err.message);
+  }
+});
+
+//^^^ ---------------- NO AUTH ---------------- ^^^
+router.use(verifyToken);
+//vvv ----------------- AUTH ------------------ vvv
+
 router.get("/", async (req, res, next) => {
   let options = {
     createdAfter: req.query.createdAfter,
@@ -41,20 +59,6 @@ router.get("/", async (req, res, next) => {
     return res.status(500).send({
       error: err || "Something went wrong.",
     });
-  }
-});
-
-router.post("/", async (req, res, next) => {
-  // Crea un oggetto `options` con i dati
-  const options = { userInput: req.body };
-  try {
-    // Esegue la chiamata all'API `users.createUser`
-    const result = await users.createUser(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    // Registra l'errore
-    console.error(err);
-    return res.status(500).send(err.message);
   }
 });
 

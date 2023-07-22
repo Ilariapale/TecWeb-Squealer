@@ -9,26 +9,17 @@ const {
   keywordRegex,
   mongooseObjectIdRegex,
   emailRegex,
-  securityLvl,
   findUser,
   findSqueal,
   findChannel,
   findKeyword,
   findNotification,
+  generateToken,
+  verifyToken,
 } = require("./utils");
-const config = require("../config");
 
 module.exports = {
   // Funzione di login
-  generateToken: (userId) => {
-    const payload = { userId };
-    const secretKey = config.secretKey; // Sostituisci con una chiave segreta robusta e casuale
-
-    // Crea il token con una data di scadenza (1 ora in questo esempio)
-    const token = jwt.sign(payload, secretKey, { expiresIn: config.tokenExpireTime });
-
-    return token;
-  },
 
   login: async (options) => {
     const { username, password } = options; //Username can be both username or email
@@ -74,10 +65,10 @@ module.exports = {
         data: { error: "wrong credentials" },
       };
     }
-    const token = module.exports.generateToken(username); // Funzione per generare il token JWT (da implementare)
+    const token = generateToken(username); // Funzione per generare il token JWT (da implementare)
     return {
       status: 200,
-      // data: { token },
+      data: { token },
     };
   },
 };
