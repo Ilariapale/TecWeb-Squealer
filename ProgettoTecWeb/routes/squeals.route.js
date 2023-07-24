@@ -2,14 +2,22 @@ const express = require("express");
 const squeals = require("../services/squeals");
 const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
-router.get("/official", async (req, res, next) => {
-  //TODO squeal di canali ufficiali
+//TODO fare in modo che un utente non attivo non possa reagire agli squeal
+router.get("/", verifyToken, async (req, res, next) => {
+  let filterOfficialOnly = req.query.isInOfficialChannel;
+
+  //if user is not logged in, filter only official channels
+  if (!req.isTokenValid) {
+    filterOfficialOnly = true;
+  }
+
   let options = {
     contentType: req.query.contentType,
     createdAfter: req.query.createdAfter,
     createdBefore: req.query.createdBefore,
     isScheduled: req.query.isScheduled,
     minReactions: req.query.minReactions,
+    isInOfficialChannel: filterOfficialOnly,
   };
 
   try {
@@ -22,10 +30,16 @@ router.get("/official", async (req, res, next) => {
   }
 });
 
-router.get("/official/:identifier", async (req, res, next) => {
-  //TODO squeal di canali ufficiali
+router.get("/:identifier", verifyToken, async (req, res, next) => {
+  //if user is not logged in, filter only official channels
+  let filterOfficialOnly = false;
+  if (!req.isTokenValid) {
+    filterOfficialOnly = true;
+  }
+
   let options = {
     identifier: req.params.identifier,
+    isInOfficialChannel: req.query.isInOfficialChannel,
   };
 
   try {
@@ -38,126 +52,92 @@ router.get("/official/:identifier", async (req, res, next) => {
   }
 });
 
-//^^^ ---------------- NO AUTH ---------------- ^^^
-router.use(verifyToken);
-//vvv ----------------- AUTH ------------------ vvv
+router.post("/", verifyToken, async (req, res) => {
+  // Verifica la proprietà req.utenteLoggato per decidere come gestire la richiesta
+  if (req.isTokenValid) {
+    // Utente loggato, gestisci la richiesta come vuoi
+    let options = {};
+    options.squealInput = req.body;
+    options.squealInput.sender_id = req.user_id;
 
-router.get("/", async (req, res, next) => {
-  let options = {
-    contentType: req.query.contentType,
-    createdAfter: req.query.createdAfter,
-    createdBefore: req.query.createdBefore,
-    isScheduled: req.query.isScheduled,
-    minReactions: req.query.minReactions,
-  };
-
-  try {
-    const result = await squeals.getSqueals(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
+    try {
+      const result = await squeals.createSqueal(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    // Utente non loggato, invia una risposta di errore o reindirizza alla pagina di login
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
   }
 });
 
-router.get("/:identifier", async (req, res, next) => {
-  let options = {
-    identifier: req.params.identifier,
-  };
-
-  try {
-    const result = await squeals.getSqueal(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
+router.delete("/:identifier", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
+    console.log(options);
+    try {
+      const result = await squeals.deleteSqueal(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
   }
 });
 
-router.post("/", async (req, res, next) => {
-  let options = {};
+router.patch("/:identifier/:reaction", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      reaction: req.params.reaction,
+      user_id: req.user_id,
+    };
 
-  options.squealInput = req.body;
-
-  try {
-    const result = await squeals.createSqueal(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
+    try {
+      const result = await squeals.addReaction(options);
+      //TODO reactSqueal
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
   }
 });
 
-router.delete("/:identifier", async (req, res, next) => {
-  let options = {
-    identifier: req.params.identifier,
-  };
+router.patch("/:identifier", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
 
-  try {
-    const result = await squeals.deleteSqueal(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
+    options.updateSquealInlineReqJson = req.body;
+
+    try {
+      const result = await squeals.updateSqueal(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
   }
 });
 
-router.patch("/:identifier/:reaction", async (req, res, next) => {
-  //TODO reaction
-  let options = {
-    identifier: req.params.identifier,
-    reaction: req.params.reaction,
-  };
-
-  options.squealInput = req.body;
-
-  try {
-    const result = await squeals.reactSqueal(options);
-    //TODO reactSqual
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
-  }
-});
-
-router.patch("/:identifier", async (req, res, next) => {
-  let options = {
-    identifier: req.params.identifier,
-  };
-
-  options.updateSquealInlineReqJson = req.body;
-
-  try {
-    const result = await squeals.updateSqueal(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
-  }
-});
-
-router.patch("/:identifier/reactions", async (req, res, next) => {
-  let options = {
-    identifier: req.params.identifier,
-  };
-
-  options.updateSquealReactionsReqJson = req.body;
-
-  try {
-    const result = await squeals.updateSquealReactions(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
-  }
-});
-
+//TODO Mod che aggiunge uno squeal ai canali ufficiali
+//TODO creazione di canali ufficiali solo per i mod
 module.exports = router;

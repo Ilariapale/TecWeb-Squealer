@@ -9,7 +9,7 @@ router.get("/official", async (req, res, next) => {
     name: req.query.name,
     createdAfter: req.query.createdAfter,
     createdBefore: req.query.createdBefore,
-    isOfficial: req.query.isOfficial,
+    isOfficial: req.query.is_official,
   };
 
   try {
@@ -26,6 +26,7 @@ router.get("/official/:identifier", async (req, res, next) => {
   //TODO canali ufficiali
   let options = {
     identifier: req.params.identifier,
+    is_official: true,
   };
 
   try {
@@ -47,7 +48,7 @@ router.get("/", async (req, res, next) => {
     name: req.query.name,
     createdAfter: req.query.createdAfter,
     createdBefore: req.query.createdBefore,
-    isOfficial: req.query.isOfficial,
+    isOfficial: req.query.is_official,
   };
 
   try {

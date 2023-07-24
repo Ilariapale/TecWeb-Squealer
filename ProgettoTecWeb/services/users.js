@@ -17,7 +17,7 @@ const {
 } = require("./utils");
 const welcomeNotification = "Welcome to Squealer! Check out your first squeal by clicking on the notification.";
 //--------------------------------------------------------------------------
-
+//TODO funzione per cambiare il tipo di account e funzione per impostare il SMM
 module.exports = {
   /**
    * Get users list filtering by creationDate and squeals count
@@ -25,10 +25,10 @@ module.exports = {
    * @param options.createdBefore Filter users created before the specified date
    * @param options.maxSquealsCount Filters users with less than the specified number of squeals
    * @param options.minSquealsCount Filters users with more than the specified number of squeals
+   * @param options.user_id Request sender's user id
    **/
   getUserList: async (options) => {
     const pipeline = [];
-
     //TODO controllare che le date siano valide
     //check if the request has specified createdAfter or createdBefore
     if (options.createdAfter) {
@@ -65,13 +65,31 @@ module.exports = {
       }
       pipeline.push({ $match: { squeals: { $exists: true, $expr: { $size: sizeMatch } } } });
     }
-    pipeline.push({ $match: { isActive: true } });
+
+    //check for the request sender's role
+    let response = await findUser(options.user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const reqSender = response.data;
+
+    //If the request sender is not a moderator, filter the inactive users
+    if (!reqSender.role === "moderator") {
+      pipeline.push({ $match: { is_active: true } });
+    }
+    if (pipeline.length == 0) {
+      pipeline.push({ $match: {} });
+    }
 
     //execute the query
     const data = await User.aggregate(pipeline).exec();
+
     //check if the query returned any result
     if (data.length <= 0) {
-      // return an error
       return {
         status: 404,
         data: { error: "No users found." },
@@ -137,31 +155,29 @@ module.exports = {
         content_type: "text",
         content: "Welcome to Squealer, " + user.username + "!",
         created_at: Date.now(),
+        last_modified: Date.now(),
       });
       const firstSqueal = await newSqueal.save();
 
       //create the notification and save it
+      //TODO quando creiamo uno squeal, mandare la notifica ai destinatari
       const newNotification = new Notification({
         squeal_ref: firstSqueal._id,
+        user_id: user._id,
         created_at: Date.now(),
         content: welcomeNotification,
       });
       const notification = await newNotification.save();
 
-      // Update the user with the new squeal and the new notification
-      const response = await User.findByIdAndUpdate(
-        user._id,
-        {
-          $push: { squeals: firstSqueal._id },
-          $push: { notifications: notification._id },
-        },
-        { new: true }
-      );
+      user.squeals.posted.push(firstSqueal._id);
+      user.notifications.push(notification._id);
+
+      await user.save();
 
       // return the new user
       return {
-        status: response ? 201 : 400,
-        data: response ? response : { error: "Failed to create user" },
+        status: user ? 201 : 400,
+        data: user ? user : { error: "Failed to create user" },
       };
     } catch (error) {
       //Handling mongoose errors
@@ -182,7 +198,6 @@ module.exports = {
         };
       } else {
         // generic or unknown error
-        console.error(error);
         throw new Error("Failed to create user");
       }
     }
@@ -191,181 +206,332 @@ module.exports = {
   /**
    * Get a user object by ID or by username, or user profile
    * @param options.identifier User's identifier, can be either username or userId
+   * @param options.user_id Request sender's user id
+   * @param options.isTokenValid True if the token is valid, false otherwise
    */
   getUser: async (options) => {
-    //TODO RIFARE ASSOLUTAMENTE
-    const { identifier } = options;
-    var response;
-    // Check if the required fields are present
-    if (!identifier) {
+    const { identifier, user_id } = options;
+    let response = await findUser(identifier);
+    if (response.status >= 300) {
+      // If the response is an error, return the error message
       return {
-        status: 400,
-        data: { error: "User identifier is required." },
+        status: response.status,
+        data: { error: response.error },
       };
     }
-    try {
-      response = await findUser(identifier);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-    } catch (err) {
-      // if an error occurs, return an error
-      throw new Error("Failed to get user. Please try again later.");
+    const user = response.data;
+    // Create a public user object with limited properties
+    const publicUser = {
+      _id: user._id,
+      username: user.username,
+      created_at: user.created_at,
+      profile_info: user.profile_info,
+      profile_picture: user.profile_picture,
+    };
+
+    // Check if the request sender exists
+    response = await findUser(user_id);
+    if (response.status >= 300) {
+      // If the response is an error, return the public user if the main user is active,
+      // otherwise return "User not found" error
+      return user.is_active ? { status: 200, data: publicUser } : { status: 404, data: { error: "User not found." } };
+    }
+    const reqSender = response.data;
+
+    // If the main user is inactive and the request sender is not a moderator,
+    // return "User not found" error
+    if (!user.is_active && reqSender.account_type !== "moderator") {
+      return { status: 404, data: { error: "User not found." } };
     }
 
-    return {
-      status: 200,
-      data: response.data,
-    };
+    // Otherwise, return the full user if the main user is active or the request sender is a moderator,
+    // otherwise return "User not found" error
+    return { status: 200, data: user.is_active || reqSender.account_type === "moderator" ? user : publicUser };
   },
 
   /**
    *  Delete a user object by ID or by username
    * @param options.identifier User's identifier, can be either username or userId
+   * @param options.user_id Request sender's user id
    */
   deleteUser: async (options) => {
-    //TODO decidere se cancellare anche i post e o i canali che ha creato
     // Check if the required fields are present
 
-    const { identifier } = options;
-    if (!identifier) {
+    const { identifier, user_id } = options;
+
+    let response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
       return {
-        status: 400,
-        data: { error: "User identifier is required." },
+        status: response.status,
+        data: { error: response.error },
       };
     }
-    var deletedUser;
-    try {
-      //check weather the identifier is a valid ObjectId or a username
-      // if (mongooseObjectIdRegex.test(identifier)) {
-      //   deletedUser = await User.findById(identifier);
-      // } else if (usernameRegex.test(identifier)) {
-      //   deletedUser = await User.findOne({ username: identifier });
-      // } else {
-      //   //otherwise return an error
-      //   return {
-      //     status: 400,
-      //     data: { error: "Invalid identifier" },
-      //   };
-      // }
+    const userToDelete = response.data;
 
-      let response = await findUser(identifier);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-
-      deletedUser = response.data;
-
-      //----------------------------------------------------------------------------------------------------------------------
-      // Removing all the references to the user from the other collections
-
-      const postedSqueals = deletedUser.squeals.posted;
-      const scheduledSqueals = deletedUser.squeals.scheduled;
-
-      await Promise.all(
-        //squeal by squeal
-        postedSqueals.map(async (squeal) => {
-          // Remove the reference of the squeal from the "squeals" array of all the users
-          await User.updateMany({}, { $pull: { mentioned_in: squeal } });
-
-          // Remove the reference of the squeal from the "squeals" array of all the channels
-          await Channel.updateMany({}, { $pull: { squeals: squeal } });
-
-          // Remove the reference of the squeal from the "squeals" array of all the keywords
-          await Keyword.updateMany({}, { $pull: { squeals: squeal } });
-
-          // Remove the squeal from the database
-          await Squeal.findByIdAndRemove(squeal);
-        })
-      );
-      // remove the reference of the user from the "recipients.users" array of all the squeals
-      await Squeal.updateMany({}, { $pull: { "recipients.users": deletedUser._id } });
-      await Channel.updateMany({});
-      // trova tutte le notifiche associate all'utente
-      const notifications = deletedUser.notifications;
-
-      await Promise.all(
-        // Notification by notification
-        notifications.map(async (notification) => {
-          // Remove the notification from the database
-          await Notification.findByIdAndRemove(notification);
-        })
-      );
-
-      // Set the user as inactive and change the username to the _id
-      //await User.findByIdAndUpdate(utenteId, { $set: { isActive: false }, $set: { username: deletedUser._id } });
-      //await User.findByIdAndRemove(deletedUser._id);
-      await deletedUser.deleteOne();
+    // Check if the request sender exists
+    response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
       return {
-        status: 200,
-        data: { message: "User deleted successfully" },
+        status: response.status,
+        data: { error: "User id in token is not valid" },
       };
-
-      //----------------------------------------------------------------------------------------------------------------------
-    } catch (err) {
-      // if an error occurs, return an error
-      throw new Error("Failed to delete user. Please try again later.");
     }
+    const reqSender = response.data;
+    console.log(identifier, " ", user_id);
+    console.log(reqSender._id, " ", userToDelete._id);
+    if (!reqSender._id.equals(userToDelete._id)) {
+      return {
+        status: 403,
+        data: { error: "You can't delete another user" },
+      };
+    }
+
+    //----------------------------------------------------------------------------------------------------------------------
+    // Removing all the references to the user from the other collections
+
+    const postedSqueals = userToDelete.squeals.posted;
+    //const scheduledSqueals = userToDelete.squeals.scheduled;
+
+    await Promise.all(
+      //squeal by squeal
+      postedSqueals.map(async (squeal) => {
+        // Remove the reference of the squeal from the "squeals" array of all the users
+        await User.updateMany({}, { $pull: { mentioned_in: squeal } });
+
+        // Remove the reference of the squeal from the "squeals" array of all the channels
+        await Channel.updateMany({}, { $pull: { squeals: squeal } });
+
+        // Remove the reference of the squeal from the "squeals" array of all the keywords
+        await Keyword.updateMany({}, { $pull: { squeals: squeal } });
+
+        // Remove the squeal from the database
+        await Squeal.findByIdAndRemove(squeal);
+      })
+    );
+    // remove the reference of the user from the "recipients.users" array of all the squeals
+    await Squeal.updateMany({}, { $pull: { "recipients.users": userToDelete._id } });
+    await Channel.updateMany({});
+    // trova tutte le notifiche associate all'utente
+    const notifications = userToDelete.notifications;
+
+    await Promise.all(
+      // Notification by notification
+      notifications.map(async (notification) => {
+        // Remove the notification from the database
+        await Notification.findByIdAndRemove(notification);
+      })
+    );
+
+    // Remove the user from the Creators array of all the channels he crated
+
+    const channels = userToDelete.created_channels;
+
+    await Promise.all(
+      // Channel by channel
+      channels.map(async (channel) => {
+        // Remove the channel from the database
+        await Channel.findByIdAndUpdate(channel, { $pull: { creators: userToDelete._id } });
+      })
+    );
+    // Set the user as inactive and change the username to the _id
+    //await User.findByIdAndUpdate(utenteId, { $set: { is_active: false }, $set: { username: userToDelete._id } });
+    //await User.findByIdAndRemove(userToDelete._id);
+    await userToDelete.deleteOne();
+    return {
+      status: 200,
+      data: { message: "User deleted successfully" },
+    };
+
+    //----------------------------------------------------------------------------------------------------------------------
   },
 
   /**
-   *
    * @param options.identifier User's identifier, can be either username or userId
-   * @param options.updateProfileInlineReqJson.password New user's password
    * @param options.updateProfileInlineReqJson.profile_info New user's profile info
    * @param options.updateProfileInlineReqJson.profile_picture new user's profile picture
+   * @param options.user_id Request sender's user id
    */
   updateProfile: async (options) => {
-    const { identifier, updateProfileInlineReqJson } = options;
+    const { identifier, user_id } = options;
+    const { profile_info, profile_picture } = options.updateProfileInlineReqJson;
     // Check if the required fields are present
-    if (!identifier) {
-      return {
-        status: 400,
-        data: { error: "User identifier is required." },
-      };
-    }
-    if (!updateProfileInlineReqJson.password && !updateProfileInlineReqJson.profile_info && !updateProfileInlineReqJson.profile_picture) {
+    if (!profile_info && !profile_picture) {
       return {
         status: 400,
         data: { error: "No fields to update" },
       };
     }
-    try {
-      let updatedUser;
-      // Check if the identifier is a valid ObjectId or a username
-      if (mongooseObjectIdRegex.test(identifier)) {
-        updatedUser = await User.findByIdAndUpdate(identifier, { $set: updateProfileInlineReqJson }, { new: true });
-      } else if (usernameRegex.test(identifier)) {
-        updatedUser = await User.findOneAndUpdate({ username: identifier }, { $set: updateProfileInlineReqJson }, { new: true });
-      } else {
-        // Otherwise return an error
-        return {
-          status: 400,
-          data: { error: "Invalid identifier" },
-        };
-      }
-      // Check if the user exists, otherwise return an error
-      if (!updatedUser) {
-        return {
-          status: 404,
-          data: { error: "User not found." },
-        };
-      }
-      // Return the result
+
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
       return {
-        status: 200,
-        data: updatedUser,
+        status: response.status,
+        data: { error: "User id in token is not valid" },
       };
-    } catch (err) {
-      throw new Error("Failed to update user. Please try again later.");
     }
+    const reqSender = response.data;
+
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const userToUpdate = response.data;
+
+    if (!reqSender._id.equals(userToUpdate._id)) {
+      return {
+        status: 403,
+        data: { error: "You can't update another user" },
+      };
+    }
+
+    if (profile_info) {
+      userToUpdate.profile_info = profile_info;
+    }
+    if (profile_picture) {
+      userToUpdate.profile_picture = profile_picture;
+    }
+    const updatedUser = userToUpdate.save();
+
+    // Return the result
+    return {
+      status: 200,
+      data: updatedUser,
+    };
+  },
+
+  /**
+   * @param options.updateProfileInlineReqJson.newPassword New user's password
+   * @param options.updateProfileInlineReqJson.oldPassword Old user's password
+   * @param options.identifier User's identifier, can be either username or userId
+   * @param options.user_id Request sender's user id
+   */
+  updatePassword: async (options) => {
+    const { identifier, user_id } = options;
+    const { newPassword, oldPassword } = options?.updateProfileInlineReqJson || {};
+
+    // Check if the required fields are present
+    if (!newPassword || !oldPassword) {
+      return {
+        status: 400,
+        data: { error: "Old password and new password are required" },
+      };
+    }
+
+    //controllare che gli utenti esistano
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: "User id in token is not valid" },
+      };
+    }
+    const reqSender = response.data;
+
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const userToUpdate = response.data;
+
+    //check if the request sender is the user to update
+    if (!reqSender._id.equals(userToUpdate._id)) {
+      return {
+        status: 403,
+        data: { error: "You can't update another user" },
+      };
+    }
+
+    //check if the old password is valid
+    const isPasswordValid = await bcrypt.compare(oldPassword, userToUpdate.password);
+    if (!isPasswordValid) {
+      return {
+        status: 400,
+        data: { error: "Old password is not valid" },
+      };
+    }
+
+    //replace the old password with the new one
+    const salt = await bcrypt.genSalt(securityLvl);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    userToUpdate.password = hashedPassword;
+
+    //save the updated user
+    const updatedUser = await userToUpdate.save();
+
+    // Return the result
+    return {
+      status: 200,
+      data: updatedUser,
+    };
+  },
+
+  /**
+   * Toggle is_active field in user object, means that the user is active or not: if the user is banned, he's not active
+   * @param options.identifier User's identifier, can be either username or userId
+   * @param options.user_id Request sender's user id
+   */
+  toggleProfileActiveStatus: async (options) => {
+    //TODO utilizzare select quando abbiamo bisogno di un solo campo e non tutto l'oggetto
+    const { identifier, user_id } = options;
+
+    // Check if the required fields are present
+    if (!identifier) {
+      return {
+        status: 400,
+        data: { error: "User identifier is required" },
+      };
+    }
+
+    //controllare che gli utenti esistano
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: "User id in token is not valid" },
+      };
+    }
+    const reqSender = response.data;
+
+    //check if the request sender is a moderator
+    if (reqSender.account_type !== "moderator") {
+      return {
+        status: 403,
+        data: { error: "You can't update another user" },
+      };
+    }
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const userToUpdate = response.data;
+
+    //toggle the is_active field
+    userToUpdate.is_active = !userToUpdate.is_active;
+
+    //save the updated user
+    const updatedUser = await userToUpdate.save();
+
+    // Return the result
+    return {
+      status: 200,
+      data: updatedUser,
+    };
   },
 };

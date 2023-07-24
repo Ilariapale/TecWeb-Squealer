@@ -13,12 +13,14 @@ const {
   findNotification,
 } = require("./utils");
 module.exports = {
+  //TODO funzione per silenziare e riattivare un canale
+  //TODO funzione per iscrivermi e disiscrivermi un canale
   /**
    * Retrieve channels with optional filters
    * @param options.name Filter channels by name
    * @param options.createdAfter Filter channels created after the specified date
    * @param options.createdBefore Filter channels created before the specified date
-   * @param options.isOfficial Filter channels by official status
+   * @param options.is_official Filter channels by official status
    */
   getChannels: async (options) => {
     const { name, createdAfter, createdBefore, isOfficial } = options;
@@ -36,7 +38,7 @@ module.exports = {
     if (isOfficial) {
       pipeline.push({ $match: { is_official: isOfficial } });
     }
-    pipeline.push({ $match: { isBlocked: false } });
+    pipeline.push({ $match: { is_blocked: false } });
 
     //console.log(pipeline);
     const data = await Channel.aggregate(pipeline).exec();
@@ -246,13 +248,13 @@ module.exports = {
   /**
    * @param options.identifier Channel's identifier, can be either the name or the id
    * @param options.updateChannelInlineReqJson.creatorsArray
-   * @param options.updateChannelInlineReqJson.isBlocked
+   * @param options.updateChannelInlineReqJson.is_blocked
    * @param options.updateChannelInlineReqJson.newName
    * @param options.updateChannelInlineReqJson.newDescription
    */
   updateChannel: async (options) => {
     const { identifier } = options;
-    const { creatorsArray, isBlocked, newName, newDescription } = options.updateChannelInlineReqJson;
+    const { creatorsArray, is_blocked, newName, newDescription } = options.updateChannelInlineReqJson;
 
     let response = await findChannel(identifier);
     if (response.status >= 300) {
@@ -264,7 +266,7 @@ module.exports = {
     }
     let channel = response.data;
 
-    if (!creatorsArray && !isBlocked && !newName && !newDescription) {
+    if (!creatorsArray && !is_blocked && !newName && !newDescription) {
       return {
         status: 400,
         data: { error: "No update parameters specified" },
@@ -275,7 +277,7 @@ module.exports = {
     channel.creators = creatorsArray || channel.creators;
     channel.description = newDescription || channel.description;
     //TODO controllare se funziona
-    typeof isBlocked !== "undefinded" ? (channel.isBlocked = isBlocked) : null;
+    typeof is_blocked !== "undefinded" ? (channel.is_blocked = is_blocked) : null;
 
     channel.save();
   },

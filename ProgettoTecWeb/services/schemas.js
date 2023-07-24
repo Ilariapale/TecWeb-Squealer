@@ -8,6 +8,7 @@ const NotificationSchema = new mongoose.Schema({
   created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
   content: { type: String, default: "" },
   squeal_ref: { type: mongoose.Types.ObjectId, ref: "Squeal" },
+  user_ref: { type: mongoose.Types.ObjectId, ref: "User" },
 });
 const Notification = mongoose.model("Notification", NotificationSchema);
 
@@ -24,6 +25,7 @@ const UserSchema = new mongoose.Schema({
     posted: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     scheduled: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     mentionedIn: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
+    reactedTo: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] }, //TODO aggiornare la funzione di cancellazione di un profilo per rimuovere reactedTo
   },
   char_quota: {
     daily: { type: Number, default: 100 },
@@ -48,8 +50,12 @@ const UserSchema = new mongoose.Schema({
     type: [{ type: mongoose.Types.ObjectId, ref: "Notification" }],
     default: [],
   },
-  isActive: { type: Boolean, default: true },
+  is_active: { type: Boolean, default: true },
 });
+/*
+UserSchema.pre(["deleteOne", "deleteMany"], async function (next) {
+  next();
+});*/
 const User = mongoose.model("User", UserSchema);
 
 // Squeal
@@ -58,7 +64,7 @@ const SquealSchema = new mongoose.Schema({
   hex_id: { type: Number, index: true },
   user_id: { type: mongoose.Types.ObjectId, ref: "User", required: true },
   is_scheduled: { type: Boolean, default: false },
-  content_type: { type: String, enum: ["text", "image", "video", "position"], default: "text" },
+  content_type: { type: String, enum: ["text", "image", "video", "position", "deleted"], default: "text" },
   content: { type: String, default: "" },
   recipients: {
     users: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
@@ -66,9 +72,10 @@ const SquealSchema = new mongoose.Schema({
     keywords: { type: [{ type: String }], default: [] },
   },
   created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+  last_modified: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
   reactions: {
     positive_reactions: { type: Number, default: 0 },
-    negative_reaction: { type: Number, default: 0 },
+    negative_reactions: { type: Number, default: 0 },
     like: { type: Number, default: 0 },
     love: { type: Number, default: 0 },
     laugh: { type: Number, default: 0 },
@@ -76,7 +83,14 @@ const SquealSchema = new mongoose.Schema({
     disgust: { type: Number, default: 0 },
     disagree: { type: Number, default: 0 },
   },
+  is_in_official_channel: { type: Boolean, default: false }, //TODO aggiornare questa variabile quando si aggiunge uno squeal ad un canale ufficiale
   impressions: { type: Number, default: 0 },
+});
+SquealSchema.pre("save", function (next) {
+  console.log("pre save squeal");
+  this.reactions.positive_reactions = this.reactions.like + this.reactions.laugh + this.reactions.love;
+  this.reactions.negative_reactions = this.reactions.dislike + this.reactions.disagree + this.reactions.disgust;
+  next();
 });
 const Squeal = mongoose.model("Squeal", SquealSchema);
 
@@ -91,7 +105,7 @@ const ChannelSchema = new mongoose.Schema({
   created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
   squeals: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
   subscribers: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
-  isBlocked: { type: Boolean, default: false },
+  is_blocked: { type: Boolean, default: false },
 });
 const Channel = mongoose.model("Channel", ChannelSchema);
 
@@ -106,18 +120,6 @@ const Keyword = mongoose.model("Keyword", KeywordSchema);
 
 //PRE functions
 
-//TODO controllare se funziona
-SquealSchema.pre(["save", "findOneAndUpdate", "findByIdAndUpdate"], function (next) {
-  console.log("pre save squeal");
-  this.positive_reactions = this.reactions.like + this.reactions.laugh + this.reactions.love;
-  this.negative_reactions = this.reactions.dislike + this.reactions.disagree + this.reactions.disgust;
-  next();
-});
-
-UserSchema.pre(["deleteOne", "deleteMany"], async function (next) {
-  console.log("pre delete user");
-  next();
-});
 //EXPORTS
 module.exports = {
   Notification,
