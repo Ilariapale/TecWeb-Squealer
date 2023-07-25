@@ -33,8 +33,10 @@ const mediaQuota = { image: 125, video: 300, position: 150 }; //char_quota per i
 
 const mentionNotification = (username, message) => `@${username} has mentioned you in a squeal! Check it out!\n${message.substring(0, 30)}...`;
 
-const officialNotification = (username, message, channel) =>
+const officialNotificationAdd = (username, message, channel) =>
   `Congratulations @${username}! Your squeal has been featured on §${channel} channel! Check it out!\n"${message.substring(0, 30)}..."`;
+
+const officialNotificationRemove = (username, message, channel) => `Oh no, @${username}! Your squeal has been removed from §${channel} channel.\n"${message.substring(0, 30)}..."`;
 //FINDERS
 async function findUser(identifier) {
   let response = {};
@@ -94,7 +96,8 @@ async function findSqueal(identifier) {
   };
 }
 
-async function findChannel(identifier) {
+async function findChannel(identifier, includeBlocked = false, includeOfficial = false) {
+  //TODO aggiunto il regex dei canali ufficiali, controllare se va bene ovunque
   let response = {};
   if (!identifier) {
     response.error = "Channel identifier is required.";
@@ -104,7 +107,7 @@ async function findChannel(identifier) {
   if (mongooseObjectIdRegex.test(identifier)) {
     //it's a mongoose ObjectId
     response.data = await Channel.findById(identifier);
-  } else if (channelNameRegex.test(identifier)) {
+  } else if (channelNameRegex.test(identifier) || (includeOfficial && officialChannelNameRegex.test(identifier))) {
     //it's a channel name
     response.data = await Channel.findOne({ name: identifier });
   } else {
@@ -112,11 +115,10 @@ async function findChannel(identifier) {
     response.status = 400;
     return response;
   }
-  if (!response.data || response.data?.is_blocked) {
-    response.error = "Channel not found";
+  if (!response.data || (!includeBlocked && response.data?.is_blocked)) {
     response.status = 404;
+    response.error = "Channel not found";
   } else {
-    response.error = "";
     response.status = 200;
   }
   return response;
@@ -191,22 +193,41 @@ async function checkForAllUsers(userArray) {
 }
 
 async function checkForAllChannels(channelArray) {
+  //TODO commentare questo codice
   if (!channelArray || channelArray.length == 0) return { channelsOutcome: true, channelsArray: [] };
   const channelPromises = channelArray.map((channel) => {
     let query;
-    if (mongooseObjectIdRegex.test(channel)) {
-      query = { _id: channel };
-    } else if (channelNameRegex.test(channel) || officialChannelNameRegex.test(channel)) {
+    if (channelNameRegex.test(channel) || officialChannelNameRegex.test(channel)) {
       query = { name: channel };
+    } else if (mongooseObjectIdRegex.test(channel)) {
+      query = { _id: channel };
     } else {
       return false;
     }
-    return Channel.exists(query);
+    return Channel.findOne(query);
   });
 
   const channelResults = await Promise.all(channelPromises);
-  const allChannelExist = channelResults.every((exists) => exists); // true if all channels exist
-  return { channelsOutcome: allChannelExist, channelsArray: channelResults };
+  const nullAndBlockedIndex = [];
+  channelResults.forEach((item, index) => {
+    if (item === null || item.is_blocked === true) {
+      nullAndBlockedIndex.push(index);
+    }
+  });
+  const allChannelExist = channelResults.every((exists) => exists && exists.is_blocked == false);
+
+  return { channelsOutcome: allChannelExist, channelsArray: channelResults, notFound: nullAndBlockedIndex.map((index) => channelArray[index]) };
+}
+
+async function containsOfficialChannels(channelArray) {
+  //TODO commentare questo codice
+  if (!channelArray || channelArray.length == 0) return false;
+  const channelPromises = channelArray.map((channel) => {
+    return Channel.exists({ _id: channel, is_official: true });
+  });
+  const channelResults = await Promise.all(channelPromises);
+  const containsOfficial = channelResults.some((exists) => exists);
+  return containsOfficial;
 }
 
 function hasEnoughCharQuota(user, contentType, content) {
@@ -292,7 +313,7 @@ async function updateRecipientsUsers(users, squeal) {
         //remove the notification about this squeal and owned by this user
         let notification = await Notification.findOneAndDelete({ squeal_ref: squeal._id, user_ref: removedUser._id });
         removedUser.notifications.pull(notification._id);
-        removedUser.squeals.mentionedIn.pull(squeal._id);
+        removedUser.squeals.mentioned_in.pull(squeal._id);
         await removedUser.save();
       }
     });
@@ -313,7 +334,7 @@ async function updateRecipientsUsers(users, squeal) {
         });
         await newNotification.save();
         addedUser.notifications.push(newNotification._id);
-        addedUser.squeals.mentionedIn.push(squeal._id);
+        addedUser.squeals.mentioned_in.push(squeal._id);
         await addedUser.save();
       }
     });
@@ -346,8 +367,18 @@ async function updateRecipientsChannels(channels, squeal) {
         removedChannel.squeals.pull(squeal._id);
         if (removedChannel.is_official) {
           //if the channel was official, remove the notification sent when the squeal was added to that official channel
-          let notification = await Notification.findOneAndDelete({ squeal_ref: squeal._id, user_ref: squeal.user_id });
-          if (notification) await User.findByIdAndUpdate(squeal.user_id, { $pull: { notifications: notification._id } });
+          //let notification = await Notification.findOneAndDelete({ squeal_ref: squeal._id, user_ref: squeal.user_id });
+          //if (notification) await User.findByIdAndUpdate(squeal.user_id, { $pull: { notifications: notification._id } });
+          //add the remove notification
+          let squealOwner = await User.findById(squeal.user_id).select("username");
+          let removeNotification = new Notification({
+            squeal_ref: squeal._id,
+            created_at: Date.now(),
+            content: officialNotificationRemove(squealOwner.username, squeal.content, removedChannel.name),
+            user_ref: squeal.user_id,
+          });
+          await removeNotification.save();
+          await User.findByIdAndUpdate(squeal.user_id, { $push: { notifications: removeNotification._id } });
         }
         await removedChannel.save();
       }
@@ -365,7 +396,7 @@ async function updateRecipientsChannels(channels, squeal) {
           let notification = new Notification({
             squeal_ref: squeal._id,
             created_at: Date.now(),
-            content: officialNotification(squealOwner.username, squeal.content, addedChannel.name),
+            content: officialNotificationAdd(squealOwner.username, squeal.content, addedChannel.name),
             user_ref: squeal.user_id,
           });
           await notification.save();
@@ -405,6 +436,7 @@ async function updateRecipientsKeywords(keywords, squeal) {
 
       if (addedKeyword) {
         addedKeyword.squeals.push(squeal._id);
+
         await addedKeyword.save();
       } else {
         const newKeyword = new Keyword({
@@ -426,6 +458,8 @@ async function updateRecipientsKeywords(keywords, squeal) {
 }
 
 function addedAndRemoved(oldArray, newArray) {
+  if (!oldArray) oldArray = [];
+  if (!newArray) newArray = [];
   let added = newArray.filter((element) => !oldArray.includes(element));
   let removed = oldArray.filter((element) => !newArray.includes(element));
   return { added, removed };
@@ -502,6 +536,7 @@ module.exports = {
   updateRecipientsUsers,
   updateRecipientsChannels,
   updateRecipientsKeywords,
+  containsOfficialChannels,
   usernameRegex,
   channelNameRegex,
   officialChannelNameRegex,

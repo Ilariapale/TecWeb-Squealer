@@ -172,7 +172,7 @@ router.patch("/:identifier/activestatus", verifyToken, async (req, res, next) =>
       user_id: req.user_id,
     };
 
-    options.updateProfileInlineReqJson = req.body;
+    //options.updateProfileInlineReqJson = req.body;
 
     try {
       const result = await users.toggleProfileActiveStatus(options);

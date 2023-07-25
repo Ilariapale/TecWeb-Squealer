@@ -1,4 +1,3 @@
-//TODO cookies
 //TODO immagini
 
 const express = require("express"),

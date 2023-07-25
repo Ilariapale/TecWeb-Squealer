@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 
 // Notification
 const NotificationSchema = new mongoose.Schema({
-  isUnseen: { type: Boolean, default: true },
+  is_unseen: { type: Boolean, default: true },
   created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
   content: { type: String, default: "" },
   squeal_ref: { type: mongoose.Types.ObjectId, ref: "Squeal" },
@@ -24,8 +24,8 @@ const UserSchema = new mongoose.Schema({
   squeals: {
     posted: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     scheduled: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
-    mentionedIn: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
-    reactedTo: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] }, //TODO aggiornare la funzione di cancellazione di un profilo per rimuovere reactedTo
+    mentioned_in: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
+    reacted_to: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] }, //TODO aggiornare la funzione di cancellazione di un profilo per rimuovere reacted_to
   },
   char_quota: {
     daily: { type: Number, default: 100 },
@@ -83,11 +83,10 @@ const SquealSchema = new mongoose.Schema({
     disgust: { type: Number, default: 0 },
     disagree: { type: Number, default: 0 },
   },
-  is_in_official_channel: { type: Boolean, default: false }, //TODO aggiornare questa variabile quando si aggiunge uno squeal ad un canale ufficiale
+  is_in_official_channel: { type: Boolean, default: false },
   impressions: { type: Number, default: 0 },
 });
 SquealSchema.pre("save", function (next) {
-  console.log("pre save squeal");
   this.reactions.positive_reactions = this.reactions.like + this.reactions.laugh + this.reactions.love;
   this.reactions.negative_reactions = this.reactions.dislike + this.reactions.disagree + this.reactions.disgust;
   next();

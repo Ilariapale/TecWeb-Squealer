@@ -13,6 +13,7 @@ const {
   findNotification,
 } = require("./utils");
 module.exports = {
+  //TODO filtro per prendere gli ultimi "N" squeal
   //TODO funzione per silenziare e riattivare un canale
   //TODO funzione per iscrivermi e disiscrivermi un canale
   /**
@@ -23,7 +24,7 @@ module.exports = {
    * @param options.is_official Filter channels by official status
    */
   getChannels: async (options) => {
-    const { name, createdAfter, createdBefore, isOfficial } = options;
+    const { name, createdAfter, createdBefore, is_Official } = options;
     const pipeline = [];
     if (name) {
       const regex = new RegExp(name, "i");
@@ -35,8 +36,8 @@ module.exports = {
     if (createdBefore) {
       pipeline.push({ $match: { created_at: { $lte: new Date(createdBefore) } } });
     }
-    if (isOfficial) {
-      pipeline.push({ $match: { is_official: isOfficial } });
+    if (is_Official) {
+      pipeline.push({ $match: { is_official: is_Official } });
     }
     pipeline.push({ $match: { is_blocked: false } });
 
@@ -51,25 +52,18 @@ module.exports = {
 
   /**
    * Create a new user
+   * @param options.channelInput.user User that creates the channel
    * @param options.channelInput.can_mute It tells you whether the channel can be muted or not
-   * @param options.channelInput.creator Creator's id, if it is official then the field is empty
    * @param options.channelInput.description Channel's description
    * @param options.channelInput.is_official It tells you whether the channel is official or not
    * @param options.channelInput.name Channel's name
    */
   createChannel: async (options) => {
-    const { can_mute, creator, description, is_official, name } = options.channelInput;
+    const { can_mute, user, description, is_official, name } = options.channelInput;
 
     //TODO controllare i permessi per creare un canale dopo che abbiamo implementato l'autenticazione
-    if (!creator) {
-      return {
-        status: 400,
-        data: { error: "creator is required" },
-      };
-    }
-
     //Check if creator exists
-    let response = await findUser(creator);
+    let response = await findUser(user);
     if (response.status >= 300) {
       //if the response is an error
       return {
@@ -77,7 +71,7 @@ module.exports = {
         data: { error: response.error },
       };
     }
-    let creatorExists = response.data;
+    const creatorUser = response.data;
 
     if (!name) {
       return {
@@ -85,14 +79,6 @@ module.exports = {
         data: { error: "name is required" },
       };
     }
-
-    if (!is_official && !(name === name.toLowerCase())) {
-      return {
-        status: 400,
-        data: { error: "name must be lowercase" },
-      };
-    }
-
     if (!channelNameRegex.test(name) && !officialChannelNameRegex.test(name)) {
       //check if the name is lowercase, alphanumeric and between 5 and 23 characters
       return {
@@ -101,9 +87,29 @@ module.exports = {
       };
     }
 
-    if (officialChannelNameRegex.test(name)) {
-      //devi avere i permessi
-      //TODO permessi
+    if (is_official && !creatorUser.account_type == "moderator") {
+      return {
+        status: 403,
+        data: { error: "You don't have the permission to create an official channel" },
+      };
+    }
+
+    if (!is_official && !channelNameRegex.test(name)) {
+      return {
+        status: 400,
+        data: {
+          error: "Unofficial channels must be lowercase, space-free and between 5 and 23 characters.\n" + "It can only contain alphanumeric characters and underscore.",
+        },
+      };
+    }
+
+    if (is_official && !officialChannelNameRegex.test(name)) {
+      return {
+        status: 400,
+        data: {
+          error: "Official channels must be uppercase, space-free and between 5 and 23 characters.\n" + "It can only contain alphanumeric characters and underscore.",
+        },
+      };
     }
 
     if (!description) {
@@ -114,9 +120,8 @@ module.exports = {
     }
 
     //check if the name already exists in the database
-
     const newChannel = new Channel({
-      creators: [creatorExists._id],
+      creators: [creatorUser._id],
       name: name,
       description: description,
       is_official: is_official || false,
@@ -125,7 +130,7 @@ module.exports = {
     });
     try {
       const data = await newChannel.save();
-      User.findByIdAndUpdate(creatorExists._id, { $push: { created_channels: data._id } }).exec();
+      User.findByIdAndUpdate(creatorUser._id, { $push: { created_channels: data._id } }).exec();
       return {
         status: 201,
         data: data,
@@ -157,8 +162,10 @@ module.exports = {
    * @param options.identifier Channel's identifier, can be either id or name
    */
   getChannel: async (options) => {
-    const { identifier } = options;
-    let data;
+    //options.isTokenValid - if the token is not valid, the user can only see official channels
+    //options.user_id - user_id of request sender
+    const { identifier, isTokenValid, user_id } = options;
+
     if (!identifier) {
       return {
         status: 400,
@@ -166,7 +173,7 @@ module.exports = {
       };
     }
 
-    let response = await findChannel(identifier);
+    let response = await findChannel(identifier, true, true);
     if (response.status >= 300) {
       //if the response is an error
       return {
@@ -174,10 +181,30 @@ module.exports = {
         data: { error: response.error },
       };
     }
+    const channel = response.data;
 
+    let user;
+    if (isTokenValid) {
+      response = await findUser(user_id);
+      if (response.status >= 300) {
+        //if the response is an error
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      user = response.data;
+    }
+    //Se il canale è bloccato e l'utente non è un moderatore Oppure, se il token non è valido e il canale non è ufficiale.
+    if ((isTokenValid && channel.is_blocked && !(user?.account_type == "moderator")) || (!isTokenValid && !channel.is_official)) {
+      return {
+        status: 404,
+        data: { error: "Channel not found" },
+      };
+    }
     return {
       status: response.status,
-      data: response.data,
+      data: channel,
     };
   },
 
@@ -186,24 +213,9 @@ module.exports = {
    * @param options.identifier Channel's identifier, can be either id or name
    */
   deleteChannel: async (options) => {
-    const { identifier } = options;
-
-    // if (mongooseObjectIdRegex.test(identifier)) {
-    //   channel = await Channel.findById(identifier);
-    // } else if (channelNameRegex.test(identifier)) {
-    //   channel = await Channel.findOne({ name: identifier });
-    // } else {
-    //   return {
-    //     status: 400,
-    //     data: { error: "Invalid identifier" },
-    //   };
-    // }
-    // if (!channel) {
-    //   return {
-    //     status: 404,
-    //     data: { error: "Channel not found" },
-    //   };
-    // }
+    //TODO aggiornare funzione con i permessi di moderatore
+    //TODO togliere user da tutti i descrittori di funzioni
+    const { identifier, user } = options;
 
     let response = await findChannel(identifier);
     if (response.status >= 300) {
@@ -253,6 +265,8 @@ module.exports = {
    * @param options.updateChannelInlineReqJson.newDescription
    */
   updateChannel: async (options) => {
+    // TODO sia un proprietario sia uno squealer moderator sia un mod del canale possono effettuare modifiche
+    // in particolare un mod si occupa di rimuovere degli squeal dal canale
     const { identifier } = options;
     const { creatorsArray, is_blocked, newName, newDescription } = options.updateChannelInlineReqJson;
 
@@ -280,5 +294,57 @@ module.exports = {
     typeof is_blocked !== "undefinded" ? (channel.is_blocked = is_blocked) : null;
 
     channel.save();
+  },
+  /**
+   * Toggle is_blocked field in user object, means that the channel is blocked or not
+   * @param options.identifier Channel's identifier, can be either username or userId
+   */
+  toggleChannelBlockedStatus: async (options) => {
+    const { identifier, user_id } = options; //options.user_id is the Request sender's user id
+
+    // Check if the required fields are present
+    if (!identifier) {
+      return {
+        status: 400,
+        data: { error: "Channel identifier is required" },
+      };
+    }
+
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: "User id in token is not valid" },
+      };
+    }
+    const user = response.data;
+
+    // Check if the user is a moderator
+    if (!user.account_type == "moderator") {
+      return {
+        status: 403,
+        data: { error: "You don't have the permission to block/unblock a channel" },
+      };
+    }
+
+    response = await findChannel(identifier, true);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const channel = response.data;
+
+    // Toggle the is_blocked field
+    channel.is_blocked = !channel.is_blocked;
+    // Return the result
+    channel.save();
+    return {
+      status: 200,
+      data: updatedChannel,
+    };
   },
 };

@@ -3,30 +3,33 @@ const channels = require("../services/channels");
 const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
-router.get("/official", async (req, res, next) => {
-  //TODO canali ufficiali
-  let options = {
-    name: req.query.name,
-    createdAfter: req.query.createdAfter,
-    createdBefore: req.query.createdBefore,
-    isOfficial: req.query.is_official,
-  };
+router.get("/", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      name: req.query.name,
+      createdAfter: req.query.createdAfter,
+      createdBefore: req.query.createdBefore,
+      is_official: req.query.is_official,
+    };
 
-  try {
-    const result = await channels.getChannels(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
+    try {
+      const result = await channels.getChannels(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
   }
 });
 
-router.get("/official/:identifier", async (req, res, next) => {
-  //TODO canali ufficiali
+router.get("/:identifier", verifyToken, async (req, res, next) => {
   let options = {
     identifier: req.params.identifier,
-    is_official: true,
+    isTokenValid: req.isTokenValid,
+    user_id: req.user_id,
   };
 
   try {
@@ -39,88 +42,87 @@ router.get("/official/:identifier", async (req, res, next) => {
   }
 });
 
-//^^^ ---------------- NO AUTH ---------------- ^^^
-router.use(verifyToken);
-//vvv ----------------- AUTH ------------------ vvv
-
-router.get("/", async (req, res, next) => {
-  let options = {
-    name: req.query.name,
-    createdAfter: req.query.createdAfter,
-    createdBefore: req.query.createdBefore,
-    isOfficial: req.query.is_official,
-  };
-
-  try {
-    const result = await channels.getChannels(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
+router.post("/", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {};
+    options.channelInput = req.body;
+    options.channelInput.user = req.user_id;
+    try {
+      const result = await channels.createChannel(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    return res.status(401).send({
+      error: "Token is either missing invalid or expired",
     });
   }
 });
 
-router.get("/:identifier", async (req, res, next) => {
-  let options = {
-    identifier: req.params.identifier,
-  };
+router.delete("/:identifier", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user: req.user_id,
+    };
 
-  try {
-    const result = await channels.getChannel(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
+    try {
+      const result = await channels.deleteChannel(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    return res.status(401).send({
+      error: "Token is either missing invalid or expired",
     });
   }
 });
 
-router.post("/", async (req, res, next) => {
-  let options = {};
+router.patch("/:identifier", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+    };
 
-  options.channelInput = req.body;
+    options.updateChannelInlineReqJson = req.body;
 
-  try {
-    const result = await channels.createChannel(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
+    try {
+      const result = await channels.updateChannel(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    return res.status(401).send({
+      error: "Token is either missing invalid or expired",
     });
   }
 });
 
-router.delete("/:identifier", async (req, res, next) => {
-  let options = {
-    identifier: req.params.identifier,
-  };
-
-  try {
-    const result = await channels.deleteChannel(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
+router.patch("/:identifier/blockedstatus", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
+    try {
+      const result = await users.toggleChannelBlockedStatus(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
   }
 });
-
-router.patch("/:identifier", async (req, res, next) => {
-  let options = {
-    identifier: req.params.identifier,
-  };
-
-  options.updateChannelInlineReqJson = req.body;
-
-  try {
-    const result = await channels.updateChannel(options);
-    res.status(result.status || 200).send(result.data);
-  } catch (err) {
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
-  }
-});
-
 module.exports = router;

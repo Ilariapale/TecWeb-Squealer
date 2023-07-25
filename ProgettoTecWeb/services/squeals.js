@@ -20,10 +20,13 @@ const {
   updateRecipientsUsers,
   updateRecipientsChannels,
   updateRecipientsKeywords,
+  containsOfficialChannels,
 } = require("./utils");
 
 //TODO gestire tutti i casi in cui l'utente è bannato
 //TODO creare e/o spostare uno squeal in un canale ufficiale
+//TODO quando vengono mandate richieste formattate male, restituire un errore con la descrizione del problema (400 Bad Request)
+//TODO fare una funzione che setta a false Notification.is_unseen per una singola notifica e per tutte le notifiche di un utente
 module.exports = {
   /**
    * Retrieve squeals with optional filters
@@ -240,21 +243,30 @@ module.exports = {
       };
     }
 
+    //CHECK FOR CHANNELS
+    const { channelsOutcome, channelsArray, notFound } = await checkForAllChannels(channels);
+    if (!channelsOutcome) {
+      return {
+        status: 404,
+        data: { error: "One or more channels not found: " + notFound.join(", ") + "." },
+      };
+    }
+
+    //check if the user is trying to post in an official channel
+    const hasOfficialChannels = await containsOfficialChannels(channelsArray);
+    if (hasOfficialChannels && author.account_type != "moderator") {
+      return {
+        status: 403,
+        data: { error: "You are not allowed to post in an official channel." },
+      };
+    }
+
     //CHECK FOR USERS
     const { usersOutcome, usersArray } = await checkForAllUsers(users);
     if (!usersOutcome) {
       return {
         status: 404,
         data: { error: "One or more users not found." },
-      };
-    }
-
-    //CHECK FOR CHANNELS
-    const { channelsOutcome, channelsArray } = await checkForAllChannels(channels);
-    if (!channelsOutcome) {
-      return {
-        status: 404,
-        data: { error: "One or more channels not found." },
       };
     }
 
@@ -275,6 +287,7 @@ module.exports = {
       },
       created_at: new Date(),
       last_modified: new Date(),
+      is_in_official_channel: hasOfficialChannels,
     });
 
     //save the squeal in the db
@@ -288,10 +301,10 @@ module.exports = {
     author.squeals.posted.push(result._id);
     await author.save();
 
-    //push the squeal in the users squeals.mentionedIn array
+    //push the squeal in the users squeals.mentioned_in array
     const userUpdatePromises = [];
     for (const user of usersArray) {
-      let promise = User.findByIdAndUpdate(user, { $push: { "squeals.mentionedIn": result._id } });
+      let promise = User.findByIdAndUpdate(user, { $push: { "squeals.mentioned_in": result._id } });
       userUpdatePromises.push(promise);
     }
     await Promise.all(userUpdatePromises);
@@ -377,11 +390,11 @@ module.exports = {
       };
     }
 
-    //1) squeal.recipients.users are the target users and I have to remove the squeal from each user.squeals.mentionedIn
+    //1) squeal.recipients.users are the target users and I have to remove the squeal from each user.squeals.mentioned_in
     const userUpdatePromises = [];
 
     for (const user of squeal.recipients.users) {
-      let promise = User.findByIdAndUpdate(user, { $pull: { "squeals.mentionedIn": squeal._id } });
+      let promise = User.findByIdAndUpdate(user, { $pull: { "squeals.mentioned_in": squeal._id } });
       userUpdatePromises.push(promise);
     }
     await Promise.all(userUpdatePromises);
@@ -448,6 +461,14 @@ module.exports = {
     }
     const user = response.data;
 
+    //check if the user is active
+    if (user.is_active == false) {
+      return {
+        status: 403,
+        data: { error: "You're not allowed to react to a squeal while banned" },
+      };
+    }
+
     //check if the identifier is specified
     response = await findSqueal(identifier);
     if (response.status >= 300) {
@@ -467,7 +488,7 @@ module.exports = {
     }
 
     //check if the user already reacted to the squeal
-    if (user.squeals.reactedTo.includes(squeal._id)) {
+    if (user.squeals.reacted_to.includes(squeal._id)) {
       return {
         status: 400,
         data: { error: "User already reacted to this squeal." },
@@ -478,8 +499,8 @@ module.exports = {
     squeal.reactions[reaction]++;
     squeal.save();
 
-    //add the squeal to the user squeals.reactedTo
-    user.squeals.reactedTo.push(squeal._id);
+    //add the squeal to the user squeals.reacted_to
+    user.squeals.reacted_to.push(squeal._id);
     await user.save();
 
     return {
@@ -572,7 +593,7 @@ module.exports = {
             data: { error: keywordsResponse.error },
           };
         }
-        squeal.keywords = keywords;
+        squeal.recipients.keywords = keywords;
       }
 
       squeal.last_modified = new Date();
@@ -588,70 +609,7 @@ module.exports = {
         data: { error: err || "Something went wrong." },
       };
     }
-    /*
-      const { identifier, user_id } = options;
-      const { recipients } = options.updateSquealInlineReqJson;
-      const reactions = JSON.parse(options?.updateSquealInlineReqJson?.reactions || "{}") || {};
-      //check if the identifier is specified
-
-      let response = await findUser(user_id);
-      if (response.status >= 300) {
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const reqSender = response.data;
-
-      //check if the reqSender is a moderator
-      if (reqSender.account_type != "moderator") {
-        return {
-          status: 403,
-          data: { error: "You are not allowed to update this squeal." },
-        };
-      }
-
-      if (!identifier) {
-        return {
-          status: 400,
-          data: { error: "Missing 'identifier' parameter." },
-        };
-      }
-
-      //check if the squeal exists
-      let data = await findSqueal(identifier);
-      if (data.status >= 300) {
-        return {
-          status: data.status,
-          data: { error: data.error },
-        };
-      }
-      const squeal = data.data;
-
-      //check if the recipients are specified
-      if (recipients) {
-        //replace the old recipients with the new ones
-        const { users, channels } = JSON.parse(recipients) || [];
-        squeal.recipients.users = users || [];
-        squeal.recipients.channels = channels || [];
-      }
-
-      if (reactions) {
-        //replace the old reaction numbers with the new ones
-        squeal.reactions.like = reactions.like === undefined ? squeal.reactions.like : reactions.like;
-        squeal.reactions.love = reactions.love === undefined ? squeal.reactions.love : reactions.love;
-        squeal.reactions.laugh = reactions.laugh === undefined ? squeal.reactions.laugh : reactions.laugh;
-        squeal.reactions.dislike = reactions.dislike === undefined ? squeal.reactions.dislike : reactions.dislike;
-        squeal.reactions.disgust = reactions.disgust === undefined ? squeal.reactions.disgust : reactions.disgust;
-        squeal.reactions.disagree = reactions.disagree === undefined ? squeal.reactions.disagree : reactions.disagree;
-      }
-      //save the squeal in the db
-      let result = await squeal.save();
-
-      return {
-        status: result ? 200 : 400,
-        data: result ? result : { error: "Failed to update squeal" },
-      };
-      */
   },
 };
+
+//TODO rimuovere dalla lista di squeal nei canali ufficiali di un utente quando vengono rimossi

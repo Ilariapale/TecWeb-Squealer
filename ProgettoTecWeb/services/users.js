@@ -160,7 +160,7 @@ module.exports = {
       const firstSqueal = await newSqueal.save();
 
       //create the notification and save it
-      //TODO quando creiamo uno squeal, mandare la notifica ai destinatari
+      //quando creiamo uno squeal, mandare la notifica ai destinatari
       const newNotification = new Notification({
         squeal_ref: firstSqueal._id,
         user_id: user._id,
