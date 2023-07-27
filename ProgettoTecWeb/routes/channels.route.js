@@ -3,6 +3,9 @@ const channels = require("../services/channels");
 const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
+//TODO funzione per silenziare e riattivare un canale (fatto)
+//TODO funzione per iscrivermi e disiscrivermi un canale (fatto)
+
 router.get("/", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -126,3 +129,41 @@ router.patch("/:identifier/blockedstatus", verifyToken, async (req, res, next) =
   }
 });
 module.exports = router;
+
+router.patch("/:identifier/subscription", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
+    try {
+      const result = await users.toggleChannelSubscription(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
+router.patch("/:identifier/mute", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
+    try {
+      const result = await users.toggleChannelMuteStatus(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});

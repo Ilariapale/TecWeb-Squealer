@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 //TODO aggiungere le chiamate per reagire ad uno squeal
+//TODO potremmo mettere i canali sottoscritti in preferences insieme ai canali mutati
 
 // Notification
 const NotificationSchema = new mongoose.Schema({

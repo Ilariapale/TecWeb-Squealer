@@ -14,8 +14,8 @@ const {
 } = require("./utils");
 module.exports = {
   //TODO filtro per prendere gli ultimi "N" squeal
-  //TODO funzione per silenziare e riattivare un canale
-  //TODO funzione per iscrivermi e disiscrivermi un canale
+  //TODO funzione per silenziare e riattivare un canale (fatto)
+  //TODO funzione per iscrivermi e disiscrivermi un canale (fatto)
   /**
    * Retrieve channels with optional filters
    * @param options.name Filter channels by name
@@ -302,14 +302,6 @@ module.exports = {
   toggleChannelBlockedStatus: async (options) => {
     const { identifier, user_id } = options; //options.user_id is the Request sender's user id
 
-    // Check if the required fields are present
-    if (!identifier) {
-      return {
-        status: 400,
-        data: { error: "Channel identifier is required" },
-      };
-    }
-
     let response = await findUser(user_id);
     if (response.status >= 300) {
       //if the response is an error
@@ -347,4 +339,104 @@ module.exports = {
       data: updatedChannel,
     };
   },
-};
+
+  /**
+   * Toggle channel mute status by ID or channel name
+   * @param options.identifier Channel's identifier, can be either id or name
+   * @param options.user_id User's identifier
+   */
+
+  toggleChannelMute: async (options) => {
+    const { identifier, user_id } = options;
+
+    //check if the user exists
+    response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const user = response.data;
+
+    //check if channel exists
+    let response = await findChannel(identifier);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const channel = response.data;
+
+    //check if the channel is already muted by the user
+    if (user.preferences.muted_channels.includes(channel._id)) {
+      await user.preferences.muted_channels.pull(channel._id)
+      return {
+        status: 200,
+        data: { error: "Channel unmuted" },
+      }
+    }
+    //if not, add the channel to the user's muted channels
+    await user.preferences.muted_channels.push(channel._id)
+    return {
+      status: 200,
+      data : {message: "Channel muted"},
+    };
+  },
+  
+
+/**
+   * Toggle channel subscription  by ID or channel name
+   * @param options.identifier Channel's identifier, can be either id or name
+   * @param options.user_id User's identifier
+   */
+
+  toggleToChannelSubscription: async (options) => {
+    const { identifier, user_id } = options;
+
+    //check if the user exists
+    response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const user = response.data;
+
+    //check if channel exists
+    let response = await findChannel(identifier);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const channel = response.data;
+
+
+    //if user is blocked, return an error
+    if (!user.is_active) {
+      return {
+        status: 403,
+        data: { error: "User is blocked" },
+      };
+    }
+
+    //check if the user is already subscribed to the channel
+    if (user.subscribed_channels.includes(channel._id)) {
+      await user.subscribed_channels.pull(channel._id);
+      return {
+        status: 200,
+        data: { error: "User unsubscribed to the channel" },
+      }
+    }
+    //if not, add the channel to the user's subscribed channels
+    await user.subscribed_channels.push(channel._id);
+    return {
+      status: 200,
+      data : {message: "User subscribed to the channel"},
+    };
+  },
+}
