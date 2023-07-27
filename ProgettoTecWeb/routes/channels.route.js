@@ -149,7 +149,7 @@ router.patch("/:identifier/subscription", verifyToken, async (req, res, next) =>
   }
 });
 
-router.patch("/:identifier/mute", verifyToken, async (req, res, next) => {
+router.patch("/:identifier/muted", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,
