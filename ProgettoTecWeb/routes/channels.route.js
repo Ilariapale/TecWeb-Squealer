@@ -69,7 +69,7 @@ router.delete("/:identifier", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,
-      user: req.user_id,
+      user_id: req.user_id,
     };
 
     try {

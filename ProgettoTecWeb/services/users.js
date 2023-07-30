@@ -18,6 +18,8 @@ const {
 const welcomeNotification = "Welcome to Squealer! Check out your first squeal by clicking on the notification.";
 //--------------------------------------------------------------------------
 //TODO funzione per cambiare il tipo di account e funzione per impostare il SMM
+//TODO quando un account viene cancellato, se quell'account possedeva canali, questi vengono passati al primo dei supervisors, se non ne ha il canale viene cancellato
+//TODO quando un account viene cancellato, se quell'account era admin
 module.exports = {
   /**
    * Get users list filtering by creationDate and squeals count

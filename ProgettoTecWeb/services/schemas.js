@@ -98,6 +98,7 @@ const Squeal = mongoose.model("Squeal", SquealSchema);
 const ChannelSchema = new mongoose.Schema({
   // _id: { type: mongoose.Types.ObjectId },
   creators: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }] },
+  supervisors: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }] },
   name: { type: String, required: true, unique: true },
   description: { type: String, required: true },
   is_official: { type: Boolean, default: false },

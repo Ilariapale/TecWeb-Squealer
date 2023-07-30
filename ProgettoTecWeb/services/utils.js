@@ -193,8 +193,9 @@ async function checkForAllUsers(userArray) {
 }
 
 async function checkForAllChannels(channelArray) {
-  //TODO commentare questo codice
+  //if the parameter is null or empty, return true, and an empty array
   if (!channelArray || channelArray.length == 0) return { channelsOutcome: true, channelsArray: [] };
+  //else, check if all the channels exist
   const channelPromises = channelArray.map((channel) => {
     let query;
     if (channelNameRegex.test(channel) || officialChannelNameRegex.test(channel)) {
@@ -207,25 +208,29 @@ async function checkForAllChannels(channelArray) {
     return Channel.findOne(query);
   });
 
+  //await for all the promises to resolve
   const channelResults = await Promise.all(channelPromises);
   const nullAndBlockedIndex = [];
+  //create an array of indexes of null or blocked channels
   channelResults.forEach((item, index) => {
     if (item === null || item.is_blocked === true) {
       nullAndBlockedIndex.push(index);
     }
   });
+  //create an array of the channels that are not null or blocked
   const allChannelExist = channelResults.every((exists) => exists && exists.is_blocked == false);
 
   return { channelsOutcome: allChannelExist, channelsArray: channelResults, notFound: nullAndBlockedIndex.map((index) => channelArray[index]) };
 }
 
 async function containsOfficialChannels(channelArray) {
-  //TODO commentare questo codice
+  //if the parameter is null or empty, return true, and an empty array
   if (!channelArray || channelArray.length == 0) return false;
   const channelPromises = channelArray.map((channel) => {
     return Channel.exists({ _id: channel, is_official: true });
   });
   const channelResults = await Promise.all(channelPromises);
+  //return true if at least one channel is official
   const containsOfficial = channelResults.some((exists) => exists);
   return containsOfficial;
 }
@@ -276,6 +281,7 @@ function hasEnoughCharQuota(user, contentType, content) {
 }
 
 async function removeQuota(user, squealCost) {
+  //this function only works after checking if the user has enough char_quota
   const { daily } = user.char_quota;
   if (squealCost > daily) {
     let charDebt = squealCost - daily;

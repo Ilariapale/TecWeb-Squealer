@@ -13,9 +13,9 @@ const {
   findNotification,
 } = require("./utils");
 module.exports = {
+  //TODO i canali hanno un owner e una lista di supervisors, gli owner possono aggiungere e rimuovere supervisors, nominare un nuovo owner e rimuovere il canale
   //TODO filtro per prendere gli ultimi "N" squeal
-  //TODO funzione per silenziare e riattivare un canale (fatto)
-  //TODO funzione per iscrivermi e disiscrivermi un canale (fatto)
+
   /**
    * Retrieve channels with optional filters
    * @param options.name Filter channels by name
@@ -213,9 +213,9 @@ module.exports = {
    * @param options.identifier Channel's identifier, can be either id or name
    */
   deleteChannel: async (options) => {
-    //TODO aggiornare funzione con i permessi di moderatore
+    //TODO puoi cancellare la funzione se sei il proprietario del canale o un moderatore
     //TODO togliere user da tutti i descrittori di funzioni
-    const { identifier, user } = options;
+    const { identifier, user_id } = options;
 
     let response = await findChannel(identifier);
     if (response.status >= 300) {
@@ -225,7 +225,21 @@ module.exports = {
         data: { error: response.error },
       };
     }
-    let channel = response.data;
+    const channel = response.data;
+
+    response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const user = response.data;
+    //TODO
+    //check if the user is a moderator or a creator of the channel
+    // if (!(user.account_type == "moderator" || channel.creators.includes(user._id))) {
+    // }
 
     //remove the channel from the squeals recipients
     const updateRecipientsPromises = [];
@@ -438,9 +452,16 @@ module.exports = {
         data: { error: "User unsubscribed to the channel" },
       };
     }
+
     //if not, add the channel to the user's subscribed channels
     user.subscribed_channels.push(channel._id);
     await user.save();
+
+    //if the user had muted the channel, remove it from the muted channels array
+    if (user.preferences.muted_channels.includes(channel._id)) {
+      await User.findByIdAndUpdate(user._id, { $pull: { "preferences.muted_channels": channel._id } }, { new: true });
+    }
+
     return {
       status: 200,
       data: { message: "User subscribed to the channel" },
