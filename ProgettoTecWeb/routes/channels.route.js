@@ -137,7 +137,7 @@ router.patch("/:identifier/subscription", verifyToken, async (req, res, next) =>
       user_id: req.user_id,
     };
     try {
-      const result = await users.toggleChannelSubscription(options);
+      const result = await channels.toggleChannelSubscription(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       return res.status(500).send({
@@ -156,7 +156,7 @@ router.patch("/:identifier/muted", verifyToken, async (req, res, next) => {
       user_id: req.user_id,
     };
     try {
-      const result = await users.toggleChannelMuteStatus(options);
+      const result = await channels.toggleChannelMuteStatus(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       return res.status(500).send({
