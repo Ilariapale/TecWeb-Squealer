@@ -347,7 +347,8 @@ module.exports = {
    * @param options.user_id Request sender's user id
    */
   deleteSqueal: async (options) => {
-    const replaceString = "[deleted squeal]";
+    // const replaceString = "[deleted squeal]";
+    // const deleted_content_type = "deleted";
     const { identifier } = options;
 
     let data = await findSqueal(identifier);
@@ -357,7 +358,7 @@ module.exports = {
         data: { error: data.error },
       };
     }
-    let squeal = data.data;
+    const squeal = data.data;
 
     //check if the user_id in the token is valid
     data = await findUser(options.user_id);
@@ -377,7 +378,7 @@ module.exports = {
         data: { error: data.error },
       };
     }
-    let squealAuthor = data.data;
+    const squealAuthor = data.data;
 
     let isSenderAuthor = reqSender._id == squealAuthor._id;
     let isModerator = reqSender.account_type == "moderator";
@@ -390,45 +391,47 @@ module.exports = {
       };
     }
 
-    //1) squeal.recipients.users are the target users and I have to remove the squeal from each user.squeals.mentioned_in
-    const userUpdatePromises = [];
+    // //1) squeal.recipients.users are the target users and I have to remove the squeal from each user.squeals.mentioned_in
+    // const userUpdatePromises = [];
 
-    for (const user of squeal.recipients.users) {
-      let promise = User.findByIdAndUpdate(user, { $pull: { "squeals.mentioned_in": squeal._id } });
-      userUpdatePromises.push(promise);
-    }
-    await Promise.all(userUpdatePromises);
+    // for (const user of squeal.recipients.users) {
+    //   let promise = User.findByIdAndUpdate(user, { $pull: { "squeals.mentioned_in": squeal._id } });
+    //   userUpdatePromises.push(promise);
+    // }
+    // await Promise.all(userUpdatePromises);
 
-    //2) squeal.recipients.channels are the target channels and I have to remove the squeal from each channel.squeals
+    // //2) squeal.recipients.channels are the target channels and I have to remove the squeal from each channel.squeals
 
-    const channelUpdatePromises = [];
+    // const channelUpdatePromises = [];
 
-    for (const channel of squeal.recipients.channels) {
-      let promise = Channel.findByIdAndUpdate(channel, { $pull: { squeals: squeal._id } });
-      channelUpdatePromises.push(promise);
-    }
-    await Promise.all(channelUpdatePromises);
+    // for (const channel of squeal.recipients.channels) {
+    //   let promise = Channel.findByIdAndUpdate(channel, { $pull: { squeals: squeal._id } });
+    //   channelUpdatePromises.push(promise);
+    // }
+    // await Promise.all(channelUpdatePromises);
 
-    //3) squeal.recipients.keywords sono le keywords destinatarie e devo rimuovere lo squeal da ogni keyword.squeals
+    // //3) squeal.recipients.keywords sono le keywords destinatarie e devo rimuovere lo squeal da ogni keyword.squeals
 
-    const keywordUpdatePromises = [];
+    // const keywordUpdatePromises = [];
 
-    for (const keyword of squeal.recipients.keywords) {
-      let promise = Keyword.findOneAndUpdate({ name: keyword }, { $pull: { squeals: squeal._id } });
-      keywordUpdatePromises.push(promise);
-    }
-    await Promise.all(keywordUpdatePromises);
+    // for (const keyword of squeal.recipients.keywords) {
+    //   let promise = Keyword.findOneAndUpdate({ name: keyword }, { $pull: { squeals: squeal._id } });
+    //   keywordUpdatePromises.push(promise);
+    // }
+    // await Promise.all(keywordUpdatePromises);
 
-    squeal.content_type = "deleted";
-    squeal.content = replaceString;
-    squeal.recipients.users = [];
-    squeal.recipients.channels = [];
-    squeal.recipients.keywords = [];
-    squeal.last_modified = new Date();
-    await squeal.save();
+    // squeal.content_type = deleted_content_type;
+    // squeal.content = replaceString;
+    // squeal.recipients.users = [];
+    // squeal.recipients.channels = [];
+    // squeal.recipients.keywords = [];
+    // squeal.last_modified = new Date();
+    // await squeal.save();
 
-    //4) cancello le notifiche che avevano come squeal_ref lo squeal cancellato
-    await Notification.deleteMany({ squeal_ref: identifier });
+    // //4) cancello le notifiche che avevano come squeal_ref lo squeal cancellato
+    // await Notification.deleteMany({ squeal_ref: identifier });
+
+    await squeal.DeleteAndPreserveInDB();
 
     return {
       status: 200,

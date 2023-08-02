@@ -13,7 +13,7 @@ const {
   findNotification,
 } = require("./utils");
 module.exports = {
-  //TODO i canali hanno un owner e una lista di supervisors, gli owner possono aggiungere e rimuovere supervisors, nominare un nuovo owner e rimuovere il canale
+  //TODO i canali hanno un owner e una lista di editors, gli owner possono aggiungere e rimuovere editors, nominare un nuovo owner e rimuovere il canale
   //TODO filtro per prendere gli ultimi "N" squeal
 
   /**
@@ -51,7 +51,7 @@ module.exports = {
   },
 
   /**
-   * Create a new user
+   * Create a new channel
    * @param options.channelInput.user User that creates the channel
    * @param options.channelInput.can_mute It tells you whether the channel can be muted or not
    * @param options.channelInput.description Channel's description
@@ -61,8 +61,7 @@ module.exports = {
   createChannel: async (options) => {
     const { can_mute, user, description, is_official, name } = options.channelInput;
 
-    //TODO controllare i permessi per creare un canale dopo che abbiamo implementato l'autenticazione
-    //Check if creator exists
+    //Check if owner exists
     let response = await findUser(user);
     if (response.status >= 300) {
       //if the response is an error
@@ -71,7 +70,7 @@ module.exports = {
         data: { error: response.error },
       };
     }
-    const creatorUser = response.data;
+    const ownerUser = response.data;
 
     if (!name) {
       return {
@@ -79,6 +78,7 @@ module.exports = {
         data: { error: "name is required" },
       };
     }
+
     if (!channelNameRegex.test(name) && !officialChannelNameRegex.test(name)) {
       //check if the name is lowercase, alphanumeric and between 5 and 23 characters
       return {
@@ -87,10 +87,17 @@ module.exports = {
       };
     }
 
-    if (is_official && !creatorUser.account_type == "moderator") {
+    if (is_official && !ownerUser.account_type == "moderator") {
       return {
         status: 403,
         data: { error: "You don't have the permission to create an official channel" },
+      };
+    }
+
+    if (!is_official && can_mute != undefined && can_mute == false) {
+      return {
+        status: 403,
+        data: { error: "You can't create an unofficial channel that can't be muted" },
       };
     }
 
@@ -121,7 +128,7 @@ module.exports = {
 
     //check if the name already exists in the database
     const newChannel = new Channel({
-      creators: [creatorUser._id],
+      owner: ownerUser._id,
       name: name,
       description: description,
       is_official: is_official || false,
@@ -129,11 +136,11 @@ module.exports = {
       created_at: Date.now(),
     });
     try {
-      const data = await newChannel.save();
-      User.findByIdAndUpdate(creatorUser._id, { $push: { created_channels: data._id } }).exec();
+      const savedChannel = await newChannel.save();
+      User.findByIdAndUpdate(ownerUser._id, { $push: { created_channels: savedChannel._id } }).exec();
       return {
         status: 201,
-        data: data,
+        data: savedChannel,
       };
     } catch (err) {
       if (err instanceof mongoose.Error.ValidationError) {
@@ -213,7 +220,6 @@ module.exports = {
    * @param options.identifier Channel's identifier, can be either id or name
    */
   deleteChannel: async (options) => {
-    //TODO puoi cancellare la funzione se sei il proprietario del canale o un moderatore
     //TODO togliere user da tutti i descrittori di funzioni
     const { identifier, user_id } = options;
 
@@ -236,34 +242,18 @@ module.exports = {
       };
     }
     const user = response.data;
-    //TODO
-    //check if the user is a moderator or a creator of the channel
-    // if (!(user.account_type == "moderator" || channel.creators.includes(user._id))) {
-    // }
 
-    //remove the channel from the squeals recipients
-    const updateRecipientsPromises = [];
-    for (const squeal of channel.squeals) {
-      //remove the channel from the squeals
-      let promise = Squeal.findByIdAndUpdate(squeal, { $pull: { "recipients.channels": channel._id } }).exec();
-      updateRecipientsPromises.push(promise);
+    if (!(user.account_type == "moderator" || channel.owner.equals(user._id))) {
+      return {
+        status: 403,
+        data: { error: "You don't have the permission to delete this channel" },
+      };
     }
-    const updatedSqueals = await Promise.all(updateRecipientsPromises);
 
-    //remove the channel from the users subscribed channels, the channel from the users muted channels,the channel from the users created channels
-    const updateSubscribedChannelsPromises = [];
-    for (const user of channel.subscribers) {
-      let promise = User.findByIdAndUpdate(user, {
-        $pull: { subscribed_channels: channel._id },
-        $pull: { created_channels: channel._id },
-        $pull: { "preferences.muted_channels": channel._id },
-      }).exec();
-      updateSubscribedChannelsPromises.push(promise);
-    }
-    const updatedUser = await Promise.all(updateSubscribedChannelsPromises);
+    //remove the channel from the database with my custom delete function
+    await channel.Delete();
 
-    //remove the channel from the database
-    await Channel.findByIdAndRemove(channel._id).exec();
+    //await Channel.findByIdAndRemove(channel._id).exec();
 
     return {
       status: 200,
@@ -273,12 +263,15 @@ module.exports = {
 
   /**
    * @param options.identifier Channel's identifier, can be either the name or the id
+   * @param options.editorsArray Array of editors
+   * @param options.owner User that created the channel
    * @param options.updateChannelInlineReqJson.creatorsArray
    * @param options.updateChannelInlineReqJson.is_blocked
    * @param options.updateChannelInlineReqJson.newName
    * @param options.updateChannelInlineReqJson.newDescription
    */
   updateChannel: async (options) => {
+    //TODO rifare
     // TODO sia un proprietario sia uno squealer moderator sia un mod del canale possono effettuare modifiche
     // in particolare un mod si occupa di rimuovere degli squeal dal canale
     const { identifier } = options;
@@ -305,7 +298,7 @@ module.exports = {
     channel.creators = creatorsArray || channel.creators;
     channel.description = newDescription || channel.description;
     //TODO controllare se funziona
-    typeof is_blocked !== "undefinded" ? (channel.is_blocked = is_blocked) : null;
+    channel.is_blocked = is_blocked !== undefined ? is_blocked : null;
 
     channel.save();
   },

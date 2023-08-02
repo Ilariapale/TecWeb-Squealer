@@ -18,7 +18,7 @@ const {
 const welcomeNotification = "Welcome to Squealer! Check out your first squeal by clicking on the notification.";
 //--------------------------------------------------------------------------
 //TODO funzione per cambiare il tipo di account e funzione per impostare il SMM
-//TODO quando un account viene cancellato, se quell'account possedeva canali, questi vengono passati al primo dei supervisors, se non ne ha il canale viene cancellato
+//TODO quando un account viene cancellato, se quell'account possedeva canali, questi vengono passati al primo dei editors, se non ne ha il canale viene cancellato
 //TODO quando un account viene cancellato, se quell'account era admin
 module.exports = {
   /**
@@ -80,7 +80,7 @@ module.exports = {
     const reqSender = response.data;
 
     //If the request sender is not a moderator, filter the inactive users
-    if (!reqSender.role === "moderator") {
+    if (!reqSender.account_type === "moderator") {
       pipeline.push({ $match: { is_active: true } });
     }
     if (pipeline.length == 0) {
@@ -281,8 +281,6 @@ module.exports = {
       };
     }
     const reqSender = response.data;
-    console.log(identifier, " ", user_id);
-    console.log(reqSender._id, " ", userToDelete._id);
     if (!reqSender._id.equals(userToDelete._id)) {
       return {
         status: 403,
@@ -292,55 +290,9 @@ module.exports = {
 
     //----------------------------------------------------------------------------------------------------------------------
     // Removing all the references to the user from the other collections
+    //TODO testare
+    userToDelete.Delete();
 
-    const postedSqueals = userToDelete.squeals.posted;
-    //const scheduledSqueals = userToDelete.squeals.scheduled;
-
-    await Promise.all(
-      //squeal by squeal
-      postedSqueals.map(async (squeal) => {
-        // Remove the reference of the squeal from the "squeals" array of all the users
-        await User.updateMany({}, { $pull: { mentioned_in: squeal } });
-
-        // Remove the reference of the squeal from the "squeals" array of all the channels
-        await Channel.updateMany({}, { $pull: { squeals: squeal } });
-
-        // Remove the reference of the squeal from the "squeals" array of all the keywords
-        await Keyword.updateMany({}, { $pull: { squeals: squeal } });
-
-        // Remove the squeal from the database
-        await Squeal.findByIdAndRemove(squeal);
-      })
-    );
-    // remove the reference of the user from the "recipients.users" array of all the squeals
-    await Squeal.updateMany({}, { $pull: { "recipients.users": userToDelete._id } });
-    await Channel.updateMany({});
-    // trova tutte le notifiche associate all'utente
-    const notifications = userToDelete.notifications;
-
-    await Promise.all(
-      // Notification by notification
-      notifications.map(async (notification) => {
-        // Remove the notification from the database
-        await Notification.findByIdAndRemove(notification);
-      })
-    );
-
-    // Remove the user from the Creators array of all the channels he crated
-
-    const channels = userToDelete.created_channels;
-
-    await Promise.all(
-      // Channel by channel
-      channels.map(async (channel) => {
-        // Remove the channel from the database
-        await Channel.findByIdAndUpdate(channel, { $pull: { creators: userToDelete._id } });
-      })
-    );
-    // Set the user as inactive and change the username to the _id
-    //await User.findByIdAndUpdate(utenteId, { $set: { is_active: false }, $set: { username: userToDelete._id } });
-    //await User.findByIdAndRemove(userToDelete._id);
-    await userToDelete.deleteOne();
     return {
       status: 200,
       data: { message: "User deleted successfully" },
