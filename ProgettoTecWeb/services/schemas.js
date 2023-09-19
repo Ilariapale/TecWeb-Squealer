@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
-import { newOwnerNotification, channelDeletedNotification } from "./utils";
-
+const { newOwnerNotification } = require("./messages.js");
 //TODO aggiungere le chiamate per reagire ad uno squeal
 //TODO potremmo mettere i canali sottoscritti in preferences insieme ai canali mutati
 
@@ -28,7 +27,8 @@ const UserSchema = new mongoose.Schema({
     posted: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     scheduled: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     mentioned_in: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
-    reacted_to: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] }, //TODO aggiornare la funzione di cancellazione di un profilo per rimuovere reacted_to
+    reacted_to: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
+    //TODO aggiornare la funzione di cancellazione di un profilo per rimuovere reacted_to
   },
   char_quota: {
     daily: { type: Number, default: 100 },
@@ -42,7 +42,7 @@ const UserSchema = new mongoose.Schema({
     controversial_squeals: { type: Number, default: 0 },
   },
   subscribed_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
-  created_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
+  owned_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
   editor_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
   profile_info: { type: String, default: "Hi there! I'm using Squealer, my new favourite social network!" },
   profile_picture: { type: String, default: "" },
@@ -62,7 +62,7 @@ UserSchema.methods.Delete = async function () {
 
   const postedSqueals = this.squeals.posted;
   const mentionedInSqueals = this.squeals.mentioned_in;
-  const createdChannels = this.created_channels;
+  const createdChannels = this.owned_channels;
   const notifications = this.notifications;
 
   //const scheduledSqueals = userToDelete.squeals.scheduled;
@@ -107,8 +107,8 @@ UserSchema.methods.Delete = async function () {
       });
       await notification.save();
 
-      //add the channel to the owner's created_channels
-      await User.findOneAndUpdate({ _id: channel.owner }, { $push: { created_channels: channel._id } });
+      //add the channel to the owner's owned_channels
+      await User.findOneAndUpdate({ _id: channel.owner }, { $push: { owned_channels: channel._id } });
 
       //remove the channel from the new owner's editor_channels
       await User.findOneAndUpdate({ _id: channel.owner }, { $pull: { editor_channels: channel._id } });
@@ -258,7 +258,7 @@ ChannelSchema.methods.Delete = async function () {
   await User.updateMany({ _id: { $in: this.subscribers } }, { $pull: { subscribed_channels: this._id, "preferences.muted_channels": this._id } });
 
   //remove the channel from the owner user
-  const owner = await User.findByIdAndUpdate(this.owner, { $pull: { created_channels: this._id } }).exec();
+  const owner = await User.findByIdAndUpdate(this.owner, { $pull: { owned_channels: this._id } }).exec();
 
   //remove the channel from the editors users
   await User.updateMany({ _id: { $in: this.editors } }, { $pull: { editor_channels: this._id } });

@@ -3,46 +3,49 @@ const bcrypt = require("bcrypt");
 const config = require("../config");
 
 const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
+const { mentionNotification, officialNotificationAdd, officialNotificationRemove } = require("./messages.js");
+const {
+  MAX_DESCRIPTION_LENGTH,
+  USERNAME_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  CHANNEL_NAME_MIN_LENGTH,
+  CHANNEL_NAME_MAX_LENGTH,
+  OFFICIAL_CHANNEL_NAME_MIN_LENGTH,
+  OFFICIAL_CHANNEL_NAME_MAX_LENGTH,
+  KEYWORD_MIN_LENGTH,
+  KEYWORD_MAX_LENGTH,
+  MEDIA_QUOTA,
+} = require("./constants");
+
 /**
  * Usernames must contain 2 to 20 characters and can only consist of letters (both uppercase and lowercase), numbers, and underscores. The username must include at least one letter.
  */
-const usernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9_]{2,20}$/;
+const usernameRegex = new RegExp(`^(?=.*[a-zA-Z])[a-zA-Z0-9_]{${USERNAME_MIN_LENGTH},${USERNAME_MAX_LENGTH}}$`);
+//const ausernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9_]{2,20}$/;
 
 /**
  * Channel names should be between 5 and 23 characters long and can only contain lowercase letters, numbers, and underscores.
  */
-const channelNameRegex = /^[a-z0-9_]{5,23}$/;
+const channelNameRegex = new RegExp(`^[a-z0-9_]{${CHANNEL_NAME_MIN_LENGTH},${CHANNEL_NAME_MAX_LENGTH}}$`);
+//const channelNameRegex = /^[a-z0-9_]{5,23}$/;
 
 /**
  * Official channel names should be between 5 and 23 characters long and can only contain uppercase letters, numbers, and underscores.
  */
-const officialChannelNameRegex = /^[A-Z0-9_]{5,23}$/;
+const officialChannelNameRegex = new RegExp(`^[A-Z0-9_]{${OFFICIAL_CHANNEL_NAME_MIN_LENGTH},${OFFICIAL_CHANNEL_NAME_MAX_LENGTH}}$`);
+//const officialChannelNameRegex = /^[A-Z0-9_]{5,23}$/;
 
 /**
  * Keywords should be between 4 and 20 characters long and can include both uppercase and lowercase letters, as well as numbers.
  */
-const keywordRegex = /^[a-zA-Z0-9]{4,20}$/;
+const keywordRegex = new RegExp(`^[a-zA-Z0-9]{${KEYWORD_MIN_LENGTH},${KEYWORD_MAX_LENGTH}}$`);
+//const keywordRegex = /^[a-zA-Z0-9]{4,20}$/;
 
 const mongooseObjectIdRegex = /^[0-9a-fA-F]{24}$/;
 
 const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
 const reactionTypes = ["like", "dislike", "love", "laugh", "disgust", "disagree"];
-
-const mediaQuota = { image: 125, video: 300, position: 150 }; //char_quota per image
-
-const mentionNotification = (username, message) => `@${username} has mentioned you in a squeal! Check it out!\n${message.substring(0, 30)}...`;
-
-const officialNotificationAdd = (username, message, channel) =>
-  `Congratulations @${username}! Your squeal has been featured on §${channel} channel! Check it out!\n"${message.substring(0, 30)}..."`;
-
-const officialNotificationRemove = (username, message, channel) => `Oh no, @${username}! Your squeal has been removed from §${channel} channel.\n"${message.substring(0, 30)}..."`;
-
-const newOwnerNotification = (username, channel) => `Congratulations @${username}! You are now the owner of §${channel} channel!`;
-
-const removedOwnerNotification = (username, channel) => `Oh no, @${username}! You are no longer the owner of §${channel} channel!`;
-
-const channelDeletedNotification = (username, channel, role) => `Oh no, @${username}! The channel §${channel} you were ${role} of has been deleted!`;
 
 //FINDERS
 async function findUser(identifier) {
@@ -255,9 +258,9 @@ function hasEnoughCharQuota(user, contentType, content) {
   }
   var contentLength;
   if (contentType == "text") contentLength = content.length;
-  if (contentType == "image") contentLength = mediaQuota.image;
-  if (contentType == "video") contentLength = mediaQuota.video;
-  if (contentType == "position") contentLength = mediaQuota.position;
+  if (contentType == "image") contentLength = MEDIA_QUOTA.image;
+  if (contentType == "video") contentLength = MEDIA_QUOTA.video;
+  if (contentType == "position") contentLength = MEDIA_QUOTA.position;
 
   const enoughDaily = contentLength <= daily + extra_daily;
   const enoughWeekly = contentLength <= weekly;
@@ -550,9 +553,6 @@ module.exports = {
   updateRecipientsChannels,
   updateRecipientsKeywords,
   containsOfficialChannels,
-  newOwnerNotification,
-  removedOwnerNotification,
-  channelDeletedNotification,
   usernameRegex,
   channelNameRegex,
   officialChannelNameRegex,

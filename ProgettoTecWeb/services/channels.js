@@ -11,21 +11,26 @@ const {
   findChannel,
   findKeyword,
   findNotification,
+  checkForAllUsers,
+  addedAndRemoved,
 } = require("./utils");
+const { MAX_DESCRIPTION_LENGTH, CHANNEL_NAME_MIN_LENGTH, CHANNEL_NAME_MAX_LENGTH, OFFICIAL_CHANNEL_NAME_MIN_LENGTH, OFFICIAL_CHANNEL_NAME_MAX_LENGTH } = require("./constants");
 module.exports = {
-  //TODO i canali hanno un owner e una lista di editors, gli owner possono aggiungere e rimuovere editors, nominare un nuovo owner e rimuovere il canale
-  //TODO filtro per prendere gli ultimi "N" squeal
-
   /**
    * Retrieve channels with optional filters
    * @param options.name Filter channels by name
    * @param options.createdAfter Filter channels created after the specified date
    * @param options.createdBefore Filter channels created before the specified date
    * @param options.is_official Filter channels by official status
+   * @param options.minSubscribers Filter channels by minimum subscribers
+   * @param options.maxSubscribers Filter channels by maximum subscribers
+   * @param options.minSqueals Filter channels by minimum squeals
+   * @param options.maxSqueals Filter channels by maximum squeals
    */
   getChannels: async (options) => {
-    const { name, createdAfter, createdBefore, is_Official } = options;
+    const { name, createdAfter, createdBefore, is_Official, minSubscribers, maxSubscribers, minSqueals, maxSqueals } = options;
     const pipeline = [];
+
     if (name) {
       const regex = new RegExp(name, "i");
       pipeline.push({ $match: { name: { $regex: regex } } });
@@ -41,6 +46,32 @@ module.exports = {
     }
     pipeline.push({ $match: { is_blocked: false } });
 
+    pipeline.push({
+      $project: {
+        _id: 1, // Includi l'ID se necessario
+        name: 1, // Includi il campo 'name'
+        description: 1, // Includi il campo 'description'
+        subscribersCount: { $size: "$subscribers" }, // Ottieni la dimensione dell'array 'subscribers'
+        squealsCount: { $size: "$squeals" },
+        //immagine: 1, // Includi il campo 'immagine'
+
+        // Aggiungi altri campi che desideri includere qui
+      },
+    });
+
+    if (minSubscribers !== undefined) {
+      pipeline.push({ $match: { subscribersCount: { $gte: minSubscribers } } });
+    }
+    if (maxSubscribers !== undefined) {
+      pipeline.push({ $match: { subscribersCount: { $lte: maxSubscribers } } });
+    }
+    if (minSqueals !== undefined) {
+      pipeline.push({ $match: { squealsCount: { $gte: minSqueals } } });
+    }
+    if (maxSqueals !== undefined) {
+      pipeline.push({ $match: { squealsCount: { $lte: maxSqueals } } });
+    }
+
     //console.log(pipeline);
     const data = await Channel.aggregate(pipeline).exec();
 
@@ -52,7 +83,6 @@ module.exports = {
 
   /**
    * Create a new channel
-   * @param options.channelInput.user User that creates the channel
    * @param options.channelInput.can_mute It tells you whether the channel can be muted or not
    * @param options.channelInput.description Channel's description
    * @param options.channelInput.is_official It tells you whether the channel is official or not
@@ -105,7 +135,9 @@ module.exports = {
       return {
         status: 400,
         data: {
-          error: "Unofficial channels must be lowercase, space-free and between 5 and 23 characters.\n" + "It can only contain alphanumeric characters and underscore.",
+          error:
+            `Unofficial channels must be lowercase, space-free and between ${CHANNEL_NAME_MIN_LENGTH} and ${CHANNEL_NAME_MAX_LENGTH} characters.\n` +
+            `It can only contain alphanumeric characters and underscore.`,
         },
       };
     }
@@ -114,7 +146,9 @@ module.exports = {
       return {
         status: 400,
         data: {
-          error: "Official channels must be uppercase, space-free and between 5 and 23 characters.\n" + "It can only contain alphanumeric characters and underscore.",
+          error:
+            `Official channels must be uppercase, space-free and between ${OFFICIAL_CHANNEL_NAME_MIN_LENGTH} and ${OFFICIAL_CHANNEL_NAME_MAX_LENGTH} characters.\n` +
+            `It can only contain alphanumeric characters and underscore.`,
         },
       };
     }
@@ -126,7 +160,13 @@ module.exports = {
       };
     }
 
-    //check if the name already exists in the database
+    if (description.length > MAX_DESCRIPTION_LENGTH) {
+      return {
+        status: 400,
+        data: { error: `description must be less than ${MAX_DESCRIPTION_LENGTH} characters` },
+      };
+    }
+
     const newChannel = new Channel({
       owner: ownerUser._id,
       name: name,
@@ -137,7 +177,7 @@ module.exports = {
     });
     try {
       const savedChannel = await newChannel.save();
-      User.findByIdAndUpdate(ownerUser._id, { $push: { created_channels: savedChannel._id } }).exec();
+      User.findByIdAndUpdate(ownerUser._id, { $push: { owned_channels: savedChannel._id } }).exec();
       return {
         status: 201,
         data: savedChannel,
@@ -220,7 +260,6 @@ module.exports = {
    * @param options.identifier Channel's identifier, can be either id or name
    */
   deleteChannel: async (options) => {
-    //TODO togliere user da tutti i descrittori di funzioni
     const { identifier, user_id } = options;
 
     let response = await findChannel(identifier);
@@ -253,8 +292,6 @@ module.exports = {
     //remove the channel from the database with my custom delete function
     await channel.Delete();
 
-    //await Channel.findByIdAndRemove(channel._id).exec();
-
     return {
       status: 200,
       data: { message: "Channel deleted" },
@@ -263,19 +300,38 @@ module.exports = {
 
   /**
    * @param options.identifier Channel's identifier, can be either the name or the id
-   * @param options.editorsArray Array of editors
-   * @param options.owner User that created the channel
-   * @param options.updateChannelInlineReqJson.creatorsArray
-   * @param options.updateChannelInlineReqJson.is_blocked
+   * @param options.updateChannelInlineReqJson.editorsArray
    * @param options.updateChannelInlineReqJson.newName
    * @param options.updateChannelInlineReqJson.newDescription
+   * @param options.updateChannelInlineReqJson.newOwner
    */
   updateChannel: async (options) => {
-    //TODO rifare
-    // TODO sia un proprietario sia uno squealer moderator sia un mod del canale possono effettuare modifiche
-    // in particolare un mod si occupa di rimuovere degli squeal dal canale
-    const { identifier } = options;
-    const { creatorsArray, is_blocked, newName, newDescription } = options.updateChannelInlineReqJson;
+    const { identifier, user_id } = options;
+    const { editorsArray, newName, newDescription } = options.updateChannelInlineReqJson;
+    let data = await findUser(user_id);
+    if (data.status >= 300) {
+      //if the response is an error
+      return {
+        status: data.status,
+        data: { error: data.error },
+      };
+    }
+    const user = data.data;
+
+    //se non ha i permessi, ritorna un errore
+    if (!user_id == channel.owner || !channel.editors.includes(user_id) || !user.account_type == "moderator") {
+      return {
+        status: 403,
+        data: { error: "You don't have the permission to update this channel" },
+      };
+    }
+
+    if (!editorsArray && !newName && !newDescription) {
+      return {
+        status: 400,
+        data: { error: "No update parameters specified" },
+      };
+    }
 
     let response = await findChannel(identifier);
     if (response.status >= 300) {
@@ -285,23 +341,192 @@ module.exports = {
         data: { error: response.error },
       };
     }
-    let channel = response.data;
+    const channel = response.data;
 
-    if (!creatorsArray && !is_blocked && !newName && !newDescription) {
+    //se la richiesta include un nuovo nome, controlla i permessi, controlla che sia valido, controlla che non esista già e aggiorna il nome
+    if (newName) {
+      if (channel.is_official && !officialChannelNameRegex.test(newName)) {
+        //check if the name is lowercase, alphanumeric and between 5 and 23 characters
+        return {
+          status: 400,
+          data: {
+            error:
+              `Official channels must be uppercase, space-free and between ${OFFICIAL_CHANNEL_NAME_MIN_LENGTH} and ${OFFICIAL_CHANNEL_NAME_MAX_LENGTH} characters.\n` +
+              `It can only contain alphanumeric characters and underscore.`,
+          },
+        };
+      }
+      if (!channel.is_official && !channelNameRegex.test(newName)) {
+        return {
+          status: 400,
+          data: {
+            error:
+              `Unofficial channels must be lowercase, space-free and between ${CHANNEL_NAME_MIN_LENGTH} and ${CHANNEL_NAME_MAX_LENGTH} characters.\n` +
+              `It can only contain alphanumeric characters and underscore.`,
+          },
+        };
+      }
+      //controlla che il nome non esista già
+      response = await findChannel(newName);
+      if (response.status < 300) {
+        //se esiste già
+        return {
+          status: 409,
+          data: {
+            error: response.error,
+          },
+        };
+      } else {
+        //se non esiste già
+        channel.name = newName;
+      }
+    }
+
+    //Modificare editors o owner
+    if (user_id == channel.owner || user.account_type == "moderator") {
+      //Cambio gli editors
+      if (Array.isArray(editorsArray) && editorsArray.length > 0) {
+        //editors
+
+        //se è un proprietario o un moderatore, aggiorna la lista degli editors
+        //controlla che gli editors esistano
+        const { added, removed } = addedAndRemoved(channel.editors, editorsArray);
+
+        let addedUsers = await checkForAllUsers(added);
+        let removedUsers = await checkForAllUsers(removed);
+
+        if (addedUsers.usersOutcome) {
+          //se esistono, aggiorna la lista degli editori
+          channel.editors = editorsArray;
+        }
+
+        const addedUserPromises = addedUsers.usersArray.map(async (user) => {
+          user.editor_channels.push(channel._id);
+          await user.save();
+        });
+
+        const removedUserPromises = removedUsers.usersArray.map(async (user) => {
+          user.editor_channels.pull(channel._id);
+          await user.save();
+        });
+
+        // Attendere che tutte le promesse vengano risolte
+        await Promise.all([...addedUserPromises, ...removedUserPromises]);
+      }
+
+      //Cambio l'owner
+      if (newOwner) {
+        //verifico che il nuovo proprietario esista
+        let response = await findUser(newOwner);
+        if (response.status >= 300) {
+          //se non esiste
+          return {
+            status: response.status,
+            data: { error: response.error },
+          };
+        }
+        const newOwnerUser = response.data;
+
+        response = await findUser(channel.owner);
+        if (response.status >= 300) {
+          //se non esiste
+          return {
+            status: response.status,
+            data: { error: response.error },
+          };
+        }
+        const oldOwnerUser = response.data;
+
+        channel.owner = newOwnerUser._id;
+
+        newOwnerUser.owned_channels.push(channel._id);
+        oldOwnerUser.owned_channels.pull(channel._id);
+
+        await newOwnerUser.save();
+        await oldOwnerUser.save();
+        await channel.save();
+      }
+    } else {
       return {
-        status: 400,
-        data: { error: "No update parameters specified" },
+        status: 403,
+        data: { error: "You don't have the permission to change editors in this channel" },
       };
     }
 
-    channel.name = newName || channel.name;
-    channel.creators = creatorsArray || channel.creators;
     channel.description = newDescription || channel.description;
-    //TODO controllare se funziona
-    channel.is_blocked = is_blocked !== undefined ? is_blocked : null;
 
-    channel.save();
+    await channel.save();
+    return {
+      status: 200,
+      data: channel,
+    };
   },
+
+  /**
+   * @param option.identifier Channel's identifier, can be either id or name
+   * @param option.squealIdentifier Squeal's identifier, can be either id or name
+   */
+  removeSquealFromChannel: async (options) => {
+    const { identifier, squealIdentifier, user_id } = options;
+    let data = findUser(user_id);
+    if (data.status >= 300) {
+      //if the response is an error
+      return {
+        status: data.status,
+        data: { error: data.error },
+      };
+    }
+    const user = data.data;
+
+    //controllo se esiste il canale
+    data = await findChannel(identifier);
+    if (data.status >= 300) {
+      //if the response is an error
+      return {
+        status: data.status,
+        data: { error: data.error },
+      };
+    }
+    const channel = data.data;
+
+    //controlliamo se l'utente è un moderatore o il proprietario del canale o editor
+    if (!(user.account_type == "moderator" || channel.owner.equals(user._id) || channel.editors.includes(user._id))) {
+      return {
+        status: 403,
+        data: { error: "You don't have the permission to remove squeals from this channel" },
+      };
+    }
+
+    //controllo se esiste lo squeal
+    data = await findSqueal(squealIdentifier);
+    if (data.status >= 300) {
+      //if the response is an error
+      return {
+        status: data.status,
+        data: { error: data.error },
+      };
+    }
+    const squeal = data.data;
+
+    //controllo se lo squeal è presente nel canale
+    if (!channel.squeals.includes(squeal._id)) {
+      return {
+        status: 404,
+        data: { error: "Squeal not found in this channel" },
+      };
+    }
+
+    //rimuovo lo squeal dal canale e il canale dallo squeal
+    channel.squeals.pull(squeal._id);
+    squeal.recipients.channels.pull(channel._id);
+    await channel.save();
+    await squeal.save();
+    return {
+      status: 200,
+      data: { message: "Squeal removed from channel" },
+    };
+  },
+
   /**
    * Toggle is_blocked field in user object, means that the channel is blocked or not
    * @param options.identifier Channel's identifier, can be either username or userId
@@ -350,9 +575,7 @@ module.exports = {
   /**
    * Toggle channel mute status by ID or channel name
    * @param options.identifier Channel's identifier, can be either id or name
-   * @param options.user_id User's identifier
    */
-
   toggleChannelMuteStatus: async (options) => {
     const { identifier, user_id } = options;
 
@@ -413,9 +636,7 @@ module.exports = {
   /**
    * Toggle channel subscription  by ID or channel name
    * @param options.identifier Channel's identifier, can be either id or name
-   * @param options.user_id User's identifier
    */
-
   toggleChannelSubscription: async (options) => {
     const { identifier, user_id } = options;
     //check if the user exists

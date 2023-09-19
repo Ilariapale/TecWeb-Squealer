@@ -3,9 +3,6 @@ const channels = require("../services/channels");
 const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
-//TODO funzione per silenziare e riattivare un canale (fatto)
-//TODO funzione per iscrivermi e disiscrivermi un canale (fatto)
-
 router.get("/", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -91,12 +88,35 @@ router.patch("/:identifier", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,
+      user_id: req.user_id,
     };
 
     options.updateChannelInlineReqJson = req.body;
 
     try {
       const result = await channels.updateChannel(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    return res.status(401).send({
+      error: "Token is either missing invalid or expired",
+    });
+  }
+});
+
+router.patch("/:identifier/:squealIdentifier", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      squealIdentifier: req.params.squealIdentifier,
+      user_id: req.user_id,
+    };
+    try {
+      const result = await channels.removeSquealFromChannel(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       return res.status(500).send({
