@@ -476,8 +476,11 @@ async function updateRecipientsKeywords(keywords, squeal) {
 function addedAndRemoved(oldArray, newArray) {
   if (!oldArray) oldArray = [];
   if (!newArray) newArray = [];
-  let added = newArray.filter((element) => !oldArray.includes(element));
-  let removed = oldArray.filter((element) => !newArray.includes(element));
+  const compare = (a, b) => {
+    return JSON.stringify(a) === JSON.stringify(b);
+  };
+  let added = newArray.filter((element) => !oldArray.some((oldElement) => compare(oldElement, element)));
+  let removed = oldArray.filter((element) => !newArray.some((newElement) => compare(newElement, element)));
   return { added, removed };
 }
 

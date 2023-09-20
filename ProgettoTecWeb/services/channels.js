@@ -304,162 +304,173 @@ module.exports = {
    * @param options.updateChannelInlineReqJson.newName
    * @param options.updateChannelInlineReqJson.newDescription
    * @param options.updateChannelInlineReqJson.newOwner
+   * options.updateChannelInlineReqJson. //TODO aggiungere la possibilità di rimuovere se stessi dagli editors
    */
   updateChannel: async (options) => {
-    const { identifier, user_id } = options;
-    const { editorsArray, newName, newDescription } = options.updateChannelInlineReqJson;
-    let data = await findUser(user_id);
-    if (data.status >= 300) {
-      //if the response is an error
-      return {
-        status: data.status,
-        data: { error: data.error },
-      };
-    }
-    const user = data.data;
-
-    //se non ha i permessi, ritorna un errore
-    if (!user_id == channel.owner || !channel.editors.includes(user_id) || !user.account_type == "moderator") {
-      return {
-        status: 403,
-        data: { error: "You don't have the permission to update this channel" },
-      };
-    }
-
-    if (!editorsArray && !newName && !newDescription) {
-      return {
-        status: 400,
-        data: { error: "No update parameters specified" },
-      };
-    }
-
-    let response = await findChannel(identifier);
-    if (response.status >= 300) {
-      //if the response is an error
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    const channel = response.data;
-
-    //se la richiesta include un nuovo nome, controlla i permessi, controlla che sia valido, controlla che non esista già e aggiorna il nome
-    if (newName) {
-      if (channel.is_official && !officialChannelNameRegex.test(newName)) {
-        //check if the name is lowercase, alphanumeric and between 5 and 23 characters
+    try {
+      const { identifier, user_id } = options;
+      const { editorsArray, newName, newDescription } = options.updateChannelInlineReqJson;
+      let data = await findUser(user_id);
+      if (data.status >= 300) {
+        //if the response is an error
         return {
-          status: 400,
-          data: {
-            error:
-              `Official channels must be uppercase, space-free and between ${OFFICIAL_CHANNEL_NAME_MIN_LENGTH} and ${OFFICIAL_CHANNEL_NAME_MAX_LENGTH} characters.\n` +
-              `It can only contain alphanumeric characters and underscore.`,
-          },
+          status: data.status,
+          data: { error: data.error },
         };
       }
-      if (!channel.is_official && !channelNameRegex.test(newName)) {
+      const user = data.data;
+
+      let response = await findChannel(identifier);
+      if (response.status >= 300) {
+        //if the response is an error
         return {
-          status: 400,
-          data: {
-            error:
-              `Unofficial channels must be lowercase, space-free and between ${CHANNEL_NAME_MIN_LENGTH} and ${CHANNEL_NAME_MAX_LENGTH} characters.\n` +
-              `It can only contain alphanumeric characters and underscore.`,
-          },
+          status: response.status,
+          data: { error: response.error },
         };
       }
-      //controlla che il nome non esista già
-      response = await findChannel(newName);
-      if (response.status < 300) {
-        //se esiste già
+      const channel = response.data;
+
+      //se non ha i permessi, ritorna un errore
+      if (!user._id.equals(channel.owner) && !channel.editors.includes(user_id) && !user.account_type == "moderator") {
         return {
-          status: 409,
-          data: {
-            error: response.error,
-          },
+          status: 403,
+          data: { error: "You don't have the permission to update this channel" },
         };
+      }
+
+      if (!editorsArray && !newName && !newDescription) {
+        return {
+          status: 400,
+          data: { error: "No update parameters specified" },
+        };
+      }
+
+      //se la richiesta include un nuovo nome, controlla i permessi, controlla che sia valido, controlla che non esista già e aggiorna il nome
+      if (newName) {
+        if (channel.is_official && !officialChannelNameRegex.test(newName)) {
+          //check if the name is lowercase, alphanumeric and between 5 and 23 characters
+          return {
+            status: 400,
+            data: {
+              error:
+                `Official channels must be uppercase, space-free and between ${OFFICIAL_CHANNEL_NAME_MIN_LENGTH} and ${OFFICIAL_CHANNEL_NAME_MAX_LENGTH} characters.\n` +
+                `It can only contain alphanumeric characters and underscore.`,
+            },
+          };
+        }
+        if (!channel.is_official && !channelNameRegex.test(newName)) {
+          return {
+            status: 400,
+            data: {
+              error:
+                `Unofficial channels must be lowercase, space-free and between ${CHANNEL_NAME_MIN_LENGTH} and ${CHANNEL_NAME_MAX_LENGTH} characters.\n` +
+                `It can only contain alphanumeric characters and underscore.`,
+            },
+          };
+        }
+        //controlla che il nome non esista già
+        response = await findChannel(newName);
+        if (response.status < 300) {
+          //se esiste già
+          return {
+            status: 409,
+            data: {
+              error: response.error,
+            },
+          };
+        } else {
+          //se non esiste già
+          channel.name = newName;
+        }
+      }
+
+      //Modificare editors o owner
+      if (user._id.equals(channel.owner) || user.account_type == "moderator") {
+        //Cambio gli editors
+        const parsedEditorsArray = JSON.parse(editorsArray);
+        if (Array.isArray(parsedEditorsArray)) {
+          let data = await checkForAllUsers(parsedEditorsArray);
+          if (!data.usersOutcome) {
+            //se non esistono, ritorna un errore
+            return {
+              status: 404,
+              data: { error: "Users not valid" },
+            };
+          }
+          const editorsIds = data.usersArray.map((user) => user._id);
+
+          //controlla che gli editors esistano
+          const { added, removed } = addedAndRemoved(channel.editors, editorsIds);
+
+          const addedUserPromises = added.map(async (user) => {
+            let userObject = (await findUser(user._id)).data;
+            userObject.editor_channels.push(channel._id);
+            await userObject.save();
+          });
+
+          const removedUserPromises = removed.map(async (user) => {
+            let userObject = (await findUser(user._id)).data;
+            userObject.editor_channels.pull(channel._id);
+            await userObject.save();
+          });
+
+          // Attendere che tutte le promesse vengano risolte
+          await Promise.all([...addedUserPromises, ...removedUserPromises]);
+
+          //aggiorno gli editors
+          channel.editors = editorsIds;
+        }
+
+        //Cambio l'owner
+        if (typeof newOwner !== "undefined") {
+          //verifico che il nuovo proprietario esista
+          let response = await findUser(newOwner);
+          if (response.status >= 300) {
+            //se non esiste
+            return {
+              status: response.status,
+              data: { error: response.error },
+            };
+          }
+          const newOwnerUser = response.data;
+
+          response = await findUser(channel.owner);
+          if (response.status >= 300) {
+            //se non esiste
+            return {
+              status: response.status,
+              data: { error: response.error },
+            };
+          }
+          const oldOwnerUser = response.data;
+
+          channel.owner = newOwnerUser._id;
+
+          newOwnerUser.owned_channels.push(channel._id);
+          oldOwnerUser.owned_channels.pull(channel._id);
+
+          await newOwnerUser.save();
+          await oldOwnerUser.save();
+          await channel.save();
+        }
       } else {
-        //se non esiste già
-        channel.name = newName;
-      }
-    }
-
-    //Modificare editors o owner
-    if (user_id == channel.owner || user.account_type == "moderator") {
-      //Cambio gli editors
-      if (Array.isArray(editorsArray) && editorsArray.length > 0) {
-        //editors
-
-        //se è un proprietario o un moderatore, aggiorna la lista degli editors
-        //controlla che gli editors esistano
-        const { added, removed } = addedAndRemoved(channel.editors, editorsArray);
-
-        let addedUsers = await checkForAllUsers(added);
-        let removedUsers = await checkForAllUsers(removed);
-
-        if (addedUsers.usersOutcome) {
-          //se esistono, aggiorna la lista degli editori
-          channel.editors = editorsArray;
-        }
-
-        const addedUserPromises = addedUsers.usersArray.map(async (user) => {
-          user.editor_channels.push(channel._id);
-          await user.save();
-        });
-
-        const removedUserPromises = removedUsers.usersArray.map(async (user) => {
-          user.editor_channels.pull(channel._id);
-          await user.save();
-        });
-
-        // Attendere che tutte le promesse vengano risolte
-        await Promise.all([...addedUserPromises, ...removedUserPromises]);
+        return {
+          status: 403,
+          data: { error: "You don't have the permission to change editors in this channel" },
+        };
       }
 
-      //Cambio l'owner
-      if (newOwner) {
-        //verifico che il nuovo proprietario esista
-        let response = await findUser(newOwner);
-        if (response.status >= 300) {
-          //se non esiste
-          return {
-            status: response.status,
-            data: { error: response.error },
-          };
-        }
-        const newOwnerUser = response.data;
+      channel.description = newDescription || channel.description;
 
-        response = await findUser(channel.owner);
-        if (response.status >= 300) {
-          //se non esiste
-          return {
-            status: response.status,
-            data: { error: response.error },
-          };
-        }
-        const oldOwnerUser = response.data;
-
-        channel.owner = newOwnerUser._id;
-
-        newOwnerUser.owned_channels.push(channel._id);
-        oldOwnerUser.owned_channels.pull(channel._id);
-
-        await newOwnerUser.save();
-        await oldOwnerUser.save();
-        await channel.save();
-      }
-    } else {
+      await channel.save();
       return {
-        status: 403,
-        data: { error: "You don't have the permission to change editors in this channel" },
+        status: 200,
+        data: channel,
       };
+    } catch (err) {
+      console.error(err);
+      throw new Error("Failed to update channel");
     }
-
-    channel.description = newDescription || channel.description;
-
-    await channel.save();
-    return {
-      status: 200,
-      data: channel,
-    };
   },
 
   /**

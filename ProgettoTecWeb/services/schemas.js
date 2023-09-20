@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
 const { newOwnerNotification } = require("./messages.js");
-//TODO aggiungere le chiamate per reagire ad uno squeal
-//TODO potremmo mettere i canali sottoscritti in preferences insieme ai canali mutati
 
 // Notification
 const NotificationSchema = new mongoose.Schema({
@@ -28,7 +26,6 @@ const UserSchema = new mongoose.Schema({
     scheduled: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     mentioned_in: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     reacted_to: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
-    //TODO aggiornare la funzione di cancellazione di un profilo per rimuovere reacted_to
   },
   char_quota: {
     daily: { type: Number, default: 100 },
@@ -59,7 +56,7 @@ const UserSchema = new mongoose.Schema({
 
 UserSchema.methods.Delete = async function () {
   // Removing all the references to the user from the other collections
-
+  // Even if the user is deleted, their reactions to other's squeals are still valid
   const postedSqueals = this.squeals.posted;
   const mentionedInSqueals = this.squeals.mentioned_in;
   const createdChannels = this.owned_channels;

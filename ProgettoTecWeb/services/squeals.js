@@ -441,7 +441,6 @@ module.exports = {
 
   /**
    * @param options.identifier
-   * @param options.user_id
    * @param options.reaction
    */
   addReaction: async (options) => {
@@ -516,7 +515,6 @@ module.exports = {
    * @param options.identifier Squeal's id
    * @param options.updateSquealInlineReqJson.recipients Array of users and channels (no keywords allowed)
    * @param options.updateSquealInlineReqJson.reactions Array like {like: 0, love: 0, laugh: 0, dislike: 0, disgust: 0, disagree: 0}
-   * @param options.user_id Request sender's user id
    */
   updateSqueal: async (options) => {
     //TODO
