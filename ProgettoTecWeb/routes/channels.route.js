@@ -108,6 +108,30 @@ router.patch("/:identifier", verifyToken, async (req, res, next) => {
   }
 });
 
+router.patch("/:identifier/editor", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
+
+    options.updateChannelInlineReqJson = req.body;
+
+    try {
+      const result = await channels.leaveModTeam(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    return res.status(401).send({
+      error: "Token is either missing invalid or expired",
+    });
+  }
+});
+
 router.patch("/:identifier/:squealIdentifier", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {

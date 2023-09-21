@@ -14,6 +14,7 @@ const {
   findChannel,
   findKeyword,
   findNotification,
+  checkForAllNotifications,
 } = require("./utils");
 const welcomeNotification = "Welcome to Squealer! Check out your first squeal by clicking on the notification.";
 //--------------------------------------------------------------------------
@@ -290,7 +291,6 @@ module.exports = {
 
     //----------------------------------------------------------------------------------------------------------------------
     // Removing all the references to the user from the other collections
-    //TODO testare
     userToDelete.Delete();
 
     return {
@@ -434,7 +434,6 @@ module.exports = {
   /**
    * Toggle is_active field in user object, means that the user is active or not: if the user is banned, he's not active
    * @param options.identifier User's identifier, can be either username or userId
-   * @param options.user_id Request sender's user id
    */
   toggleProfileActiveStatus: async (options) => {
     //TODO utilizzare select quando abbiamo bisogno di un solo campo e non tutto l'oggetto
@@ -486,6 +485,49 @@ module.exports = {
     return {
       status: 200,
       data: updatedUser,
+    };
+  },
+
+  /**
+   * @param options.notificationArray Notification's identifier
+   */
+  toggleNotificationStatus: async (options) => {
+    const { user_id } = options;
+    const { notificationArray } = options.updateProfileInlineReqJson;
+
+    // Check if the required fields are present
+    if (notificationArray === undefined || notificationArray.length <= 0) {
+      return {
+        status: 400,
+        data: { error: "Notification identifier is required" },
+      };
+    }
+
+    let data = findUser(user_id);
+    if (data.status >= 300) {
+      //if the response is an error
+      return {
+        status: data.status,
+        data: { error: "User id in token is not valid" },
+      };
+    }
+    const reqSender = data.data;
+
+    //controllare che gli utenti esistano
+    let response = await checkForAllNotifications(notificationArray, reqSender);
+    if (!response.notificationsOutcome) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: "One or more notifications not found" },
+      };
+    }
+
+    const updatedNotifications = await Notification.updateMany({ _id: { $in: response.notificationsArray } }, { $set: { is_unseen: false } });
+    // Return the result
+    return {
+      status: 200,
+      data: updatedNotifications,
     };
   },
 };

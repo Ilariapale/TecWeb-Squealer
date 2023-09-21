@@ -121,6 +121,9 @@ UserSchema.methods.Delete = async function () {
   if (this.smm != null && this.smm != undefined && this.smm != "") {
     await User.findByIdAndUpdate(this.smm, { $unset: { smm: "" } });
   }
+
+  //remove the user from the db
+  await this.deleteOne();
 };
 
 const User = mongoose.model("User", UserSchema);
@@ -186,36 +189,9 @@ SquealSchema.methods.DeleteAndPreserveInDB = async function () {
  * This function deletes the squeal from the db and all the references to it from the other collections
  */
 SquealSchema.methods.Delete = async function () {
-  //TODO testare e cancellare commenti se funziona tutto
-  //1) squeal.recipients.users are the target users and I have to remove the squeal from each user.squeals.mentioned_in
-  // const userUpdatePromises = [];
-  // for (const user of this.recipients.users) {
-  //   let promise = User.findByIdAndUpdate(user, { $pull: { "squeals.mentioned_in": this._id } });
-  //   userUpdatePromises.push(promise);
-  // }
-  // await Promise.all(userUpdatePromises);
-
   await User.updateMany({ _id: { $in: this.recipients.users } }, { $pull: { "squeals.mentioned_in": this._id } });
 
-  //2) squeal.recipients.channels are the target channels and I have to remove the squeal from each channel.squeals
-
-  // const channelUpdatePromises = [];
-  // for (const channel of this.recipients.channels) {
-  //   let promise = Channel.findByIdAndUpdate(channel, { $pull: { squeals: this._id } });
-  //   channelUpdatePromises.push(promise);
-  // }
-  // await Promise.all(channelUpdatePromises);
-
   await Channel.updateMany({ _id: { $in: this.recipients.channels } }, { $pull: { squeals: this._id } });
-
-  //3) squeal.recipients.keywords sono le keywords destinatarie e devo rimuovere lo squeal da ogni keyword.squeals
-
-  // const keywordUpdatePromises = [];
-  // for (const keyword of this.recipients.keywords) {
-  //   let promise = Keyword.findOneAndUpdate({ name: keyword }, { $pull: { squeals: this._id } });
-  //   keywordUpdatePromises.push(promise);
-  // }
-  // await Promise.all(keywordUpdatePromises);
 
   await Keyword.updateMany({ name: { $in: this.recipients.keywords } }, { $pull: { squeals: this._id } });
 

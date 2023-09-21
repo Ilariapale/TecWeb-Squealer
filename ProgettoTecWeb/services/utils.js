@@ -233,6 +233,37 @@ async function checkForAllChannels(channelArray) {
   return { channelsOutcome: allChannelExist, channelsArray: channelResults, notFound: nullAndBlockedIndex.map((index) => channelArray[index]) };
 }
 
+async function checkForAllNotifications(notificationArray, user) {
+  // Controlla se user è undefined o se notificationArray è vuoto
+  if (!user || !notificationArray || notificationArray.length === 0) {
+    return { notificationsOutcome: true, notificationsArray: [] };
+  }
+
+  // Verifica che ogni elemento in notificationArray sia un ObjectID valido
+  const isValidObjectID = (id) => mongooseObjectIdRegex.test(id);
+  if (!notificationArray.every(isValidObjectID)) {
+    return {
+      notificationsOutcome: false,
+      notificationsArray: [],
+      notFound: notificationArray.filter((notification) => !isValidObjectID(notification)),
+    };
+  }
+
+  // Verifica se tutte le notifiche nell'array esistono nel database
+  const notificationResults = await Notification.find({ _id: { $in: notificationArray } });
+
+  // Estrai gli _id delle notifiche esistenti
+  const existingNotificationIds = notificationResults.map((notification) => notification._id);
+
+  // Verifica se tutte le notifiche nell'array sono presenti nelle notifiche dell'utente
+  const allNotificationsInUser = notificationArray.every((notification) => user.notifications.includes(notification));
+
+  return {
+    notificationsOutcome: allNotificationsInUser,
+    notificationsArray: existingNotificationIds,
+  };
+}
+
 async function containsOfficialChannels(channelArray) {
   //if the parameter is null or empty, return true, and an empty array
   if (!channelArray || channelArray.length == 0) return false;
@@ -309,6 +340,8 @@ async function removeQuota(user, squealCost) {
 }
 
 async function updateRecipientsUsers(users, squeal) {
+  //se user è undefined creo un array vuoto
+  if (!users) users = [];
   //if it's too much, we can check just the new users
   const { usersOutcome, usersArray } = await checkForAllUsers(users);
   if (!usersOutcome) {
@@ -317,10 +350,10 @@ async function updateRecipientsUsers(users, squeal) {
       data: { error: "One or more users not found." },
     };
   }
+  console.log("--------------------------------");
   const results = addedAndRemoved(squeal.recipients.users, usersArray);
   const addedUsers = results.added;
   const removedUsers = results.removed;
-
   //remove squeal and notification from removed users
   if (removedUsers && removedUsers.length > 0) {
     const removedPromises = removedUsers.map(async (user) => {
@@ -547,6 +580,7 @@ module.exports = {
   findNotification,
   checkForAllChannels,
   checkForAllUsers,
+  checkForAllNotifications,
   verifyToken,
   generateToken,
   hasEnoughCharQuota,

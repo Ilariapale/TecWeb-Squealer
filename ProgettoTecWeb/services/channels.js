@@ -304,7 +304,6 @@ module.exports = {
    * @param options.updateChannelInlineReqJson.newName
    * @param options.updateChannelInlineReqJson.newDescription
    * @param options.updateChannelInlineReqJson.newOwner
-   * options.updateChannelInlineReqJson. //TODO aggiungere la possibilità di rimuovere se stessi dagli editors
    */
   updateChannel: async (options) => {
     try {
@@ -345,7 +344,7 @@ module.exports = {
         };
       }
 
-      //se la richiesta include un nuovo nome, controlla i permessi, controlla che sia valido, controlla che non esista già e aggiorna il nome
+      //se la richiesta include un nuovo nome per il canale, controlla i permessi, controlla che sia valido, controlla che non esista già e aggiorna il nome
       if (newName) {
         if (channel.is_official && !officialChannelNameRegex.test(newName)) {
           //check if the name is lowercase, alphanumeric and between 5 and 23 characters
@@ -397,8 +396,15 @@ module.exports = {
               data: { error: "Users not valid" },
             };
           }
-          const editorsIds = data.usersArray.map((user) => user._id);
-
+          const editorsIds = data.usersArray;
+          //se tra gli editors c'è il proprietario, ritorna un errore
+          //console.log(editorsArray);
+          if (editorsIds.some((editorId) => editorId.equals(channel.owner))) {
+            return {
+              status: 400,
+              data: { error: "The owner can't be an editor" },
+            };
+          }
           //controlla che gli editors esistano
           const { added, removed } = addedAndRemoved(channel.editors, editorsIds);
 
@@ -471,6 +477,51 @@ module.exports = {
       console.error(err);
       throw new Error("Failed to update channel");
     }
+  },
+
+  /**
+   * @param options.identifier Channel's identifier, can be either id or name
+   * @param options.user_id User's id
+   */
+  leaveModTeam: async (options) => {
+    const { identifier, user_id } = options;
+    let data = await findUser(user_id);
+    if (data.status >= 300) {
+      //if the response is an error
+      return {
+        status: data.status,
+        data: { error: data.error },
+      };
+    }
+    const user = data.data;
+
+    data = await findChannel(identifier);
+    if (data.status >= 300) {
+      //if the response is an error
+      return {
+        status: data.status,
+        data: { error: data.error },
+      };
+    }
+    const channel = data.data;
+
+    if (!channel.editors.includes(user._id)) {
+      return {
+        status: 403,
+        data: { error: "You're not an editor of this channel" },
+      };
+    }
+
+    channel.editors.pull(user._id);
+    user.editor_channels.pull(channel._id);
+
+    await channel.save();
+    await user.save();
+
+    return {
+      status: 200,
+      data: { message: "You left the mod team" },
+    };
   },
 
   /**

@@ -186,4 +186,26 @@ router.patch("/:identifier/activestatus", verifyToken, async (req, res, next) =>
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
+
+router.patch("/notification", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+    };
+
+    options.updateProfileInlineReqJson = req.body;
+
+    try {
+      const result = await users.toggleNotificationStatus(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
 module.exports = router;

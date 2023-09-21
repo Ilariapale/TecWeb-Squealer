@@ -22,11 +22,9 @@ const {
   updateRecipientsKeywords,
   containsOfficialChannels,
 } = require("./utils");
-
+//TODO tradurre tutti i commenti in inglese
 //TODO gestire tutti i casi in cui l'utente è bannato
-//TODO creare e/o spostare uno squeal in un canale ufficiale
 //TODO quando vengono mandate richieste formattate male, restituire un errore con la descrizione del problema (400 Bad Request)
-//TODO fare una funzione che setta a false Notification.is_unseen per una singola notifica e per tutte le notifiche di un utente
 module.exports = {
   /**
    * Retrieve squeals with optional filters
@@ -272,7 +270,6 @@ module.exports = {
 
     //create the hex_id from the length of the user squeals array
     hex_id = author.squeals?.posted?.length || 0;
-
     //create the squeal object
     const newSqueal = new Squeal({
       hex_id: hex_id,
@@ -380,7 +377,7 @@ module.exports = {
     }
     const squealAuthor = data.data;
 
-    let isSenderAuthor = reqSender._id == squealAuthor._id;
+    let isSenderAuthor = reqSender._id.equals(squealAuthor._id);
     let isModerator = reqSender.account_type == "moderator";
     let isSMM = reqSender.account_type == "professional" && reqSender.professional_type == "smm" && reqSender._id.equals(squealAuthor.smm);
 
@@ -390,47 +387,6 @@ module.exports = {
         data: { error: "You are not allowed to delete this squeal." },
       };
     }
-
-    // //1) squeal.recipients.users are the target users and I have to remove the squeal from each user.squeals.mentioned_in
-    // const userUpdatePromises = [];
-
-    // for (const user of squeal.recipients.users) {
-    //   let promise = User.findByIdAndUpdate(user, { $pull: { "squeals.mentioned_in": squeal._id } });
-    //   userUpdatePromises.push(promise);
-    // }
-    // await Promise.all(userUpdatePromises);
-
-    // //2) squeal.recipients.channels are the target channels and I have to remove the squeal from each channel.squeals
-
-    // const channelUpdatePromises = [];
-
-    // for (const channel of squeal.recipients.channels) {
-    //   let promise = Channel.findByIdAndUpdate(channel, { $pull: { squeals: squeal._id } });
-    //   channelUpdatePromises.push(promise);
-    // }
-    // await Promise.all(channelUpdatePromises);
-
-    // //3) squeal.recipients.keywords sono le keywords destinatarie e devo rimuovere lo squeal da ogni keyword.squeals
-
-    // const keywordUpdatePromises = [];
-
-    // for (const keyword of squeal.recipients.keywords) {
-    //   let promise = Keyword.findOneAndUpdate({ name: keyword }, { $pull: { squeals: squeal._id } });
-    //   keywordUpdatePromises.push(promise);
-    // }
-    // await Promise.all(keywordUpdatePromises);
-
-    // squeal.content_type = deleted_content_type;
-    // squeal.content = replaceString;
-    // squeal.recipients.users = [];
-    // squeal.recipients.channels = [];
-    // squeal.recipients.keywords = [];
-    // squeal.last_modified = new Date();
-    // await squeal.save();
-
-    // //4) cancello le notifiche che avevano come squeal_ref lo squeal cancellato
-    // await Notification.deleteMany({ squeal_ref: identifier });
-
     await squeal.DeleteAndPreserveInDB();
 
     return {
@@ -517,100 +473,93 @@ module.exports = {
    * @param options.updateSquealInlineReqJson.reactions Array like {like: 0, love: 0, laugh: 0, dislike: 0, disgust: 0, disagree: 0}
    */
   updateSqueal: async (options) => {
-    //TODO
-    try {
-      const { identifier, user_id } = options;
-      const recipients = options.updateSquealInlineReqJson.recipients ? JSON.parse(options.updateSquealInlineReqJson?.recipients) : undefined;
-      const reactions = options.updateSquealInlineReqJson.reactions ? JSON.parse(options.updateSquealInlineReqJson?.reactions) : undefined;
-      if (!identifier) {
-        return {
-          status: 400,
-          data: { error: "Missing 'identifier' parameter." },
-        };
-      }
-      let response = await findUser(user_id);
-      if (response.status >= 300) {
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const reqSender = response.data;
-
-      //check if the reqSender is a moderator
-      if (reqSender.account_type != "moderator") {
-        return {
-          status: 403,
-          data: { error: "You are not allowed to update this squeal." },
-        };
-      }
-
-      //check if the squeal exists
-      let data = await findSqueal(identifier);
-      if (data.status >= 300) {
-        return {
-          status: data.status,
-          data: { error: data.error },
-        };
-      }
-      const squeal = data.data;
-
-      if (!recipients && !reactions) {
-        return {
-          status: 400,
-          data: { error: "Missing 'recipients' or 'reactions' parameter." },
-        };
-      }
-      if (recipients) {
-        const { users, channels, keywords } = recipients;
-
-        //UPDATE USERS
-        let usersResponse = await updateRecipientsUsers(users, squeal);
-        if (usersResponse.status >= 300) {
-          return {
-            status: usersResponse.status,
-            data: { error: usersResponse.error },
-          };
-        }
-        squeal.recipients.users = usersResponse.data.usersArray;
-
-        //UPDATE CHANNELS
-        let channelsResponse = await updateRecipientsChannels(channels, squeal);
-        if (channelsResponse.status >= 300) {
-          return {
-            status: channelsResponse.status,
-            data: { error: channelsResponse.error },
-          };
-        }
-        //check if the squeal is in an official channel
-        squeal.is_in_official_channel = (channels || []).some((channel) => channel.is_official);
-        squeal.recipients.channels = channelsResponse.data.channelsArray;
-
-        //UPDATE KEYWORDS
-        let keywordsResponse = await updateRecipientsKeywords(keywords, squeal);
-        if (keywordsResponse.status >= 300) {
-          return {
-            status: keywordsResponse.status,
-            data: { error: keywordsResponse.error },
-          };
-        }
-        squeal.recipients.keywords = keywords;
-      }
-
-      squeal.last_modified = new Date();
-      const updatedSqueal = await squeal.save();
+    const { identifier, user_id } = options;
+    const recipients = options.updateSquealInlineReqJson.recipients ? JSON.parse(options.updateSquealInlineReqJson?.recipients) : undefined;
+    const reactions = options.updateSquealInlineReqJson.reactions ? JSON.parse(options.updateSquealInlineReqJson?.reactions) : undefined;
+    if (!identifier) {
       return {
-        status: updatedSqueal ? 200 : 400,
-        data: updatedSqueal ? updatedSqueal : { error: "Failed to update squeal" },
-      };
-    } catch (err) {
-      console.log(err);
-      return {
-        status: 500,
-        data: { error: err || "Something went wrong." },
+        status: 400,
+        data: { error: "Missing 'identifier' parameter." },
       };
     }
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const reqSender = response.data;
+
+    //check if the reqSender is a moderator
+    if (reqSender.account_type != "moderator") {
+      return {
+        status: 403,
+        data: { error: "You are not allowed to update this squeal." },
+      };
+    }
+
+    //check if the squeal exists
+    let data = await findSqueal(identifier);
+    if (data.status >= 300) {
+      return {
+        status: data.status,
+        data: { error: data.error },
+      };
+    }
+    const squeal = data.data;
+
+    if (!recipients && !reactions) {
+      return {
+        status: 400,
+        data: { error: "Missing 'recipients' or 'reactions' parameter." },
+      };
+    }
+    if (recipients) {
+      const { users, channels, keywords } = recipients;
+
+      //UPDATE USERS
+      console.log("--------users--------");
+      console.log(users);
+      console.log("--------squeal--------");
+      console.log(squeal);
+      let usersResponse = await updateRecipientsUsers(users, squeal);
+      if (usersResponse.status >= 300) {
+        return {
+          status: usersResponse.status,
+          data: { error: usersResponse.error },
+        };
+      }
+      squeal.recipients.users = usersResponse.data.usersArray;
+
+      //UPDATE CHANNELS
+      let channelsResponse = await updateRecipientsChannels(channels, squeal);
+      if (channelsResponse.status >= 300) {
+        return {
+          status: channelsResponse.status,
+          data: { error: channelsResponse.error },
+        };
+      }
+      //check if the squeal is in an official channel
+      squeal.is_in_official_channel = (channels || []).some((channel) => channel.is_official);
+      squeal.recipients.channels = channelsResponse.data.channelsArray;
+
+      //UPDATE KEYWORDS
+      let keywordsResponse = await updateRecipientsKeywords(keywords, squeal);
+      if (keywordsResponse.status >= 300) {
+        return {
+          status: keywordsResponse.status,
+          data: { error: keywordsResponse.error },
+        };
+      }
+      squeal.recipients.keywords = keywords;
+    }
+
+    squeal.last_modified = new Date();
+    const updatedSqueal = await squeal.save();
+    return {
+      status: updatedSqueal ? 200 : 400,
+      data: updatedSqueal ? updatedSqueal : { error: "Failed to update squeal" },
+    };
   },
 };
-
-//TODO rimuovere dalla lista di squeal nei canali ufficiali di un utente quando vengono rimossi ??
