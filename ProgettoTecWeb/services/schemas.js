@@ -44,6 +44,7 @@ const UserSchema = new mongoose.Schema({
   profile_info: { type: String, default: "Hi there! I'm using Squealer, my new favourite social network!" },
   profile_picture: { type: String, default: "" },
   smm: { type: mongoose.Types.ObjectId, ref: "User" },
+  managed_accounts: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
   preferences: {
     muted_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
   },

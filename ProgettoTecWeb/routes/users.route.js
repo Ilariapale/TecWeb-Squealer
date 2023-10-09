@@ -99,6 +99,49 @@ router.delete("/:identifier", verifyToken, async (req, res, next) => {
   }
 });
 
+router.patch("/:identifier/type", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
+
+    options.updateProfileInlineReqJson = req.body;
+
+    try {
+      const result = await users.updateUser(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
+router.patch("/smm", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+    };
+
+    options.updateProfileInlineReqJson = req.body;
+
+    try {
+      const result = await users.updateSMM(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
 router.patch("/:identifier/profile", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
