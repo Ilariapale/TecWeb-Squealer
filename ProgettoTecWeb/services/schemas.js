@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { newOwnerNotification } = require("./messages.js");
+const { newOwnerNotification, deletedManagedAccountNotification, deletedSMMNotification } = require("./messages.js");
 
 // Notification
 const NotificationSchema = new mongoose.Schema({
@@ -45,6 +45,10 @@ const UserSchema = new mongoose.Schema({
   profile_picture: { type: String, default: "" },
   smm: { type: mongoose.Types.ObjectId, ref: "User" },
   managed_accounts: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
+  pending_requests: {
+    SMM_requests: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] }, //SMM FIELD: requests recieved from VIPs
+    VIP_requests: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] }, //VIP FIELD: requests sent to SMMs
+  },
   preferences: {
     muted_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
   },
@@ -118,9 +122,40 @@ UserSchema.methods.Delete = async function () {
     }
   }
 
-  //remove the smm if they have one
+  //remove the VIP profile from the smm managed accounts if they have one
   if (this.smm != null && this.smm != undefined && this.smm != "") {
-    await User.findByIdAndUpdate(this.smm, { $unset: { smm: "" } });
+    //mando la notifica al smm
+    const newNotification = new Notification({
+      squeal_ref: undefined,
+      user_ref: this.smm,
+      created_at: Date.now(),
+      content: deletedManagedAccountNotification(this.username),
+    });
+    const notification = await newNotification.save();
+
+    await User.findByIdAndUpdate(this.smm, { $pull: { managed_accounts: this._id }, $push: { notifications: notification._id } });
+  }
+
+  //if the deleted account is a smm, remove the smm from the managed accounts
+  if (this.managed_accounts.length > 0) {
+    //mando la notifica a tutti gli smm
+    const promises = this.managed_accounts.map((managed_account) => {
+      const notification = new Notification({
+        squeal_ref: undefined,
+        user_ref: managed_account,
+        created_at: Date.now(),
+        content: deletedSMMNotification(this.username),
+      });
+
+      return Promise.all([
+        notification.save(),
+        User.findByIdAndUpdate(managed_account, {
+          $unset: { smm: "" },
+          $push: { notifications: notification._id },
+        }),
+      ]);
+    });
+    await Promise.all(promises);
   }
 
   //remove the user from the db

@@ -16,11 +16,9 @@ const {
   findNotification,
   checkForAllNotifications,
 } = require("./utils");
-const { welcomeNotification, updatedManagedAccountNotification, updatedSMMNotification, welcomeMessage } = require("./messages");
+const { welcomeNotification, updatedManagedAccountNotification, updatedSMMNotification, welcomeMessage, newManagedAccountNotification, newSMMNotification } = require("./messages");
 //--------------------------------------------------------------------------
-//TODO quando un account viene cancellato, se quell'account possedeva canali, questi vengono passati al primo dei editors, se non ne ha il canale viene cancellato
-//TODO quando un account viene cancellato, se quell'account era admin
-//TODO quando un account viene cancellato, se quell'account era professional, gestire i smm
+//TODO gestire l'approvazione del SMM della richiesta da parte del VIP
 module.exports = {
   /**
    * Get users list filtering by creationDate and squeals count
@@ -302,12 +300,14 @@ module.exports = {
 
   /**
    * @param options.identifier User's identifier, can be either username or userId
-   * @param options.updateProfileInlineReqJson.account_type New user's account type
-   * @param options.updateProfileInlineReqJson.professional_type New user's professional type
+   * @param options.inlineReqJson.account_type New user's account type
+   * @param options.inlineReqJson.professional_type New user's professional type
    */
   updateUser: async (options) => {
+    //TODO gestire gli array di request quando gli account cambiano type
+
     const { identifier, user_id } = options;
-    const { account_type, professional_type } = options.updateProfileInlineReqJson;
+    const { account_type, professional_type } = options.inlineReqJson;
     // Check if the required fields are present
     if (!account_type && !professional_type) {
       return {
@@ -427,14 +427,16 @@ module.exports = {
   },
 
   /**
-   * @param options.updateProfileInlineReqJson.newSMM New user's SMM
+   * This function is used by a VIP to send a request to a SMM
+   * @param options.identifier SMM's identifier, can be either username or userId
    */
-  updateSMM: async (options) => {
-    const { user_id } = options;
-    const { newSMM } = options.updateProfileInlineReqJson;
+  requestSMM: async (options) => {
+    const { identifier, user_id } = options;
 
+    //check if the request sender exists
     let response = await findUser(user_id);
     if (response.status >= 300) {
+      //if the response is an error
       return {
         status: response.status,
         data: { error: "User id in token is not valid" },
@@ -450,102 +452,157 @@ module.exports = {
       };
     }
 
-    //check if the new SMM exists and is a proper SMM
-    let smm;
-    if (newSMM === undefined) {
-      smm = undefined;
-    } else {
-      response = await findUser(newSMM);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      smm = response.data;
-      if (smm.account_type !== "professional" || smm.professional_type !== "SMM") {
-        return {
-          status: 400,
-          data: { error: "The user is not a SMM" },
-        };
-      }
-    }
-
-    //if the user doesn't have a SMM and doesn't want to have one
-    if (reqSender.smm === undefined) {
-      //if the user doesn't have a SMM
-      if (!newSMM) {
-        return { status: 204 };
-      }
-
-      //if the user doesn't have a SMM and wants to have one
-      smm.managed_accounts.push(reqSender._id);
-      reqSender.smm = smm._id;
-      await smm.save();
-      await reqSender.save();
-
+    //check if the reqSender already has a SMM
+    if (reqSender.smm) {
       return {
-        status: 200,
-        data: { message: "SMM updated successfully" },
+        status: 400,
+        data: { error: "You already have a SMM" },
       };
     }
 
-    //if the user has a SMM
-    response = await findUser(reqSender.smm);
+    //check if the requested SMM exists
+    response = await findUser(identifier);
     if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const smm = response.data;
+
+    //check if the requested SMM is a proper SMM
+    if (smm.account_type !== "professional" || smm.professional_type !== "SMM") {
+      return {
+        status: 400,
+        data: { error: "The user is not a SMM" },
+      };
+    }
+
+    if (smm.pending_requests.SMM_requests.includes(reqSender._id)) {
+      //TODO controllare se ll'include funziona con gli id
+      return {
+        status: 400,
+        data: { error: "You already sent a request to this SMM" },
+      };
+    }
+
+    smm.pending_requests.SMM_requests.push(reqSender._id);
+    reqSender.pending_requests.VIP_requests.push(smm._id);
+    await smm.save();
+    await reqSender.save();
+    return {
+      status: 200,
+      data: { message: "Request sent successfully" },
+    };
+  },
+
+  /**
+   * This function is used by a SMM to accept or decline a VIP's request
+   * @param options.identifier New user's VIP
+   * @param options.request_response Response to the request, can be either "true" or "false"
+   */
+  handleVIPRequest: async (options) => {
+    const { identifier, user_id, request_response } = options;
+
+    if (request_response !== "true" && request_response !== "false") {
+      return {
+        status: 400,
+        data: { error: "Request response must be either 'true' or 'false'" },
+      };
+    }
+
+    //check if the request sender exists
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
       return {
         status: response.status,
         data: { error: "User id in token is not valid" },
       };
     }
-    const oldSMM = response.data;
+    const reqSender = response.data;
 
-    //if the user wants to remove their SMM
-    if (!newSMM) {
-      oldSMM.managed_accounts.pull(reqSender._id);
-      reqSender.smm = undefined;
-      await oldSMM.save();
-      await reqSender.save();
-
+    //check if the reqSender is a SMM
+    if (reqSender.account_type !== "professional" || reqSender.professional_type !== "SMM") {
       return {
-        status: 200,
-        data: { message: "SMM updated successfully" },
+        status: 403,
+        data: { error: "You are not a SMM" },
       };
     }
+    //check if the requested VIP exists
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const vip = response.data;
 
-    //if the user wants to modify their SMM
-    //check if the new SMM is the same as the old one
-    if (smm._id.equals(oldSMM._id)) {
+    //check if the requested VIP is a proper VIP
+    if (vip.account_type !== "professional" || vip.professional_type !== "VIP") {
       return {
         status: 400,
-        data: { error: "The user is already your SMM" },
-      };
-    } else {
-      //if the new SMM is different from the old one
-      oldSMM.managed_accounts.pull(reqSender._id);
-      smm.managed_accounts.push(reqSender._id);
-      reqSender.smm = smm._id;
-      await oldSMM.save();
-      await smm.save();
-      await reqSender.save();
-
-      return {
-        status: 200,
-        data: { message: "SMM updated successfully" },
+        data: { error: "The user is not a VIP" },
       };
     }
+
+    //check if the VIP already has a SMM
+    if (vip.smm) {
+      vip.pending_requests.VIP_requests.pull(reqSender._id);
+      reqSender.pending_requests.SMM_requests.pull(vip._id);
+      return {
+        status: 400,
+        data: { error: "The VIP already has a SMM" },
+      };
+    }
+    //SMM accepts the request
+    if (request_response === "true") {
+      //add the VIP to the SMM's managed_accounts
+      reqSender.managed_accounts.push(vip._id);
+      //set the SMM of the VIP
+      vip.smm = reqSender._id;
+
+      //VIP NOTIFICATION
+      const newVipNotification = new Notification({
+        squeal_ref: undefined,
+        user_ref: vip._id,
+        created_at: Date.now(),
+        content: newSMMNotification(reqSender.username),
+      });
+      const vipNotification = await newVipNotification.save();
+      vip.notifications.push(vipNotification._id);
+
+      //SMM NOTIFICATION
+      const newSmmNotification = new Notification({
+        squeal_ref: undefined,
+        user_ref: reqSender._id,
+        created_at: Date.now(),
+        content: newManagedAccountNotification(vip.username),
+      });
+      const smmNotification = await newSmmNotification.save();
+      reqSender.notifications.push(smmNotification._id);
+    }
+    //remove request from both profiles
+    vip.pending_requests.VIP_requests.pull(reqSender._id);
+    reqSender.pending_requests.SMM_requests.pull(vip._id);
+    await vip.save();
+    await reqSender.save();
   },
+
+  removeSMM: async (options) => {},
 
   /**
    * @param options.identifier User's identifier, can be either username or userId
-   * @param options.updateProfileInlineReqJson.profile_info New user's profile info
-   * @param options.updateProfileInlineReqJson.profile_picture new user's profile picture
+   * @param options.inlineReqJson.profile_info New user's profile info
+   * @param options.inlineReqJson.profile_picture new user's profile picture
    * @param options.user_id Request sender's user id
    */
   updateProfile: async (options) => {
     const { identifier, user_id } = options;
-    const { profile_info, profile_picture } = options.updateProfileInlineReqJson;
+    const { profile_info, profile_picture } = options.inlineReqJson;
     // Check if the required fields are present
     if (!profile_info && !profile_picture) {
       return {
@@ -597,14 +654,14 @@ module.exports = {
   },
 
   /**
-   * @param options.updateProfileInlineReqJson.newPassword New user's password
-   * @param options.updateProfileInlineReqJson.oldPassword Old user's password
+   * @param options.inlineReqJson.newPassword New user's password
+   * @param options.inlineReqJson.oldPassword Old user's password
    * @param options.identifier User's identifier, can be either username or userId
    * @param options.user_id Request sender's user id
    */
   updatePassword: async (options) => {
     const { identifier, user_id } = options;
-    const { newPassword, oldPassword } = options?.updateProfileInlineReqJson || {};
+    const { newPassword, oldPassword } = options?.inlineReqJson || {};
 
     // Check if the required fields are present
     if (!newPassword || !oldPassword) {
@@ -729,7 +786,7 @@ module.exports = {
    */
   toggleNotificationStatus: async (options) => {
     const { user_id } = options;
-    const { notificationArray } = options.updateProfileInlineReqJson;
+    const { notificationArray } = options.inlineReqJson;
 
     // Check if the required fields are present
     if (notificationArray === undefined || notificationArray.length <= 0) {

@@ -19,6 +19,15 @@ const updatedManagedAccountNotification = (username) =>
   `Your managed account @${username} has been updated and it's no longer a VIP account. You won't be able to manage that account anymore.`;
 
 const updatedSMMNotification = (username) => `Your SMM account @${username} has been updated and it's no longer a SMM account. They won't be able to manage your account anymore.`;
+
+const deletedManagedAccountNotification = (username) => `Your managed account @${username} has been deleted. You won't be able to manage that account anymore.`;
+
+const deletedSMMNotification = (username) => `Your SMM account @${username} has been deleted. They won't be able to manage your account anymore.`;
+
+const newSMMNotification = (username) => `Congratulation! @${username} accepted your request and is now your SMM!`;
+
+const newManagedAccountNotification = (username) => `Congratulation! You are now a SMM account for @${username}!`;
+
 module.exports = {
   mentionNotification,
   officialNotificationAdd,
@@ -30,4 +39,8 @@ module.exports = {
   updatedManagedAccountNotification,
   updatedSMMNotification,
   welcomeMessage,
+  deletedManagedAccountNotification,
+  deletedSMMNotification,
+  newSMMNotification,
+  newManagedAccountNotification,
 };
