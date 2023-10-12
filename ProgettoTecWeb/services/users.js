@@ -16,55 +16,88 @@ const {
   findNotification,
   checkForAllNotifications,
 } = require("./utils");
-const { welcomeNotification, updatedManagedAccountNotification, updatedSMMNotification, welcomeMessage, newManagedAccountNotification, newSMMNotification } = require("./messages");
+const {
+  welcomeNotification,
+  updatedManagedAccountNotification,
+  updatedSMMNotification,
+  welcomeMessage,
+  newManagedAccountNotification,
+  newSMMNotification,
+  newSMMrequestNotification,
+  noLongerSMM,
+  noLongerManagedAccount,
+} = require("./messages");
 //--------------------------------------------------------------------------
-//TODO gestire l'approvazione del SMM della richiesta da parte del VIP
+//TODO messaggi privati
+//TODO commenti agli squeals
+
 module.exports = {
   /**
    * Get users list filtering by creationDate and squeals count
-   * @param options.createdAfter Filter users created after the specified date
-   * @param options.createdBefore Filter users created before the specified date
+   * @param options.createdAfter Filter users created after the specified date, object with year, month and day properties
+   * @param options.createdBefore Filter users created before the specified date, object with year, month and day properties
    * @param options.maxSquealsCount Filters users with less than the specified number of squeals
    * @param options.minSquealsCount Filters users with more than the specified number of squeals
-   * @param options.user_id Request sender's user id
    **/
+  //TESTED
   getUserList: async (options) => {
     const pipeline = [];
-    //TODO controllare che le date siano valide
     //check if the request has specified createdAfter or createdBefore
     if (options.createdAfter) {
-      pipeline.push({ $match: { created_at: { $gte: new Date(options.createdAfter) } } });
+      const date = Date.parse(options.createdAfter);
+      if (isNaN(date)) {
+        return {
+          status: 400,
+          data: { error: "createdAfter must be a valid date: YYYY-MM-DD" },
+        };
+      }
+      pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
     }
 
     if (options.createdBefore) {
-      pipeline.push({ $match: { created_at: { $lte: new Date(options.createdBefore) } } });
+      const date = Date.parse(options.createdBefore);
+      if (isNaN(date)) {
+        return {
+          status: 400,
+          data: { error: "createdBefore must be a valid date: YYYY-MM-DD" },
+        };
+      }
+      pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
     }
     //check if the request has specified maxSquealsCount or minSquealsCount
     if (options.maxSquealsCount || options.minSquealsCount) {
       const sizeMatch = {};
       if (options.maxSquealsCount) {
-        if (options.maxSquealsCount < 0) {
+        const maxSquealsCount = parseInt(options.maxSquealsCount);
+        if (isNaN(maxSquealsCount) || maxSquealsCount < 0) {
           //return an error if the maxSquealsCount is negative
           return {
             status: 400,
             data: { error: "maxSquealsCount must be a positive integer" },
           };
-        } else {
-          sizeMatch.$lt = parseInt(options.maxSquealsCount);
         }
+        sizeMatch.lt = maxSquealsCount;
       }
       if (options.minSquealsCount) {
-        if (options.minSquealsCount < 0) {
+        const minSquealsCount = parseInt(options.minSquealsCount);
+        if (isNaN(minSquealsCount) || minSquealsCount < 0) {
           return {
             //return an error if the minSquealsCount is negative
             status: 400,
             data: { error: "minSquealsCount must be a positive integer" },
           };
-        } else {
-          sizeMatch.$gt = parseInt(options.minSquealsCount);
         }
+        sizeMatch.gt = minSquealsCount;
       }
-      pipeline.push({ $match: { squeals: { $exists: true, $expr: { $size: sizeMatch } } } });
+      if (sizeMatch.lt != undefined && sizeMatch.gt != undefined && sizeMatch.lt < sizeMatch.gt) {
+        //return an error if the maxSquealsCount is less than the minSquealsCount
+        return {
+          status: 400,
+          data: { error: "maxSquealsCount must be greater than minSquealsCount" },
+        };
+      }
+      pipeline.push({ $match: { "squeals.quantity": { $gte: sizeMatch.gt || 0 } } });
+      pipeline.push({ $match: { "squeals.quantity": { $lte: sizeMatch.lt || Number.MAX_SAFE_INTEGER } } });
     }
 
     //check for the request sender's role
@@ -108,6 +141,7 @@ module.exports = {
    * @param options.userInput.password Account password
    * @param options.userInput.username Unique identifier of any given account
    */
+  //TESTED
   createUser: async (options) => {
     const { username, email, password } = options.userInput;
     // Check if the required fields are present
@@ -171,6 +205,7 @@ module.exports = {
       const notification = await newNotification.save();
 
       user.squeals.posted.push(firstSqueal._id);
+      user.squeals.quantity++;
       user.notifications.push(notification._id);
 
       await user.save();
@@ -207,9 +242,8 @@ module.exports = {
   /**
    * Get a user object by ID or by username, or user profile
    * @param options.identifier User's identifier, can be either username or userId
-   * @param options.user_id Request sender's user id
-   * @param options.isTokenValid True if the token is valid, false otherwise
    */
+  //TESTED
   getUser: async (options) => {
     const { identifier, user_id } = options;
     let response = await findUser(identifier);
@@ -254,9 +288,9 @@ module.exports = {
    *  Delete a user object by ID or by username
    * @param options.identifier User's identifier, can be either username or userId
    */
+  //TESTED
   deleteUser: async (options) => {
     // Check if the required fields are present
-
     const { identifier, user_id } = options;
 
     let response = await findUser(identifier);
@@ -303,127 +337,179 @@ module.exports = {
    * @param options.inlineReqJson.account_type New user's account type
    * @param options.inlineReqJson.professional_type New user's professional type
    */
+  //TYPE TESTED
   updateUser: async (options) => {
-    //TODO gestire gli array di request quando gli account cambiano type
-
-    const { identifier, user_id } = options;
-    const { account_type, professional_type } = options.inlineReqJson;
-    // Check if the required fields are present
-    if (!account_type && !professional_type) {
-      return {
-        status: 400,
-        data: { error: "No fields to update" },
-      };
-    }
-
-    let response = await findUser(user_id);
-    if (response.status >= 300) {
-      //if the response is an error
-      return {
-        status: response.status,
-        data: { error: "User id in token is not valid" },
-      };
-    }
-    const reqSender = response.data;
-
-    //if reqSender is not a moderator, he can't update the account type
-    if (reqSender.account_type !== "moderator") {
-      return {
-        status: 403,
-        data: { error: "You are not allowed to update the user" },
-      };
-    }
-
-    //controlli di coerenza
-    if (account_type === "professional" && (!professional_type || professional_type === "none")) {
-      return {
-        status: 400,
-        data: { error: "Professional type must be specified" },
-      };
-    }
-
-    if (["VIP", "SMM"].includes(professional_type) && account_type !== "professional") {
-      return {
-        status: 400,
-        data: { error: "account_type must be 'professional'." },
-      };
-    }
-
-    response = await findUser(identifier);
-    if (response.status >= 300) {
-      //if the response is an error
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    const userToUpdate = response.data;
-
-    //se era professional vip, rimuovere il smm dal profilo e il profilo dal smm
-    //TODO controllare
-    if (userToUpdate.account_type === "professional" && userToUpdate.professional_type === "VIP" && userToUpdate.smm && professional_type !== "VIP") {
-      response = await findUser(userToUpdate.smm);
+    try {
+      const { identifier, user_id } = options;
+      const { account_type, professional_type } = options.inlineReqJson;
+      // Check if the required fields are present
+      if (!account_type && !professional_type) {
+        return {
+          status: 400,
+          data: { error: "No fields to update" },
+        };
+      }
+      if (account_type && !["standard", "verified", "professional", "moderator"].includes(account_type)) {
+        return {
+          status: 400,
+          data: { error: "account_type must be either 'standard', 'verified', 'professional' or 'moderator'" },
+        };
+      }
+      if (professional_type && !["VIP", "SMM", "none"].includes(professional_type)) {
+        return {
+          status: 400,
+          data: { error: "professional_type must be either 'VIP', 'SMM' or 'none'" },
+        };
+      }
+      let response = await findUser(user_id);
       if (response.status >= 300) {
         //if the response is an error
         return {
           status: response.status,
-          data: { error: "Smm not found" },
+          data: { error: "User id in token is not valid" },
         };
       }
-      const smm = response.data;
-      smm.managed_accounts.pull(userToUpdate._id);
-      userToUpdate.smm = undefined;
+      const reqSender = response.data;
 
-      const newNotification = new Notification({
-        squeal_ref: undefined,
-        user_ref: smm._id,
-        created_at: Date.now(),
-        content: updatedManagedAccountNotification(userToUpdate.username),
-      });
-      const notification = await newNotification.save();
-      smm.notifications.push(notification._id);
+      //if reqSender is not a moderator, he can't update the account type
+      if (reqSender.account_type !== "moderator") {
+        return {
+          status: 403,
+          data: { error: "You are not allowed to update the user" },
+        };
+      }
 
-      await smm.save();
-    }
-    //TODO controllare
-    //se era professional smm, rimuovere tutti i managed_accounts dal profilo e il smm da tutti i managed_accounts
-    if (userToUpdate.account_type === "professional" && userToUpdate.professional_type === "SMM" && userToUpdate.managed_accounts.length > 0 && professional_type !== "SMM") {
-      const managedAccountsPromises = userToUpdate.managed_accounts.map(async (managed_account) => {
-        const response = await findUser(managed_account);
-        if (response.status >= 300) {
-          //if the response is an error
-          return {
-            status: response.status,
-            data: { error: "Managed account not found" },
-          };
+      //controlli di coerenza
+      if (account_type === "professional" && (!professional_type || professional_type === "none")) {
+        return {
+          status: 400,
+          data: { error: "Professional type must be specified" },
+        };
+      }
+
+      if (["VIP", "SMM"].includes(professional_type) && account_type !== "professional") {
+        return {
+          status: 400,
+          data: { error: "account_type must be 'professional'." },
+        };
+      }
+
+      response = await findUser(identifier);
+      if (response.status >= 300) {
+        //if the response is an error
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const userToUpdate = response.data;
+
+      //TODO controllare
+      //se era professional vip
+      if (userToUpdate.account_type === "professional" && userToUpdate.professional_type === "VIP" && professional_type !== "VIP") {
+        //se aveva un SMM rimuovere il smm dal profilo e il profilo dal smm
+        if (userToUpdate.smm) {
+          response = await findUser(userToUpdate.smm);
+          if (response.status >= 300) {
+            //if the response is an error
+            return {
+              status: response.status,
+              data: { error: "Smm not found" },
+            };
+          }
+          const smm = response.data;
+          smm.managed_accounts.pull(userToUpdate._id);
+          userToUpdate.smm = undefined;
+
+          const newNotification = new Notification({
+            squeal_ref: undefined,
+            user_ref: smm._id,
+            created_at: Date.now(),
+            content: updatedManagedAccountNotification(userToUpdate.username),
+          });
+          const notification = await newNotification.save();
+          smm.notifications.push(notification._id);
+
+          await smm.save();
         }
-        const managedAccount = response.data;
-        managedAccount.smm = undefined;
-
-        const newNotification = new Notification({
-          squeal_ref: undefined,
-          user_ref: managedAccount._id,
-          created_at: Date.now(),
-          content: updatedSMMNotification(userToUpdate.username),
+        //gestire la coda di richieste del VIP
+        //rimuovo dall'array tutte le richieste e rimuovo dai vip la richiesta in coda
+        const VIPRequestsPromises = userToUpdate.pending_requests.VIP_requests.map(async (request) => {
+          const response = await findUser(request);
+          if (response.status >= 300) {
+            //if the response is an error
+            return {
+              status: response.status,
+              data: { error: "User not found" },
+            };
+          }
+          const SMM = response.data;
+          SMM.pending_requests.SMM_requests.pull(userToUpdate._id);
+          return SMM.save();
         });
-        const notification = await newNotification.save();
-        managedAccount.notifications.push(notification._id);
-        return managedAccount.save();
-      });
-      await Promise.all(managedAccountsPromises);
-      userToUpdate.managed_accounts = [];
+        await Promise.all(VIPRequestsPromises);
+        userToUpdate.pending_requests.VIP_requests = [];
+      }
+      //TODO controllare
+      //se era professional smm, rimuovere tutti i managed_accounts dal profilo e il smm da tutti i managed_accounts
+      if (userToUpdate.account_type === "professional" && userToUpdate.professional_type === "SMM" && professional_type !== "SMM") {
+        if (userToUpdate.managed_accounts.length > 0) {
+          const managedAccountsPromises = userToUpdate.managed_accounts.map(async (managed_account) => {
+            const response = await findUser(managed_account);
+            if (response.status >= 300) {
+              //if the response is an error
+              return {
+                status: response.status,
+                data: { error: "Managed account not found" },
+              };
+            }
+            const managedAccount = response.data;
+            managedAccount.smm = undefined;
+
+            const newNotification = new Notification({
+              squeal_ref: undefined,
+              user_ref: managedAccount._id,
+              created_at: Date.now(),
+              content: updatedSMMNotification(userToUpdate.username),
+            });
+            const notification = await newNotification.save();
+            managedAccount.notifications.push(notification._id);
+            return managedAccount.save();
+          });
+          await Promise.all(managedAccountsPromises);
+          userToUpdate.managed_accounts = [];
+        }
+
+        const SMMRequestsPromises = userToUpdate.pending_requests.SMM_requests.map(async (request) => {
+          const response = await findUser(request);
+          if (response.status >= 300) {
+            //if the response is an error
+            return {
+              status: response.status,
+              data: { error: "User not found" },
+            };
+          }
+          const VIP = response.data;
+          VIP.pending_requests.VIP_requests.pull(userToUpdate._id);
+          return VIP.save();
+        });
+        await Promise.all(SMMRequestsPromises);
+        userToUpdate.pending_requests.SMM_requests = [];
+      }
+
+      userToUpdate.account_type = account_type || userToUpdate.account_type;
+      userToUpdate.professional_type = professional_type || (account_type === "professional" ? professional_type : "none");
+
+      const updatedUser = await userToUpdate.save();
+
+      // Return the result
+      return {
+        status: 200,
+        data: updatedUser,
+      };
+    } catch (err) {
+      console.error(err);
     }
-
-    userToUpdate.account_type = account_type || userToUpdate.account_type;
-    userToUpdate.professional_type = professional_type || (account_type === "professional" ? professional_type : "none");
-
-    const updatedUser = await userToUpdate.save();
-
-    // Return the result
-    return {
-      status: 200,
-      data: updatedUser,
-    };
   },
 
   /**
@@ -431,70 +517,87 @@ module.exports = {
    * @param options.identifier SMM's identifier, can be either username or userId
    */
   requestSMM: async (options) => {
-    const { identifier, user_id } = options;
+    try {
+      const { identifier, user_id } = options;
 
-    //check if the request sender exists
-    let response = await findUser(user_id);
-    if (response.status >= 300) {
-      //if the response is an error
+      //check if the request sender exists
+      let response = await findUser(user_id);
+      if (response.status >= 300) {
+        //if the response is an error
+        return {
+          status: response.status,
+          data: { error: "User id in token is not valid" },
+        };
+      }
+      const reqSender = response.data;
+
+      //check if the reqSender is a VIP
+      if (reqSender.account_type !== "professional" || reqSender.professional_type !== "VIP") {
+        return {
+          status: 403,
+          data: { error: "You are not allowed to have a SMM" },
+        };
+      }
+
+      //check if the reqSender already has a SMM
+      if (reqSender.smm) {
+        return {
+          status: 400,
+          data: { error: "You already have a SMM" },
+        };
+      }
+
+      //check if the requested SMM exists
+      response = await findUser(identifier);
+      if (response.status >= 300) {
+        //if the response is an error
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const smm = response.data;
+
+      //check if the requested SMM is a proper SMM
+      if (smm.account_type !== "professional" || smm.professional_type !== "SMM") {
+        return {
+          status: 400,
+          data: { error: "The user is not a SMM" },
+        };
+      }
+
+      if (smm.pending_requests.SMM_requests.includes(reqSender._id)) {
+        //TODO controllare se ll'include funziona con gli id
+        return {
+          status: 400,
+          data: { error: "You already sent a request to this SMM" },
+        };
+      }
+
+      //send notification to the SMM
+      const newNotification = new Notification({
+        squeal_ref: undefined,
+        user_ref: smm._id,
+        created_at: Date.now(),
+        content: newSMMrequestNotification(reqSender.username),
+        reply: true,
+      });
+      await newNotification.save();
+
+      smm.notifications.push(newNotification._id);
+      smm.pending_requests.SMM_requests.push(reqSender._id);
+      reqSender.pending_requests.VIP_requests.push(smm._id);
+
+      await smm.save();
+      await reqSender.save();
+
       return {
-        status: response.status,
-        data: { error: "User id in token is not valid" },
+        status: 200,
+        data: { message: "Request sent successfully" },
       };
+    } catch (err) {
+      console.error(err);
     }
-    const reqSender = response.data;
-
-    //check if the reqSender is a VIP
-    if (reqSender.account_type !== "professional" || reqSender.professional_type !== "VIP") {
-      return {
-        status: 403,
-        data: { error: "You are not allowed to have a SMM" },
-      };
-    }
-
-    //check if the reqSender already has a SMM
-    if (reqSender.smm) {
-      return {
-        status: 400,
-        data: { error: "You already have a SMM" },
-      };
-    }
-
-    //check if the requested SMM exists
-    response = await findUser(identifier);
-    if (response.status >= 300) {
-      //if the response is an error
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    const smm = response.data;
-
-    //check if the requested SMM is a proper SMM
-    if (smm.account_type !== "professional" || smm.professional_type !== "SMM") {
-      return {
-        status: 400,
-        data: { error: "The user is not a SMM" },
-      };
-    }
-
-    if (smm.pending_requests.SMM_requests.includes(reqSender._id)) {
-      //TODO controllare se ll'include funziona con gli id
-      return {
-        status: 400,
-        data: { error: "You already sent a request to this SMM" },
-      };
-    }
-
-    smm.pending_requests.SMM_requests.push(reqSender._id);
-    reqSender.pending_requests.VIP_requests.push(smm._id);
-    await smm.save();
-    await reqSender.save();
-    return {
-      status: 200,
-      data: { message: "Request sent successfully" },
-    };
   },
 
   /**
@@ -502,10 +605,11 @@ module.exports = {
    * @param options.identifier New user's VIP
    * @param options.request_response Response to the request, can be either "true" or "false"
    */
+  //TESTED
   handleVIPRequest: async (options) => {
     const { identifier, user_id, request_response } = options;
 
-    if (request_response !== "true" && request_response !== "false") {
+    if (!["true", "false"].includes(request_response)) {
       return {
         status: 400,
         data: { error: "Request response must be either 'true' or 'false'" },
@@ -590,9 +694,108 @@ module.exports = {
     reqSender.pending_requests.SMM_requests.pull(vip._id);
     await vip.save();
     await reqSender.save();
+    return {
+      status: 200,
+      data: { message: "Request handled successfully" },
+    };
   },
 
-  removeSMM: async (options) => {},
+  /**
+   * This function is used to remove the SMM
+   */
+  removeSMM: async (options) => {
+    const { user_id } = options;
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: response.error,
+      };
+    }
+    const user = response.data;
+    //check if the user is a VIP
+    if (user.account_type !== "professional" || user.professional_type !== "VIP") {
+      return {
+        status: 403,
+        data: { error: "You are not a VIP" },
+      };
+    }
+    //check if the user has a SMM
+    if (!user.smm) {
+      return {
+        status: 400,
+        data: { error: "You don't have a SMM" },
+      };
+    }
+
+    const notification = new Notification({
+      squeal_ref: undefined,
+      user_ref: user.smm,
+      created_at: Date.now(),
+      content: noLongerSMM(user.username),
+    });
+    await notification.save();
+
+    await User.findbyIdAndUpdate(user.smm, { $pull: { managed_accounts: user._id }, $push: { notifications: notification._id } });
+
+    user.smm = undefined;
+    await user.save();
+
+    return {
+      status: 200,
+      data: { message: "SMM removed successfully" },
+    };
+  },
+
+  /**
+   * This function is used to remove the SMM
+   * @param options.identifier Identifier of the VIP to remove
+   */
+  removeVIP: async (options) => {
+    const { identifier, user_id } = options;
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: response.error,
+      };
+    }
+    const user = response.data;
+    //check if the user is a SMM
+    if (user.account_type !== "professional" || user.professional_type !== "SMM") {
+      return {
+        status: 403,
+        data: { error: "You are not a SMM" },
+      };
+    }
+    //check if the user has a VIP
+    if (!user.managed_accounts.includes(identifier)) {
+      return {
+        status: 400,
+        data: { error: "You're not their SMM" },
+      };
+    }
+
+    const notification = new Notification({
+      squeal_ref: undefined,
+      user_ref: identifier,
+      created_at: Date.now(),
+      content: noLongerManagedAccount(user.username),
+    });
+    await notification.save();
+
+    await User.findbyIdAndUpdate(identifier, { $set: { smm: undefined }, $push: { notifications: notification._id } });
+
+    user.managed_accounts.pull(identifier);
+    await user.save();
+
+    return {
+      status: 200,
+      data: { message: "VIP removed successfully" },
+    };
+  },
 
   /**
    * @param options.identifier User's identifier, can be either username or userId

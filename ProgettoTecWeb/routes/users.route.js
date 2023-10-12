@@ -79,6 +79,44 @@ router.get("/:identifier", verifyToken, async (req, res, next) => {
   }
 });
 
+router.delete("/SMM", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+    };
+
+    try {
+      const result = await users.removeSMM(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
+router.delete("/VIP", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+    };
+
+    try {
+      const result = await users.removeVIP(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
 router.delete("/:identifier", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -252,36 +290,12 @@ router.patch("/:identifier/password", verifyToken, async (req, res, next) => {
   }
 });
 
-router.patch("/:identifier/password", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      identifier: req.params.identifier,
-      user_id: req.user_id,
-    };
-
-    options.inlineReqJson = req.body;
-
-    try {
-      const result = await users.updatePassword(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
-
 router.patch("/:identifier/activestatus", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,
       user_id: req.user_id,
     };
-
-    //options.inlineReqJson = req.body;
 
     try {
       const result = await users.toggleProfileActiveStatus(options);

@@ -25,6 +25,7 @@ const {
 //TODO tradurre tutti i commenti in inglese
 //TODO gestire tutti i casi in cui l'utente è bannato
 //TODO quando vengono mandate richieste formattate male, restituire un errore con la descrizione del problema (400 Bad Request)
+//TODO notifica quando vieni menzionato in un post
 module.exports = {
   /**
    * Retrieve squeals with optional filters
@@ -135,7 +136,6 @@ module.exports = {
 
   /**
    * @param options.squealInput.sender_id Request sender's user id
-   * @param options.squealInput.user_id Squeal author's user id, if you're posting as another user
    * @param options.squealInput.content_type Type of the squeal content, it can be "text", "image", "video" or "position"
    * @param options.squealInput.content Squeal content based on the content_type, fill it in content.text, an content.image, content.video or content.position
    * @param options.squealInput.is_scheduled It tells you whether or not the squeal is scheduled
@@ -296,6 +296,7 @@ module.exports = {
 
     //push the squeal in the user squeals array
     author.squeals.posted.push(result._id);
+    author.squeals.quantity++;
     await author.save();
 
     //push the squeal in the users squeals.mentioned_in array

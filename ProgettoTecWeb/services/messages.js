@@ -28,6 +28,12 @@ const newSMMNotification = (username) => `Congratulation! @${username} accepted 
 
 const newManagedAccountNotification = (username) => `Congratulation! You are now a SMM account for @${username}!`;
 
+const newSMMrequestNotification = (username) => `@${username} requested you to be their SMM!`;
+
+const noLongerSMM = (username) => `You are no longer @${username}'s SMM!`;
+
+const noLongerManagedAccount = (username) => `@${username} removed you from their managed account, they're no longer your SMM!`;
+
 module.exports = {
   mentionNotification,
   officialNotificationAdd,
@@ -43,4 +49,7 @@ module.exports = {
   deletedSMMNotification,
   newSMMNotification,
   newManagedAccountNotification,
+  newSMMrequestNotification,
+  noLongerSMM,
+  noLongerManagedAccount,
 };

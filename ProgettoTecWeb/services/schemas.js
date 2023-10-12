@@ -9,8 +9,12 @@ const NotificationSchema = new mongoose.Schema({
   squeal_ref: { type: mongoose.Types.ObjectId, ref: "Squeal" },
   channel_ref: { type: mongoose.Types.ObjectId, ref: "Channel" },
   user_ref: { type: mongoose.Types.ObjectId, ref: "User" },
+  reply: { type: Boolean, default: false },
+  source: { type: String, enum: ["squeal", "channel", "user"] },
 });
 const Notification = mongoose.model("Notification", NotificationSchema);
+//squeal -> se ti taggano
+//
 
 // ========== USER ==========
 const UserSchema = new mongoose.Schema({
@@ -23,6 +27,7 @@ const UserSchema = new mongoose.Schema({
   created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
   squeals: {
     posted: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
+    quantity: { type: Number, default: 0 },
     scheduled: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     mentioned_in: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     reacted_to: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
@@ -115,7 +120,7 @@ UserSchema.methods.Delete = async function () {
       //remove the channel from the new owner's editor_channels
       await User.findOneAndUpdate({ _id: channel.owner }, { $pull: { editor_channels: channel._id } });
 
-      //saave changes
+      //save changes
       await channel.save();
     } else {
       await channel.Delete();
@@ -139,7 +144,7 @@ UserSchema.methods.Delete = async function () {
   //if the deleted account is a smm, remove the smm from the managed accounts
   if (this.managed_accounts.length > 0) {
     //mando la notifica a tutti gli smm
-    const promises = this.managed_accounts.map((managed_account) => {
+    const promises = this.managed_accounts.map(async (managed_account) => {
       const notification = new Notification({
         squeal_ref: undefined,
         user_ref: managed_account,
@@ -157,6 +162,15 @@ UserSchema.methods.Delete = async function () {
     });
     await Promise.all(promises);
   }
+  //TODO controllare --------------------------------------------------------------------------------------------
+  if (this.pending_requests.VIP_requests != undefined && this.account_type == "professional" && professional_type == "VIP") {
+    //rimuovo dalla lista SMM_request degli SMM presenti nella VIP_request list l'id dell'utente che ha fatto la richiesta
+    await User.updateMany({ _id: { $in: this.pending_requests.VIP_requests } }, { $pull: { "pending_requests.SMM_requests": this._id } });
+  } else if (this.pending_requests.SMM_requests != undefined && this.account_type == "professional" && professional_type == "SMM") {
+    //rimuovo dalla lista VIP_request degli VIP presenti nella SMM_request list l'id dell'utente che ha fatto la richiesta
+    await User.updateMany({ _id: { $in: this.pending_requests.SMM_requests } }, { $pull: { "pending_requests.VIP_requests": this._id } });
+  }
+  //-------------------------------------------------------------------------------------------------------------
 
   //remove the user from the db
   await this.deleteOne();
