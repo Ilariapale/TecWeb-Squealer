@@ -1,5 +1,5 @@
-const mentionNotification = (username, message) => `@${username} has mentioned you in a squeal! Check it out!\n${message.substring(0, 30)}...`;
-
+const mentionNotification = (username, message, type = "text") => `@${username} has mentioned you in a ${type} squeal! Check it out!\n${message.substring(0, 30)}...`;
+//TODO controllare il tipo del messaggio ad esempio se è una posizione o una immagine, il substring non funziona
 const officialNotificationAdd = (username, message, channel) =>
   `Congratulations @${username}! Your squeal has been featured on §${channel} channel! Check it out!\n"${message.substring(0, 30)}..."`;
 

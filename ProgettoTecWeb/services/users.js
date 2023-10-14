@@ -579,7 +579,7 @@ module.exports = {
         //if the response is an error
         return {
           status: response.status,
-          data: { error: "User id in token is not valid" },
+          data: { error: `User id in token is not valid` },
         };
       }
       const reqSender = response.data;
@@ -588,7 +588,14 @@ module.exports = {
       if (reqSender.account_type !== "professional" || reqSender.professional_type !== "VIP") {
         return {
           status: 403,
-          data: { error: "You are not allowed to have a SMM" },
+          data: { error: `You are not allowed to have a SMM` },
+        };
+      }
+
+      if (reqSender.is_active === false) {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to request a SMM because you are banned` },
         };
       }
 
@@ -596,7 +603,7 @@ module.exports = {
       if (reqSender.smm) {
         return {
           status: 400,
-          data: { error: "You already have a SMM" },
+          data: { error: `You already have a SMM` },
         };
       }
 
@@ -619,11 +626,18 @@ module.exports = {
         };
       }
 
+      if (smm.is_active === false) {
+        return {
+          status: 400,
+          data: { error: `You cannot request a banned user to be your SMM.` },
+        };
+      }
+
       if (smm.pending_requests.SMM_requests.includes(reqSender._id)) {
         //TODO controllare se ll'include funziona con gli id
         return {
           status: 400,
-          data: { error: "You already sent a request to this SMM" },
+          data: { error: `You already sent a request to this SMM` },
         };
       }
 
@@ -646,7 +660,7 @@ module.exports = {
 
       return {
         status: 200,
-        data: { message: "Request sent successfully" },
+        data: { message: `Request sent successfully` },
       };
     } catch (err) {
       console.error(err);
@@ -665,7 +679,7 @@ module.exports = {
     if (!["true", "false"].includes(request_response)) {
       return {
         status: 400,
-        data: { error: "Request response must be either 'true' or 'false'" },
+        data: { error: `Request response must be either 'true' or 'false'` },
       };
     }
 
@@ -675,7 +689,7 @@ module.exports = {
       //if the response is an error
       return {
         status: response.status,
-        data: { error: "User id in token is not valid" },
+        data: { error: `User id in token is not valid` },
       };
     }
     const reqSender = response.data;
@@ -684,9 +698,18 @@ module.exports = {
     if (reqSender.account_type !== "professional" || reqSender.professional_type !== "SMM") {
       return {
         status: 403,
-        data: { error: "You are not a SMM" },
+        data: { error: `You are not a SMM` },
       };
     }
+
+    //check if the SMM is banned
+    if (reqSender.is_active === false) {
+      return {
+        status: 403,
+        data: { error: `Banned users are not allowed to handle requests.` },
+      };
+    }
+
     //check if the requested VIP exists
     response = await findUser(identifier);
     if (response.status >= 300) {
@@ -749,7 +772,7 @@ module.exports = {
     await reqSender.save();
     return {
       status: 200,
-      data: { message: "Request handled successfully" },
+      data: { message: `Request handled successfully` },
     };
   },
 
@@ -993,6 +1016,10 @@ module.exports = {
    */
   userBanStatus: async (options) => {
     //TODO utilizzare select quando abbiamo bisogno di un solo campo e non tutto l'oggetto
+    //TODO quando un utente viene bannato, riceve una notifica.
+    //Se ha un smm anche il smm riceve la notifica.
+    //Se è un smm, tutti i vip che lo hanno come smm ricevono la notifica
+
     const { identifier, user_id, ban_status } = options;
 
     //check if ban_status is valid
@@ -1056,6 +1083,7 @@ module.exports = {
    * @param options.notificationArray Notifications identifier array
    */
   toggleNotificationStatus: async (options) => {
+    //TODO modifica il toggle
     const { user_id } = options;
     const { notificationArray } = options.inlineReqJson;
 

@@ -2,14 +2,17 @@ const express = require("express");
 const squeals = require("../services/squeals");
 const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
+
 router.get("/", verifyToken, async (req, res, next) => {
   //if user is not logged in, filter only official channels
+  console.log(req.isTokenValid);
   let options = {
     contentType: req.query.contentType,
     createdAfter: req.query.createdAfter,
     createdBefore: req.query.createdBefore,
     isScheduled: req.query.isScheduled,
     minReactions: req.query.minReactions,
+    balance: req.query.balance,
     isInOfficialChannel: !req.isTokenValid || req.query.isInOfficialChannel,
   };
 
@@ -17,39 +20,43 @@ router.get("/", verifyToken, async (req, res, next) => {
     const result = await squeals.getSqueals(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
+    console.log(err);
     return res.status(500).send({
       error: err || "Something went wrong.",
     });
   }
 });
-
-router.get(["/:identifier", "/:user_identifier/squeal_hex"], verifyToken, async (req, res, next) => {
+//squeals/3284612219837
+//squeals/user_id/1928731293711/hex/23
+router.get(["/:identifier", "/user_id/:user_identifier/hex/:squeal_hex"], verifyToken, async (req, res, next) => {
   //if user is not logged in, filter only official channels
-  //TODO controllare che il doppio path sopra funzioni
   let options = {
     identifier: req.params.identifier,
     user_identifier: req.params.user_identifier,
     squeal_hex: req.params.squeal_hex,
-    is_in_official_channel: !req.isTokenValid || req.query.isInOfficialChannel == "true",
+    is_in_official_channel: !req.isTokenValid || req.query.is_in_official_channel == "true",
   };
-
   try {
-    const result = await squeals.getSqueal(options);
-    res.status(result.status || 200).send(result.data);
+    if (!["true", "false", undefined].includes(req.query.is_in_official_channel)) {
+      res.status(400).send({ error: `is_in_official_channel must be either "true" or "false"` });
+    } else {
+      const result = await squeals.getSqueal(options);
+      res.status(result.status || 200).send(result.data);
+    }
   } catch (err) {
+    console.log(err);
     return res.status(500).send({
       error: err || "Something went wrong.",
     });
   }
 });
-
 router.post("/", verifyToken, async (req, res) => {
   // Verifica la proprietà req.utenteLoggato per decidere come gestire la richiesta
   if (req.isTokenValid) {
     // Utente loggato, gestisci la richiesta come vuoi
     let options = {};
     options.squealInput = req.body;
-    options.squealInput.sender_id = req.user_id;
+    options.squealInput.user_id = req.user_id;
 
     try {
       const result = await squeals.createSqueal(options);
@@ -113,7 +120,7 @@ router.patch("/:identifier", verifyToken, async (req, res, next) => {
       user_id: req.user_id,
     };
 
-    options.updateSquealInlineReqJson = req.body;
+    options.inlineReqJson = req.body;
 
     try {
       const result = await squeals.updateSqueal(options);

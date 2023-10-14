@@ -47,6 +47,8 @@ const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
 const reactionTypes = ["like", "dislike", "love", "laugh", "disgust", "disagree"];
 
+const contentTypes = ["text", "image", "video", "position", "deleted"];
+
 //FINDERS
 async function findUser(identifier) {
   let response = {};
@@ -76,7 +78,8 @@ async function findUser(identifier) {
   return response;
 }
 
-async function findSqueal(identifier, just_official = false) {
+async function findSqueal(identifier, just_official = false, include_deleted = true) {
+  //aggiunto il parametro include_deleted e settato di base a false
   let response;
   if (!identifier) {
     return {
@@ -93,7 +96,7 @@ async function findSqueal(identifier, just_official = false) {
       status: 400,
     };
   }
-  if (!response || (response.is_in_official_channel && just_official)) {
+  if (!response || (!response.is_in_official_channel && just_official) || (response.content_type == "deleted" && !include_deleted)) {
     return {
       error: "Squeal not found",
       status: 404,
@@ -598,4 +601,5 @@ module.exports = {
   mongooseObjectIdRegex,
   emailRegex,
   reactionTypes,
+  contentTypes,
 };
