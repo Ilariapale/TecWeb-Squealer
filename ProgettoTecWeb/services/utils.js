@@ -76,7 +76,7 @@ async function findUser(identifier) {
   return response;
 }
 
-async function findSqueal(identifier) {
+async function findSqueal(identifier, just_official = false) {
   let response;
   if (!identifier) {
     return {
@@ -93,7 +93,7 @@ async function findSqueal(identifier) {
       status: 400,
     };
   }
-  if (!response) {
+  if (!response || (response.is_in_official_channel && just_official)) {
     return {
       error: "Squeal not found",
       status: 404,
@@ -106,7 +106,8 @@ async function findSqueal(identifier) {
   };
 }
 
-async function findChannel(identifier, includeBlocked = false, includeOfficial = false) {
+async function findChannel(identifier, includeBlocked = false, includeOfficial = true) {
+  //modificato il default di includeOfficial da false a true
   //TODO aggiunto il regex dei canali ufficiali, controllare se va bene ovunque
   let response = {};
   if (!identifier) {

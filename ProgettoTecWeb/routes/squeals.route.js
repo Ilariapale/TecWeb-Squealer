@@ -23,11 +23,14 @@ router.get("/", verifyToken, async (req, res, next) => {
   }
 });
 
-router.get("/:identifier", verifyToken, async (req, res, next) => {
+router.get(["/:identifier", "/:user_identifier/squeal_hex"], verifyToken, async (req, res, next) => {
   //if user is not logged in, filter only official channels
+  //TODO controllare che il doppio path sopra funzioni
   let options = {
     identifier: req.params.identifier,
-    isInOfficialChannel: !req.isTokenValid || req.query.isInOfficialChannel,
+    user_identifier: req.params.user_identifier,
+    squeal_hex: req.params.squeal_hex,
+    is_in_official_channel: !req.isTokenValid || req.query.isInOfficialChannel == "true",
   };
 
   try {

@@ -27,7 +27,6 @@ const UserSchema = new mongoose.Schema({
   created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
   squeals: {
     posted: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
-    quantity: { type: Number, default: 0 },
     scheduled: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     mentioned_in: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
     reacted_to: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },

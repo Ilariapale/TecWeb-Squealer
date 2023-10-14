@@ -42,10 +42,12 @@ router.post("/", async (req, res, next) => {
 router.get("/", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
-      createdAfter: req.query.createdAfter,
-      createdBefore: req.query.createdBefore,
-      maxSquealsCount: req.query.maxSquealsCount,
-      minSquealsCount: req.query.minSquealsCount,
+      created_after: req.query.created_after,
+      created_before: req.query.created_before,
+      max_squeals: req.query.max_squeals,
+      min_squeals: req.query.min_squeals,
+      account_type: req.query.account_type,
+      professional_type: req.query.professional_type,
       user_id: req.user_id,
     };
 
@@ -290,15 +292,17 @@ router.patch("/:identifier/password", verifyToken, async (req, res, next) => {
   }
 });
 
-router.patch("/:identifier/activestatus", verifyToken, async (req, res, next) => {
+//es. http://ijdoai.com/user/username/banstatus?value=true
+router.patch("/:identifier/banstatus", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,
       user_id: req.user_id,
+      ban_status: req.query.value,
     };
 
     try {
-      const result = await users.toggleProfileActiveStatus(options);
+      const result = await users.userBanStatus(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       return res.status(500).send({

@@ -7,9 +7,14 @@ router.get("/", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       name: req.query.name,
-      createdAfter: req.query.createdAfter,
-      createdBefore: req.query.createdBefore,
+      created_after: req.query.created_after,
+      created_before: req.query.created_before,
       is_official: req.query.is_official,
+      min_subscribers: req.query.min_subscribers,
+      max_subscribers: req.query.max_subscribers,
+      min_squeals: req.query.min_squeals,
+      max_squeals: req.query.max_squeals,
+      user_id: req.user_id,
     };
 
     try {
@@ -46,7 +51,7 @@ router.post("/", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {};
     options.channelInput = req.body;
-    options.channelInput.user = req.user_id;
+    options.channelInput.user_id = req.user_id;
     try {
       const result = await channels.createChannel(options);
       res.status(result.status || 200).send(result.data);
@@ -179,9 +184,10 @@ router.patch("/:identifier/subscription", verifyToken, async (req, res, next) =>
     let options = {
       identifier: req.params.identifier,
       user_id: req.user_id,
+      value: req.query.value,
     };
     try {
-      const result = await channels.toggleChannelSubscription(options);
+      const result = await channels.channelSubscription(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       return res.status(500).send({
@@ -197,10 +203,11 @@ router.patch("/:identifier/muted", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,
+      value: req.query.value,
       user_id: req.user_id,
     };
     try {
-      const result = await channels.toggleChannelMuteStatus(options);
+      const result = await channels.channelMuteStatus(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       return res.status(500).send({

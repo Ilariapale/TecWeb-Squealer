@@ -27,6 +27,7 @@ const {
   noLongerSMM,
   noLongerManagedAccount,
 } = require("./messages");
+const { PASSWORD_MIN_LENGTH } = require("./constants");
 //--------------------------------------------------------------------------
 //TODO messaggi privati
 //TODO commenti agli squeals
@@ -34,105 +35,151 @@ const {
 module.exports = {
   /**
    * Get users list filtering by creationDate and squeals count
-   * @param options.createdAfter Filter users created after the specified date, object with year, month and day properties
-   * @param options.createdBefore Filter users created before the specified date, object with year, month and day properties
-   * @param options.maxSquealsCount Filters users with less than the specified number of squeals
-   * @param options.minSquealsCount Filters users with more than the specified number of squeals
+   * @param options.created_after Filter users created after the specified date, object with year, month and day properties
+   * @param options.created_before Filter users created before the specified date, object with year, month and day properties
+   * @param options.max_squeals Filters users with less than the specified number of squeals
+   * @param options.min_squeals Filters users with more than the specified number of squeals
+   * @param options.account_type Filters users by account type
+   * @param options.professional_type Filters users by professional type
    **/
   //TESTED
   getUserList: async (options) => {
-    const pipeline = [];
-    //check if the request has specified createdAfter or createdBefore
-    if (options.createdAfter) {
-      const date = Date.parse(options.createdAfter);
-      if (isNaN(date)) {
-        return {
-          status: 400,
-          data: { error: "createdAfter must be a valid date: YYYY-MM-DD" },
-        };
-      }
-      pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
-    }
+    try {
+      const { created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id } = options;
+      const pipeline = [];
 
-    if (options.createdBefore) {
-      const date = Date.parse(options.createdBefore);
-      if (isNaN(date)) {
-        return {
-          status: 400,
-          data: { error: "createdBefore must be a valid date: YYYY-MM-DD" },
-        };
-      }
-      pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
-    }
-    //check if the request has specified maxSquealsCount or minSquealsCount
-    if (options.maxSquealsCount || options.minSquealsCount) {
-      const sizeMatch = {};
-      if (options.maxSquealsCount) {
-        const maxSquealsCount = parseInt(options.maxSquealsCount);
-        if (isNaN(maxSquealsCount) || maxSquealsCount < 0) {
-          //return an error if the maxSquealsCount is negative
+      //ACCOUNT TYPE
+      if (account_type) {
+        if (!["standard", "verified", "professional", "moderator"].includes(account_type)) {
           return {
             status: 400,
-            data: { error: "maxSquealsCount must be a positive integer" },
+            data: { error: "account_type must be either 'standard', 'verified', 'professional' or 'moderator'" },
           };
         }
-        sizeMatch.lt = maxSquealsCount;
+        pipeline.push({ $match: { account_type: account_type } });
       }
-      if (options.minSquealsCount) {
-        const minSquealsCount = parseInt(options.minSquealsCount);
-        if (isNaN(minSquealsCount) || minSquealsCount < 0) {
+
+      //PROFESSIONAL TYPE
+      if (professional_type) {
+        if (!["VIP", "SMM", "none"].includes(professional_type)) {
           return {
-            //return an error if the minSquealsCount is negative
             status: 400,
-            data: { error: "minSquealsCount must be a positive integer" },
+            data: { error: "professional_type must be either 'VIP', 'SMM' or 'none'" },
           };
         }
-        sizeMatch.gt = minSquealsCount;
+        pipeline.push({ $match: { professional_type: professional_type } });
       }
-      if (sizeMatch.lt != undefined && sizeMatch.gt != undefined && sizeMatch.lt < sizeMatch.gt) {
-        //return an error if the maxSquealsCount is less than the minSquealsCount
+
+      //CREATED AFTER
+      if (created_after) {
+        const date = Date.parse(created_after);
+        if (isNaN(date)) {
+          return {
+            status: 400,
+            data: { error: "created_after must be a valid date: YYYY-MM-DD" },
+          };
+        }
+        pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
+      }
+
+      //CREATED BEFORE
+      if (created_before) {
+        const date = Date.parse(created_before);
+        if (isNaN(date)) {
+          return {
+            status: 400,
+            data: { error: "created_before must be a valid date: YYYY-MM-DD" },
+          };
+        }
+        pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
+      }
+
+      //PROJECTION
+      pipeline.push({
+        $project: {
+          _id: 1,
+          username: 1,
+          profile_info: 1,
+          profile_picture: 1,
+          created_at: 1,
+          professional_type: 1,
+          account_type: 1,
+          squeals_count: { $size: "$squeals.posted" },
+        },
+      });
+
+      //MIN AND MAX SQUEALS
+      if (max_squeals || min_squeals) {
+        const sizeMatch = {};
+        if (max_squeals) {
+          const int_max_squeals = parseInt(max_squeals);
+          if (isNaN(int_max_squeals) || int_max_squeals < 0) {
+            //return an error if the max_squeals is negative
+            return {
+              status: 400,
+              data: { error: "max_squeals must be a positive integer" },
+            };
+          }
+          sizeMatch.lt = int_max_squeals;
+        }
+        if (min_squeals) {
+          const int_min_squeals = parseInt(min_squeals);
+          if (isNaN(int_min_squeals) || int_min_squeals < 0) {
+            return {
+              //return an error if the min_squeals is negative
+              status: 400,
+              data: { error: "min_squeals must be a positive integer" },
+            };
+          }
+          sizeMatch.gt = int_min_squeals;
+        }
+        if (sizeMatch.lt != undefined && sizeMatch.gt != undefined && sizeMatch.lt < sizeMatch.gt) {
+          //return an error if the max_squeals is less than the min_squeals
+          return {
+            status: 400,
+            data: { error: "max_squeals must be greater than min_squeals" },
+          };
+        }
+        pipeline.push({ $match: { squeals_count: { $gte: sizeMatch.gt || 0 } } });
+        pipeline.push({ $match: { squeals_count: { $lte: sizeMatch.lt || Number.MAX_SAFE_INTEGER } } });
+      }
+
+      //check for the request sender's role
+      let response = await findUser(user_id);
+      if (response.status >= 300) {
+        //if the response is an error
         return {
-          status: 400,
-          data: { error: "maxSquealsCount must be greater than minSquealsCount" },
+          status: response.status,
+          data: { error: response.error },
         };
       }
-      pipeline.push({ $match: { "squeals.quantity": { $gte: sizeMatch.gt || 0 } } });
-      pipeline.push({ $match: { "squeals.quantity": { $lte: sizeMatch.lt || Number.MAX_SAFE_INTEGER } } });
-    }
+      const reqSender = response.data;
 
-    //check for the request sender's role
-    let response = await findUser(options.user_id);
-    if (response.status >= 300) {
-      //if the response is an error
+      //If the request sender is not a moderator, filter the inactive users
+      if (reqSender.account_type !== "moderator") {
+        pipeline.push({ $match: { is_active: true } });
+      }
+      if (pipeline.length == 0) {
+        pipeline.push({ $match: {} });
+      }
+
+      //execute the query
+      const data = await User.aggregate(pipeline).exec();
+
+      //check if the query returned any result
+      if (data.length <= 0) {
+        return {
+          status: 404,
+          data: { error: "No users found." },
+        };
+      }
       return {
-        status: response.status,
-        data: { error: response.error },
+        status: 200,
+        data: data,
       };
+    } catch (err) {
+      console.error(err);
     }
-    const reqSender = response.data;
-
-    //If the request sender is not a moderator, filter the inactive users
-    if (!reqSender.account_type === "moderator") {
-      pipeline.push({ $match: { is_active: true } });
-    }
-    if (pipeline.length == 0) {
-      pipeline.push({ $match: {} });
-    }
-
-    //execute the query
-    const data = await User.aggregate(pipeline).exec();
-
-    //check if the query returned any result
-    if (data.length <= 0) {
-      return {
-        status: 404,
-        data: { error: "No users found." },
-      };
-    }
-    return {
-      status: 200,
-      data: data,
-    };
   },
 
   /**
@@ -149,6 +196,13 @@ module.exports = {
       return {
         status: 400,
         data: { error: "Username email and password are required" },
+      };
+    }
+
+    if (password.length < PASSWORD_MIN_LENGTH) {
+      return {
+        status: 400,
+        data: { error: "Password must be at least 8 characters long" },
       };
     }
 
@@ -205,7 +259,6 @@ module.exports = {
       const notification = await newNotification.save();
 
       user.squeals.posted.push(firstSqueal._id);
-      user.squeals.quantity++;
       user.notifications.push(notification._id);
 
       await user.save();
@@ -801,9 +854,9 @@ module.exports = {
    * @param options.identifier User's identifier, can be either username or userId
    * @param options.inlineReqJson.profile_info New user's profile info
    * @param options.inlineReqJson.profile_picture new user's profile picture
-   * @param options.user_id Request sender's user id
    */
   updateProfile: async (options) => {
+    //TODO immagine profilo, in generale caricamento immagini
     const { identifier, user_id } = options;
     const { profile_info, profile_picture } = options.inlineReqJson;
     // Check if the required fields are present
@@ -860,7 +913,6 @@ module.exports = {
    * @param options.inlineReqJson.newPassword New user's password
    * @param options.inlineReqJson.oldPassword Old user's password
    * @param options.identifier User's identifier, can be either username or userId
-   * @param options.user_id Request sender's user id
    */
   updatePassword: async (options) => {
     const { identifier, user_id } = options;
@@ -871,6 +923,13 @@ module.exports = {
       return {
         status: 400,
         data: { error: "Old password and new password are required" },
+      };
+    }
+
+    if (newPassword.length < PASSWORD_MIN_LENGTH) {
+      return {
+        status: 400,
+        data: { error: "New password must be at least 8 characters long" },
       };
     }
 
@@ -930,10 +989,19 @@ module.exports = {
   /**
    * Toggle is_active field in user object, means that the user is active or not: if the user is banned, he's not active
    * @param options.identifier User's identifier, can be either username or userId
+   * @param options.ban_status New user's ban status, "true" if banned, "false" if not
    */
-  toggleProfileActiveStatus: async (options) => {
+  userBanStatus: async (options) => {
     //TODO utilizzare select quando abbiamo bisogno di un solo campo e non tutto l'oggetto
-    const { identifier, user_id } = options;
+    const { identifier, user_id, ban_status } = options;
+
+    //check if ban_status is valid
+    if (!["true", "false"].includes(ban_status)) {
+      return {
+        status: 400,
+        data: { error: "Ban status value must be either 'true' or 'false'" },
+      };
+    }
 
     // Check if the required fields are present
     if (!identifier) {
@@ -958,7 +1026,7 @@ module.exports = {
     if (reqSender.account_type !== "moderator") {
       return {
         status: 403,
-        data: { error: "You can't update another user" },
+        data: { error: "Only a moderator can ban another user" },
       };
     }
     response = await findUser(identifier);
@@ -972,7 +1040,7 @@ module.exports = {
     const userToUpdate = response.data;
 
     //toggle the is_active field
-    userToUpdate.is_active = !userToUpdate.is_active;
+    userToUpdate.is_active = ban_status === "true" ? false : true;
 
     //save the updated user
     const updatedUser = await userToUpdate.save();
@@ -985,7 +1053,7 @@ module.exports = {
   },
 
   /**
-   * @param options.notificationArray Notification's identifier
+   * @param options.notificationArray Notifications identifier array
    */
   toggleNotificationStatus: async (options) => {
     const { user_id } = options;
@@ -999,18 +1067,29 @@ module.exports = {
       };
     }
 
-    let data = findUser(user_id);
-    if (data.status >= 300) {
+    // Check if the array contains only valid ids
+    for (let i = 0; i < notificationArray.length; i++) {
+      let notificationId = notificationArray[i];
+      if (mongooseObjectIdRegex.test(notificationId) === false) {
+        return {
+          status: 400,
+          data: { error: `Notification identifier ${i} is not valid` },
+        };
+      }
+    }
+
+    let response = findUser(user_id);
+    if (response.status >= 300) {
       //if the response is an error
       return {
-        status: data.status,
+        status: response.status,
         data: { error: "User id in token is not valid" },
       };
     }
-    const reqSender = data.data;
+    const reqSender = response.data;
 
     //controllare che gli utenti esistano
-    let response = await checkForAllNotifications(notificationArray, reqSender);
+    response = await checkForAllNotifications(notificationArray, reqSender);
     if (!response.notificationsOutcome) {
       //if the response is an error
       return {

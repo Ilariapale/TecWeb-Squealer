@@ -39,98 +39,144 @@ module.exports = {
   getSqueals: async (options) => {
     const pipeline = [];
 
-    //TODO controllare che le date siano valide
+    //TODO testare
     if (options.contentType) {
+      if (!["text", "image", "video", "position"].includes(options.contentType)) {
+        return {
+          status: 400,
+          data: { error: "Invalid content_type." },
+        };
+      }
       pipeline.push({ $match: { content_type: options.contentType } });
     }
 
     //check if the request has specified createdAfter or createdBefore
     if (options.createdAfter) {
-      pipeline.push({ $match: { created_at: { $gte: new Date(options.createdAfter) } } });
+      const date = Date.parse(options.createdAfter);
+      if (isNaN(date)) {
+        return {
+          status: 400,
+          data: { error: "Invalid date format." },
+        };
+      }
+      pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
     }
     if (options.createdBefore) {
-      pipeline.push({ $match: { created_at: { $lte: new Date(options.createdBefore) } } });
+      const date = Date.parse(options.createdBefore);
+      if (isNaN(date)) {
+        return {
+          status: 400,
+          data: { error: "Invalid date format." },
+        };
+      }
+      pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
     }
 
     //check if the request has specified isScheduled
     if (options.isScheduled) {
-      pipeline.push({ $match: { is_scheduled: true } });
+      if (!["true", "false"].includes(options.isScheduled))
+        return {
+          status: 400,
+          data: { error: `Invalid isScheduled value. Must be either "true" or "false".` },
+        };
+
+      pipeline.push({ $match: { is_scheduled: options.isScheduled == "true" ? true : false } });
     }
 
     //check if the request has specified isInOfficialChannel
     if (options.isInOfficialChannel) {
-      pipeline.push({ $match: { is_in_official_channel: true } });
+      if (!["true", "false"].includes(options.isInOfficialChannel))
+        return {
+          status: 400,
+          data: { error: `Invalid isInOfficialChannel value. Must be either "true" or "false".` },
+        };
+      pipeline.push({ $match: { is_in_official_channel: options.isInOfficialChannel == "true" ? true : false } });
+    }
+
+    //PROJECTION
+    pipeline.push({
+      $project: {
+        _id: 1,
+        hex_id: 1,
+        user_id: 1,
+        is_scheduled: 1,
+        content_type: 1,
+        content: 1,
+        recipients: 1,
+        created_at: 1,
+        last_modified: 1,
+        reactions: 1,
+        is_in_official_channel: 1,
+        impressions: 1,
+        reactions_count: { $add: ["$reactions.positive_reactions", "$reactions.negative_reactions"] },
+      },
+    });
+
+    //check if the request has specified minReactions
+    if (options.minReactions) {
+      const minReactions = parseInt(options.minReactions);
+      if (isNaN(minReactions)) {
+        //return an error if the minReactions is not a number
+        return {
+          status: 400,
+          data: { error: "minReactions must be a positive integer" },
+        };
+      }
+      pipeline.push({ $match: { reactions_count: { $gte: minReactions } } });
     }
 
     if (pipeline.length == 0) {
       pipeline.push({ $match: {} });
     }
-    //check if the request has specified minReactions
-    if (options.minReactions) {
-      if (options.minReactions < 0) {
-        //return an error if the minReactions is negative
-        return {
-          status: 400,
-          data: { error: "minReactions must be a positive integer" },
-        };
-      } else {
-        pipeline.push({ $match: { reactions: { $exists: true, $expr: { $gte: { $size: "$reactions" }, $gte: options.minReactions } } } });
-      }
-    }
-
     //execute the query
     const data = await Squeal.aggregate(pipeline).exec();
+
     //check if the query returned any result
-    if (data.length > 0) {
-      //if the query returned some results, increment the impressions counter for each squeal
-      const squealImpressionsPromises = [];
-
-      for (const squeal of data) {
-        let promise = squeal.save();
-        squealImpressionsPromises.push(promise);
-      }
-      await Promise.all(squealImpressionsPromises);
-
-      //return the squeals
-      return {
-        status: 200,
-        data: data,
-      };
-    } else {
-      //otherwise return an error
+    if (data.length <= 0) {
       return {
         status: 404,
         data: { error: "No squeal found." },
       };
     }
+
+    //if the query returned some results, increment the impressions counter for each squeal
+    const squealImpressionsPromises = [];
+
+    for (const squeal of data) {
+      let promise = squeal.save();
+      squealImpressionsPromises.push(promise);
+    }
+    await Promise.all(squealImpressionsPromises);
+
+    //return the squeals
+    return {
+      status: 200,
+      data: data,
+    };
   },
 
   /**
-   * Get a squeal object by ID or by id, or squeal HEX
+   * Get a squeal object by ID, or squeal HEX
    * @param options.identifier Squeal's identifier, can be either id
-   * @param options.isInOfficialChannel It tells you whether the channel is official or not
    */
   getSqueal: async (options) => {
-    const { identifier, isInOfficialChannel } = options;
+    const { identifier, is_in_official_channel, user_identifier, squeal_hex } = options;
+    //TODO implementare la ricerca tramite idUser e hex
+    const response = await findSqueal(identifier, is_in_official_channel);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const squeal = response.data;
 
-    const squeal = await findSqueal(identifier);
-    if (squeal.status >= 300) {
-      return {
-        status: squeal.status,
-        data: { error: squeal.error },
-      };
-    }
-    if (squeal.data.is_in_official_channel == isInOfficialChannel || isInOfficialChannel == false) {
-      squeal.data.impressions++;
-      await squeal.data.save();
-      return {
-        status: 200,
-        data: squeal.data,
-      };
-    }
+    //impressions increment with save()
+    await squeal.save();
+
     return {
-      status: 404,
-      data: { error: "Squeal not found." },
+      status: 200,
+      data: squeal,
     };
   },
 
@@ -296,7 +342,6 @@ module.exports = {
 
     //push the squeal in the user squeals array
     author.squeals.posted.push(result._id);
-    author.squeals.quantity++;
     await author.save();
 
     //push the squeal in the users squeals.mentioned_in array
@@ -349,34 +394,34 @@ module.exports = {
     // const deleted_content_type = "deleted";
     const { identifier } = options;
 
-    let data = await findSqueal(identifier);
-    if (data.status >= 300) {
+    let response = await findSqueal(identifier);
+    if (response.status >= 300) {
       return {
-        status: data.status,
-        data: { error: data.error },
+        status: response.status,
+        data: { error: response.error },
       };
     }
-    const squeal = data.data;
+    const squeal = response.data;
 
     //check if the user_id in the token is valid
-    data = await findUser(options.user_id);
-    if (data.status >= 300) {
+    response = await findUser(options.user_id);
+    if (response.status >= 300) {
       return {
-        status: data.status,
-        data: { error: data.error },
+        status: response.status,
+        data: { error: response.error },
       };
     }
-    let reqSender = data.data;
+    let reqSender = response.data;
 
     //check if the user is the author of the squeal
-    data = await findUser(squeal.user_id);
-    if (data.status >= 300) {
+    response = await findUser(squeal.user_id);
+    if (response.status >= 300) {
       return {
-        status: data.status,
-        data: { error: data.error },
+        status: response.status,
+        data: { error: response.error },
       };
     }
-    const squealAuthor = data.data;
+    const squealAuthor = response.data;
 
     let isSenderAuthor = reqSender._id.equals(squealAuthor._id);
     let isModerator = reqSender.account_type == "moderator";
@@ -501,14 +546,14 @@ module.exports = {
     }
 
     //check if the squeal exists
-    let data = await findSqueal(identifier);
-    if (data.status >= 300) {
+    let squealResponse = await findSqueal(identifier);
+    if (squealResponse.status >= 300) {
       return {
-        status: data.status,
-        data: { error: data.error },
+        status: squealResponse.status,
+        data: { error: squealResponse.error },
       };
     }
-    const squeal = data.data;
+    const squeal = squealResponse.data;
 
     if (!recipients && !reactions) {
       return {
@@ -520,10 +565,6 @@ module.exports = {
       const { users, channels, keywords } = recipients;
 
       //UPDATE USERS
-      console.log("--------users--------");
-      console.log(users);
-      console.log("--------squeal--------");
-      console.log(squeal);
       let usersResponse = await updateRecipientsUsers(users, squeal);
       if (usersResponse.status >= 300) {
         return {
