@@ -41,11 +41,16 @@ module.exports = {
    * @param options.min_squeals Filters users with more than the specified number of squeals
    * @param options.account_type Filters users by account type
    * @param options.professional_type Filters users by professional type
+   *
+   * @param options.sort_order Sorts users, can be either "asc" or "desc"
+   * @param options.sort_by Sorts users by the specified field, it can be "username", "date", "squeals"
    **/
   //TESTED
   getUserList: async (options) => {
     try {
-      const { created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id } = options;
+      const { created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id, sort_order, sort_by } = options;
+      const sort_orders = ["asc", "desc"];
+      const sort_types = ["username", "date", "squeals"];
       const pipeline = [];
 
       //ACCOUNT TYPE
@@ -159,8 +164,28 @@ module.exports = {
       if (reqSender.account_type !== "moderator") {
         pipeline.push({ $match: { is_active: true } });
       }
-      if (pipeline.length == 0) {
-        pipeline.push({ $match: {} });
+
+      //SORTING
+      if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
+        return {
+          status: 400,
+          data: { error: "Both sort_order and sort_by must be specified" },
+        };
+      }
+
+      if (sort_order && sort_by) {
+        if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+          return {
+            status: 400,
+            data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join("', '")}'. 'sort_order' options are '${sort_orders.join("', '")}'.` },
+          };
+        }
+
+        const order = sort_order === "asc" ? 1 : -1;
+
+        if (sort_by === "username") pipeline.push({ $sort: { username: order } });
+        else if (sort_by === "date") pipeline.push({ $sort: { created_at: order } });
+        else if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order } });
       }
 
       //execute the query

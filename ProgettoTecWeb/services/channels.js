@@ -28,10 +28,15 @@ module.exports = {
    * @param options.max_subscribers Filter channels by maximum subscribers
    * @param options.min_squeals Filter channels by minimum squeals
    * @param options.max_squeals Filter channels by maximum squeals
+   *
+   * @param options.sort_order Sorts channels, can be either "asc" or "desc"
+   * @param options.sort_by Sorts channels by the specified field, it can be "name", "date", "squeals", "subscribers"
    */
 
   getChannels: async (options) => {
-    const { name, created_after, created_before, is_official, min_subscribers, max_subscribers, min_squeals, max_squeals, user_id } = options;
+    const { name, created_after, created_before, is_official, min_subscribers, max_subscribers, min_squeals, max_squeals, sort_order, sort_by, user_id } = options;
+    const sort_orders = ["asc", "desc"];
+    const sort_types = ["name", "date", "squeals", "subscribers"];
     const pipeline = [];
 
     let response = await findUser(user_id);
@@ -90,6 +95,7 @@ module.exports = {
         subscribers_count: { $size: "$subscribers" }, // Ottieni la dimensione dell'array 'subscribers'
         squeals_count: { $size: "$squeals" },
         is_blocked: 1,
+        created_at: 1, // Includi il campo 'created_at'
         //immagine: 1, // Includi il campo 'immagine'
 
         // Aggiungi altri campi che desideri includere qui
@@ -149,8 +155,35 @@ module.exports = {
       }
       pipeline.push({ $match: { squeals_count: { $lte: int_max_squeals } } });
     }
+    console.log(sort_order, sort_by);
 
-    //console.log(pipeline);
+    if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
+      return {
+        status: 400,
+        data: { error: "Both sort_order and sort_by must be specified" },
+      };
+    }
+    try {
+      if (sort_order && sort_by) {
+        if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+          return {
+            status: 400,
+            data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join(`', '`)}'. 'sort_order' options are '${sort_orders.join(`', '`)}'.` },
+          };
+        }
+
+        const order = sort_order === "asc" ? 1 : -1;
+
+        if (sort_by === "name") pipeline.push({ $sort: { name: order } });
+        if (sort_by === "date") pipeline.push({ $sort: { created_at: order } });
+        if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order } });
+        if (sort_by === "subscribers") pipeline.push({ $sort: { subscribers_count: order } });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+    console.log(pipeline);
     const data = await Channel.aggregate(pipeline).exec();
 
     return {

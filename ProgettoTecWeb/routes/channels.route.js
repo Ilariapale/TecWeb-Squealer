@@ -14,6 +14,8 @@ router.get("/", verifyToken, async (req, res, next) => {
       max_subscribers: req.query.max_subscribers,
       min_squeals: req.query.min_squeals,
       max_squeals: req.query.max_squeals,
+      sort_by: req.query.sort_by,
+      sort_order: req.query.sort_order,
       user_id: req.user_id,
     };
 

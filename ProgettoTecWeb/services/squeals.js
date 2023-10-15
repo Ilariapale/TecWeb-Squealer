@@ -36,30 +36,36 @@ const { mentionedNotification } = require("./messages");
 module.exports = {
   /**
    * Retrieve squeals with optional filters
-   * @param options.contentType Filter squeals by content type (text, image, video, position)
-   * @param options.createdAfter Filter squeals created after the specified date
-   * @param options.createdBefore Filter squeals created before the specified date
-   * @param options.isScheduled Filter squeals by scheduled status
-   * @param options.minReactions Filter squeals with more than n total reactions
-   * @param options.balance Filter squeals with more than n balance
-   * @param options.isInOfficialChannel Filter squeals by official channel status
+   * @param options.content_type Filter squeals by content type (text, image, video, position)
+   * @param options.created_after Filter squeals created after the specified date
+   * @param options.created_before Filter squeals created before the specified date
+   * @param options.is_scheduled Filter squeals by scheduled status
+   * @param options.min_reactions Filter squeals with more than n total reactions
+   * @param options.min_balance Filter squeals with more than n balance
+   * @param options.max_balance Filter squeals with less than n balance
+   * @param options.is_in_official_channel Filter squeals by official channel status
+   * @param options.sort_order Sorts squeals, can be either "asc" or "desc"
+   * @param options.sort_by Can be "impressions", "reactions", "date", "comments"
    */
+  //TODO comments_count non esiste ancora
   getSqueals: async (options) => {
-    const { contentType, createdAfter, createdBefore, isScheduled, minReactions, balance, isInOfficialChannel } = options;
+    const { content_type, created_after, created_before, is_scheduled, min_reactions, min_balance, max_balance, is_in_official_channel, sort_order, sort_by } = options;
+    const sort_types = ["reactions", "comments", "impressions", "date"];
+    const sort_orders = ["asc", "desc"];
     const pipeline = [];
-    if (contentType) {
-      if (!contentTypes.includes(contentType)) {
+    if (content_type) {
+      if (!contentTypes.includes(content_type)) {
         return {
           status: 400,
           data: { error: `Invalid content_type.` },
         };
       }
-      pipeline.push({ $match: { content_type: contentType } });
+      pipeline.push({ $match: { content_type: content_type } });
     }
 
-    //check if the request has specified createdAfter or createdBefore
-    if (createdAfter) {
-      const date = Date.parse(createdAfter);
+    //check if the request has specified created_after or created_before
+    if (created_after) {
+      const date = Date.parse(created_after);
       if (isNaN(date)) {
         return {
           status: 400,
@@ -68,8 +74,8 @@ module.exports = {
       }
       pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
     }
-    if (createdBefore) {
-      const date = Date.parse(createdBefore);
+    if (created_before) {
+      const date = Date.parse(created_before);
       if (isNaN(date)) {
         return {
           status: 400,
@@ -79,20 +85,20 @@ module.exports = {
       pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
     }
 
-    //check if the request has specified isScheduled
-    if (isScheduled) {
-      if (!["true", "false"].includes(isScheduled))
+    //check if the request has specified is_scheduled
+    if (is_scheduled) {
+      if (!["true", "false"].includes(is_scheduled))
         return {
           status: 400,
-          data: { error: `Invalid isScheduled value. Must be either "true" or "false".` },
+          data: { error: `Invalid is_scheduled value. Must be either "true" or "false".` },
         };
 
-      pipeline.push({ $match: { is_scheduled: isScheduled == "true" ? true : false } });
+      pipeline.push({ $match: { is_scheduled: is_scheduled == "true" ? true : false } });
     }
 
-    //check if the request has specified isInOfficialChannel
-    if (isInOfficialChannel) {
-      pipeline.push({ $match: { is_in_official_channel: isInOfficialChannel } });
+    //check if the request has specified is_in_official_channel
+    if (is_in_official_channel) {
+      pipeline.push({ $match: { is_in_official_channel: is_in_official_channel } });
     }
 
     //PROJECTION
@@ -119,35 +125,74 @@ module.exports = {
       },
     });
 
-    if (balance) {
-      const balance = parseInt(balance);
+    let intMinBalance;
+
+    if (min_balance) {
+      const balance = parseInt(min_balance);
       if (isNaN(balance)) {
         //return an error if the balance is not a number
         return {
           status: 400,
-          data: { error: `"balance" must be a positive integer` },
+          data: { error: `"min_balance" must be a number.` },
         };
       }
+      intMinBalance = balance;
       pipeline.push({ $match: { "reactions.balance": { $gte: balance } } });
-      //TODO magari aggiungere anche un filtro per cercare quelli minori di balance e non solo maggiori
     }
 
-    //check if the request has specified minReactions
-    if (minReactions) {
-      const minReactions = parseInt(minReactions);
-      if (isNaN(minReactions)) {
-        //return an error if the minReactions is not a number
+    if (max_balance) {
+      const balance = parseInt(max_balance);
+      if (isNaN(balance)) {
+        //return an error if the balance is not a number
         return {
           status: 400,
-          data: { error: `"minReactions" must be a positive integer` },
+          data: { error: `"balance" must be a number.` },
+        };
+      }
+      if (intMinBalance && balance < intMinBalance) {
+        //return an error if the max_balance is less than the min_balance
+        return {
+          status: 400,
+          data: { error: `"max_balance" must be greater than "min_balance".` },
+        };
+      }
+      pipeline.push({ $match: { "reactions.balance": { $lte: balance } } });
+    }
+
+    //check if the request has specified min_reactions
+    if (min_reactions) {
+      const minReactions = parseInt(min_reactions);
+      if (isNaN(minReactions)) {
+        //return an error if the min_reactions is not a number
+        return {
+          status: 400,
+          data: { error: `"min_reactions" must be a positive integer` },
         };
       }
       pipeline.push({ $match: { reactions_count: { $gte: minReactions } } });
     }
 
-    if (pipeline.length == 0) {
-      pipeline.push({ $match: {} });
+    if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
+      return {
+        status: 400,
+        data: { error: `Missing 'sort_order' or 'sort_by' parameter.` },
+      };
     }
+
+    if (sort_order && sort_by) {
+      if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+        return {
+          status: 400,
+          data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join("', '")}. 'sort_order' options are '${sort_orders.join("', '")}'.` },
+        };
+      }
+      const order = sort_order == "asc" ? 1 : -1;
+      if (sort_by == "reactions") pipeline.push({ $sort: { "reactions.reactions_count": order } });
+      else if (sort_by == "comments") pipeline.push({ $sort: { comments_count: order } });
+      else if (sort_by == "impressions") pipeline.push({ $sort: { impressions: order } });
+      else if (sort_by == "date") pipeline.push({ $sort: { created_at: order } });
+    }
+
     //execute the query
     const data = await Squeal.aggregate(pipeline).exec();
 

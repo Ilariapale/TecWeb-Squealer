@@ -7,13 +7,16 @@ router.get("/", verifyToken, async (req, res, next) => {
   //if user is not logged in, filter only official channels
   console.log(req.isTokenValid);
   let options = {
-    contentType: req.query.contentType,
-    createdAfter: req.query.createdAfter,
-    createdBefore: req.query.createdBefore,
-    isScheduled: req.query.isScheduled,
-    minReactions: req.query.minReactions,
-    balance: req.query.balance,
-    isInOfficialChannel: !req.isTokenValid || req.query.isInOfficialChannel,
+    content_type: req.query.content_type,
+    created_after: req.query.created_after,
+    created_before: req.query.created_before,
+    is_scheduled: req.query.is_scheduled,
+    min_reactions: req.query.min_reactions,
+    min_balance: req.query.min_balance,
+    max_balance: req.query.max_balance,
+    sort_order: req.query.sort_order,
+    sort_by: req.query.sort_by,
+    is_in_official_channel: !req.isTokenValid || req.query.isInOfficialChannel,
   };
 
   try {

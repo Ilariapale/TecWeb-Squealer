@@ -48,6 +48,8 @@ router.get("/", verifyToken, async (req, res, next) => {
       min_squeals: req.query.min_squeals,
       account_type: req.query.account_type,
       professional_type: req.query.professional_type,
+      sort_order: req.query.sort_order,
+      sort_by: req.query.sort_by,
       user_id: req.user_id,
     };
 
