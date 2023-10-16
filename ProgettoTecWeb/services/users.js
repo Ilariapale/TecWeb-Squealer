@@ -280,6 +280,7 @@ module.exports = {
         user_ref: user._id,
         created_at: Date.now(),
         content: welcomeNotification(user.username),
+        source: "squeal",
       });
       const notification = await newNotification.save();
 
@@ -500,10 +501,10 @@ module.exports = {
           userToUpdate.smm = undefined;
 
           const newNotification = new Notification({
-            squeal_ref: undefined,
             user_ref: smm._id,
             created_at: Date.now(),
             content: updatedManagedAccountNotification(userToUpdate.username),
+            source: "system",
           });
           const notification = await newNotification.save();
           smm.notifications.push(notification._id);
@@ -549,6 +550,7 @@ module.exports = {
               user_ref: managedAccount._id,
               created_at: Date.now(),
               content: updatedSMMNotification(userToUpdate.username),
+              source: "system",
             });
             const notification = await newNotification.save();
             managedAccount.notifications.push(notification._id);
@@ -672,6 +674,7 @@ module.exports = {
         user_ref: smm._id,
         created_at: Date.now(),
         content: newSMMrequestNotification(reqSender.username),
+        source: "user",
         reply: true,
       });
       await newNotification.save();
@@ -776,6 +779,7 @@ module.exports = {
         user_ref: vip._id,
         created_at: Date.now(),
         content: newSMMNotification(reqSender.username),
+        source: "user",
       });
       const vipNotification = await newVipNotification.save();
       vip.notifications.push(vipNotification._id);
@@ -786,6 +790,7 @@ module.exports = {
         user_ref: reqSender._id,
         created_at: Date.now(),
         content: newManagedAccountNotification(vip.username),
+        source: "user",
       });
       const smmNotification = await newSmmNotification.save();
       reqSender.notifications.push(smmNotification._id);
@@ -835,6 +840,7 @@ module.exports = {
       user_ref: user.smm,
       created_at: Date.now(),
       content: noLongerSMM(user.username),
+      source: "user",
     });
     await notification.save();
 
@@ -884,6 +890,7 @@ module.exports = {
       user_ref: identifier,
       created_at: Date.now(),
       content: noLongerManagedAccount(user.username),
+      source: "user",
     });
     await notification.save();
 

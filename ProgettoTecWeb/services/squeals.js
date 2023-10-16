@@ -24,10 +24,9 @@ const {
   containsOfficialChannels,
 } = require("./utils");
 
-const { mentionedNotification } = require("./messages");
+const { mentionNotification, squealInOfficialChannel } = require("./messages");
 
 //TODO tradurre tutti i commenti in inglese
-//TODO gestire tutti i casi in cui l'utente è bannato
 //TODO quando vengono mandate richieste formattate male, restituire un errore con la descrizione del problema (400 Bad Request)
 //TODO notifica quando vieni menzionato in un post
 //TODO reagire se non sei autenticato
@@ -285,212 +284,219 @@ module.exports = {
    */
   //TODO DA TESTARE
   createSqueal: async (options) => {
-    //vietare di postare in un canale ufficiale
-    const { user_id, vip_id, content, recipients } = options.squealInput;
+    try {
+      //vietare di postare in un canale ufficiale
+      const { user_id, vip_id, content, recipients } = options.squealInput;
 
-    //set the default value for content_type
-    const content_type = options.squealInput.content_type || "text";
-    const is_scheduled = options.squealInput.is_scheduled == "true" ? true : options.squealInput.is_scheduled == "false" ? false : undefined;
+      //set the default value for content_type
+      const content_type = options.squealInput.content_type || "text";
+      const is_scheduled = options.squealInput.is_scheduled == "true" ? true : options.squealInput.is_scheduled == "false" ? false : undefined;
 
-    //check for the request sender's id
-    let response = await findUser(user_id);
-    if (response.status >= 300) {
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    const reqSender = response.data;
-
-    //check in the db if the vip_id is valid
-    let vip_user;
-    if (vip_id) {
-      response = await findUser(vip_id);
+      //check for the request sender's id
+      let response = await findUser(user_id);
       if (response.status >= 300) {
         return {
           status: response.status,
           data: { error: response.error },
         };
       }
-      vip_user = response.data;
-    }
+      const reqSender = response.data;
 
-    //abbiamo sicuramente un reqSender valido
-    //forse c'è anche un vip_user che puo' essere undefined o un utente valido
-
-    //author is the reqSender by default
-    var author = reqSender;
-
-    if (vip_user && !reqSender._id.equals(vip_user._id)) {
-      //Sto cercando di postare a nome di qualcun altro
-      //quindi controllo se l'utente che manda la richiesta ha i permessi per farlo, ovvero è un SMM di un utente VIP
-      if (reqSender.account_type != "professional" || reqSender.professional_type != "smm") {
-        return {
-          status: 403,
-          data: { error: `You are not allowed to post as another user.` },
-        };
-      }
-      //altrimenti controllo se hai i permessi per postare a nome di un utente VIP
-      if (!reqSender._id.equals(vip_user.smm)) {
-        return {
-          status: 403,
-          data: { error: `You are not allowed to post as this user.` },
-        };
+      //check in the db if the vip_id is valid
+      let vip_user;
+      if (vip_id) {
+        response = await findUser(vip_id);
+        if (response.status >= 300) {
+          return {
+            status: response.status,
+            data: { error: response.error },
+          };
+        }
+        vip_user = response.data;
       }
 
-      //here I know that the reqSender is a SMM of the user, so I can post as the user
-      author = vip_user;
-    }
+      //abbiamo sicuramente un reqSender valido
+      //forse c'è anche un vip_user che puo' essere undefined o un utente valido
 
-    if (!reqSender.is_active || !vip_user.is_active) {
-      return {
-        status: 403,
-        data: { error: `Either the vip or the smm is banned and they are not allowed to post a squeal.` },
-      };
-    }
+      //author is the reqSender by default
+      var author = reqSender;
 
-    //check if the content_type is valid
-    if (!contentTypes.includes(content_type) || content_type == "deleted") {
-      return {
-        status: 400,
-        data: { error: `Invalid content_type.` },
-      };
-    }
+      if (vip_user && !reqSender._id.equals(vip_user._id)) {
+        //Sto cercando di postare a nome di qualcun altro
+        //quindi controllo se l'utente che manda la richiesta ha i permessi per farlo, ovvero è un SMM di un utente VIP
+        if (reqSender.account_type != "professional" || reqSender.professional_type != "smm") {
+          return {
+            status: 403,
+            data: { error: `You are not allowed to post as another user.` },
+          };
+        }
+        //altrimenti controllo se hai i permessi per postare a nome di un utente VIP
+        if (!reqSender._id.equals(vip_user.smm)) {
+          return {
+            status: 403,
+            data: { error: `You are not allowed to post as this user.` },
+          };
+        }
 
-    //check if the content is specified and correctly formatted
-    if (!content || content?.length == 0) {
-      return {
-        status: 400,
-        data: { error: `Missing 'content' parameter.` },
-      };
-    }
+        //here I know that the reqSender is a SMM of the user, so I can post as the user
+        author = vip_user;
+        console.log(reqSender.is_active);
+        console.log(vip_user.is_active);
+        if (!reqSender.is_active || !vip_user.is_active) {
+          return {
+            status: 403,
+            data: { error: `Either the vip or the smm is banned and they are not allowed to post a squeal.` },
+          };
+        }
+      }
 
-    //check if the recipients are specified
-    if (!recipients) {
-      return {
-        status: 400,
-        data: { error: `Missing 'recipients' parameter.` },
-      };
-    }
-    var { users, channels, keywords } = JSON.parse(recipients);
-    users = users || [];
-    channels = channels || [];
-    keywords = keywords || [];
+      //check if the content_type is valid
+      if (!contentTypes.includes(content_type) || content_type == "deleted") {
+        return {
+          status: 400,
+          data: { error: `Invalid content_type.` },
+        };
+      }
 
-    //check if the user has enough char_quota
-    const enoughQuota = hasEnoughCharQuota(author, content_type, content);
-    if (!enoughQuota.outcome) {
-      return {
-        status: 403,
-        data: { error: enoughQuota.reason },
-      };
-    }
+      //check if the content is specified and correctly formatted
+      if (!content || content?.length == 0) {
+        return {
+          status: 400,
+          data: { error: `Missing 'content' parameter.` },
+        };
+      }
 
-    //CHECK FOR CHANNELS
-    const { channelsOutcome, channelsArray, notFound } = await checkForAllChannels(channels);
-    if (!channelsOutcome) {
-      return {
-        status: 404,
-        data: { error: `One or more channels not found: ` + notFound.join(", ") + `.` },
-      };
-    }
+      //check if the recipients are specified
+      if (!recipients) {
+        return {
+          status: 400,
+          data: { error: `Missing 'recipients' parameter.` },
+        };
+      }
+      var { users, channels, keywords } = JSON.parse(recipients);
+      users = users || [];
+      channels = channels || [];
+      keywords = keywords || [];
 
-    //check if the user is trying to post in an official channel
-    const hasOfficialChannels = await containsOfficialChannels(channelsArray);
-    if (hasOfficialChannels && author.account_type != "moderator") {
-      return {
-        status: 403,
-        data: { error: `You are not allowed to post in an official channel.` },
-      };
-    }
+      //check if the user has enough char_quota
+      const enoughQuota = hasEnoughCharQuota(author, content_type, content);
+      if (!enoughQuota.outcome) {
+        return {
+          status: 403,
+          data: { error: enoughQuota.reason },
+        };
+      }
 
-    //CHECK FOR USERS
-    const { usersOutcome, usersArray } = await checkForAllUsers(users);
-    if (!usersOutcome) {
-      return {
-        status: 404,
-        data: { error: `One or more users not found.` },
-      };
-    }
+      //CHECK FOR CHANNELS
+      const { channelsOutcome, channelsArray, notFound } = await checkForAllChannels(channels);
+      if (!channelsOutcome) {
+        return {
+          status: 404,
+          data: { error: `One or more channels not found: ` + notFound.join(", ") + `.` },
+        };
+      }
 
-    //create the hex_id from the length of the user squeals array
-    hex_id = author.squeals?.posted?.length || 0;
-    //create the squeal object
-    const newSqueal = new Squeal({
-      hex_id: hex_id,
-      vip_id: author._id,
-      is_scheduled: is_scheduled || false,
-      content_type: content_type,
-      content: content,
-      recipients: {
-        users: usersArray,
-        channels: channelsArray,
-        keywords: keywords,
-      },
-      created_at: new Date(),
-      last_modified: new Date(),
-      is_in_official_channel: hasOfficialChannels,
-    });
+      //check if the user is trying to post in an official channel
+      const hasOfficialChannels = await containsOfficialChannels(channelsArray);
+      if (hasOfficialChannels && author.account_type != "moderator") {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to post in an official channel.` },
+        };
+      }
 
-    //save the squeal in the db
-    let result = await newSqueal.save();
+      //CHECK FOR USERS
+      const { usersOutcome, usersArray } = await checkForAllUsers(users);
+      if (!usersOutcome) {
+        return {
+          status: 404,
+          data: { error: `One or more users not found.` },
+        };
+      }
 
-    //remove the char_quota from the user
-    await removeQuota(author, enoughQuota.quotaToSubtract);
-    //subtract the squeal length from the user's char_quota
-
-    //push the squeal in the user squeals array
-    author.squeals.posted.push(result._id);
-    await author.save();
-
-    //push the squeal in the users squeals.mentioned_in array
-    const userUpdatePromises = [];
-    for (const user of usersArray) {
-      //send a notification to the mentioned user
-      const notification = new Notification({
-        user_id: user,
-        squeal_id: result._id,
-        message: mentionedNotification(author.username, content),
+      //create the hex_id from the length of the user squeals array
+      hex_id = author.squeals?.posted?.length || 0;
+      //create the squeal object
+      const newSqueal = new Squeal({
+        hex_id: hex_id,
+        user_id: author._id,
+        is_scheduled: is_scheduled || false,
+        content_type: content_type,
+        content: content,
+        recipients: {
+          users: usersArray,
+          channels: channelsArray,
+          keywords: keywords,
+        },
         created_at: new Date(),
+        last_modified: new Date(),
+        is_in_official_channel: hasOfficialChannels,
       });
-      await notification.save();
 
-      let promise = User.findByIdAndUpdate(user, { $push: { "squeals.mentioned_in": result._id }, $push: { notifications: notification._id } });
-      userUpdatePromises.push(promise);
-    }
-    await Promise.all(userUpdatePromises);
+      //save the squeal in the db
+      let result = await newSqueal.save();
 
-    //push the squeal in the channels squeals array
-    const channelUpdatePromises = [];
-    for (const channel of channelsArray) {
-      let promise = Channel.findByIdAndUpdate(channel._id, { $push: { squeals: result._id } });
-      channelUpdatePromises.push(promise);
-    }
-    await Promise.all(channelUpdatePromises);
+      //remove the char_quota from the user
+      await removeQuota(author, enoughQuota.quotaToSubtract);
+      //subtract the squeal length from the user's char_quota
 
-    //push the squeal in the keywords squeals array
-    const promises = keywords.map(async (keyword) => {
-      const existingKeyword = await Keyword.findOne({ name: keyword });
+      //push the squeal in the user squeals array
+      author.squeals.posted.push(result._id);
+      await author.save();
 
-      if (existingKeyword) {
-        existingKeyword.squeals.push(result._id);
-        await existingKeyword.save();
-      } else {
-        const newKeyword = new Keyword({
-          name: keyword,
-          squeals: [result._id],
+      //push the squeal in the users squeals.mentioned_in array
+      const userUpdatePromises = [];
+      for (const user of usersArray) {
+        //send a notification to the mentioned user
+        console.log(mentionNotification(author.username, content));
+        const notification = new Notification({
+          user_ref: user,
+          squeal_ref: result._id,
+          content: mentionNotification(author.username, content),
           created_at: new Date(),
+          source: "squeal",
         });
-        await newKeyword.save();
+        await notification.save();
+
+        let promise = User.findByIdAndUpdate(user, { $push: { "squeals.mentioned_in": result._id }, $push: { notifications: notification._id } });
+        userUpdatePromises.push(promise);
       }
-    });
+      await Promise.all(userUpdatePromises);
 
-    await Promise.all(promises);
+      //push the squeal in the channels squeals array
+      const channelUpdatePromises = [];
+      for (const channel of channelsArray) {
+        let promise = Channel.findByIdAndUpdate(channel._id, { $push: { squeals: result._id } });
+        channelUpdatePromises.push(promise);
+      }
+      await Promise.all(channelUpdatePromises);
 
-    return {
-      status: result ? 201 : 400,
-      data: result ? result : { error: `Failed to create squeal` },
-    };
+      //push the squeal in the keywords squeals array
+      const promises = keywords.map(async (keyword) => {
+        const existingKeyword = await Keyword.findOne({ name: keyword });
+
+        if (existingKeyword) {
+          existingKeyword.squeals.push(result._id);
+          await existingKeyword.save();
+        } else {
+          const newKeyword = new Keyword({
+            name: keyword,
+            squeals: [result._id],
+            created_at: new Date(),
+          });
+          await newKeyword.save();
+        }
+      });
+
+      await Promise.all(promises);
+
+      return {
+        status: result ? 201 : 400,
+        data: result ? result : { error: `Failed to create squeal` },
+      };
+    } catch (error) {
+      console.log(error);
+    }
   },
 
   /**
@@ -615,106 +621,111 @@ module.exports = {
    * @param options.inlineReqJson.reactions Array like {like: 0, love: 0, laugh: 0, dislike: 0, disgust: 0, disagree: 0}
    */
   updateSqueal: async (options) => {
-    const { identifier, user_id } = options;
-    const recipients = options.inlineReqJson.recipients ? JSON.parse(options.inlineReqJson?.recipients) : undefined;
-    const reactions = options.inlineReqJson.reactions ? JSON.parse(options.inlineReqJson?.reactions) : undefined;
-    if (!identifier) {
-      return {
-        status: 400,
-        data: { error: `Missing 'identifier' parameter.` },
-      };
-    }
-    let response = await findUser(user_id);
-    if (response.status >= 300) {
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    const reqSender = response.data;
-
-    //check if the reqSender is a moderator
-    if (reqSender.account_type != "moderator") {
-      return {
-        status: 403,
-        data: { error: `You are not allowed to update this squeal.` },
-      };
-    }
-
-    //check if the squeal exists
-    let squealResponse = await findSqueal(identifier);
-    if (squealResponse.status >= 300) {
-      return {
-        status: squealResponse.status,
-        data: { error: squealResponse.error },
-      };
-    }
-    const squeal = squealResponse.data;
-
-    if (!recipients && !reactions) {
-      return {
-        status: 400,
-        data: { error: `Missing 'recipients' or 'reactions' parameter.` },
-      };
-    }
-    if (recipients) {
-      const { users, channels, keywords } = recipients;
-
-      //UPDATE USERS
-      let usersResponse = await updateRecipientsUsers(users, squeal);
-      if (usersResponse.status >= 300) {
-        return {
-          status: usersResponse.status,
-          data: { error: usersResponse.error },
-        };
-      }
-      squeal.recipients.users = usersResponse.data.usersArray;
-
-      //UPDATE CHANNELS
-      let channelsResponse = await updateRecipientsChannels(channels, squeal);
-      if (channelsResponse.status >= 300) {
-        return {
-          status: channelsResponse.status,
-          data: { error: channelsResponse.error },
-        };
-      }
-      //check if the squeal is in an official channel
-      squeal.is_in_official_channel = (channels || []).some((channel) => channel.is_official);
-      squeal.recipients.channels = channelsResponse.data.channelsArray;
-
-      //UPDATE KEYWORDS
-      let keywordsResponse = await updateRecipientsKeywords(keywords, squeal);
-      if (keywordsResponse.status >= 300) {
-        return {
-          status: keywordsResponse.status,
-          data: { error: keywordsResponse.error },
-        };
-      }
-      squeal.recipients.keywords = keywords;
-    }
-
-    //UPDATE REACTIONS
-    if (reactions) {
-      const { like, love, laugh, dislike, disgust, disagree } = parseInt(reactions);
-      if (isNaN(like) || isNaN(love) || isNaN(laugh) || isNaN(dislike) || isNaN(disgust) || isNaN(disagree)) {
+    try {
+      const { identifier, user_id } = options;
+      const recipients = options.inlineReqJson.recipients ? JSON.parse(options.inlineReqJson?.recipients) : undefined;
+      const reactions = options.inlineReqJson.reactions ? JSON.parse(options.inlineReqJson?.reactions) : undefined;
+      if (!identifier) {
         return {
           status: 400,
-          data: { error: `Reactions must be integers.` },
+          data: { error: `Missing 'identifier' parameter.` },
         };
       }
-      like ? (squeal.reactions.positive_reactions.like = like) : null;
-      love ? (squeal.reactions.positive_reactions.love = love) : null;
-      laugh ? (squeal.reactions.positive_reactions.laugh = laugh) : null;
-      dislike ? (squeal.reactions.negative_reactions.dislike = dislike) : null;
-      disgust ? (squeal.reactions.negative_reactions.disgust = disgust) : null;
-      disagree ? (squeal.reactions.negative_reactions.disagree = disagree) : null;
-    }
+      let response = await findUser(user_id);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const reqSender = response.data;
 
-    squeal.last_modified = new Date();
-    const updatedSqueal = await squeal.save();
-    return {
-      status: updatedSqueal ? 200 : 400,
-      data: updatedSqueal ? updatedSqueal : { error: `Failed to update squeal` },
-    };
+      //check if the reqSender is a moderator
+      if (reqSender.account_type != "moderator") {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to update this squeal.` },
+        };
+      }
+
+      //check if the squeal exists
+      let squealResponse = await findSqueal(identifier);
+      if (squealResponse.status >= 300) {
+        return {
+          status: squealResponse.status,
+          data: { error: squealResponse.error },
+        };
+      }
+      const squeal = squealResponse.data;
+
+      if (!recipients && !reactions) {
+        return {
+          status: 400,
+          data: { error: `Missing 'recipients' or 'reactions' parameter.` },
+        };
+      }
+      if (recipients) {
+        const { users, channels, keywords } = recipients;
+
+        //UPDATE USERS
+        let usersResponse = await updateRecipientsUsers(users, squeal);
+        if (usersResponse.status >= 300) {
+          return {
+            status: usersResponse.status,
+            data: { error: usersResponse.error },
+          };
+        }
+        squeal.recipients.users = usersResponse.data.usersArray;
+
+        //UPDATE CHANNELS
+        let channelsResponse = await updateRecipientsChannels(channels, squeal);
+        if (channelsResponse.status >= 300) {
+          return {
+            status: channelsResponse.status,
+            data: { error: channelsResponse.error },
+          };
+        }
+
+        //check if the squeal is in an official channel
+        squeal.is_in_official_channel = (channelsResponse.data.channelsArray || []).some((channel) => channel.is_official);
+        squeal.recipients.channels = channelsResponse.data.channelsArray;
+
+        //UPDATE KEYWORDS
+        let keywordsResponse = await updateRecipientsKeywords(keywords, squeal);
+        if (keywordsResponse.status >= 300) {
+          return {
+            status: keywordsResponse.status,
+            data: { error: keywordsResponse.error },
+          };
+        }
+        squeal.recipients.keywords = keywords;
+      }
+
+      //UPDATE REACTIONS
+      if (reactions) {
+        const { like, love, laugh, dislike, disgust, disagree } = parseInt(reactions);
+        if (isNaN(like) || isNaN(love) || isNaN(laugh) || isNaN(dislike) || isNaN(disgust) || isNaN(disagree)) {
+          return {
+            status: 400,
+            data: { error: `Reactions must be integers.` },
+          };
+        }
+        like ? (squeal.reactions.positive_reactions.like = like) : null;
+        love ? (squeal.reactions.positive_reactions.love = love) : null;
+        laugh ? (squeal.reactions.positive_reactions.laugh = laugh) : null;
+        dislike ? (squeal.reactions.negative_reactions.dislike = dislike) : null;
+        disgust ? (squeal.reactions.negative_reactions.disgust = disgust) : null;
+        disagree ? (squeal.reactions.negative_reactions.disagree = disagree) : null;
+      }
+
+      squeal.last_modified = new Date();
+      const updatedSqueal = await squeal.save();
+      return {
+        status: updatedSqueal ? 200 : 400,
+        data: updatedSqueal ? updatedSqueal : { error: `Failed to update squeal` },
+      };
+    } catch (error) {
+      console.log(error);
+    }
   },
 };

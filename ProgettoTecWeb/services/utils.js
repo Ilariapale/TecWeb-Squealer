@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const config = require("../config");
 
 const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
-const { mentionNotification, officialNotificationAdd, officialNotificationRemove } = require("./messages.js");
+const { mentionNotification, squealInOfficialChannel, squealRemovedFromOfficialChannel, squealUpdatedOfficialChannel } = require("./messages.js");
 const {
   MAX_DESCRIPTION_LENGTH,
   USERNAME_MIN_LENGTH,
@@ -206,7 +206,10 @@ async function checkForAllUsers(userArray) {
   return { usersOutcome: allUserExist, usersArray: userResults };
 }
 
-async function checkForAllChannels(channelArray) {
+/**
+ * @param channelArray array of channel's ids or names
+ */
+async function checkForAllChannels(channelArray, includeBlocked = false) {
   //if the parameter is null or empty, return true, and an empty array
   if (!channelArray || channelArray.length == 0) return { channelsOutcome: true, channelsArray: [] };
   //else, check if all the channels exist
@@ -224,6 +227,7 @@ async function checkForAllChannels(channelArray) {
 
   //await for all the promises to resolve
   const channelResults = await Promise.all(channelPromises);
+
   const nullAndBlockedIndex = [];
   //create an array of indexes of null or blocked channels
   channelResults.forEach((item, index) => {
@@ -232,7 +236,7 @@ async function checkForAllChannels(channelArray) {
     }
   });
   //create an array of the channels that are not null or blocked
-  const allChannelExist = channelResults.every((exists) => exists && exists.is_blocked == false);
+  const allChannelExist = channelResults.every((exists) => exists && (exists.is_blocked == false || includeBlocked));
 
   return { channelsOutcome: allChannelExist, channelsArray: channelResults, notFound: nullAndBlockedIndex.map((index) => channelArray[index]) };
 }
@@ -344,121 +348,119 @@ async function removeQuota(user, squealCost) {
 }
 
 async function updateRecipientsUsers(users, squeal) {
-  //se user è undefined creo un array vuoto
-  if (!users) users = [];
   //if it's too much, we can check just the new users
   const { usersOutcome, usersArray } = await checkForAllUsers(users);
+
   if (!usersOutcome) {
     return {
       status: 404,
       data: { error: "One or more users not found." },
     };
   }
-  console.log("--------------------------------");
-  const results = addedAndRemoved(squeal.recipients.users, usersArray);
-  const addedUsers = results.added;
-  const removedUsers = results.removed;
-  //remove squeal and notification from removed users
+
+  const results = addedAndRemoved(
+    squeal.recipients.users,
+    usersArray.map((user) => user._id)
+  );
+
+  const addedUsers = results.added; //id
+  const removedUsers = results.removed; //id
+
+  //UPDATE REMOVED USERS and REMOVE NOTIFICATIONS
   if (removedUsers && removedUsers.length > 0) {
     const removedPromises = removedUsers.map(async (user) => {
-      const removedUser = await User.findById(user);
-      if (removedUser) {
-        //remove the notification about this squeal and owned by this user
-        let notification = await Notification.findOneAndDelete({ squeal_ref: squeal._id, user_ref: removedUser._id });
-        removedUser.notifications.pull(notification._id);
-        removedUser.squeals.mentioned_in.pull(squeal._id);
-        await removedUser.save();
-      }
+      const notification = Notification.findOneAndDelete({ squeal_ref: squeal._id, user_ref: user });
+      return User.findOneAndUpdate({ _id: user }, { $pull: { notifications: (await notification)._id, "squeals.mentioned_in": squeal._id } }).exec();
     });
     await Promise.all(removedPromises);
   }
 
-  //add squeal and notification to added users
+  //UPDATE ADDED USERS and ADD NOTIFICATIONS
   if (addedUsers && addedUsers.length > 0) {
+    const squealAuthor = await User.findById(squeal.user_id).select("username");
     const addedPromises = addedUsers.map(async (user) => {
-      const addedUser = await User.findById(user);
-      if (addedUser) {
-        let squealOwner = await User.findById(squeal.user_id).select("username");
-        const newNotification = new Notification({
-          squeal_ref: squeal._id,
-          created_at: Date.now(),
-          content: mentionNotification(squealOwner.username, squeal.content),
-          user_ref: addedUser._id,
-        });
-        await newNotification.save();
-        addedUser.notifications.push(newNotification._id);
-        addedUser.squeals.mentioned_in.push(squeal._id);
-        await addedUser.save();
-      }
+      const notification = new Notification({
+        squeal_ref: squeal._id,
+        created_at: Date.now(),
+        content: mentionNotification(squealAuthor.username, squeal.content),
+        user_ref: user,
+        source: "system",
+      });
+      //add the notification to the notifications array of the added user
+      return User.findOneAndUpdate({ _id: user }, { $push: { notifications: (await notification.save())._id, "squeals.mentioned_in": squeal._id } }).exec();
     });
     await Promise.all(addedPromises);
   }
+
   return {
     status: 200,
     data: { usersArray, addedUsers, removedUsers },
   };
-
-  //squeal.recipients.users = usersArray;
 }
 
 async function updateRecipientsChannels(channels, squeal) {
   const { channelsOutcome, channelsArray } = await checkForAllChannels(channels);
+
   if (!channelsOutcome) {
     return {
       status: 404,
       data: { error: "One or more channels not found." },
     };
   }
-  const results = addedAndRemoved(squeal.recipients.channels, channelsArray);
+
+  const results = addedAndRemoved(
+    squeal.recipients.channels,
+    channelsArray.map((channel) => channel._id)
+  );
+
   const addedChannels = results.added;
   const removedChannels = results.removed;
-  //remove squeal and notification from removed channels
+  const addedOfficialNames = [];
+  const removedOfficialNames = [];
+
+  //UPDATE REMOVED CHANNELS
   if (removedChannels && removedChannels.length > 0) {
-    const removedPromises = removedChannels.map(async (channel) => {
-      const removedChannel = await Channel.findById(channel);
-      if (removedChannel) {
-        removedChannel.squeals.pull(squeal._id);
-        if (removedChannel.is_official) {
-          //if the channel was official, remove the notification sent when the squeal was added to that official channel
-          //let notification = await Notification.findOneAndDelete({ squeal_ref: squeal._id, user_ref: squeal.user_id });
-          //if (notification) await User.findByIdAndUpdate(squeal.user_id, { $pull: { notifications: notification._id } });
-          //add the remove notification
-          let squealOwner = await User.findById(squeal.user_id).select("username");
-          let removeNotification = new Notification({
-            squeal_ref: squeal._id,
-            created_at: Date.now(),
-            content: officialNotificationRemove(squealOwner.username, squeal.content, removedChannel.name),
-            user_ref: squeal.user_id,
-          });
-          await removeNotification.save();
-          await User.findByIdAndUpdate(squeal.user_id, { $push: { notifications: removeNotification._id } });
-        }
-        await removedChannel.save();
-      }
+    const removedResult = await Channel.find({ _id: { $in: removedChannels } });
+    const removedPromises = removedResult.map((channel) => {
+      if (channel.is_official) removedOfficialNames.push(channel.name);
+      channel.squeals.pull(squeal._id);
+      return channel.save();
     });
     await Promise.all(removedPromises);
   }
-  //add squeal and notification to added channels
+
+  //UPDATE ADDED CHANNELS
   if (addedChannels && addedChannels.length > 0) {
-    const addedPromises = addedChannels.map(async (channel) => {
-      const addedChannel = await Channel.findById(channel);
-      if (addedChannel) {
-        addedChannel.squeals.push(squeal._id);
-        if (addedChannel.is_official) {
-          let squealOwner = await User.findById(squeal.user_id).select("username");
-          let notification = new Notification({
-            squeal_ref: squeal._id,
-            created_at: Date.now(),
-            content: officialNotificationAdd(squealOwner.username, squeal.content, addedChannel.name),
-            user_ref: squeal.user_id,
-          });
-          await notification.save();
-          await User.findByIdAndUpdate(squeal.user_id, { $push: { notifications: notification._id } });
-        }
-        await addedChannel.save();
-      }
+    const addedResult = await Channel.find({ _id: { $in: addedChannels } });
+    const addedPromises = addedResult.map((channel) => {
+      if (channel.is_official) addedOfficialNames.push(channel.name);
+      channel.squeals.push(squeal._id);
+      return channel.save();
     });
     await Promise.all(addedPromises);
+  }
+
+  //NOTIFICATIONS
+  //squealInOfficialChannel, squealRemovedFromOfficialChannel, squealUpdatedOfficialChannel
+  if (addedOfficialNames.length > 0 || removedOfficialNames.length > 0) {
+    let message;
+    if (addedOfficialNames.length > 0 && removedOfficialNames.length > 0) {
+      message = squealUpdatedOfficialChannel(squeal.content, addedOfficialNames, removedOfficialNames);
+    } else if (addedOfficialNames.length > 0) {
+      message = squealInOfficialChannel(squeal.content, addedOfficialNames);
+    } else if (removedOfficialNames.length > 0) {
+      message = squealRemovedFromOfficialChannel(squeal.content, removedOfficialNames);
+    }
+
+    const notification = new Notification({
+      squeal_ref: squeal._id,
+      created_at: Date.now(),
+      content: message,
+      user_ref: squeal.user_id,
+      source: "system",
+    });
+    await notification.save();
+    await User.findOneAndUpdate({ _id: squeal.user_id }, { $push: { notifications: notification._id } }).exec();
   }
 
   return {
@@ -518,6 +520,9 @@ function addedAndRemoved(oldArray, newArray) {
   };
   let added = newArray.filter((element) => !oldArray.some((oldElement) => compare(oldElement, element)));
   let removed = oldArray.filter((element) => !newArray.some((newElement) => compare(newElement, element)));
+  console.log("ADDED AND REMOVED");
+  console.log(added);
+
   return { added, removed };
 }
 

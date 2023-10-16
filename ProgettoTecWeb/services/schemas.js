@@ -10,7 +10,7 @@ const NotificationSchema = new mongoose.Schema({
   channel_ref: { type: mongoose.Types.ObjectId, ref: "Channel" },
   user_ref: { type: mongoose.Types.ObjectId, ref: "User" },
   reply: { type: Boolean, default: false },
-  source: { type: String, enum: ["squeal", "channel", "user"] },
+  source: { type: String, enum: ["squeal", "channel", "user", "system"] },
 });
 const Notification = mongoose.model("Notification", NotificationSchema);
 //squeal -> se ti taggano

@@ -1,9 +1,23 @@
-const mentionNotification = (username, message, type = "text") => `@${username} has mentioned you in a ${type} squeal! Check it out!\n${message.substring(0, 30)}...`;
+const mentionNotification = (username, message, type = "text") =>
+  `@${username} has mentioned you in a ${type} squeal! Check it out!\n'${message.substring(0, 30)}${message.length > 30 ? ".." : ""}'.`;
 //TODO controllare il tipo del messaggio ad esempio se è una posizione o una immagine, il substring non funziona
-const officialNotificationAdd = (username, message, channel) =>
-  `Congratulations @${username}! Your squeal has been featured on §${channel} channel! Check it out!\n"${message.substring(0, 30)}..."`;
 
-const officialNotificationRemove = (username, message, channel) => `Oh no, @${username}! Your squeal has been removed from §${channel} channel.\n"${message.substring(0, 30)}..."`;
+const squealInOfficialChannel = (message, channels) =>
+  `Good news! Your squeal has been featured in ${channels.length > 1 ? "some" : "an"} official channel${channels.length > 1 ? "s" : ""}! It can now be found in §${channels.join(
+    ", §"
+  )}. Check it out!\n'${message.substring(0, 30)}${message.length > 30 ? ".." : ""}'.`;
+
+const squealRemovedFromOfficialChannel = (message, channels) =>
+  `Bad news! Your squeal has been removed from ${channels.length > 1 ? "some" : "an"} official channel${
+    channels.length > 1 ? "s" : ""
+  }! It can no longer be found in §${channels.join(", §")}.\n'${message.substring(0, 30)}${message.length > 30 ? ".." : ""}'.`;
+
+const squealUpdatedOfficialChannel = (message, added_channels, removed_channels) =>
+  `Good news and bad news! Your squeal has been featured in ${added_channels.length > 1 ? "some" : "an"} official channel${added_channels.length > 1 ? "s" : ""} and removed from ${
+    removed_channels.length > 1 ? "some " : "an"
+  }other${removed_channels.length > 1 ? "s" : ""}! It can now be found in §${added_channels.join(", §")} but no longer in §${removed_channels.join(
+    ", §"
+  )}. Check it out!\n'${message.substring(0, 30)}${message.length > 30 ? ".." : ""}'.`;
 
 const newOwnerNotification = (username, channel) => `Congratulations @${username}! You are now the owner of §${channel} channel!`;
 
@@ -36,8 +50,6 @@ const noLongerManagedAccount = (username) => `@${username} removed you from thei
 
 module.exports = {
   mentionNotification,
-  officialNotificationAdd,
-  officialNotificationRemove,
   newOwnerNotification,
   removedOwnerNotification,
   channelDeletedNotification,
@@ -52,4 +64,7 @@ module.exports = {
   newSMMrequestNotification,
   noLongerSMM,
   noLongerManagedAccount,
+  squealInOfficialChannel,
+  squealRemovedFromOfficialChannel,
+  squealUpdatedOfficialChannel,
 };
