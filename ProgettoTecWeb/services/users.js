@@ -342,7 +342,7 @@ module.exports = {
       profile_info: user.profile_info,
       profile_picture: user.profile_picture,
     };
-
+    //TODO controllare nel response.status >= 300
     // Check if the request sender exists
     response = await findUser(user_id);
     if (response.status >= 300) {
@@ -1098,7 +1098,7 @@ module.exports = {
     }
     const userToUpdate = response.data;
 
-    //toggle the is_active field
+    //change the "is_active" field: if the user is banned, he's not active
     userToUpdate.is_active = ban_status === "true" ? false : true;
 
     //save the updated user
@@ -1112,12 +1112,14 @@ module.exports = {
   },
 
   /**
-   * @param options.notificationArray Notifications identifier array
+   * @param options.inlineReqJson.notificationArray Notifications identifier array
+   * @param options.value New notification status
    */
-  toggleNotificationStatus: async (options) => {
-    //TODO modifica il toggle
-    const { user_id } = options;
+  setNotificationStatus: async (options) => {
+    const { user_id, value } = options;
     const { notificationArray } = options.inlineReqJson;
+
+    const new_is_unseen = value === "true" ? true : false;
 
     // Check if the required fields are present
     if (notificationArray === undefined || notificationArray.length <= 0) {
@@ -1158,7 +1160,7 @@ module.exports = {
       };
     }
 
-    const updatedNotifications = await Notification.updateMany({ _id: { $in: response.notificationsArray } }, { $set: { is_unseen: false } });
+    const updatedNotifications = await Notification.updateMany({ _id: { $in: response.notificationsArray } }, { $set: { is_unseen: new_is_unseen } });
     // Return the result
     return {
       status: 200,

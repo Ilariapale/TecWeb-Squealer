@@ -179,7 +179,6 @@ router.patch("/:identifier/blockedstatus", verifyToken, async (req, res, next) =
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
-module.exports = router;
 
 router.patch("/:identifier/subscription", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
@@ -220,3 +219,5 @@ router.patch("/:identifier/muted", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
+
+module.exports = router;

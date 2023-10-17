@@ -1,6 +1,24 @@
 const mongoose = require("mongoose");
 const { newOwnerNotification, deletedManagedAccountNotification, deletedSMMNotification } = require("./messages.js");
 
+// Chat
+const ChatSchema = new mongoose.Schema({
+  //_id: { type: mongoose.Types.ObjectId },
+  partecipants: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
+  messages: {
+    type: [
+      {
+        sender: { type: Number, min: 0 },
+        text: { type: String },
+        timestamp: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+      },
+    ],
+    default: [],
+  },
+  created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+});
+const Chat = mongoose.model("Chat", ChatSchema);
+
 // Notification
 const NotificationSchema = new mongoose.Schema({
   is_unseen: { type: Boolean, default: true },
@@ -41,6 +59,10 @@ const UserSchema = new mongoose.Schema({
     positive_squeals: { type: Number, default: 0 },
     negative_squeals: { type: Number, default: 0 },
     controversial_squeals: { type: Number, default: 0 },
+  },
+  direct_chats: {
+    type: [{ type: mongoose.Types.ObjectId, ref: "Chat" }],
+    default: [],
   },
   subscribed_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
   owned_channels: { type: [{ type: mongoose.Types.ObjectId, ref: "Channel" }], default: [] },
@@ -309,4 +331,5 @@ module.exports = {
   Squeal,
   Channel,
   Keyword,
+  Chat,
 };

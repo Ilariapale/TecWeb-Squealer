@@ -28,7 +28,6 @@ const { mentionNotification, squealInOfficialChannel } = require("./messages");
 
 //TODO tradurre tutti i commenti in inglese
 //TODO quando vengono mandate richieste formattate male, restituire un errore con la descrizione del problema (400 Bad Request)
-//TODO notifica quando vieni menzionato in un post
 //TODO reagire se non sei autenticato
 
 //DONE Controllati i casi in cui l'utente che fa richiesta è bannato

@@ -9,6 +9,7 @@ const KEYWORD_MIN_LENGTH = 4;
 const KEYWORD_MAX_LENGTH = 20;
 const PASSWORD_MIN_LENGTH = 8;
 const MEDIA_QUOTA = { image: 125, video: 300, position: 150 }; //char_quota per image
+const DIRECT_MESSAGE_MAX_LENGTH = 1000;
 
 module.exports = {
   MAX_DESCRIPTION_LENGTH,
@@ -22,4 +23,5 @@ module.exports = {
   KEYWORD_MAX_LENGTH,
   MEDIA_QUOTA,
   PASSWORD_MIN_LENGTH,
+  DIRECT_MESSAGE_MAX_LENGTH,
 };

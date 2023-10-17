@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const config = require("../config");
 
-const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
+const { Notification, User, Squeal, Channel, Keyword, Chat } = require("./schemas");
 const { mentionNotification, squealInOfficialChannel, squealRemovedFromOfficialChannel, squealUpdatedOfficialChannel } = require("./messages.js");
 const {
   MAX_DESCRIPTION_LENGTH,
@@ -180,6 +180,31 @@ async function findNotification(identifier) {
   }
   if (!response.data) {
     response.error = "Notification not found";
+    response.status = 404;
+  } else {
+    response.error = "";
+    response.status = 200;
+  }
+  return response;
+}
+
+async function findChat(identifier) {
+  let response = {};
+  if (!identifier) {
+    response.error = "Chat identifier is required.";
+    response.status = 400;
+    return response;
+  }
+  if (mongooseObjectIdRegex.test(identifier)) {
+    //it's a mongoose ObjectId
+    response.data = await Chat.findById(identifier);
+  } else {
+    response.error = "Invalid identifier";
+    response.status = 400;
+    return response;
+  }
+  if (!response.data) {
+    response.error = "Chat not found";
     response.status = 404;
   } else {
     response.error = "";
@@ -586,6 +611,7 @@ module.exports = {
   findSqueal,
   findChannel,
   findKeyword,
+  findChat,
   findNotification,
   checkForAllChannels,
   checkForAllUsers,

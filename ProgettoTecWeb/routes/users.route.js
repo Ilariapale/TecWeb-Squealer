@@ -320,12 +320,13 @@ router.patch("/notification", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       user_id: req.user_id,
+      value: req.query.value,
     };
 
     options.inlineReqJson = req.body;
 
     try {
-      const result = await users.toggleNotificationStatus(options);
+      const result = await users.setNotificationStatus(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       return res.status(500).send({
