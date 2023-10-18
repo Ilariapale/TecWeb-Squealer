@@ -48,6 +48,9 @@ const noLongerSMM = (username) => `You are no longer @${username}'s SMM!`;
 
 const noLongerManagedAccount = (username) => `@${username} removed you from their managed account, they're no longer your SMM!`;
 
+const someoneCommentedYourSqueal = (username, comment) =>
+  `Hey! @${username} just added a comment to your squeal! Check it out!\n'${comment.substring(0, 30)}${comment.length > 30 ? ".." : ""}'.`;
+
 module.exports = {
   mentionNotification,
   newOwnerNotification,
@@ -67,4 +70,5 @@ module.exports = {
   squealInOfficialChannel,
   squealRemovedFromOfficialChannel,
   squealUpdatedOfficialChannel,
+  someoneCommentedYourSqueal,
 };

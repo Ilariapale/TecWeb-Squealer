@@ -1,5 +1,6 @@
 const express = require("express");
 const squeals = require("../services/squeals");
+const comments = require("../services/comments");
 const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 

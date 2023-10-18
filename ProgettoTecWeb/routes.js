@@ -7,5 +7,6 @@ module.exports = function (app) {
   app.use("/squeals", require("./routes/squeals.route"));
   app.use("/users", require("./routes/users.route"));
   app.use("/chats", require("./routes/chats.route"));
+  app.use("/comments", require("./routes/comments.route"));
   app.use("/auth", require("./routes/auth.route"));
 };

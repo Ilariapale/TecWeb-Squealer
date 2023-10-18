@@ -29,7 +29,6 @@ const {
 } = require("./messages");
 const { PASSWORD_MIN_LENGTH } = require("./constants");
 //--------------------------------------------------------------------------
-//TODO messaggi privati
 //TODO commenti agli squeals
 
 module.exports = {
@@ -41,7 +40,6 @@ module.exports = {
    * @param options.min_squeals Filters users with more than the specified number of squeals
    * @param options.account_type Filters users by account type
    * @param options.professional_type Filters users by professional type
-   *
    * @param options.sort_order Sorts users, can be either "asc" or "desc"
    * @param options.sort_by Sorts users by the specified field, it can be "username", "date", "squeals"
    **/

@@ -26,6 +26,7 @@ const NotificationSchema = new mongoose.Schema({
   content: { type: String, default: "" },
   squeal_ref: { type: mongoose.Types.ObjectId, ref: "Squeal" },
   channel_ref: { type: mongoose.Types.ObjectId, ref: "Channel" },
+  comment_ref: { type: String },
   user_ref: { type: mongoose.Types.ObjectId, ref: "User" },
   reply: { type: Boolean, default: false },
   source: { type: String, enum: ["squeal", "channel", "user", "system"] },
@@ -103,6 +104,9 @@ UserSchema.methods.Delete = async function () {
 
   // Rimuovi il riferimento dello squeal dal campo "squeals" di tutte le keywords
   await Keyword.updateMany({ squeals: { $in: postedSqueals } }, { $pull: { squeals: { $in: postedSqueals } } });
+
+  //Elimina tutti i commenti associati agli squeals dell'utente dal database
+  await CommentSection.deleteMany({ squeal_ref: { $in: postedSqueals } });
 
   // Elimina tutti gli squeals dell'utente dal database
   await Squeal.deleteMany({ _id: { $in: postedSqueals } });
@@ -199,6 +203,24 @@ UserSchema.methods.Delete = async function () {
 
 const User = mongoose.model("User", UserSchema);
 
+const CommentSectionSchema = new mongoose.Schema({
+  //_id: { type: mongoose.Types.ObjectId },
+  squeal_ref: { type: mongoose.Types.ObjectId, ref: "Squeal", required: true },
+  comments_array: {
+    type: [
+      {
+        author_username: { type: String, required: true },
+        author_id: { type: mongoose.Types.ObjectId, ref: "User", required: true },
+        text: { type: String },
+        timestamp: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+      },
+    ],
+    default: [],
+  },
+});
+
+const CommentSection = mongoose.model("comment_section", CommentSectionSchema);
+
 // =========== SQUEAL ===========
 const SquealSchema = new mongoose.Schema({
   //_id: { type: mongoose.Types.ObjectId },
@@ -214,6 +236,7 @@ const SquealSchema = new mongoose.Schema({
   },
   created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
   last_modified: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+  comment_section: { type: mongoose.Types.ObjectId, ref: "CommentSection", default: null },
   reactions: {
     positive_reactions: { type: Number, default: 0 },
     negative_reactions: { type: Number, default: 0 },
@@ -332,4 +355,5 @@ module.exports = {
   Channel,
   Keyword,
   Chat,
+  CommentSection,
 };

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
+const { Notification, User, Squeal, Channel, Keyword, CommentSection } = require("./schemas");
 const {
   usernameRegex,
   channelNameRegex,
@@ -488,6 +488,16 @@ module.exports = {
       });
 
       await Promise.all(promises);
+
+      //Create the comments section
+      const newCommentSection = new CommentSection({
+        squeal_ref: result._id,
+        comments_array: [],
+      });
+      result.comment_section = (await newCommentSection.save())._id;
+
+      await result.save();
+      await newCommentSection.save();
 
       return {
         status: result ? 201 : 400,
