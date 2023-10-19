@@ -51,6 +51,19 @@ const noLongerManagedAccount = (username) => `@${username} removed you from thei
 const someoneCommentedYourSqueal = (username, comment) =>
   `Hey! @${username} just added a comment to your squeal! Check it out!\n'${comment.substring(0, 30)}${comment.length > 30 ? ".." : ""}'.`;
 
+const bannedUserNotification = (username) => `@${username}, you have been temporarely banned from Squealer! You will no longer be able to post or comments squeals.`;
+
+const unbannedUserNotification = (username) => `@${username}, you have been unbanned from Squealer! You can now post and comment squeals again.`;
+
+const declinedSMMrequestNotification = (username) => `@${username} declined your request to be your SMM! You'll be luckier next time!`;
+
+const updatedProfileTypeNotification = (username, old_account_type, new_account_type, old_professional_type, new_professional_type) =>
+  old_account_type !== new_account_type
+    ? old_professional_type !== new_professional_type
+      ? `@${username}, your account type has been changed from ${old_account_type} to ${new_account_type} and your professional type is now ${new_professional_type} instead of ${old_professional_type}!`
+      : `@${username}, your account type has been changed from ${old_account_type} to ${new_account_type}!`
+    : `@${username}, your professional type has been changed from ${old_professional_type} to ${new_professional_type}!`;
+
 module.exports = {
   mentionNotification,
   newOwnerNotification,
@@ -71,4 +84,8 @@ module.exports = {
   squealRemovedFromOfficialChannel,
   squealUpdatedOfficialChannel,
   someoneCommentedYourSqueal,
+  bannedUserNotification,
+  unbannedUserNotification,
+  declinedSMMrequestNotification,
+  updatedProfileTypeNotification,
 };

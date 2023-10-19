@@ -13,6 +13,7 @@ const {
   findNotification,
   checkForAllUsers,
   addedAndRemoved,
+  checkIfEditorsArrayIsValid,
 } = require("./utils");
 const { MAX_DESCRIPTION_LENGTH, CHANNEL_NAME_MIN_LENGTH, CHANNEL_NAME_MAX_LENGTH, OFFICIAL_CHANNEL_NAME_MIN_LENGTH, OFFICIAL_CHANNEL_NAME_MAX_LENGTH } = require("./constants");
 module.exports = {
@@ -32,7 +33,6 @@ module.exports = {
    * @param options.sort_order Sorts channels, can be either "asc" or "desc"
    * @param options.sort_by Sorts channels by the specified field, it can be "name", "date", "squeals", "subscribers"
    */
-
   getChannels: async (options) => {
     const { name, created_after, created_before, is_official, min_subscribers, max_subscribers, min_squeals, max_squeals, sort_order, sort_by, user_id } = options;
     const sort_orders = ["asc", "desc"];
@@ -61,7 +61,7 @@ module.exports = {
       if (isNaN(date)) {
         return {
           status: 400,
-          data: { error: "created_after must be a valid date: YYYY-MM-DD" },
+          data: { error: `'created_after' must be a valid date: YYYY-MM-DD.` },
         };
       }
       pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
@@ -71,17 +71,16 @@ module.exports = {
       if (isNaN(date)) {
         return {
           status: 400,
-          data: { error: "created_before must be a valid date: YYYY-MM-DD" },
+          data: { error: `'created_before' must be a valid date: YYYY-MM-DD.` },
         };
       }
       pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
     }
     if (is_official) {
-      console.log(is_official);
       if (!["true", "false"].includes(is_official)) {
         return {
           status: 400,
-          data: { error: "is_official must be either true or false" },
+          data: { error: `'is_official' must be either 'true' or 'false'.` },
         };
       }
       pipeline.push({ $match: { is_official: is_official == "true" ? true : false } });
@@ -107,7 +106,7 @@ module.exports = {
       if (isNaN(int_min_subscribers)) {
         return {
           status: 400,
-          data: { error: "min_subscribers must be an integer" },
+          data: { error: `'min_subscribers' must be an number.` },
         };
       }
       pipeline.push({ $match: { subscribers_count: { $gte: int_min_subscribers } } });
@@ -118,14 +117,14 @@ module.exports = {
       if (isNaN(int_max_subscribers)) {
         return {
           status: 400,
-          data: { error: "max_subscribers must be an integer" },
+          data: { error: `'max_subscribers' must be an number.` },
         };
       }
       pipeline.push({ $match: { subscribers_count: { $lte: int_max_subscribers } } });
       if (subscribers_lower !== undefined && int_max_subscribers < subscribers_lower) {
         return {
           status: 400,
-          data: { error: "max_subscribers must be greater or equal than min_subscribers" },
+          data: { error: `'max_subscribers' must be greater or equal than 'min_subscribers'.` },
         };
       }
     }
@@ -134,7 +133,7 @@ module.exports = {
       if (isNaN(int_min_squeals)) {
         return {
           status: 400,
-          data: { error: "min_squeals must be an integer" },
+          data: { error: `'min_squeals' must be an number.` },
         };
       }
       pipeline.push({ $match: { squeals_count: { $gte: int_min_squeals } } });
@@ -144,23 +143,22 @@ module.exports = {
       if (isNaN(int_max_squeals)) {
         return {
           status: 400,
-          data: { error: "max_squeals must be an integer" },
+          data: { error: `'max_squeals' must be an number.` },
         };
       }
       if (min_squeals !== undefined && int_max_squeals < parseInt(min_squeals)) {
         return {
           status: 400,
-          data: { error: "max_squeals must be greater or equal than min_squeals" },
+          data: { error: `'max_squeals' must be greater or equal than 'min_squeals'.` },
         };
       }
       pipeline.push({ $match: { squeals_count: { $lte: int_max_squeals } } });
     }
-    console.log(sort_order, sort_by);
 
     if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
       return {
         status: 400,
-        data: { error: "Both sort_order and sort_by must be specified" },
+        data: { error: `Both 'sort_order' and 'sort_by' must be specified.` },
       };
     }
     try {
@@ -183,7 +181,6 @@ module.exports = {
       console.log(err);
     }
 
-    console.log(pipeline);
     const data = await Channel.aggregate(pipeline).exec();
 
     return {
@@ -217,14 +214,14 @@ module.exports = {
     if (!ownerUser.is_active) {
       return {
         status: 403,
-        data: { error: `You can't create a channel if you're banned.` },
+        data: { error: `You are not allowed to create a channel if you're banned.` },
       };
     }
 
     if (is_official && !["true", "false"].includes(is_official)) {
       return {
         status: 400,
-        data: { error: `is_official must be either true or false` },
+        data: { error: `'is_official' must be either 'true' or 'false'.` },
       };
     }
     const is_official_bool = is_official == "true" ? true : false;
@@ -232,14 +229,14 @@ module.exports = {
     if (is_official_bool && ownerUser.account_type !== "moderator") {
       return {
         status: 403,
-        data: { error: `You don't have the permission to create an official channel` },
+        data: { error: `You are not allowed to create an official channel.` },
       };
     }
 
     if (can_mute && !["true", "false"].includes(can_mute)) {
       return {
         status: 400,
-        data: { error: `can_mute must be either true or false` },
+        data: { error: `'can_mute' must be either 'true' or 'false'.` },
       };
     }
     const can_mute_bool = can_mute == "false" ? false : true;
@@ -247,14 +244,14 @@ module.exports = {
     if (!is_official_bool && !can_mute_bool) {
       return {
         status: 403,
-        data: { error: `You can't create an unofficial channel that can't be muted` },
+        data: { error: `You can't create an unofficial channel that can't be muted.` },
       };
     }
 
     if (!name) {
       return {
         status: 400,
-        data: { error: `name is required` },
+        data: { error: `'name' is required` },
       };
     }
 
@@ -279,14 +276,14 @@ module.exports = {
     if (!description) {
       return {
         status: 400,
-        data: { error: `Description is required` },
+        data: { error: `'Description' is required.` },
       };
     }
 
     if (description.length > MAX_DESCRIPTION_LENGTH) {
       return {
         status: 400,
-        data: { error: `Description must be less than ${MAX_DESCRIPTION_LENGTH} characters, yours is ${description.length}.` },
+        data: { error: `Description must be less than ${MAX_DESCRIPTION_LENGTH} characters long, yours is ${description.length}.` },
       };
     }
 
@@ -318,11 +315,11 @@ module.exports = {
       } else if (err.code == 11000) {
         return {
           status: 409,
-          data: { error: `Channel name already exists` },
+          data: { error: `Channel name already exists.` },
         };
       } else {
         console.error(err);
-        throw new Error(`Failed to create channel`);
+        throw new Error(`Failed to create channel.`);
       }
     }
   },
@@ -340,7 +337,7 @@ module.exports = {
     if (!identifier) {
       return {
         status: 400,
-        data: { error: `Channel identifier is required.` },
+        data: { error: `Channel 'identifier' is required.` },
       };
     }
 
@@ -370,7 +367,7 @@ module.exports = {
     if ((isTokenValid && channel.is_blocked && user?.account_type !== "moderator") || (!isTokenValid && !channel.is_official)) {
       return {
         status: 404,
-        data: { error: `Channel not found` },
+        data: { error: `Channel not found.` },
       };
     }
     return {
@@ -409,7 +406,7 @@ module.exports = {
     if (!(user.account_type == "moderator" || channel.owner.equals(user._id))) {
       return {
         status: 403,
-        data: { error: `You don't have the permission to delete this channel` },
+        data: { error: `You don't have the permission to delete this channel.` },
       };
     }
 
@@ -418,185 +415,201 @@ module.exports = {
 
     return {
       status: 200,
-      data: { message: "Channel deleted" },
+      data: { message: `Channel deleted.` },
     };
   },
 
   /**
    * @param options.identifier Channel's identifier, can be either the name or the id
-   * @param options.updateChannelInlineReqJson.editorsArray
-   * @param options.updateChannelInlineReqJson.newName
-   * @param options.updateChannelInlineReqJson.newDescription
-   * @param options.updateChannelInlineReqJson.newOwner
+   * @param options.inlineReqJson.editors_array
+   * @param options.inlineReqJson.new_name
+   * @param options.inlineReqJson.new_description
+   * @param options.inlineReqJson.new_owner
    */
-  //TODO DA TESTARE
+  //TESTED
   updateChannel: async (options) => {
-    try {
-      const { identifier, user_id } = options;
-      const { editorsArray, newName, newDescription } = options.updateChannelInlineReqJson;
-      let data = await findUser(user_id);
-      if (data.status >= 300) {
-        //if the response is an error
+    const { identifier, user_id } = options;
+    const { editors_array, new_name, new_description, new_owner } = options.inlineReqJson;
+
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const user = response.data;
+
+    response = await findChannel(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const channel = response.data;
+
+    if (!user._id.equals(channel.owner) && !channel.editors.map((editor) => editor.toString()).includes(user._id.toString()) && user.account_type !== "moderator") {
+      return {
+        status: 403,
+        data: { error: `You don't have the permission to update this channel.` },
+      };
+    }
+
+    if (!editors_array && !new_name && !new_description && !new_owner) {
+      return {
+        status: 400,
+        data: { error: `No update parameters specified.` },
+      };
+    }
+
+    //se la richiesta include un nuovo nome per il canale, controlla i permessi, controlla che sia valido, controlla che non esista già e aggiorna il nome
+    if (new_name) {
+      if (channel.is_official && !officialChannelNameRegex.test(new_name)) {
+        //check if the name is lowercase, alphanumeric and between 5 and 23 characters
         return {
-          status: data.status,
-          data: { error: data.error },
+          status: 400,
+          data: {
+            error: `Official channels must be uppercase, space-free and between ${OFFICIAL_CHANNEL_NAME_MIN_LENGTH} and ${OFFICIAL_CHANNEL_NAME_MAX_LENGTH} characters. It can only contain alphanumeric characters and underscore.`,
+          },
         };
       }
-      const user = data.data;
 
-      let response = await findChannel(identifier);
+      if (!channel.is_official && !channelNameRegex.test(new_name)) {
+        return {
+          status: 400,
+          data: {
+            error: `Unofficial channels must be lowercase, space-free and between ${CHANNEL_NAME_MIN_LENGTH} and ${CHANNEL_NAME_MAX_LENGTH} characters. It can only contain alphanumeric characters and underscore.`,
+          },
+        };
+      }
+
+      //controlla che il nome non esista già
+      response = await findChannel(new_name);
+      if (response.status < 300) {
+        //se esiste già
+        return {
+          status: 409,
+          data: {
+            error: `Channel name already exists.`,
+          },
+        };
+      }
+      //se non esiste già
+      channel.name = new_name;
+    }
+
+    //Modificare editors o owner
+    if (editors_array) {
+      if (!(user._id.equals(channel.owner) || user.account_type == "moderator")) {
+        return {
+          status: 403,
+          data: { error: `You don't have the permission to change editors in this channel.` },
+        };
+      }
+      //Cambio gli editors
+      let response = checkIfEditorsArrayIsValid(editors_array);
+      if (!response.isValid) {
+        return {
+          status: 400,
+          data: { error: `Incorrect 'editors_array' format.` },
+        };
+      }
+      const parsedEditors_array = response.value;
+
+      let data = await checkForAllUsers(parsedEditors_array);
+      if (!data.usersOutcome) {
+        //se non esistono, ritorna un errore
+        return {
+          status: 404,
+          data: { error: `Users not valid.` },
+        };
+      }
+
+      const editorsIds = data.usersArray;
+      //se tra gli editors c'è il proprietario, ritorna un errore
+      if (editorsIds.some((editorId) => JSON.stringify(editorId) == JSON.stringify(channel.owner))) {
+        return {
+          status: 400,
+          data: { error: `The owner of the channel can't be an editor.` },
+        };
+      }
+
+      //controlla che gli editors esistano
+      const { added, removed } = addedAndRemoved(channel.editors, editorsIds);
+
+      const addedUserPromises = added.map(async (user) => {
+        let userObject = (await findUser(user._id)).data;
+        userObject.editor_channels.push(channel._id);
+        await userObject.save();
+      });
+
+      const removedUserPromises = removed.map(async (user) => {
+        let userObject = (await findUser(user._id)).data;
+        userObject.editor_channels.pull(channel._id);
+        await userObject.save();
+      });
+
+      // Attendere che tutte le promesse vengano risolte
+      await Promise.all([...addedUserPromises, ...removedUserPromises]);
+
+      //aggiorno gli editors
+      channel.editors = editorsIds;
+    }
+    //Cambio l'owner
+    if (new_owner) {
+      if (!(user._id.equals(channel.owner) || user.account_type == "moderator")) {
+        return {
+          status: 403,
+          data: { error: `You don't have the permission to change the owner of this channel.` },
+        };
+      }
+      //verifico che il nuovo proprietario esista
+      let response = await findUser(new_owner);
       if (response.status >= 300) {
-        //if the response is an error
+        //se non esiste
         return {
           status: response.status,
           data: { error: response.error },
         };
       }
-      const channel = response.data;
+      const newOwnerUser = response.data;
 
-      //se non ha i permessi, ritorna un errore
-      if (!user._id.equals(channel.owner) && !channel.editors.includes(user_id) && user.account_type !== "moderator") {
+      //Se il nuovo owner era un editor rimuovilo dagli editors
+      if (channel.editors.includes(newOwnerUser._id)) {
+        //includes funziona
+        channel.editors.pull(newOwnerUser._id);
+        newOwnerUser.editor_channels.pull(channel._id);
+      }
+
+      response = await findUser(channel.owner);
+      if (response.status >= 300) {
+        //se non esiste
         return {
-          status: 403,
-          data: { error: `You don't have the permission to update this channel` },
+          status: response.status,
+          data: { error: response.error },
         };
       }
+      const oldOwnerUser = response.data;
 
-      if (!editorsArray && !newName && !newDescription) {
-        return {
-          status: 400,
-          data: { error: `No update parameters specified` },
-        };
-      }
+      channel.owner = newOwnerUser._id;
 
-      //se la richiesta include un nuovo nome per il canale, controlla i permessi, controlla che sia valido, controlla che non esista già e aggiorna il nome
-      if (newName) {
-        if (channel.is_official && !officialChannelNameRegex.test(newName)) {
-          //check if the name is lowercase, alphanumeric and between 5 and 23 characters
-          return {
-            status: 400,
-            data: {
-              error: `Official channels must be uppercase, space-free and between ${OFFICIAL_CHANNEL_NAME_MIN_LENGTH} and ${OFFICIAL_CHANNEL_NAME_MAX_LENGTH} characters. It can only contain alphanumeric characters and underscore.`,
-            },
-          };
-        }
-        if (!channel.is_official && !channelNameRegex.test(newName)) {
-          return {
-            status: 400,
-            data: {
-              error: `Unofficial channels must be lowercase, space-free and between ${CHANNEL_NAME_MIN_LENGTH} and ${CHANNEL_NAME_MAX_LENGTH} characters. It can only contain alphanumeric characters and underscore.`,
-            },
-          };
-        }
-        //controlla che il nome non esista già
-        response = await findChannel(newName);
-        if (response.status < 300) {
-          //se esiste già
-          return {
-            status: 409,
-            data: {
-              error: response.error,
-            },
-          };
-        }
-        //se non esiste già
-        channel.name = newName;
-      }
+      newOwnerUser.owned_channels.push(channel._id);
+      oldOwnerUser.owned_channels.pull(channel._id);
 
-      //Modificare editors o owner
-      if (user._id.equals(channel.owner) || user.account_type == "moderator") {
-        //Cambio gli editors
-        const parsedEditorsArray = JSON.parse(editorsArray);
-        if (Array.isArray(parsedEditorsArray)) {
-          let data = await checkForAllUsers(parsedEditorsArray);
-          if (!data.usersOutcome) {
-            //se non esistono, ritorna un errore
-            return {
-              status: 404,
-              data: { error: `Users not valid` },
-            };
-          }
-          const editorsIds = data.usersArray;
-          //se tra gli editors c'è il proprietario, ritorna un errore
-          //console.log(editorsArray);
-          if (editorsIds.some((editorId) => editorId.equals(channel.owner))) {
-            return {
-              status: 400,
-              data: { error: `The owner can't be an editor` },
-            };
-          }
-          //controlla che gli editors esistano
-          const { added, removed } = addedAndRemoved(channel.editors, editorsIds);
-
-          const addedUserPromises = added.map(async (user) => {
-            let userObject = (await findUser(user._id)).data;
-            userObject.editor_channels.push(channel._id);
-            await userObject.save();
-          });
-
-          const removedUserPromises = removed.map(async (user) => {
-            let userObject = (await findUser(user._id)).data;
-            userObject.editor_channels.pull(channel._id);
-            await userObject.save();
-          });
-
-          // Attendere che tutte le promesse vengano risolte
-          await Promise.all([...addedUserPromises, ...removedUserPromises]);
-
-          //aggiorno gli editors
-          channel.editors = editorsIds;
-        }
-
-        //Cambio l'owner
-        if (typeof newOwner !== undefined) {
-          //verifico che il nuovo proprietario esista
-          let response = await findUser(newOwner);
-          if (response.status >= 300) {
-            //se non esiste
-            return {
-              status: response.status,
-              data: { error: response.error },
-            };
-          }
-          const newOwnerUser = response.data;
-
-          response = await findUser(channel.owner);
-          if (response.status >= 300) {
-            //se non esiste
-            return {
-              status: response.status,
-              data: { error: response.error },
-            };
-          }
-          const oldOwnerUser = response.data;
-
-          channel.owner = newOwnerUser._id;
-
-          newOwnerUser.owned_channels.push(channel._id);
-          oldOwnerUser.owned_channels.pull(channel._id);
-
-          await newOwnerUser.save();
-          await oldOwnerUser.save();
-          await channel.save();
-        }
-      } else {
-        return {
-          status: 403,
-          data: { error: `You don't have the permission to change editors in this channel` },
-        };
-      }
-
-      channel.description = newDescription || channel.description;
-
-      await channel.save();
-      return {
-        status: 200,
-        data: channel,
-      };
-    } catch (err) {
-      console.error(err);
-      throw new Error(`Failed to update channel`);
+      await newOwnerUser.save();
+      await oldOwnerUser.save();
     }
+
+    channel.description = new_description || channel.description;
+
+    await channel.save();
+    return {
+      status: 200,
+      data: channel,
+    };
   },
 
   /**
@@ -627,7 +640,7 @@ module.exports = {
     if (!channel.editors.includes(user._id)) {
       return {
         status: 403,
-        data: { error: `You're not an editor of this channel` },
+        data: { error: `You're not an editor of this channel.` },
       };
     }
 
@@ -639,7 +652,7 @@ module.exports = {
 
     return {
       status: 200,
-      data: { message: `You left the mod team` },
+      data: { message: `You left the mod team.` },
     };
   },
 
@@ -674,7 +687,7 @@ module.exports = {
     if (!(user.account_type == "moderator" || channel.owner.equals(user._id) || channel.editors.includes(user._id))) {
       return {
         status: 403,
-        data: { error: `You don't have the permission to remove squeals from this channel` },
+        data: { error: `You don't have the permission to remove squeals from this channel.` },
       };
     }
 
@@ -693,7 +706,7 @@ module.exports = {
     if (!channel.squeals.includes(squeal._id)) {
       return {
         status: 404,
-        data: { error: `Squeal not found in this channel` },
+        data: { error: `Squeal not found in this channel.` },
       };
     }
 
@@ -704,24 +717,40 @@ module.exports = {
     await squeal.save();
     return {
       status: 200,
-      data: { message: `Squeal removed from channel` },
+      data: { message: `Squeal removed from channel.` },
     };
   },
 
   /**
    * Toggle is_blocked field in user object, means that the channel is blocked or not
    * @param options.identifier Channel's identifier, can be either username or userId
+   * @param options.query.value Query value which can be either "true"  or "false"
    */
-  toggleChannelBlockedStatus: async (options) => {
-    //TODO cambiare la funzione e rimuovere il toggle
-    const { identifier, user_id } = options; //options.user_id is the Request sender's user id
+  //TESTED
+  channelBlockedStatus: async (options) => {
+    //TESTED
+    const { identifier, user_id, value } = options; //options.user_id is the Request sender's user id
+
+    if (!value) {
+      return {
+        status: 400,
+        data: { error: `Channel blocked status 'value' is required.` },
+      };
+    }
+
+    if (!["true", "false"].includes(value)) {
+      return {
+        status: 400,
+        data: { error: `Channel blocked status value must be either 'true' or 'false'.` },
+      };
+    }
 
     let response = await findUser(user_id);
     if (response.status >= 300) {
       //if the response is an error
       return {
         status: response.status,
-        data: { error: `User id in token is not valid` },
+        data: { error: `'user_id' in token is not valid.` },
       };
     }
     const user = response.data;
@@ -730,7 +759,7 @@ module.exports = {
     if (user.account_type !== "moderator") {
       return {
         status: 403,
-        data: { error: `You don't have the permission to block/unblock a channel` },
+        data: { error: `You don't have the permission to block/unblock a channel.` },
       };
     }
 
@@ -745,12 +774,12 @@ module.exports = {
     const channel = response.data;
 
     // Toggle the is_blocked field
-    channel.is_blocked = !channel.is_blocked;
+    channel.is_blocked = value === "true" ? true : false;
     // Return the result
-    channel.save();
+    await channel.save();
     return {
       status: 200,
-      data: updatedChannel,
+      data: channel,
     };
   },
 
@@ -759,14 +788,21 @@ module.exports = {
    * @param options.identifier Channel's identifier, can be either id or name
    * @param options.value Query value which can be either "true" or "false"
    */
-  //TODO DA TESTARE
+  //TESTED
   channelMuteStatus: async (options) => {
     const { identifier, user_id, value } = options;
     //Check if value is correct
-    if (value && !["true", "false"].includes(value)) {
+    if (!value) {
       return {
         status: 400,
-        data: { error: `"value" must be either "true" or "false` },
+        data: { error: `'value' is required.` },
+      };
+    }
+
+    if (!["true", "false"].includes(value)) {
+      return {
+        status: 400,
+        data: { error: `'value' must be either 'true' or 'false'.` },
       };
     }
     const value_bool = value == "true" ? true : false;
@@ -795,7 +831,7 @@ module.exports = {
     if (!channel.can_mute) {
       return {
         status: 403,
-        data: { error: `You can't mute/unmute this channel` },
+        data: { error: `You are not allowed to mute/unmute this channel.` },
       };
     }
 
@@ -804,7 +840,13 @@ module.exports = {
       if (!user.subscribed_channels.includes(channel._id)) {
         return {
           status: 403,
-          data: { error: `You can't mute a channel you're not subscribed to` },
+          data: { error: `You can't mute a channel you're not subscribed to.` },
+        };
+      }
+      if (user.preferences.muted_channels.includes(channel._id)) {
+        return {
+          status: 403,
+          data: { error: `You can't mute a channel you already muted.` },
         };
       }
       user.preferences.muted_channels.push(channel._id);
@@ -816,7 +858,13 @@ module.exports = {
       if (!user.preferences.muted_channels.includes(channel._id)) {
         return {
           status: 403,
-          data: { error: `You can't unmute a channel you didn't mute` },
+          data: { error: `You can't unmute a channel you didn't mute.` },
+        };
+      }
+      if (!user.preferences.muted_channels.includes(channel._id)) {
+        return {
+          status: 403,
+          data: { error: `You can't unmute a channel you didn't mute.` },
         };
       }
       //otherwise, remove it from the muted channels array
@@ -826,7 +874,7 @@ module.exports = {
     await user.save();
     return {
       status: 200,
-      data: { message: "Channel muted" },
+      data: { message: `Channel muted/unmuted.` },
     };
   },
 
@@ -835,14 +883,21 @@ module.exports = {
    * @param options.identifier Channel's identifier, can be either id or name
    * @param options.value Query value which can be either "true" or "false"
    */
-  //TODO DA TESTARE
+  //TESTED
   channelSubscription: async (options) => {
     const { identifier, value, user_id } = options;
     //Check if value is correct
-    if (value && !["true", "false"].includes(value)) {
+    if (!value) {
       return {
         status: 400,
-        data: { error: `"value" must be either "true" or "false"` },
+        data: { error: `'value' is required.` },
+      };
+    }
+
+    if (!["true", "false"].includes(value)) {
+      return {
+        status: 400,
+        data: { error: `'value' must be either 'true' or 'false'.` },
       };
     }
     const value_bool = value == "true" ? true : false;
@@ -869,19 +924,40 @@ module.exports = {
     //if value is false and the user is subscribed to that channel, unsubscribe them
     if (!value_bool && user.subscribed_channels.includes(channel._id)) {
       user.subscribed_channels.pull(channel._id);
-    }
-    //if value is true and the user is not subscribed to that channel, subscribe them
-    else if (value_bool && !user.subscribed_channels.includes(channel._id)) {
-      user.subscribed_channels.push(channel._id);
       //if the user had muted the channel, remove it from the muted channels array
       user.preferences.muted_channels.pull(channel._id);
+      channel.subscribers.pull(user._id);
+      await user.save();
+      await channel.save();
+      return {
+        status: 200,
+        data: { message: `User unsubscribed to the channel.` },
+      };
+    }
+    //if value is true and the user is not subscribed to that channel, subscribe them
+    if (value_bool && !user.subscribed_channels.includes(channel._id)) {
+      user.subscribed_channels.push(channel._id);
+      channel.subscribers.push(user._id);
+      await user.save();
+      await channel.save();
+      return {
+        status: 200,
+        data: { message: `User subscribed to the channel.` },
+      };
     }
 
-    await user.save();
+    //if you're already subscribed to the channel and you want to subscribe to it again
+    if (value_bool && user.subscribed_channels.includes(channel._id)) {
+      return {
+        status: 400,
+        data: { message: `User already subscribed to the channel.` },
+      };
+    }
 
+    //if you're not subscribed to the channel and you want to unsubscribe to it again
     return {
-      status: 200,
-      data: { message: "User subscribed to the channel" },
+      status: 400,
+      data: { message: `User not subscribed to the channel.` },
     };
   },
 };

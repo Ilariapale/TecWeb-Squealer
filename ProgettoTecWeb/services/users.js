@@ -26,10 +26,13 @@ const {
   newSMMrequestNotification,
   noLongerSMM,
   noLongerManagedAccount,
+  bannedUserNotification,
+  unbannedUserNotification,
+  declinedSMMrequestNotification,
+  updatedProfileTypeNotification,
 } = require("./messages");
 const { PASSWORD_MIN_LENGTH } = require("./constants");
 //--------------------------------------------------------------------------
-//TODO commenti agli squeals
 
 module.exports = {
   /**
@@ -45,164 +48,160 @@ module.exports = {
    **/
   //TESTED
   getUserList: async (options) => {
-    try {
-      const { created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id, sort_order, sort_by } = options;
-      const sort_orders = ["asc", "desc"];
-      const sort_types = ["username", "date", "squeals"];
-      const pipeline = [];
+    const { created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id, sort_order, sort_by } = options;
+    const sort_orders = ["asc", "desc"];
+    const sort_types = ["username", "date", "squeals"];
+    const pipeline = [];
 
-      //ACCOUNT TYPE
-      if (account_type) {
-        if (!["standard", "verified", "professional", "moderator"].includes(account_type)) {
-          return {
-            status: 400,
-            data: { error: "account_type must be either 'standard', 'verified', 'professional' or 'moderator'" },
-          };
-        }
-        pipeline.push({ $match: { account_type: account_type } });
-      }
-
-      //PROFESSIONAL TYPE
-      if (professional_type) {
-        if (!["VIP", "SMM", "none"].includes(professional_type)) {
-          return {
-            status: 400,
-            data: { error: "professional_type must be either 'VIP', 'SMM' or 'none'" },
-          };
-        }
-        pipeline.push({ $match: { professional_type: professional_type } });
-      }
-
-      //CREATED AFTER
-      if (created_after) {
-        const date = Date.parse(created_after);
-        if (isNaN(date)) {
-          return {
-            status: 400,
-            data: { error: "created_after must be a valid date: YYYY-MM-DD" },
-          };
-        }
-        pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
-      }
-
-      //CREATED BEFORE
-      if (created_before) {
-        const date = Date.parse(created_before);
-        if (isNaN(date)) {
-          return {
-            status: 400,
-            data: { error: "created_before must be a valid date: YYYY-MM-DD" },
-          };
-        }
-        pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
-      }
-
-      //PROJECTION
-      pipeline.push({
-        $project: {
-          _id: 1,
-          username: 1,
-          profile_info: 1,
-          profile_picture: 1,
-          created_at: 1,
-          professional_type: 1,
-          account_type: 1,
-          squeals_count: { $size: "$squeals.posted" },
-        },
-      });
-
-      //MIN AND MAX SQUEALS
-      if (max_squeals || min_squeals) {
-        const sizeMatch = {};
-        if (max_squeals) {
-          const int_max_squeals = parseInt(max_squeals);
-          if (isNaN(int_max_squeals) || int_max_squeals < 0) {
-            //return an error if the max_squeals is negative
-            return {
-              status: 400,
-              data: { error: "max_squeals must be a positive integer" },
-            };
-          }
-          sizeMatch.lt = int_max_squeals;
-        }
-        if (min_squeals) {
-          const int_min_squeals = parseInt(min_squeals);
-          if (isNaN(int_min_squeals) || int_min_squeals < 0) {
-            return {
-              //return an error if the min_squeals is negative
-              status: 400,
-              data: { error: "min_squeals must be a positive integer" },
-            };
-          }
-          sizeMatch.gt = int_min_squeals;
-        }
-        if (sizeMatch.lt != undefined && sizeMatch.gt != undefined && sizeMatch.lt < sizeMatch.gt) {
-          //return an error if the max_squeals is less than the min_squeals
-          return {
-            status: 400,
-            data: { error: "max_squeals must be greater than min_squeals" },
-          };
-        }
-        pipeline.push({ $match: { squeals_count: { $gte: sizeMatch.gt || 0 } } });
-        pipeline.push({ $match: { squeals_count: { $lte: sizeMatch.lt || Number.MAX_SAFE_INTEGER } } });
-      }
-
-      //check for the request sender's role
-      let response = await findUser(user_id);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const reqSender = response.data;
-
-      //If the request sender is not a moderator, filter the inactive users
-      if (reqSender.account_type !== "moderator") {
-        pipeline.push({ $match: { is_active: true } });
-      }
-
-      //SORTING
-      if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
+    //ACCOUNT TYPE
+    if (account_type) {
+      if (!["standard", "verified", "professional", "moderator"].includes(account_type)) {
         return {
           status: 400,
-          data: { error: "Both sort_order and sort_by must be specified" },
+          data: { error: "'account_type' must be either 'standard', 'verified', 'professional' or 'moderator'." },
         };
       }
+      pipeline.push({ $match: { account_type: account_type } });
+    }
 
-      if (sort_order && sort_by) {
-        if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+    //PROFESSIONAL TYPE
+    if (professional_type) {
+      if (!["VIP", "SMM", "none"].includes(professional_type)) {
+        return {
+          status: 400,
+          data: { error: "'professional_type' must be either 'VIP', 'SMM' or 'none'." },
+        };
+      }
+      pipeline.push({ $match: { professional_type: professional_type } });
+    }
+
+    //CREATED AFTER
+    if (created_after) {
+      const date = Date.parse(created_after);
+      if (isNaN(date)) {
+        return {
+          status: 400,
+          data: { error: "'created_after' must be a valid date: 'YYYY-MM-DD'." },
+        };
+      }
+      pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
+    }
+
+    //CREATED BEFORE
+    if (created_before) {
+      const date = Date.parse(created_before);
+      if (isNaN(date)) {
+        return {
+          status: 400,
+          data: { error: "'created_before' must be a valid date: YYYY-MM-DD." },
+        };
+      }
+      pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
+    }
+
+    //PROJECTION
+    pipeline.push({
+      $project: {
+        _id: 1,
+        username: 1,
+        profile_info: 1,
+        profile_picture: 1,
+        created_at: 1,
+        professional_type: 1,
+        account_type: 1,
+        squeals_count: { $size: "$squeals.posted" },
+      },
+    });
+
+    //MIN AND MAX SQUEALS
+    if (max_squeals || min_squeals) {
+      const sizeMatch = {};
+      if (max_squeals) {
+        const int_max_squeals = parseInt(max_squeals);
+        if (isNaN(int_max_squeals) || int_max_squeals < 0) {
+          //return an error if the max_squeals is negative
           return {
             status: 400,
-            data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join("', '")}'. 'sort_order' options are '${sort_orders.join("', '")}'.` },
+            data: { error: "'max_squeals' must be a positive integer." },
           };
         }
-
-        const order = sort_order === "asc" ? 1 : -1;
-
-        if (sort_by === "username") pipeline.push({ $sort: { username: order } });
-        else if (sort_by === "date") pipeline.push({ $sort: { created_at: order } });
-        else if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order } });
+        sizeMatch.lt = int_max_squeals;
       }
-
-      //execute the query
-      const data = await User.aggregate(pipeline).exec();
-
-      //check if the query returned any result
-      if (data.length <= 0) {
+      if (min_squeals) {
+        const int_min_squeals = parseInt(min_squeals);
+        if (isNaN(int_min_squeals) || int_min_squeals < 0) {
+          return {
+            //return an error if the min_squeals is negative
+            status: 400,
+            data: { error: "'min_squeals' must be a positive integer." },
+          };
+        }
+        sizeMatch.gt = int_min_squeals;
+      }
+      if (sizeMatch.lt != undefined && sizeMatch.gt != undefined && sizeMatch.lt < sizeMatch.gt) {
+        //return an error if the max_squeals is less than the min_squeals
         return {
-          status: 404,
-          data: { error: "No users found." },
+          status: 400,
+          data: { error: "'max_squeals' must be greater than min_squeals." },
         };
       }
-      return {
-        status: 200,
-        data: data,
-      };
-    } catch (err) {
-      console.error(err);
+      pipeline.push({ $match: { squeals_count: { $gte: sizeMatch.gt || 0 } } });
+      pipeline.push({ $match: { squeals_count: { $lte: sizeMatch.lt || Number.MAX_SAFE_INTEGER } } });
     }
+
+    //check for the request sender's role
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const reqSender = response.data;
+
+    //If the request sender is not a moderator, filter the inactive users
+    if (reqSender.account_type !== "moderator") {
+      pipeline.push({ $match: { is_active: true } });
+    }
+
+    //SORTING
+    if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
+      return {
+        status: 400,
+        data: { error: "Both 'sort_order' and 'sort_by' must be specified." },
+      };
+    }
+
+    if (sort_order && sort_by) {
+      if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+        return {
+          status: 400,
+          data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join("', '")}'. 'sort_order' options are '${sort_orders.join("', '")}'.` },
+        };
+      }
+
+      const order = sort_order === "asc" ? 1 : -1;
+
+      if (sort_by === "username") pipeline.push({ $sort: { username: order } });
+      else if (sort_by === "date") pipeline.push({ $sort: { created_at: order } });
+      else if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order } });
+    }
+
+    //execute the query
+    const data = await User.aggregate(pipeline).exec();
+
+    //check if the query returned any result
+    if (data.length <= 0) {
+      return {
+        status: 404,
+        data: { error: "No users found." },
+      };
+    }
+    return {
+      status: 200,
+      data: data,
+    };
   },
 
   /**
@@ -218,21 +217,21 @@ module.exports = {
     if (!username || !email || !password) {
       return {
         status: 400,
-        data: { error: "Username email and password are required" },
+        data: { error: `'username' 'email' and 'password' are required.` },
       };
     }
 
     if (password.length < PASSWORD_MIN_LENGTH) {
       return {
         status: 400,
-        data: { error: "Password must be at least 8 characters long" },
+        data: { error: `'password' must be at least 8 characters long.` },
       };
     }
 
     if (!usernameRegex.test(username)) {
       return {
         status: 400,
-        data: { error: "Username format is not valid" },
+        data: { error: `'username' format is not valid.` },
       };
     }
 
@@ -257,7 +256,7 @@ module.exports = {
       if (!user) {
         return {
           status: 400,
-          data: { error: "Failed to create user" },
+          data: { error: `Failed to create user.` },
         };
       }
       // Create the first squeal and save it
@@ -290,7 +289,7 @@ module.exports = {
       // return the new user
       return {
         status: user ? 201 : 400,
-        data: user ? user : { error: "Failed to create user" },
+        data: user ? user : { error: `Failed to create user.` },
       };
     } catch (error) {
       //Handling mongoose errors
@@ -307,11 +306,11 @@ module.exports = {
         // duplicate key error
         return {
           status: 409,
-          data: { error: "Username or email already exists" },
+          data: { error: `'username' or 'email' already exists` },
         };
       } else {
         // generic or unknown error
-        throw new Error("Failed to create user");
+        throw new Error(`Failed to create user`);
       }
     }
   },
@@ -340,22 +339,20 @@ module.exports = {
       profile_info: user.profile_info,
       profile_picture: user.profile_picture,
     };
-    //TODO controllare nel response.status >= 300
     // Check if the request sender exists
     response = await findUser(user_id);
     if (response.status >= 300) {
       // If the response is an error, return the public user if the main user is active,
       // otherwise return "User not found" error
-      return user.is_active ? { status: 200, data: publicUser } : { status: 404, data: { error: "User not found." } };
+      return user.is_active ? { status: 200, data: publicUser } : { status: 404, data: { error: `User not found.` } };
     }
     const reqSender = response.data;
 
     // If the main user is inactive and the request sender is not a moderator,
     // return "User not found" error
     if (!user.is_active && reqSender.account_type !== "moderator") {
-      return { status: 404, data: { error: "User not found." } };
+      return { status: 404, data: { error: `User not found.` } };
     }
-
     // Otherwise, return the full user if the main user is active or the request sender is a moderator,
     // otherwise return "User not found" error
     return { status: 200, data: user.is_active || reqSender.account_type === "moderator" ? user : publicUser };
@@ -386,14 +383,14 @@ module.exports = {
       //if the response is an error
       return {
         status: response.status,
-        data: { error: "User id in token is not valid" },
+        data: { error: `'user_id' in token is not valid.` },
       };
     }
     const reqSender = response.data;
     if (!reqSender._id.equals(userToDelete._id)) {
       return {
         status: 403,
-        data: { error: "You can't delete another user" },
+        data: { error: `You are not allowed to delete another user.` },
       };
     }
 
@@ -403,7 +400,7 @@ module.exports = {
 
     return {
       status: 200,
-      data: { message: "User deleted successfully" },
+      data: { message: "User deleted successfully." },
     };
 
     //----------------------------------------------------------------------------------------------------------------------
@@ -416,296 +413,203 @@ module.exports = {
    */
   //TYPE TESTED
   updateUser: async (options) => {
-    try {
-      const { identifier, user_id } = options;
-      const { account_type, professional_type } = options.inlineReqJson;
-      // Check if the required fields are present
-      if (!account_type && !professional_type) {
-        return {
-          status: 400,
-          data: { error: "No fields to update" },
-        };
-      }
-      if (account_type && !["standard", "verified", "professional", "moderator"].includes(account_type)) {
-        return {
-          status: 400,
-          data: { error: "account_type must be either 'standard', 'verified', 'professional' or 'moderator'" },
-        };
-      }
-      if (professional_type && !["VIP", "SMM", "none"].includes(professional_type)) {
-        return {
-          status: 400,
-          data: { error: "professional_type must be either 'VIP', 'SMM' or 'none'" },
-        };
-      }
-      let response = await findUser(user_id);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: "User id in token is not valid" },
-        };
-      }
-      const reqSender = response.data;
+    const { identifier, user_id } = options;
+    const { account_type, professional_type } = options.inlineReqJson;
+    // Check if the required fields are present
+    if (!account_type && !professional_type) {
+      return {
+        status: 400,
+        data: { error: `No fields to update.` },
+      };
+    }
+    if (account_type && !["standard", "verified", "professional", "moderator"].includes(account_type)) {
+      return {
+        status: 400,
+        data: { error: `'account_type' must be either 'standard', 'verified', 'professional' or 'moderator'.` },
+      };
+    }
+    if (professional_type && !["VIP", "SMM", "none"].includes(professional_type)) {
+      return {
+        status: 400,
+        data: { error: `'professional_type' must be either 'VIP', 'SMM' or 'none'.` },
+      };
+    }
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: `'user_id' in token is not valid.` },
+      };
+    }
+    const reqSender = response.data;
 
-      //if reqSender is not a moderator, he can't update the account type
-      if (reqSender.account_type !== "moderator") {
-        return {
-          status: 403,
-          data: { error: "You are not allowed to update the user" },
-        };
-      }
+    //if reqSender is not a moderator, he can't update the account type
+    if (reqSender.account_type !== "moderator") {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to update the user.` },
+      };
+    }
 
-      //controlli di coerenza
-      if (account_type === "professional" && (!professional_type || professional_type === "none")) {
-        return {
-          status: 400,
-          data: { error: "Professional type must be specified" },
-        };
-      }
+    //controlli di coerenza
+    if (account_type === "professional" && (!professional_type || professional_type === "none")) {
+      return {
+        status: 400,
+        data: { error: "'professional_type' must be specified." },
+      };
+    }
 
-      if (["VIP", "SMM"].includes(professional_type) && account_type !== "professional") {
-        return {
-          status: 400,
-          data: { error: "account_type must be 'professional'." },
-        };
-      }
+    if (["VIP", "SMM"].includes(professional_type) && account_type !== "professional") {
+      return {
+        status: 400,
+        data: { error: "'account_type' must be 'professional'." },
+      };
+    }
 
-      response = await findUser(identifier);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const userToUpdate = response.data;
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const userToUpdate = response.data;
 
-      //TODO controllare
-      //se era professional vip
-      if (userToUpdate.account_type === "professional" && userToUpdate.professional_type === "VIP" && professional_type !== "VIP") {
-        //se aveva un SMM rimuovere il smm dal profilo e il profilo dal smm
-        if (userToUpdate.smm) {
-          response = await findUser(userToUpdate.smm);
+    const old_account_type = userToUpdate.account_type;
+    const old_professional_type = userToUpdate.professional_type;
+
+    //se era professional vip
+    if (userToUpdate.account_type === "professional" && userToUpdate.professional_type === "VIP" && professional_type !== "VIP") {
+      //se aveva un SMM rimuovere il smm dal profilo e il profilo dal smm
+      if (userToUpdate.smm) {
+        response = await findUser(userToUpdate.smm);
+        if (response.status >= 300) {
+          //if the response is an error
+          return {
+            status: response.status,
+            data: { error: `SMM not found.` },
+          };
+        }
+        const smm = response.data;
+        smm.managed_accounts.pull(userToUpdate._id);
+        userToUpdate.smm = undefined;
+        const newNotification = new Notification({
+          user_ref: smm._id,
+          created_at: Date.now(),
+          content: updatedManagedAccountNotification(userToUpdate.username),
+          source: "system",
+        });
+        const notification = await newNotification.save();
+        smm.notifications.push(notification._id);
+        await smm.save();
+      }
+      //gestire la coda di richieste del VIP
+      //rimuovo dall'array tutte le richieste e rimuovo dai vip la richiesta in coda
+      const VIPRequestsPromises = userToUpdate.pending_requests.VIP_requests.map(async (request) => {
+        const response = await findUser(request);
+        if (response.status >= 300) {
+          //if the response is an error
+          return {
+            status: response.status,
+            data: { error: `User not found.` },
+          };
+        }
+        const SMM = response.data;
+        SMM.pending_requests.SMM_requests.pull(userToUpdate._id);
+        return SMM.save();
+      });
+      await Promise.all(VIPRequestsPromises);
+      userToUpdate.pending_requests.VIP_requests = [];
+    }
+    //se era professional smm, rimuovere tutti i managed_accounts dal profilo e il smm da tutti i managed_accounts
+    if (userToUpdate.account_type === "professional" && userToUpdate.professional_type === "SMM" && professional_type !== "SMM") {
+      if (userToUpdate.managed_accounts.length > 0) {
+        const managedAccountsPromises = userToUpdate.managed_accounts.map(async (managed_account) => {
+          const response = await findUser(managed_account);
           if (response.status >= 300) {
             //if the response is an error
             return {
               status: response.status,
-              data: { error: "Smm not found" },
+              data: { error: `Managed account not found.` },
             };
           }
-          const smm = response.data;
-          smm.managed_accounts.pull(userToUpdate._id);
-          userToUpdate.smm = undefined;
-
+          const managedAccount = response.data;
+          managedAccount.smm = undefined;
           const newNotification = new Notification({
-            user_ref: smm._id,
+            squeal_ref: undefined,
+            user_ref: managedAccount._id,
             created_at: Date.now(),
-            content: updatedManagedAccountNotification(userToUpdate.username),
+            content: updatedSMMNotification(userToUpdate.username),
             source: "system",
           });
           const notification = await newNotification.save();
-          smm.notifications.push(notification._id);
-
-          await smm.save();
-        }
-        //gestire la coda di richieste del VIP
-        //rimuovo dall'array tutte le richieste e rimuovo dai vip la richiesta in coda
-        const VIPRequestsPromises = userToUpdate.pending_requests.VIP_requests.map(async (request) => {
-          const response = await findUser(request);
-          if (response.status >= 300) {
-            //if the response is an error
-            return {
-              status: response.status,
-              data: { error: "User not found" },
-            };
-          }
-          const SMM = response.data;
-          SMM.pending_requests.SMM_requests.pull(userToUpdate._id);
-          return SMM.save();
+          managedAccount.notifications.push(notification._id);
+          return managedAccount.save();
         });
-        await Promise.all(VIPRequestsPromises);
-        userToUpdate.pending_requests.VIP_requests = [];
-      }
-      //TODO controllare
-      //se era professional smm, rimuovere tutti i managed_accounts dal profilo e il smm da tutti i managed_accounts
-      if (userToUpdate.account_type === "professional" && userToUpdate.professional_type === "SMM" && professional_type !== "SMM") {
-        if (userToUpdate.managed_accounts.length > 0) {
-          const managedAccountsPromises = userToUpdate.managed_accounts.map(async (managed_account) => {
-            const response = await findUser(managed_account);
-            if (response.status >= 300) {
-              //if the response is an error
-              return {
-                status: response.status,
-                data: { error: "Managed account not found" },
-              };
-            }
-            const managedAccount = response.data;
-            managedAccount.smm = undefined;
-
-            const newNotification = new Notification({
-              squeal_ref: undefined,
-              user_ref: managedAccount._id,
-              created_at: Date.now(),
-              content: updatedSMMNotification(userToUpdate.username),
-              source: "system",
-            });
-            const notification = await newNotification.save();
-            managedAccount.notifications.push(notification._id);
-            return managedAccount.save();
-          });
-          await Promise.all(managedAccountsPromises);
-          userToUpdate.managed_accounts = [];
-        }
-
-        const SMMRequestsPromises = userToUpdate.pending_requests.SMM_requests.map(async (request) => {
-          const response = await findUser(request);
-          if (response.status >= 300) {
-            //if the response is an error
-            return {
-              status: response.status,
-              data: { error: "User not found" },
-            };
-          }
-          const VIP = response.data;
-          VIP.pending_requests.VIP_requests.pull(userToUpdate._id);
-          return VIP.save();
-        });
-        await Promise.all(SMMRequestsPromises);
-        userToUpdate.pending_requests.SMM_requests = [];
+        await Promise.all(managedAccountsPromises);
+        userToUpdate.managed_accounts = [];
       }
 
-      userToUpdate.account_type = account_type || userToUpdate.account_type;
-      userToUpdate.professional_type = professional_type || (account_type === "professional" ? professional_type : "none");
-
-      const updatedUser = await userToUpdate.save();
-
-      // Return the result
-      return {
-        status: 200,
-        data: updatedUser,
-      };
-    } catch (err) {
-      console.error(err);
+      const SMMRequestsPromises = userToUpdate.pending_requests.SMM_requests.map(async (request) => {
+        const response = await findUser(request);
+        if (response.status >= 300) {
+          //if the response is an error
+          return {
+            status: response.status,
+            data: { error: `User not found.` },
+          };
+        }
+        const VIP = response.data;
+        VIP.pending_requests.VIP_requests.pull(userToUpdate._id);
+        return VIP.save();
+      });
+      await Promise.all(SMMRequestsPromises);
+      userToUpdate.pending_requests.SMM_requests = [];
     }
+
+    userToUpdate.account_type = account_type || userToUpdate.account_type;
+    userToUpdate.professional_type = professional_type || (account_type === "professional" ? professional_type : "none");
+
+    if (!(userToUpdate.account_type === old_account_type && userToUpdate.professional_type === old_professional_type)) {
+      const newNotification = new Notification({
+        user_ref: userToUpdate._id,
+        created_at: Date.now(),
+        content: updatedProfileTypeNotification(userToUpdate.username, old_account_type, userToUpdate.account_type, old_professional_type, userToUpdate.professional_type),
+        source: "system",
+      });
+      const notification = await newNotification.save();
+      userToUpdate.notifications.push(notification._id);
+    }
+    const updatedUser = await userToUpdate.save();
+
+    // Return the result
+    return {
+      status: 200,
+      data: updatedUser,
+    };
   },
 
   /**
    * This function is used by a VIP to send a request to a SMM
    * @param options.identifier SMM's identifier, can be either username or userId
    */
-  requestSMM: async (options) => {
-    try {
-      const { identifier, user_id } = options;
-
-      //check if the request sender exists
-      let response = await findUser(user_id);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: `User id in token is not valid` },
-        };
-      }
-      const reqSender = response.data;
-
-      //check if the reqSender is a VIP
-      if (reqSender.account_type !== "professional" || reqSender.professional_type !== "VIP") {
-        return {
-          status: 403,
-          data: { error: `You are not allowed to have a SMM` },
-        };
-      }
-
-      if (reqSender.is_active === false) {
-        return {
-          status: 403,
-          data: { error: `You are not allowed to request a SMM because you are banned` },
-        };
-      }
-
-      //check if the reqSender already has a SMM
-      if (reqSender.smm) {
-        return {
-          status: 400,
-          data: { error: `You already have a SMM` },
-        };
-      }
-
-      //check if the requested SMM exists
-      response = await findUser(identifier);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const smm = response.data;
-
-      //check if the requested SMM is a proper SMM
-      if (smm.account_type !== "professional" || smm.professional_type !== "SMM") {
-        return {
-          status: 400,
-          data: { error: "The user is not a SMM" },
-        };
-      }
-
-      if (smm.is_active === false) {
-        return {
-          status: 400,
-          data: { error: `You cannot request a banned user to be your SMM.` },
-        };
-      }
-
-      if (smm.pending_requests.SMM_requests.includes(reqSender._id)) {
-        //TODO controllare se ll'include funziona con gli id
-        return {
-          status: 400,
-          data: { error: `You already sent a request to this SMM` },
-        };
-      }
-
-      //send notification to the SMM
-      const newNotification = new Notification({
-        squeal_ref: undefined,
-        user_ref: smm._id,
-        created_at: Date.now(),
-        content: newSMMrequestNotification(reqSender.username),
-        source: "user",
-        reply: true,
-      });
-      await newNotification.save();
-
-      smm.notifications.push(newNotification._id);
-      smm.pending_requests.SMM_requests.push(reqSender._id);
-      reqSender.pending_requests.VIP_requests.push(smm._id);
-
-      await smm.save();
-      await reqSender.save();
-
-      return {
-        status: 200,
-        data: { message: `Request sent successfully` },
-      };
-    } catch (err) {
-      console.error(err);
-    }
-  },
-
-  /**
-   * This function is used by a SMM to accept or decline a VIP's request
-   * @param options.identifier New user's VIP
-   * @param options.request_response Response to the request, can be either "true" or "false"
-   */
   //TESTED
-  handleVIPRequest: async (options) => {
-    const { identifier, user_id, request_response } = options;
+  requestSMM: async (options) => {
+    const { identifier, user_id, action } = options;
 
-    if (!["true", "false"].includes(request_response)) {
+    if (!action) {
       return {
         status: 400,
-        data: { error: `Request response must be either 'true' or 'false'` },
+        data: { error: `No 'action' specified` },
+      };
+    }
+
+    if (!["send", "withdraw"].includes(action)) {
+      return {
+        status: 400,
+        data: { error: `Invalid value for 'action' field. 'action' options are 'send' or 'withdraw'` },
       };
     }
 
@@ -715,7 +619,139 @@ module.exports = {
       //if the response is an error
       return {
         status: response.status,
-        data: { error: `User id in token is not valid` },
+        data: { error: `'user_id' in token is not valid` },
+      };
+    }
+    const reqSender = response.data;
+
+    //check if the reqSender is a VIP
+    if (reqSender.account_type !== "professional" || reqSender.professional_type !== "VIP") {
+      return {
+        status: 403,
+        data: { error: `You are not a VIP and you're not allowed to have a SMM.` },
+      };
+    }
+
+    if (reqSender.is_active === false) {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to send/withdraw SMM requests because you are banned` },
+      };
+    }
+
+    //check if the reqSender already has a SMM
+    if (reqSender.smm && action === "send") {
+      return {
+        status: 400,
+        data: { error: `You already have a SMM` },
+      };
+    }
+
+    //check if the requested SMM exists
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const smm = response.data;
+
+    //check if the requested SMM is a proper SMM
+    if (smm.account_type !== "professional" || smm.professional_type !== "SMM") {
+      return {
+        status: 400,
+        data: { error: `The user is not a SMM.` },
+      };
+    }
+
+    if (!smm.is_active) {
+      return {
+        status: 400,
+        data: { error: `You cannot request a banned user to be your SMM.` },
+      };
+    }
+
+    if (smm.pending_requests.SMM_requests.includes(reqSender._id)) {
+      if (action === "send") {
+        //includes funziona con gli id
+        return {
+          status: 400,
+          data: { error: `You already sent a request to this SMM.` },
+        };
+      }
+      //withdraw
+      smm.pending_requests.SMM_requests.pull(reqSender._id);
+      reqSender.pending_requests.VIP_requests.pull(smm._id);
+      const oldNotification = await Notification.deleteOne({ user_ref: smm._id, content: newSMMrequestNotification(reqSender.username) });
+      reqSender.notifications.pull(oldNotification._id);
+      await smm.save();
+      await reqSender.save();
+      return {
+        status: 200,
+        data: { message: `Request withdrawn successfully` },
+      };
+    }
+    if (action === "withdraw") {
+      return {
+        status: 400,
+        data: { error: `You didn't send a request to this SMM.` },
+      };
+    }
+    //send notification to the SMM
+    const newNotification = new Notification({
+      user_ref: smm._id,
+      created_at: Date.now(),
+      content: newSMMrequestNotification(reqSender.username),
+      source: "user",
+      reply: true,
+    });
+    await newNotification.save();
+
+    smm.notifications.push(newNotification._id);
+    smm.pending_requests.SMM_requests.push(reqSender._id);
+    reqSender.pending_requests.VIP_requests.push(smm._id);
+
+    await smm.save();
+    await reqSender.save();
+
+    return {
+      status: 200,
+      data: { message: `Request sent successfully.` },
+    };
+  },
+
+  /**
+   * This function is used by a SMM to accept or decline a VIP's request
+   * @param options.identifier New user's VIP
+   * @param options.request_action Response to the request, can be either "accept" or "decline"
+   */
+  //TESTED
+  handleVIPRequest: async (options) => {
+    const { identifier, user_id, request_action } = options;
+
+    if (!request_action) {
+      return {
+        status: 400,
+        data: { error: `No 'action' specified.` },
+      };
+    }
+
+    if (!["accept", "decline"].includes(request_action)) {
+      return {
+        status: 400,
+        data: { error: `'request_action' must be either 'accept' or 'decline'.` },
+      };
+    }
+
+    //check if the request sender exists
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: `'user_id' in token is not valid.` },
       };
     }
     const reqSender = response.data;
@@ -724,7 +760,7 @@ module.exports = {
     if (reqSender.account_type !== "professional" || reqSender.professional_type !== "SMM") {
       return {
         status: 403,
-        data: { error: `You are not a SMM` },
+        data: { error: `You are not a SMM.` },
       };
     }
 
@@ -751,7 +787,7 @@ module.exports = {
     if (vip.account_type !== "professional" || vip.professional_type !== "VIP") {
       return {
         status: 400,
-        data: { error: "The user is not a VIP" },
+        data: { error: `The user is not a VIP.` },
       };
     }
 
@@ -761,11 +797,11 @@ module.exports = {
       reqSender.pending_requests.SMM_requests.pull(vip._id);
       return {
         status: 400,
-        data: { error: "The VIP already has a SMM" },
+        data: { error: `The VIP already has a SMM.` },
       };
     }
     //SMM accepts the request
-    if (request_response === "true") {
+    if (request_action === "accept") {
       //add the VIP to the SMM's managed_accounts
       reqSender.managed_accounts.push(vip._id);
       //set the SMM of the VIP
@@ -773,7 +809,6 @@ module.exports = {
 
       //VIP NOTIFICATION
       const newVipNotification = new Notification({
-        squeal_ref: undefined,
         user_ref: vip._id,
         created_at: Date.now(),
         content: newSMMNotification(reqSender.username),
@@ -784,7 +819,6 @@ module.exports = {
 
       //SMM NOTIFICATION
       const newSmmNotification = new Notification({
-        squeal_ref: undefined,
         user_ref: reqSender._id,
         created_at: Date.now(),
         content: newManagedAccountNotification(vip.username),
@@ -792,12 +826,27 @@ module.exports = {
       });
       const smmNotification = await newSmmNotification.save();
       reqSender.notifications.push(smmNotification._id);
+    } else {
+      //SMM declines the request
+      const newNotification = new Notification({
+        user_ref: vip._id,
+        created_at: Date.now(),
+        content: declinedSMMrequestNotification(reqSender.username),
+        source: "user",
+      });
+      await newNotification.save();
+      vip.notifications.push(newNotification._id);
     }
     //remove request from both profiles
     vip.pending_requests.VIP_requests.pull(reqSender._id);
     reqSender.pending_requests.SMM_requests.pull(vip._id);
+
+    const oldNotification = await Notification.deleteOne({ user_ref: reqSender._id, content: newSMMrequestNotification(vip.username) });
+    vip.notifications.pull(oldNotification._id);
+
     await vip.save();
     await reqSender.save();
+
     return {
       status: 200,
       data: { message: `Request handled successfully` },
@@ -822,14 +871,14 @@ module.exports = {
     if (user.account_type !== "professional" || user.professional_type !== "VIP") {
       return {
         status: 403,
-        data: { error: "You are not a VIP" },
+        data: { error: `You are not a VIP.` },
       };
     }
     //check if the user has a SMM
     if (!user.smm) {
       return {
         status: 400,
-        data: { error: "You don't have a SMM" },
+        data: { error: `You don't have a SMM.` },
       };
     }
 
@@ -849,7 +898,7 @@ module.exports = {
 
     return {
       status: 200,
-      data: { message: "SMM removed successfully" },
+      data: { message: "SMM removed successfully." },
     };
   },
 
@@ -872,14 +921,14 @@ module.exports = {
     if (user.account_type !== "professional" || user.professional_type !== "SMM") {
       return {
         status: 403,
-        data: { error: "You are not a SMM" },
+        data: { error: `You are not a SMM.` },
       };
     }
     //check if the user has a VIP
     if (!user.managed_accounts.includes(identifier)) {
       return {
         status: 400,
-        data: { error: "You're not their SMM" },
+        data: { error: `You are not their SMM.` },
       };
     }
 
@@ -899,7 +948,7 @@ module.exports = {
 
     return {
       status: 200,
-      data: { message: "VIP removed successfully" },
+      data: { message: `VIP removed successfully.` },
     };
   },
 
@@ -916,7 +965,7 @@ module.exports = {
     if (!profile_info && !profile_picture) {
       return {
         status: 400,
-        data: { error: "No fields to update" },
+        data: { error: `No fields to update.` },
       };
     }
 
@@ -925,7 +974,7 @@ module.exports = {
       //if the response is an error
       return {
         status: response.status,
-        data: { error: "User id in token is not valid" },
+        data: { error: `'user_id' in token is not valid.` },
       };
     }
     const reqSender = response.data;
@@ -943,7 +992,7 @@ module.exports = {
     if (!reqSender._id.equals(userToUpdate._id)) {
       return {
         status: 403,
-        data: { error: "You can't update another user" },
+        data: { error: `You are not allowed to update another user.` },
       };
     }
 
@@ -963,26 +1012,26 @@ module.exports = {
   },
 
   /**
-   * @param options.inlineReqJson.newPassword New user's password
-   * @param options.inlineReqJson.oldPassword Old user's password
+   * @param options.inlineReqJson.new_password New user's password
+   * @param options.inlineReqJson.old_password Old user's password
    * @param options.identifier User's identifier, can be either username or userId
    */
   updatePassword: async (options) => {
     const { identifier, user_id } = options;
-    const { newPassword, oldPassword } = options?.inlineReqJson || {};
+    const { new_password, old_password } = options?.inlineReqJson || {};
 
     // Check if the required fields are present
-    if (!newPassword || !oldPassword) {
+    if (!new_password || !old_password) {
       return {
         status: 400,
-        data: { error: "Old password and new password are required" },
+        data: { error: `'old_password' and 'new_password' are required.` },
       };
     }
 
-    if (newPassword.length < PASSWORD_MIN_LENGTH) {
+    if (new_password.length < PASSWORD_MIN_LENGTH) {
       return {
         status: 400,
-        data: { error: "New password must be at least 8 characters long" },
+        data: { error: `'new_password' must be at least 8 characters long.` },
       };
     }
 
@@ -992,7 +1041,7 @@ module.exports = {
       //if the response is an error
       return {
         status: response.status,
-        data: { error: "User id in token is not valid" },
+        data: { error: `'user_id' in token is not valid.` },
       };
     }
     const reqSender = response.data;
@@ -1011,22 +1060,22 @@ module.exports = {
     if (!reqSender._id.equals(userToUpdate._id)) {
       return {
         status: 403,
-        data: { error: "You can't update another user" },
+        data: { error: `You are not allowed to update another user.` },
       };
     }
 
     //check if the old password is valid
-    const isPasswordValid = await bcrypt.compare(oldPassword, userToUpdate.password);
+    const isPasswordValid = await bcrypt.compare(old_password, userToUpdate.password);
     if (!isPasswordValid) {
       return {
         status: 400,
-        data: { error: "Old password is not valid" },
+        data: { error: `'old_password' is not valid.` },
       };
     }
 
     //replace the old password with the new one
     const salt = await bcrypt.genSalt(securityLvl);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    const hashedPassword = await bcrypt.hash(new_password, salt);
     userToUpdate.password = hashedPassword;
 
     //save the updated user
@@ -1045,8 +1094,6 @@ module.exports = {
    * @param options.ban_status New user's ban status, "true" if banned, "false" if not
    */
   userBanStatus: async (options) => {
-    //TODO utilizzare select quando abbiamo bisogno di un solo campo e non tutto l'oggetto
-    //TODO quando un utente viene bannato, riceve una notifica.
     //Se ha un smm anche il smm riceve la notifica.
     //Se è un smm, tutti i vip che lo hanno come smm ricevono la notifica
 
@@ -1056,7 +1103,7 @@ module.exports = {
     if (!["true", "false"].includes(ban_status)) {
       return {
         status: 400,
-        data: { error: "Ban status value must be either 'true' or 'false'" },
+        data: { error: `Ban status value must be either 'true' or 'false'.` },
       };
     }
 
@@ -1064,7 +1111,7 @@ module.exports = {
     if (!identifier) {
       return {
         status: 400,
-        data: { error: "User identifier is required" },
+        data: { error: `User 'identifier' is required.` },
       };
     }
 
@@ -1074,7 +1121,7 @@ module.exports = {
       //if the response is an error
       return {
         status: response.status,
-        data: { error: "User id in token is not valid" },
+        data: { error: `'user_id' in token is not valid.` },
       };
     }
     const reqSender = response.data;
@@ -1083,7 +1130,7 @@ module.exports = {
     if (reqSender.account_type !== "moderator") {
       return {
         status: 403,
-        data: { error: "Only a moderator can ban another user" },
+        data: { error: `You are not allowed to ban a user.` },
       };
     }
     response = await findUser(identifier);
@@ -1098,6 +1145,14 @@ module.exports = {
 
     //change the "is_active" field: if the user is banned, he's not active
     userToUpdate.is_active = ban_status === "true" ? false : true;
+
+    const notification = new Notification({
+      user_ref: userToUpdate._id,
+      created_at: Date.now(),
+      content: ban_status === "true" ? bannedUserNotification(userToUpdate.username) : unbannedUserNotification(userToUpdate.username),
+      source: "system",
+    });
+    await notification.save();
 
     //save the updated user
     const updatedUser = await userToUpdate.save();
@@ -1123,7 +1178,7 @@ module.exports = {
     if (notificationArray === undefined || notificationArray.length <= 0) {
       return {
         status: 400,
-        data: { error: "Notification identifier is required" },
+        data: { error: `Notification 'identifier' is required.` },
       };
     }
 
@@ -1133,7 +1188,7 @@ module.exports = {
       if (mongooseObjectIdRegex.test(notificationId) === false) {
         return {
           status: 400,
-          data: { error: `Notification identifier ${i} is not valid` },
+          data: { error: `Notification 'identifier' ${i} is not valid.` },
         };
       }
     }
@@ -1143,7 +1198,7 @@ module.exports = {
       //if the response is an error
       return {
         status: response.status,
-        data: { error: "User id in token is not valid" },
+        data: { error: `'user_id' in token is not valid.` },
       };
     }
     const reqSender = response.data;
@@ -1154,7 +1209,7 @@ module.exports = {
       //if the response is an error
       return {
         status: response.status,
-        data: { error: "One or more notifications not found" },
+        data: { error: `One or more notifications not found.` },
       };
     }
 

@@ -15,6 +15,7 @@ const {
   findNotification,
   checkForAllUsers,
   checkForAllChannels,
+  checkIfReactionsAreValid,
   hasEnoughCharQuota,
   removeQuota,
   addedAndRemoved,
@@ -22,12 +23,12 @@ const {
   updateRecipientsChannels,
   updateRecipientsKeywords,
   containsOfficialChannels,
+  checkIfRecipientsAreValid,
 } = require("./utils");
 
 const { mentionNotification, squealInOfficialChannel } = require("./messages");
 
 //TODO tradurre tutti i commenti in inglese
-//TODO quando vengono mandate richieste formattate male, restituire un errore con la descrizione del problema (400 Bad Request)
 //TODO reagire se non sei autenticato
 
 //DONE Controllati i casi in cui l'utente che fa richiesta è bannato
@@ -45,10 +46,9 @@ module.exports = {
    * @param options.sort_order Sorts squeals, can be either "asc" or "desc"
    * @param options.sort_by Can be "impressions", "reactions", "date", "comments"
    */
-  //TODO comments_count non esiste ancora
   getSqueals: async (options) => {
     const { content_type, created_after, created_before, is_scheduled, min_reactions, min_balance, max_balance, is_in_official_channel, sort_order, sort_by } = options;
-    const sort_types = ["reactions", "comments", "impressions", "date"];
+    const sort_types = ["reactions", "impressions", "date"];
     const sort_orders = ["asc", "desc"];
     const pipeline = [];
     if (content_type) {
@@ -88,7 +88,7 @@ module.exports = {
       if (!["true", "false"].includes(is_scheduled))
         return {
           status: 400,
-          data: { error: `Invalid is_scheduled value. Must be either "true" or "false".` },
+          data: { error: `Invalid 'is_scheduled' value. Must be either 'true' or 'false'.` },
         };
 
       pipeline.push({ $match: { is_scheduled: is_scheduled == "true" ? true : false } });
@@ -131,7 +131,7 @@ module.exports = {
         //return an error if the balance is not a number
         return {
           status: 400,
-          data: { error: `"min_balance" must be a number.` },
+          data: { error: `'min_balance' must be a number.` },
         };
       }
       intMinBalance = balance;
@@ -144,14 +144,14 @@ module.exports = {
         //return an error if the balance is not a number
         return {
           status: 400,
-          data: { error: `"balance" must be a number.` },
+          data: { error: `'balance' must be a number.` },
         };
       }
       if (intMinBalance && balance < intMinBalance) {
         //return an error if the max_balance is less than the min_balance
         return {
           status: 400,
-          data: { error: `"max_balance" must be greater than "min_balance".` },
+          data: { error: `'max_balance' must be greater than 'min_balance'.` },
         };
       }
       pipeline.push({ $match: { "reactions.balance": { $lte: balance } } });
@@ -164,7 +164,7 @@ module.exports = {
         //return an error if the min_reactions is not a number
         return {
           status: 400,
-          data: { error: `"min_reactions" must be a positive integer` },
+          data: { error: `'min_reactions' must be a positive number.` },
         };
       }
       pipeline.push({ $match: { reactions_count: { $gte: minReactions } } });
@@ -173,7 +173,7 @@ module.exports = {
     if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
       return {
         status: 400,
-        data: { error: `Missing 'sort_order' or 'sort_by' parameter.` },
+        data: { error: `Both 'sort_order' and 'sort_by' must be specified.` },
       };
     }
 
@@ -186,7 +186,6 @@ module.exports = {
       }
       const order = sort_order == "asc" ? 1 : -1;
       if (sort_by == "reactions") pipeline.push({ $sort: { "reactions.reactions_count": order } });
-      else if (sort_by == "comments") pipeline.push({ $sort: { comments_count: order } });
       else if (sort_by == "impressions") pipeline.push({ $sort: { impressions: order } });
       else if (sort_by == "date") pipeline.push({ $sort: { created_at: order } });
     }
@@ -281,7 +280,7 @@ module.exports = {
    * @param options.squealInput.is_scheduled It tells you whether or not the squeal is scheduled
    * @param options.squealInput.recipients Array of users, channels or keywords, with no limit and no impact on the quota.
    */
-  //TODO DA TESTARE
+  //TESTED
   createSqueal: async (options) => {
     try {
       //vietare di postare in un canale ufficiale
@@ -319,8 +318,8 @@ module.exports = {
 
       //author is the reqSender by default
       var author = reqSender;
-
       if (vip_user && !reqSender._id.equals(vip_user._id)) {
+        //equals funziona anche con ids
         //Sto cercando di postare a nome di qualcun altro
         //quindi controllo se l'utente che manda la richiesta ha i permessi per farlo, ovvero è un SMM di un utente VIP
         if (reqSender.account_type != "professional" || reqSender.professional_type != "smm") {
@@ -339,8 +338,6 @@ module.exports = {
 
         //here I know that the reqSender is a SMM of the user, so I can post as the user
         author = vip_user;
-        console.log(reqSender.is_active);
-        console.log(vip_user.is_active);
         if (!reqSender.is_active || !vip_user.is_active) {
           return {
             status: 403,
@@ -353,7 +350,7 @@ module.exports = {
       if (!contentTypes.includes(content_type) || content_type == "deleted") {
         return {
           status: 400,
-          data: { error: `Invalid content_type.` },
+          data: { error: `Invalid 'content_type'.` },
         };
       }
 
@@ -361,7 +358,7 @@ module.exports = {
       if (!content || content?.length == 0) {
         return {
           status: 400,
-          data: { error: `Missing 'content' parameter.` },
+          data: { error: `'content' is required.` },
         };
       }
 
@@ -369,13 +366,19 @@ module.exports = {
       if (!recipients) {
         return {
           status: 400,
-          data: { error: `Missing 'recipients' parameter.` },
+          data: { error: `'recipients'is required.` },
         };
       }
-      var { users, channels, keywords } = JSON.parse(recipients);
-      users = users || [];
-      channels = channels || [];
-      keywords = keywords || [];
+
+      response = checkIfRecipientsAreValid(recipients);
+      if (!response.isValid) {
+        return {
+          status: 400,
+          data: { error: `Formatting error in 'recipients' parameter.` },
+        };
+      }
+
+      const { users, channels, keywords } = response.value;
 
       //check if the user has enough char_quota
       const enoughQuota = hasEnoughCharQuota(author, content_type, content);
@@ -447,7 +450,6 @@ module.exports = {
       const userUpdatePromises = [];
       for (const user of usersArray) {
         //send a notification to the mentioned user
-        console.log(mentionNotification(author.username, content));
         const notification = new Notification({
           user_ref: user,
           squeal_ref: result._id,
@@ -563,7 +565,7 @@ module.exports = {
     if (!reaction) {
       return {
         status: 400,
-        data: { error: `Missing 'reaction' parameter.` },
+        data: { error: `'reaction' is required.` },
       };
     }
     //check if the user_id is specified
@@ -594,7 +596,7 @@ module.exports = {
     if (squeal.content_type == "deleted") {
       return {
         status: 403,
-        data: { error: `You're not allowed to react to a deleted squeal` },
+        data: { error: `You can't react to a deleted squeal` },
       };
     }
     //check if the reaction is valid
@@ -608,7 +610,7 @@ module.exports = {
     if (user.squeals.reacted_to.includes(squeal._id)) {
       return {
         status: 400,
-        data: { error: `User already reacted to this squeal.` },
+        data: { error: `You already reacted to this squeal.` },
       };
     }
     //add the reaction to the squeal
@@ -630,111 +632,118 @@ module.exports = {
    * @param options.inlineReqJson.reactions Array like {like: 0, love: 0, laugh: 0, dislike: 0, disgust: 0, disagree: 0}
    */
   updateSqueal: async (options) => {
-    try {
-      const { identifier, user_id } = options;
-      const recipients = options.inlineReqJson.recipients ? JSON.parse(options.inlineReqJson?.recipients) : undefined;
-      const reactions = options.inlineReqJson.reactions ? JSON.parse(options.inlineReqJson?.reactions) : undefined;
-      if (!identifier) {
-        return {
-          status: 400,
-          data: { error: `Missing 'identifier' parameter.` },
-        };
-      }
-      let response = await findUser(user_id);
-      if (response.status >= 300) {
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const reqSender = response.data;
-
-      //check if the reqSender is a moderator
-      if (reqSender.account_type != "moderator") {
-        return {
-          status: 403,
-          data: { error: `You are not allowed to update this squeal.` },
-        };
-      }
-
-      //check if the squeal exists
-      let squealResponse = await findSqueal(identifier);
-      if (squealResponse.status >= 300) {
-        return {
-          status: squealResponse.status,
-          data: { error: squealResponse.error },
-        };
-      }
-      const squeal = squealResponse.data;
-
-      if (!recipients && !reactions) {
-        return {
-          status: 400,
-          data: { error: `Missing 'recipients' or 'reactions' parameter.` },
-        };
-      }
-      if (recipients) {
-        const { users, channels, keywords } = recipients;
-
-        //UPDATE USERS
-        let usersResponse = await updateRecipientsUsers(users, squeal);
-        if (usersResponse.status >= 300) {
-          return {
-            status: usersResponse.status,
-            data: { error: usersResponse.error },
-          };
-        }
-        squeal.recipients.users = usersResponse.data.usersArray;
-
-        //UPDATE CHANNELS
-        let channelsResponse = await updateRecipientsChannels(channels, squeal);
-        if (channelsResponse.status >= 300) {
-          return {
-            status: channelsResponse.status,
-            data: { error: channelsResponse.error },
-          };
-        }
-
-        //check if the squeal is in an official channel
-        squeal.is_in_official_channel = (channelsResponse.data.channelsArray || []).some((channel) => channel.is_official);
-        squeal.recipients.channels = channelsResponse.data.channelsArray;
-
-        //UPDATE KEYWORDS
-        let keywordsResponse = await updateRecipientsKeywords(keywords, squeal);
-        if (keywordsResponse.status >= 300) {
-          return {
-            status: keywordsResponse.status,
-            data: { error: keywordsResponse.error },
-          };
-        }
-        squeal.recipients.keywords = keywords;
-      }
-
-      //UPDATE REACTIONS
-      if (reactions) {
-        const { like, love, laugh, dislike, disgust, disagree } = parseInt(reactions);
-        if (isNaN(like) || isNaN(love) || isNaN(laugh) || isNaN(dislike) || isNaN(disgust) || isNaN(disagree)) {
-          return {
-            status: 400,
-            data: { error: `Reactions must be integers.` },
-          };
-        }
-        like ? (squeal.reactions.positive_reactions.like = like) : null;
-        love ? (squeal.reactions.positive_reactions.love = love) : null;
-        laugh ? (squeal.reactions.positive_reactions.laugh = laugh) : null;
-        dislike ? (squeal.reactions.negative_reactions.dislike = dislike) : null;
-        disgust ? (squeal.reactions.negative_reactions.disgust = disgust) : null;
-        disagree ? (squeal.reactions.negative_reactions.disagree = disagree) : null;
-      }
-
-      squeal.last_modified = new Date();
-      const updatedSqueal = await squeal.save();
+    const { identifier, user_id } = options;
+    const recipients = options.inlineReqJson.recipients;
+    const reactions = options.inlineReqJson.reactions;
+    if (!identifier) {
       return {
-        status: updatedSqueal ? 200 : 400,
-        data: updatedSqueal ? updatedSqueal : { error: `Failed to update squeal` },
+        status: 400,
+        data: { error: `'identifier' is required.` },
       };
-    } catch (error) {
-      console.log(error);
     }
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const reqSender = response.data;
+
+    //check if the reqSender is a moderator
+    if (reqSender.account_type != "moderator") {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to update this squeal.` },
+      };
+    }
+
+    //check if the squeal exists
+    let squealResponse = await findSqueal(identifier);
+    if (squealResponse.status >= 300) {
+      return {
+        status: squealResponse.status,
+        data: { error: squealResponse.error },
+      };
+    }
+    const squeal = squealResponse.data;
+
+    if (!recipients && !reactions) {
+      return {
+        status: 400,
+        data: { error: `Both 'recipients' and 'reactions' must be specified.` },
+      };
+    }
+    if (recipients) {
+      response = checkIfRecipientsAreValid(recipients);
+      if (!response.isValid) {
+        return {
+          status: 400,
+          data: { error: `Formatting error in 'recipients' parameter.` },
+        };
+      }
+
+      const { users, channels, keywords } = response.value;
+
+      //UPDATE USERS
+      let usersResponse = await updateRecipientsUsers(users, squeal);
+      if (usersResponse.status >= 300) {
+        return {
+          status: usersResponse.status,
+          data: { error: usersResponse.error },
+        };
+      }
+      squeal.recipients.users = usersResponse.data.usersArray;
+
+      //UPDATE CHANNELS
+      let channelsResponse = await updateRecipientsChannels(channels, squeal);
+      if (channelsResponse.status >= 300) {
+        return {
+          status: channelsResponse.status,
+          data: { error: channelsResponse.error },
+        };
+      }
+
+      //check if the squeal is in an official channel
+      squeal.is_in_official_channel = (channelsResponse.data.channelsArray || []).some((channel) => channel.is_official);
+      squeal.recipients.channels = channelsResponse.data.channelsArray;
+
+      //UPDATE KEYWORDS
+      let keywordsResponse = await updateRecipientsKeywords(keywords, squeal);
+      if (keywordsResponse.status >= 300) {
+        return {
+          status: keywordsResponse.status,
+          data: { error: keywordsResponse.error },
+        };
+      }
+      squeal.recipients.keywords = keywords;
+    }
+
+    //UPDATE REACTIONS
+    if (reactions) {
+      response = checkIfReactionsAreValid(reactions);
+
+      if (!response.isValid) {
+        return {
+          status: 400,
+          data: { error: `'reactions' object must be like {'love': '42', 'disgust' : '0' } with at least one field. Numbers must be non negative.` },
+        };
+      }
+      const { like, love, laugh, dislike, disgust, disagree } = response.value;
+
+      squeal.reactions.like = like || squeal.reactions.like;
+      squeal.reactions.love = love || squeal.reactions.love;
+      squeal.reactions.laugh = laugh || squeal.reactions.laugh;
+      squeal.reactions.dislike = dislike || squeal.reactions.dislike;
+      squeal.reactions.disgust = disgust || squeal.reactions.disgust;
+      squeal.reactions.disagree = disagree || squeal.reactions.disagree;
+    }
+
+    squeal.last_modified = new Date();
+    const updatedSqueal = await squeal.save();
+    return {
+      status: updatedSqueal ? 200 : 400,
+      data: updatedSqueal ? updatedSqueal : { error: `Failed to update squeal` },
+    };
   },
 };

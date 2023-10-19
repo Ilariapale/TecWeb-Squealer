@@ -162,12 +162,13 @@ router.patch("/:identifier/type", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
-
-router.post("/:identifier/SMMRequest", verifyToken, async (req, res, next) => {
+//users/paulpaccy/SMMRequest?   action=send     action=withdraw
+router.patch("/:identifier/SMMRequest", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,
       user_id: req.user_id,
+      action: req.query.action,
     };
 
     try {
@@ -184,12 +185,12 @@ router.post("/:identifier/SMMRequest", verifyToken, async (req, res, next) => {
   }
 });
 
-//es. http://ijdoai.com/user/username/requestHandler?response=accept
-router.patch("/:identifier/requestHandler", verifyToken, async (req, res, next) => {
+//es. http://ijdoai.com/user/username/requestHandler?value=accept
+router.patch("/:identifier/VIP-request-handler", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,
-      request_response: req.query.response,
+      request_action: req.query.action,
       user_id: req.user_id,
     };
 
@@ -207,49 +208,6 @@ router.patch("/:identifier/requestHandler", verifyToken, async (req, res, next) 
   }
 });
 
-router.patch("/:identifier/managedAccountRequestHandler", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      identifier: req.params.identifier,
-      request_response: req.query.response,
-      user_id: req.user_id,
-    };
-
-    try {
-      const result = await users.handleManagedAccountRequest(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      console.error(err);
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
-
-router.patch("/smm", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      user_id: req.user_id,
-    };
-
-    options.inlineReqJson = req.body;
-
-    try {
-      const result = await users.updateSMM(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
-
 router.patch("/:identifier/profile", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -258,7 +216,7 @@ router.patch("/:identifier/profile", verifyToken, async (req, res, next) => {
     };
 
     options.inlineReqJson = req.body;
-
+    console.log(options);
     try {
       const result = await users.updateProfile(options);
       res.status(result.status || 200).send(result.data);

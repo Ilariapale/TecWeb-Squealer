@@ -187,7 +187,7 @@ UserSchema.methods.Delete = async function () {
     });
     await Promise.all(promises);
   }
-  //TODO controllare --------------------------------------------------------------------------------------------
+
   if (this.pending_requests.VIP_requests != undefined && this.account_type == "professional" && professional_type == "VIP") {
     //rimuovo dalla lista SMM_request degli SMM presenti nella VIP_request list l'id dell'utente che ha fatto la richiesta
     await User.updateMany({ _id: { $in: this.pending_requests.VIP_requests } }, { $pull: { "pending_requests.SMM_requests": this._id } });
@@ -195,7 +195,6 @@ UserSchema.methods.Delete = async function () {
     //rimuovo dalla lista VIP_request degli VIP presenti nella SMM_request list l'id dell'utente che ha fatto la richiesta
     await User.updateMany({ _id: { $in: this.pending_requests.SMM_requests } }, { $pull: { "pending_requests.VIP_requests": this._id } });
   }
-  //-------------------------------------------------------------------------------------------------------------
 
   //remove the user from the db
   await this.deleteOne();

@@ -53,7 +53,7 @@ const contentTypes = ["text", "image", "video", "position", "deleted"];
 async function findUser(identifier) {
   let response = {};
   if (!identifier) {
-    response.error = "User identifier is required.";
+    response.error = `User 'identifier' is required.`;
     response.status = 400;
     return response;
   }
@@ -64,15 +64,15 @@ async function findUser(identifier) {
     //it's a username
     response.data = await User.findOne({ username: identifier });
   } else {
-    response.error = "Invalid user identifier";
+    response.error = `Invalid user 'identifier'.`;
     response.status = 400;
     return response;
   }
   if (!response.data) {
-    response.error = "User not found";
+    response.error = `User not found.`;
     response.status = 404;
   } else {
-    response.error = "";
+    response.error = ``;
     response.status = 200;
   }
   return response;
@@ -83,7 +83,7 @@ async function findSqueal(identifier, just_official = false, include_deleted = t
   let response;
   if (!identifier) {
     return {
-      error: "Squeal identifier is required.",
+      error: `Squeal 'identifier' is required.`,
       status: 400,
     };
   }
@@ -92,29 +92,28 @@ async function findSqueal(identifier, just_official = false, include_deleted = t
     response = await Squeal.findById(identifier);
   } else {
     return {
-      error: "Invalid squeal identifier",
+      error: `Invalid squeal 'identifier'.`,
       status: 400,
     };
   }
-  if (!response || (!response.is_in_official_channel && just_official) || (response.content_type == "deleted" && !include_deleted)) {
+  if (!response || (!response.is_in_official_channel && just_official) || (response.content_type == `deleted` && !include_deleted)) {
     return {
-      error: "Squeal not found",
+      error: `Squeal not found.`,
       status: 404,
     };
   }
   return {
     data: response,
-    error: "",
+    error: ``,
     status: 200,
   };
 }
 
 async function findChannel(identifier, includeBlocked = false, includeOfficial = true) {
   //modificato il default di includeOfficial da false a true
-  //TODO aggiunto il regex dei canali ufficiali, controllare se va bene ovunque
   let response = {};
   if (!identifier) {
-    response.error = "Channel identifier is required.";
+    response.error = `Channel 'identifier' is required.`;
     response.status = 400;
     return response;
   }
@@ -125,13 +124,13 @@ async function findChannel(identifier, includeBlocked = false, includeOfficial =
     //it's a channel name
     response.data = await Channel.findOne({ name: identifier });
   } else {
-    response.error = "Invalid identifier";
+    response.error = `Invalid 'identifier'.`;
     response.status = 400;
     return response;
   }
   if (!response.data || (!includeBlocked && response.data?.is_blocked)) {
     response.status = 404;
-    response.error = "Channel not found";
+    response.error = `Channel not found.`;
   } else {
     response.status = 200;
   }
@@ -141,7 +140,7 @@ async function findChannel(identifier, includeBlocked = false, includeOfficial =
 async function findKeyword(identifier) {
   let response = {};
   if (!identifier) {
-    response.error = "Keyword identifier is required.";
+    response.error = `Keyword 'identifier' is required.`;
     response.status = 400;
     return response;
   }
@@ -149,16 +148,16 @@ async function findKeyword(identifier) {
     //it's a keyword
     response.data = await Keyword.findOne({ name: identifier });
   } else {
-    response.error = "Invalid identifier";
+    response.error = `Invalid 'identifier'.`;
     response.status = 400;
     return response;
   }
   if (!response.data) {
-    response.error = "Keyword not found";
+    response.error = `Keyword not found.`;
     response.status = 404;
     return response;
   }
-  response.error = "";
+  response.error = ``;
   response.status = 200;
   return response;
 }
@@ -166,7 +165,7 @@ async function findKeyword(identifier) {
 async function findNotification(identifier) {
   let response = {};
   if (!identifier) {
-    response.error = "Notification identifier is required.";
+    response.error = `Notification 'identifier' is required.`;
     response.status = 400;
     return response;
   }
@@ -174,15 +173,15 @@ async function findNotification(identifier) {
     //it's a mongoose ObjectId
     response.data = await Notification.findById(identifier);
   } else {
-    response.error = "Invalid identifier";
+    response.error = `Invalid 'identifier'.`;
     response.status = 400;
     return response;
   }
   if (!response.data) {
-    response.error = "Notification not found";
+    response.error = `Notification not found.`;
     response.status = 404;
   } else {
-    response.error = "";
+    response.error = ``;
     response.status = 200;
   }
   return response;
@@ -191,7 +190,7 @@ async function findNotification(identifier) {
 async function findChat(identifier) {
   let response = {};
   if (!identifier) {
-    response.error = "Chat identifier is required.";
+    response.error = `Chat 'identifier' is required.`;
     response.status = 400;
     return response;
   }
@@ -199,15 +198,15 @@ async function findChat(identifier) {
     //it's a mongoose ObjectId
     response.data = await Chat.findById(identifier);
   } else {
-    response.error = "Invalid identifier";
+    response.error = `Invalid 'identifier'.`;
     response.status = 400;
     return response;
   }
   if (!response.data) {
-    response.error = "Chat not found";
+    response.error = `Chat not found.`;
     response.status = 404;
   } else {
-    response.error = "";
+    response.error = ``;
     response.status = 200;
   }
   return response;
@@ -216,7 +215,7 @@ async function findChat(identifier) {
 async function findCommentSection(identifier) {
   let response = {};
   if (!identifier) {
-    response.error = "CommentSection identifier is required.";
+    response.error = `CommentSection 'identifier' is required.`;
     response.status = 400;
     return response;
   }
@@ -224,15 +223,15 @@ async function findCommentSection(identifier) {
     //it's a mongoose ObjectId
     response.data = await CommentSection.findById(identifier);
   } else {
-    response.error = "Invalid identifier";
+    response.error = `Invalid 'identifier'.`;
     response.status = 400;
     return response;
   }
   if (!response.data) {
-    response.error = "CommentSection not found";
+    response.error = `CommentSection not found.`;
     response.status = 404;
   } else {
-    response.error = "";
+    response.error = ``;
     response.status = 200;
   }
   return response;
@@ -338,7 +337,7 @@ function hasEnoughCharQuota(user, contentType, content) {
   const { extra_daily, daily, weekly, monthly } = user.char_quota;
   //if the user has no daily, weekly or monthly char_quota, return false
   if (daily <= 0 || weekly <= 0 || monthly <= 0) {
-    let reason = "You have 0 " + (daily == 0 ? "daily" : weekly == 0 ? "weekly" : "monthly") + " char_quota.";
+    let reason = `You have 0 ` + (daily == 0 ? `daily` : weekly == 0 ? `weekly` : `monthly`) + ` char_quota.`;
 
     return {
       outcome: false,
@@ -358,19 +357,19 @@ function hasEnoughCharQuota(user, contentType, content) {
 
   if (!enoughDaily || !enoughWeekly || !enoughMonthly) {
     let reason =
-      "You don't have enough " +
-      (enoughDaily ? "daily" : enoughWeekly ? "weekly" : "monthly") +
-      " char_quota: Your post is " +
+      `You don't have enough ` +
+      (enoughDaily ? `daily` : enoughWeekly ? `weekly` : `monthly`) +
+      ` char_quota: Your post is ` +
       contentLength +
-      " characters long, but your quota is " +
+      ` characters long, but your quota is ` +
       daily +
-      " daily, " +
+      ` daily, ` +
       weekly +
-      " weekly and " +
+      ` weekly and ` +
       monthly +
-      " monthly. You also have " +
+      ` monthly. You also have ` +
       extra_daily +
-      " extra daily char_quota.";
+      ` extra daily char_quota.`;
     return {
       outcome: false,
       reason: reason,
@@ -404,7 +403,7 @@ async function updateRecipientsUsers(users, squeal) {
   if (!usersOutcome) {
     return {
       status: 404,
-      data: { error: "One or more users not found." },
+      data: { error: `One or more users not found.` },
     };
   }
 
@@ -454,7 +453,7 @@ async function updateRecipientsChannels(channels, squeal) {
   if (!channelsOutcome) {
     return {
       status: 404,
-      data: { error: "One or more channels not found." },
+      data: { error: `One or more channels not found.` },
     };
   }
 
@@ -519,6 +518,77 @@ async function updateRecipientsChannels(channels, squeal) {
   };
 }
 
+function checkIfEditorsArrayIsValid(editors) {
+  if (!editors) return { isValid: true, value: [] };
+  try {
+    editors = JSON.parse(editors);
+    if (!Array.isArray(editors)) return { isValid: false, value: undefined };
+    return { isValid: true, value: editors };
+  } catch (err) {
+    return { isValid: false, value: undefined };
+  }
+}
+
+function checkIfReactionsAreValid(reactions) {
+  try {
+    reactions = JSON.parse(reactions);
+    var { like, love, laugh, dislike, disgust, disagree } = reactions;
+    [like, love, laugh, dislike, disgust, disagree] = [like, love, laugh, dislike, disgust, disagree].map(Number);
+    if (
+      (isNaN(like) && isNaN(love) && isNaN(laugh) && isNaN(dislike) && isNaN(disgust) && isNaN(disagree)) ||
+      like < 0 ||
+      love < 0 ||
+      laugh < 0 ||
+      dislike < 0 ||
+      disgust < 0 ||
+      disagree < 0
+    ) {
+      return {
+        isValid: false,
+        value: undefined,
+      };
+    }
+
+    return {
+      isValid: true,
+      value: {
+        like: isNaN(like) ? undefined : like,
+        love: isNaN(love) ? undefined : love,
+        laugh: isNaN(laugh) ? undefined : laugh,
+        dislike: isNaN(dislike) ? undefined : dislike,
+        disgust: isNaN(disgust) ? undefined : disgust,
+        disagree: isNaN(disagree) ? undefined : disagree,
+      },
+    };
+  } catch (err) {
+    return {
+      isValid: false,
+      value: undefined,
+    };
+  }
+}
+
+function checkIfRecipientsAreValid(recipients) {
+  try {
+    var { users, channels, keywords } = JSON.parse(recipients);
+    if (!((users === undefined || Array.isArray(users)) && (keywords === undefined || Array.isArray(keywords)) && (channels === undefined || Array.isArray(channels))))
+      return { isValid: false, value: undefined };
+    return {
+      isValid: true,
+      value: {
+        users: users || [],
+        channels: channels || [],
+        keywords: keywords || [],
+      },
+    };
+  } catch (err) {
+    return {
+      isValid: false,
+      value: undefined,
+    };
+  }
+}
+
 async function updateRecipientsKeywords(keywords, squeal) {
   const results = addedAndRemoved(squeal.recipients.keywords, keywords);
   const addedKeywords = results.added;
@@ -570,9 +640,6 @@ function addedAndRemoved(oldArray, newArray) {
   };
   let added = newArray.filter((element) => !oldArray.some((oldElement) => compare(oldElement, element)));
   let removed = oldArray.filter((element) => !newArray.some((newElement) => compare(newElement, element)));
-  console.log("ADDED AND REMOVED");
-  console.log(added);
-
   return { added, removed };
 }
 
@@ -590,7 +657,7 @@ function generateToken(userId) {
 
 function verifyToken(req, res, next) {
   if (!req.headers) {
-    return res.status(400).send("No headers in request");
+    return res.status(400).send(`No headers in request.`);
   }
 
   const token = req.headers.authorization;
@@ -611,21 +678,6 @@ function verifyToken(req, res, next) {
       next();
     });
   }
-  /*
-  if (!token) {
-    req.isTokenValid = false;
-  } else {
-    jwt.verify(token, config.secretKey, (err, decodedToken) => {
-      if (err) {
-        req.isTokenValid = false;
-      } else {
-        req.isTokenValid = true;
-        req.user_id = decodedToken.userId;
-      }
-    });
-  }
-  next();
-  */
 }
 
 module.exports = {
@@ -642,11 +694,14 @@ module.exports = {
   checkForAllChannels,
   checkForAllUsers,
   checkForAllNotifications,
+  checkIfReactionsAreValid,
+  checkIfEditorsArrayIsValid,
   verifyToken,
   generateToken,
   hasEnoughCharQuota,
   removeQuota,
   addedAndRemoved,
+  checkIfRecipientsAreValid,
   updateRecipientsUsers,
   updateRecipientsChannels,
   updateRecipientsKeywords,

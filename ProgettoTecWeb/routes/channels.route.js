@@ -98,7 +98,7 @@ router.patch("/:identifier", verifyToken, async (req, res, next) => {
       user_id: req.user_id,
     };
 
-    options.updateChannelInlineReqJson = req.body;
+    options.inlineReqJson = req.body;
 
     try {
       const result = await channels.updateChannel(options);
@@ -122,8 +122,6 @@ router.patch("/:identifier/editor", verifyToken, async (req, res, next) => {
       user_id: req.user_id,
     };
 
-    options.updateChannelInlineReqJson = req.body;
-
     try {
       const result = await channels.leaveModTeam(options);
       res.status(result.status || 200).send(result.data);
@@ -136,6 +134,67 @@ router.patch("/:identifier/editor", verifyToken, async (req, res, next) => {
     return res.status(401).send({
       error: "Token is either missing invalid or expired",
     });
+  }
+});
+
+router.patch("/:identifier/blocked-status", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+      value: req.query.value,
+    };
+
+    try {
+      const result = await channels.channelBlockedStatus(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
+router.patch("/:identifier/subscription-status", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+      value: req.query.value,
+    };
+    try {
+      const result = await channels.channelSubscription(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
+router.patch("/:identifier/muted-status", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      value: req.query.value,
+      user_id: req.user_id,
+    };
+    try {
+      const result = await channels.channelMuteStatus(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
   }
 });
 
@@ -158,65 +217,6 @@ router.patch("/:identifier/:squealIdentifier", verifyToken, async (req, res, nex
     return res.status(401).send({
       error: "Token is either missing invalid or expired",
     });
-  }
-});
-
-router.patch("/:identifier/blockedstatus", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      identifier: req.params.identifier,
-      user_id: req.user_id,
-    };
-    try {
-      const result = await users.toggleChannelBlockedStatus(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
-
-router.patch("/:identifier/subscription", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      identifier: req.params.identifier,
-      user_id: req.user_id,
-      value: req.query.value,
-    };
-    try {
-      const result = await channels.channelSubscription(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
-
-router.patch("/:identifier/muted", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      identifier: req.params.identifier,
-      value: req.query.value,
-      user_id: req.user_id,
-    };
-    try {
-      const result = await channels.channelMuteStatus(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
   }
 });
 

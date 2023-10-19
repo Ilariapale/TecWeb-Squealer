@@ -19,8 +19,6 @@ const {
 } = require("./utils");
 
 module.exports = {
-  // Funzione di login
-
   login: async (options) => {
     const { username, password } = options; //Username can be both username or email
 
@@ -28,7 +26,7 @@ module.exports = {
       //username or password not provided
       return {
         status: 400,
-        data: { error: "Username or password not provided." },
+        data: { error: `'username' and 'password' must be specified.` },
       };
     }
     // Implementa qui la logica di verifica delle credenziali dell'utente
@@ -36,14 +34,14 @@ module.exports = {
     if (emailRegex.test(username)) {
       return {
         status: 400,
-        data: { error: "Login require a username, not an email." },
+        data: { error: `Login requires a username, not an email.` },
       };
     }
     if (!usernameRegex.test(username)) {
       //username not valid
       return {
         status: 400,
-        data: { error: "Username not valid." },
+        data: { error: `'username' not valid.` },
       };
     }
 
@@ -53,7 +51,7 @@ module.exports = {
       //user not found
       return {
         status: 404,
-        data: { error: "wrong credentials" },
+        data: { error: `Wrong credentials.` },
       };
     }
     const isPasswordValid = await bcrypt.compare(password, user.data.password);
@@ -62,7 +60,7 @@ module.exports = {
       //password not valid
       return {
         status: 401,
-        data: { error: "wrong credentials" },
+        data: { error: `Wrong credentials.` },
       };
     }
     const token = generateToken(username); // Funzione per generare il token JWT (da implementare)

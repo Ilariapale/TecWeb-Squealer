@@ -36,7 +36,7 @@ module.exports = {
     if (!chat.partecipants.includes(reqSender._id)) {
       return {
         status: 403,
-        data: { error: "Chat not found" },
+        data: { error: `Chat not found.` },
       };
     }
 
@@ -71,16 +71,16 @@ module.exports = {
     const recipient = response.data;
 
     // Check if the message is valid
-    if (!message || message == "" || message.length > DIRECT_MESSAGE_MAX_LENGTH) {
+    if (!message || message == `` || message.length > DIRECT_MESSAGE_MAX_LENGTH) {
       return {
         status: 400,
-        data: { error: "Invalid message" },
+        data: { error: `Message can't be empty or longer than ${DIRECT_MESSAGE_MAX_LENGTH} characters long.` },
       };
     }
 
     const newMessage = {
       sender: 0,
-      text: message,
+      text: message.replace(/\s+/g, ` `), // Replace multiple spaces with a single space
       timestamp: Date.now(),
     };
 
@@ -114,5 +114,4 @@ module.exports = {
       data: chat,
     };
   },
-  //TODO cancellare messaggio nella chat privata (?)
 };

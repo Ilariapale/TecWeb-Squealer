@@ -22,14 +22,14 @@ module.exports = {
     if (!name) {
       return {
         status: 400,
-        data: { error: "name is required" },
+        data: { error: `name is required.` },
       };
     }
 
     if (!keywordRegex.test(name)) {
       return {
         status: 400,
-        data: { error: "name is not valid" },
+        data: { error: `name is not valid.` },
       };
     }
 
@@ -42,7 +42,7 @@ module.exports = {
       const result = await newKeyword.save();
       return {
         status: result ? 201 : 400,
-        data: result ? { keyword: result } : { error: "Failed to create keyword" },
+        data: result ? { keyword: result } : { error: `Failed to create keyword.` },
       };
     } catch (error) {
       if (error instanceof mongoose.Error.ValidationError) {
@@ -58,12 +58,12 @@ module.exports = {
         // duplicate key error
         return {
           status: 409,
-          data: { error: "Keyword already exists" },
+          data: { error: `Keyword already exists.` },
         };
       } else {
         // generic or unknown error
         console.error(error);
-        throw new Error("Failed to create keyword");
+        throw new Error(`Failed to create keyword.`);
       }
     }
   },
@@ -74,25 +74,6 @@ module.exports = {
    */
   getKeyword: async (options) => {
     const { identifier } = options;
-    // if (!identifier) {
-    //   return {
-    //     status: 400,
-    //     data: { error: "Keyword identifier is required." },
-    //   };
-    // }
-    // if (!keywordRegex.test(identifier)) {
-    //   return {
-    //     status: 400,
-    //     data: { error: "Invalid identifier" },
-    //   };
-    // }
-    // const data = await Keyword.findOne({ name: identifier });
-    // if (!data) {
-    //   return {
-    //     status: 404,
-    //     data: { error: "Keyword not found" },
-    //   };
-    // }
     let response = await findKeyword(identifier);
     if (response.status >= 300) {
       //if the response is an error
@@ -108,7 +89,6 @@ module.exports = {
   },
 
   /**
-   *
    * @param options.identifier Identifier is the keyword's name
    */
   deleteKeyword: async (options) => {
@@ -116,20 +96,20 @@ module.exports = {
     if (!identifier) {
       return {
         status: 400,
-        data: { error: "Keyword identifier is required." },
+        data: { error: `Keyword 'identifier' is required.` },
       };
     }
     if (!keywordRegex.test(identifier)) {
       return {
         status: 400,
-        data: { error: "Invalid identifier" },
+        data: { error: `Invalid 'identifier'.` },
       };
     }
     const data = await Keyword.findOne({ name: identifier });
     if (!data) {
       return {
         status: 404,
-        data: { error: "Keyword not found" },
+        data: { error: `Keyword not found.` },
       };
     }
 
@@ -146,7 +126,7 @@ module.exports = {
 
     return {
       status: 200,
-      data: { message: "Keyword deleted" },
+      data: { message: `Keyword deleted.` },
     };
   },
 };
