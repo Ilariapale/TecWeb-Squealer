@@ -13,7 +13,7 @@ const {
   findNotification,
   checkForAllUsers,
   addedAndRemoved,
-  checkIfEditorsArrayIsValid,
+  checkIfArrayIsValid,
 } = require("./utils");
 const { MAX_DESCRIPTION_LENGTH, CHANNEL_NAME_MIN_LENGTH, CHANNEL_NAME_MAX_LENGTH, OFFICIAL_CHANNEL_NAME_MIN_LENGTH, OFFICIAL_CHANNEL_NAME_MAX_LENGTH } = require("./constants");
 module.exports = {
@@ -510,7 +510,7 @@ module.exports = {
         };
       }
       //Cambio gli editors
-      let response = checkIfEditorsArrayIsValid(editors_array);
+      let response = checkIfArrayIsValid(editors_array);
       if (!response.isValid) {
         return {
           status: 400,

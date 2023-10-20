@@ -26,6 +26,7 @@ const {
   checkIfRecipientsAreValid,
 } = require("./utils");
 
+const { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } = require("./constants");
 const { mentionNotification, squealInOfficialChannel } = require("./messages");
 
 //TODO tradurre tutti i commenti in inglese
@@ -47,10 +48,48 @@ module.exports = {
    * @param options.sort_by Can be "impressions", "reactions", "date", "comments"
    */
   getSqueals: async (options) => {
-    const { content_type, created_after, created_before, is_scheduled, min_reactions, min_balance, max_balance, is_in_official_channel, sort_order, sort_by } = options;
+    //TODO test pag_size and last_loaded e fare la stessa cosa per gli user
+    const {
+      pag_size,
+      last_loaded,
+      content_type,
+      created_after,
+      created_before,
+      is_scheduled,
+      min_reactions,
+      min_balance,
+      max_balance,
+      is_in_official_channel,
+      sort_order,
+      sort_by,
+    } = options;
     const sort_types = ["reactions", "impressions", "date"];
     const sort_orders = ["asc", "desc"];
     const pipeline = [];
+
+    if (!pag_size) {
+      pag_size = DEFAULT_PAGE_SIZE;
+    } else {
+      pag_size = parseInt(pag_size);
+      if (isNaN(pag_size || pag_size <= 0 || pag_size > MAX_PAGE_SIZE)) {
+        return {
+          status: 400,
+          data: { error: `'pag_size' must be a number between 1 and 100.` },
+        };
+      }
+    }
+    pipeline.push({ $limit: pag_size });
+
+    if (last_loaded) {
+      if (!mongooseObjectIdRegex.test(last_loaded)) {
+        return {
+          status: 400,
+          data: { error: `'last_loaded' must be a valid ObjectId.` },
+        };
+      }
+      pipeline.push({ $match: { _id: { $lt: last_loaded } } });
+    }
+
     if (content_type) {
       if (!contentTypes.includes(content_type)) {
         return {
@@ -508,6 +547,65 @@ module.exports = {
     } catch (error) {
       console.log(error);
     }
+  },
+
+  getHomeSqueals: async (options) => {
+    const { user_id, is_logged_in } = options;
+    let { last_loaded, pag_size } = options;
+    const query = {};
+    //check the parameters
+    if (!pag_size) {
+      pag_size = DEFAULT_PAGE_SIZE;
+    } else {
+      pag_size = parseInt(pag_size);
+      if (isNaN(pag_size || pag_size <= 0 || pag_size > MAX_PAGE_SIZE)) {
+        return {
+          status: 400,
+          data: { error: `'pag_size' must be a number between 1 and 100.` },
+        };
+      }
+    }
+
+    if (last_loaded) {
+      if (!mongooseObjectIdRegex.test(last_loaded)) {
+        return {
+          status: 400,
+          data: { error: `'last_loaded' must be a valid ObjectId.` },
+        };
+      }
+      query._id = { $lt: last_loaded };
+    }
+
+    if (!is_logged_in) {
+      query.is_in_official_channel = true;
+      //Utente non loggato, vede solo gli squeal nei canali ufficiali
+    } else {
+      //Utente loggato, vede gli squeal dei canali a cui è iscritto e quelli dei canali ufficiali, ma non quelli dei canali silenziati
+      const response = await findUser(user_id);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const user = response.data;
+      const subscribed_channels = user.subscribed_channels;
+      const muted_channels = user.preferences.muted_channels;
+      query.$or = [
+        { is_in_official_channel: true },
+        {
+          "recipients.channels": {
+            $in: subscribed_channels,
+            $nin: muted_channels,
+          },
+        },
+      ];
+    }
+    const squeals_array = await Squeal.find(query).sort({ created_at: -1 }).limit(pag_size).exec();
+    return {
+      status: 200,
+      data: squeals_array,
+    };
   },
 
   /**

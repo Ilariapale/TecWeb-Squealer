@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
+const { Notification, User, Squeal, Channel, Keyword, CommentSection } = require("./schemas");
 const {
   jwt,
   bcrypt,
@@ -15,6 +15,7 @@ const {
   findKeyword,
   findNotification,
   checkForAllNotifications,
+  checkIfArrayIsValid,
 } = require("./utils");
 const {
   welcomeNotification,
@@ -269,6 +270,15 @@ module.exports = {
         last_modified: Date.now(),
       });
       const firstSqueal = await newSqueal.save();
+
+      //create comment section
+      const newCommentSection = new CommentSection({
+        squeal_ref: firstSqueal._id,
+      });
+      const commentSection = await newCommentSection.save();
+
+      firstSqueal.comment_section = commentSection._id;
+      await firstSqueal.save();
 
       //create the notification and save it
       //quando creiamo uno squeal, mandare la notifica ai destinatari
@@ -599,10 +609,10 @@ module.exports = {
   requestSMM: async (options) => {
     const { identifier, user_id, action } = options;
 
-    if (!action) {
+    if (!action || !identifier || action === "" || identifier === "") {
       return {
         status: 400,
-        data: { error: `No 'action' specified` },
+        data: { error: `Both 'SMM_id' and 'action' must be specified.` },
       };
     }
 
@@ -731,10 +741,10 @@ module.exports = {
   handleVIPRequest: async (options) => {
     const { identifier, user_id, request_action } = options;
 
-    if (!request_action) {
+    if (!request_action || !identifier || request_action === "" || identifier === "") {
       return {
         status: 400,
-        data: { error: `No 'action' specified.` },
+        data: { error: `Both 'VIP_id' and 'action' must be specified.` },
       };
     }
 
@@ -1165,59 +1175,75 @@ module.exports = {
   },
 
   /**
-   * @param options.inlineReqJson.notificationArray Notifications identifier array
+   * @param options.inlineReqJson.notification_array Notifications identifier array
    * @param options.value New notification status
    */
   setNotificationStatus: async (options) => {
-    const { user_id, value } = options;
-    const { notificationArray } = options.inlineReqJson;
+    try {
+      const { user_id, value } = options;
+      const { notification_array } = options.inlineReqJson;
 
-    const new_is_unseen = value === "true" ? true : false;
+      const new_is_unseen = value === "true" ? true : value[0] == "true" ? true : false;
 
-    // Check if the required fields are present
-    if (notificationArray === undefined || notificationArray.length <= 0) {
-      return {
-        status: 400,
-        data: { error: `Notification 'identifier' is required.` },
-      };
-    }
-
-    // Check if the array contains only valid ids
-    for (let i = 0; i < notificationArray.length; i++) {
-      let notificationId = notificationArray[i];
-      if (mongooseObjectIdRegex.test(notificationId) === false) {
+      let data = checkIfArrayIsValid(notification_array);
+      if (!data.isValid) {
         return {
           status: 400,
-          data: { error: `Notification 'identifier' ${i} is not valid.` },
+          data: { error: `Notification 'identifier' is not valid.` },
         };
       }
-    }
+      const array = data.value;
 
-    let response = findUser(user_id);
-    if (response.status >= 300) {
-      //if the response is an error
+      // Check if the required fields are present
+      if (array === undefined || array.length <= 0) {
+        return {
+          status: 400,
+          data: { error: `Notification 'identifier' is required.` },
+        };
+      }
+
+      // Check if the array contains only valid ids
+      for (let i = 0; i < array.length; i++) {
+        let notificationId = array[i];
+        if (!mongooseObjectIdRegex.test(notificationId)) {
+          return {
+            status: 400,
+            data: { error: `Notification 'identifier' ${i} is not valid.` },
+          };
+        }
+      }
+
+      let response = await findUser(user_id);
+      if (response.status >= 300) {
+        //if the response is an error
+        return {
+          status: response.status,
+          data: { error: `'user_id' in token is not valid.` },
+        };
+      }
+      const reqSender = response.data;
+      //controllare che gli utenti esistano
+      response = await checkForAllNotifications(array, reqSender);
+      if (!response.notificationsOutcome) {
+        //if the response is an error
+        return {
+          status: 404,
+          data: { error: `One or more notifications not found.` },
+        };
+      }
+
+      await Notification.updateMany({ _id: { $in: response.notificationsArray } }, { $set: { is_unseen: new_is_unseen } });
+      // Return the result
       return {
-        status: response.status,
-        data: { error: `'user_id' in token is not valid.` },
+        status: 200,
+        data: { message: "Notifications updated successfully." },
+      };
+    } catch (error) {
+      console.log(error);
+      return {
+        status: 500,
+        data: { error: `Internal server error.` },
       };
     }
-    const reqSender = response.data;
-
-    //controllare che gli utenti esistano
-    response = await checkForAllNotifications(notificationArray, reqSender);
-    if (!response.notificationsOutcome) {
-      //if the response is an error
-      return {
-        status: response.status,
-        data: { error: `One or more notifications not found.` },
-      };
-    }
-
-    const updatedNotifications = await Notification.updateMany({ _id: { $in: response.notificationsArray } }, { $set: { is_unseen: new_is_unseen } });
-    // Return the result
-    return {
-      status: 200,
-      data: updatedNotifications,
-    };
   },
 };

@@ -83,44 +83,6 @@ router.get("/:identifier", verifyToken, async (req, res, next) => {
   }
 });
 
-router.delete("/SMM", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      user_id: req.user_id,
-    };
-
-    try {
-      const result = await users.removeSMM(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
-
-router.delete("/VIP", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      user_id: req.user_id,
-    };
-
-    try {
-      const result = await users.removeVIP(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
-
 router.delete("/:identifier", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -140,7 +102,89 @@ router.delete("/:identifier", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
+//users/SMM?action=send&SMM_id=paulpaccy     action=[withdraw, send] SMM_id=[username, id]
+router.patch("/SMM", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.query.SMM_id,
+      user_id: req.user_id,
+      action: req.query.action,
+    };
 
+    try {
+      const result = await users.requestSMM(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+//users/SMM
+router.delete("/SMM", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+    };
+
+    try {
+      const result = await users.removeSMM(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+//users/VIP?action=accept&VIP_id=paulpaccy
+router.patch("/VIP", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.query.VIP_id,
+      request_action: req.query.action,
+      user_id: req.user_id,
+    };
+
+    try {
+      const result = await users.handleVIPRequest(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+//users/VIP
+router.delete("/VIP", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+    };
+
+    try {
+      const result = await users.removeVIP(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+//users/paulpaccy/type   body: {account_type:"professional", professional_type:"SMM"}
 router.patch("/:identifier/type", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -162,52 +206,7 @@ router.patch("/:identifier/type", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
-//users/paulpaccy/SMMRequest?   action=send     action=withdraw
-router.patch("/:identifier/SMMRequest", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      identifier: req.params.identifier,
-      user_id: req.user_id,
-      action: req.query.action,
-    };
-
-    try {
-      const result = await users.requestSMM(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      console.error(err);
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
-
-//es. http://ijdoai.com/user/username/requestHandler?value=accept
-router.patch("/:identifier/VIP-request-handler", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      identifier: req.params.identifier,
-      request_action: req.query.action,
-      user_id: req.user_id,
-    };
-
-    try {
-      const result = await users.handleVIPRequest(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      console.error(err);
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
-
+//users/paulpaccy/profile   body: {profile_info: "Hey there, I'm Paul!", profile_picture: "TODO"}
 router.patch("/:identifier/profile", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -229,7 +228,7 @@ router.patch("/:identifier/profile", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
-
+//users/paulpaccy/password   body: {old_password: "123456", new_password: "1234567"}
 router.patch("/:identifier/password", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -251,8 +250,7 @@ router.patch("/:identifier/password", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
-
-//es. http://ijdoai.com/user/username/banstatus?value=true
+//users/username/banstatus?value=true
 router.patch("/:identifier/banstatus", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -273,7 +271,7 @@ router.patch("/:identifier/banstatus", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
-
+//users/notification?value=true   body:{notification_array: ["427618673", "427618674"]]}
 router.patch("/notification", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {

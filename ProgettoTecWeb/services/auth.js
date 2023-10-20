@@ -26,7 +26,7 @@ module.exports = {
       //username or password not provided
       return {
         status: 400,
-        data: { error: `'username' and 'password' must be specified.` },
+        data: { error: `Both 'username' and 'password' must be specified.` },
       };
     }
     // Implementa qui la logica di verifica delle credenziali dell'utente

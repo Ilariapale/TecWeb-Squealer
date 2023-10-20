@@ -518,12 +518,12 @@ async function updateRecipientsChannels(channels, squeal) {
   };
 }
 
-function checkIfEditorsArrayIsValid(editors) {
-  if (!editors) return { isValid: true, value: [] };
+function checkIfArrayIsValid(input_array) {
+  if (!input_array) return { isValid: true, value: [] };
   try {
-    editors = JSON.parse(editors);
-    if (!Array.isArray(editors)) return { isValid: false, value: undefined };
-    return { isValid: true, value: editors };
+    input_array = JSON.parse(input_array);
+    if (!Array.isArray(input_array)) return { isValid: false, value: undefined };
+    return { isValid: true, value: input_array };
   } catch (err) {
     return { isValid: false, value: undefined };
   }
@@ -695,7 +695,7 @@ module.exports = {
   checkForAllUsers,
   checkForAllNotifications,
   checkIfReactionsAreValid,
-  checkIfEditorsArrayIsValid,
+  checkIfArrayIsValid,
   verifyToken,
   generateToken,
   hasEnoughCharQuota,
