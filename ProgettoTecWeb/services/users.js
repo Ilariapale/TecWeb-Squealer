@@ -32,7 +32,7 @@ const {
   declinedSMMrequestNotification,
   updatedProfileTypeNotification,
 } = require("./messages");
-const { PASSWORD_MIN_LENGTH } = require("./constants");
+const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } = require("./constants");
 //--------------------------------------------------------------------------
 
 module.exports = {
@@ -46,163 +46,193 @@ module.exports = {
    * @param options.professional_type Filters users by professional type
    * @param options.sort_order Sorts users, can be either "asc" or "desc"
    * @param options.sort_by Sorts users by the specified field, it can be "username", "date", "squeals"
+   * @param options.pag_size Number of users to return
+   * @param options.last_loaded Last user loaded, used for pagination
    **/
-  //TESTED
   getUserList: async (options) => {
-    const { created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id, sort_order, sort_by } = options;
-    const sort_orders = ["asc", "desc"];
-    const sort_types = ["username", "date", "squeals"];
-    const pipeline = [];
+    try {
+      const { last_loaded, created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id, sort_order, sort_by } = options;
+      let { pag_size } = options;
+      const sort_orders = ["asc", "desc"];
+      const sort_types = ["username", "date", "squeals"];
+      const pipeline = [];
 
-    //ACCOUNT TYPE
-    if (account_type) {
-      if (!["standard", "verified", "professional", "moderator"].includes(account_type)) {
-        return {
-          status: 400,
-          data: { error: "'account_type' must be either 'standard', 'verified', 'professional' or 'moderator'." },
-        };
-      }
-      pipeline.push({ $match: { account_type: account_type } });
-    }
-
-    //PROFESSIONAL TYPE
-    if (professional_type) {
-      if (!["VIP", "SMM", "none"].includes(professional_type)) {
-        return {
-          status: 400,
-          data: { error: "'professional_type' must be either 'VIP', 'SMM' or 'none'." },
-        };
-      }
-      pipeline.push({ $match: { professional_type: professional_type } });
-    }
-
-    //CREATED AFTER
-    if (created_after) {
-      const date = Date.parse(created_after);
-      if (isNaN(date)) {
-        return {
-          status: 400,
-          data: { error: "'created_after' must be a valid date: 'YYYY-MM-DD'." },
-        };
-      }
-      pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
-    }
-
-    //CREATED BEFORE
-    if (created_before) {
-      const date = Date.parse(created_before);
-      if (isNaN(date)) {
-        return {
-          status: 400,
-          data: { error: "'created_before' must be a valid date: YYYY-MM-DD." },
-        };
-      }
-      pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
-    }
-
-    //PROJECTION
-    pipeline.push({
-      $project: {
-        _id: 1,
-        username: 1,
-        profile_info: 1,
-        profile_picture: 1,
-        created_at: 1,
-        professional_type: 1,
-        account_type: 1,
-        squeals_count: { $size: "$squeals.posted" },
-      },
-    });
-
-    //MIN AND MAX SQUEALS
-    if (max_squeals || min_squeals) {
-      const sizeMatch = {};
-      if (max_squeals) {
-        const int_max_squeals = parseInt(max_squeals);
-        if (isNaN(int_max_squeals) || int_max_squeals < 0) {
-          //return an error if the max_squeals is negative
+      if (last_loaded) {
+        if (!mongooseObjectIdRegex.test(last_loaded)) {
           return {
             status: 400,
-            data: { error: "'max_squeals' must be a positive integer." },
+            data: { error: `'last_loaded' must be a valid ObjectId.` },
           };
         }
-        sizeMatch.lt = int_max_squeals;
+        pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
       }
-      if (min_squeals) {
-        const int_min_squeals = parseInt(min_squeals);
-        if (isNaN(int_min_squeals) || int_min_squeals < 0) {
+
+      //ACCOUNT TYPE
+      if (account_type) {
+        if (!["standard", "verified", "professional", "moderator"].includes(account_type)) {
           return {
-            //return an error if the min_squeals is negative
             status: 400,
-            data: { error: "'min_squeals' must be a positive integer." },
+            data: { error: "'account_type' must be either 'standard', 'verified', 'professional' or 'moderator'." },
           };
         }
-        sizeMatch.gt = int_min_squeals;
+        pipeline.push({ $match: { account_type: account_type } });
       }
-      if (sizeMatch.lt != undefined && sizeMatch.gt != undefined && sizeMatch.lt < sizeMatch.gt) {
-        //return an error if the max_squeals is less than the min_squeals
+
+      //PROFESSIONAL TYPE
+      if (professional_type) {
+        if (!["VIP", "SMM", "none"].includes(professional_type)) {
+          return {
+            status: 400,
+            data: { error: "'professional_type' must be either 'VIP', 'SMM' or 'none'." },
+          };
+        }
+        pipeline.push({ $match: { professional_type: professional_type } });
+      }
+
+      //CREATED AFTER
+      if (created_after) {
+        const date = Date.parse(created_after);
+        if (isNaN(date)) {
+          return {
+            status: 400,
+            data: { error: "'created_after' must be a valid date: 'YYYY-MM-DD'." },
+          };
+        }
+        pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
+      }
+
+      //CREATED BEFORE
+      if (created_before) {
+        const date = Date.parse(created_before);
+        if (isNaN(date)) {
+          return {
+            status: 400,
+            data: { error: "'created_before' must be a valid date: YYYY-MM-DD." },
+          };
+        }
+        pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
+      }
+
+      //PROJECTION
+      pipeline.push({
+        $project: {
+          _id: 1,
+          username: 1,
+          profile_info: 1,
+          profile_picture: 1,
+          created_at: 1,
+          professional_type: 1,
+          account_type: 1,
+          squeals_count: { $size: "$squeals.posted" },
+        },
+      });
+
+      //MIN AND MAX SQUEALS
+      if (max_squeals || min_squeals) {
+        const sizeMatch = {};
+        if (max_squeals) {
+          const int_max_squeals = parseInt(max_squeals);
+          if (isNaN(int_max_squeals) || int_max_squeals < 0) {
+            //return an error if the max_squeals is negative
+            return {
+              status: 400,
+              data: { error: "'max_squeals' must be a positive integer." },
+            };
+          }
+          sizeMatch.lt = int_max_squeals;
+        }
+        if (min_squeals) {
+          const int_min_squeals = parseInt(min_squeals);
+          if (isNaN(int_min_squeals) || int_min_squeals < 0) {
+            return {
+              //return an error if the min_squeals is negative
+              status: 400,
+              data: { error: "'min_squeals' must be a positive integer." },
+            };
+          }
+          sizeMatch.gt = int_min_squeals;
+        }
+        if (sizeMatch.lt != undefined && sizeMatch.gt != undefined && sizeMatch.lt < sizeMatch.gt) {
+          //return an error if the max_squeals is less than the min_squeals
+          return {
+            status: 400,
+            data: { error: "'max_squeals' must be greater than min_squeals." },
+          };
+        }
+        pipeline.push({ $match: { squeals_count: { $gte: sizeMatch.gt || 0 } } });
+        pipeline.push({ $match: { squeals_count: { $lte: sizeMatch.lt || Number.MAX_SAFE_INTEGER } } });
+      }
+
+      //check for the request sender's role
+      let response = await findUser(user_id);
+      if (response.status >= 300) {
+        //if the response is an error
         return {
-          status: 400,
-          data: { error: "'max_squeals' must be greater than min_squeals." },
+          status: response.status,
+          data: { error: response.error },
         };
       }
-      pipeline.push({ $match: { squeals_count: { $gte: sizeMatch.gt || 0 } } });
-      pipeline.push({ $match: { squeals_count: { $lte: sizeMatch.lt || Number.MAX_SAFE_INTEGER } } });
-    }
+      const reqSender = response.data;
 
-    //check for the request sender's role
-    let response = await findUser(user_id);
-    if (response.status >= 300) {
-      //if the response is an error
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    const reqSender = response.data;
+      //If the request sender is not a moderator, filter the inactive users
+      if (reqSender.account_type !== "moderator") {
+        pipeline.push({ $match: { is_active: true } });
+      }
 
-    //If the request sender is not a moderator, filter the inactive users
-    if (reqSender.account_type !== "moderator") {
-      pipeline.push({ $match: { is_active: true } });
-    }
-
-    //SORTING
-    if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
-      return {
-        status: 400,
-        data: { error: "Both 'sort_order' and 'sort_by' must be specified." },
-      };
-    }
-
-    if (sort_order && sort_by) {
-      if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+      //SORTING
+      if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
         return {
           status: 400,
-          data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join("', '")}'. 'sort_order' options are '${sort_orders.join("', '")}'.` },
+          data: { error: "Both 'sort_order' and 'sort_by' must be specified." },
         };
       }
 
-      const order = sort_order === "asc" ? 1 : -1;
+      if (sort_order && sort_by) {
+        if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+          return {
+            status: 400,
+            data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join("', '")}'. 'sort_order' options are '${sort_orders.join("', '")}'.` },
+          };
+        }
 
-      if (sort_by === "username") pipeline.push({ $sort: { username: order } });
-      else if (sort_by === "date") pipeline.push({ $sort: { created_at: order } });
-      else if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order } });
-    }
+        const order = sort_order === "asc" ? 1 : -1;
 
-    //execute the query
-    const data = await User.aggregate(pipeline).exec();
+        if (sort_by === "username") pipeline.push({ $sort: { username: order } });
+        else if (sort_by === "date") pipeline.push({ $sort: { created_at: order } });
+        else if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order } });
+      }
 
-    //check if the query returned any result
-    if (data.length <= 0) {
+      //PAGE SIZE
+      if (!pag_size) {
+        pag_size = DEFAULT_PAGE_SIZE;
+      } else {
+        pag_size = parseInt(pag_size);
+        if (isNaN(pag_size || pag_size <= 0 || pag_size > MAX_PAGE_SIZE)) {
+          return {
+            status: 400,
+            data: { error: `'pag_size' must be a number between 1 and 100.` },
+          };
+        }
+      }
+      pipeline.push({ $limit: pag_size });
+      console.log(pipeline);
+      //execute the query
+      const data = await User.aggregate(pipeline).exec();
+
+      //check if the query returned any result
+      if (data.length <= 0) {
+        return {
+          status: 404,
+          data: { error: "No users found." },
+        };
+      }
       return {
-        status: 404,
-        data: { error: "No users found." },
+        status: 200,
+        data: data,
       };
+    } catch (err) {
+      console.log(err);
     }
-    return {
-      status: 200,
-      data: data,
-    };
   },
 
   /**
@@ -604,6 +634,7 @@ module.exports = {
   /**
    * This function is used by a VIP to send a request to a SMM
    * @param options.identifier SMM's identifier, can be either username or userId
+   * @param option.action Action to perform, can be either "send" or "withdraw"
    */
   //TESTED
   requestSMM: async (options) => {
@@ -916,6 +947,7 @@ module.exports = {
    * This function is used to remove the SMM
    * @param options.identifier Identifier of the VIP to remove
    */
+  //TODO testare
   removeVIP: async (options) => {
     const { identifier, user_id } = options;
     let response = await findUser(user_id);
@@ -934,6 +966,7 @@ module.exports = {
         data: { error: `You are not a SMM.` },
       };
     }
+    //TODO identifier è obbligatorio.
     //check if the user has a VIP
     if (!user.managed_accounts.includes(identifier)) {
       return {

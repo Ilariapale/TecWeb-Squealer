@@ -51,6 +51,8 @@ router.get("/", verifyToken, async (req, res, next) => {
       sort_order: req.query.sort_order,
       sort_by: req.query.sort_by,
       user_id: req.user_id,
+      pag_size: req.query.pag_size,
+      last_loaded: req.query.last_loaded,
     };
 
     try {
@@ -169,6 +171,7 @@ router.patch("/VIP", verifyToken, async (req, res, next) => {
 router.delete("/VIP", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
+      identifier: req.query.VIP_id,
       user_id: req.user_id,
     };
 
@@ -251,7 +254,7 @@ router.patch("/:identifier/password", verifyToken, async (req, res, next) => {
   }
 });
 //users/username/banstatus?value=true
-router.patch("/:identifier/banstatus", verifyToken, async (req, res, next) => {
+router.patch("/:identifier/ban-status", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,

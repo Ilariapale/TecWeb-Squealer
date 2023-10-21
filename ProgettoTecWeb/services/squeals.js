@@ -45,40 +45,18 @@ module.exports = {
    * @param options.max_balance Filter squeals with less than n balance
    * @param options.is_in_official_channel Filter squeals by official channel status
    * @param options.sort_order Sorts squeals, can be either "asc" or "desc"
-   * @param options.sort_by Can be "impressions", "reactions", "date", "comments"
+   * @param options.sort_by Can be "impressions", "reactions", "date"
+   * @param options.pag_size Number of squeals to retrieve
+   * @param options.last_loaded Last loaded squeal id
    */
+  //TODO controllare squeal in canale ufficiale, canale cancellato
   getSqueals: async (options) => {
-    //TODO test pag_size and last_loaded e fare la stessa cosa per gli user
-    const {
-      pag_size,
-      last_loaded,
-      content_type,
-      created_after,
-      created_before,
-      is_scheduled,
-      min_reactions,
-      min_balance,
-      max_balance,
-      is_in_official_channel,
-      sort_order,
-      sort_by,
-    } = options;
+    const { last_loaded, content_type, created_after, created_before, is_scheduled, min_reactions, min_balance, max_balance, is_in_official_channel, sort_order, sort_by } =
+      options;
+    let { pag_size } = options;
     const sort_types = ["reactions", "impressions", "date"];
     const sort_orders = ["asc", "desc"];
     const pipeline = [];
-
-    if (!pag_size) {
-      pag_size = DEFAULT_PAGE_SIZE;
-    } else {
-      pag_size = parseInt(pag_size);
-      if (isNaN(pag_size || pag_size <= 0 || pag_size > MAX_PAGE_SIZE)) {
-        return {
-          status: 400,
-          data: { error: `'pag_size' must be a number between 1 and 100.` },
-        };
-      }
-    }
-    pipeline.push({ $limit: pag_size });
 
     if (last_loaded) {
       if (!mongooseObjectIdRegex.test(last_loaded)) {
@@ -87,7 +65,7 @@ module.exports = {
           data: { error: `'last_loaded' must be a valid ObjectId.` },
         };
       }
-      pipeline.push({ $match: { _id: { $lt: last_loaded } } });
+      pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
     }
 
     if (content_type) {
@@ -228,7 +206,20 @@ module.exports = {
       else if (sort_by == "impressions") pipeline.push({ $sort: { impressions: order } });
       else if (sort_by == "date") pipeline.push({ $sort: { created_at: order } });
     }
+    if (!pag_size) {
+      pag_size = DEFAULT_PAGE_SIZE;
+    } else {
+      pag_size = parseInt(pag_size);
+      if (isNaN(pag_size || pag_size <= 0 || pag_size > MAX_PAGE_SIZE)) {
+        return {
+          status: 400,
+          data: { error: `'pag_size' must be a number between 1 and 100.` },
+        };
+      }
+    }
+    pipeline.push({ $limit: pag_size });
 
+    console.log(pipeline);
     //execute the query
     const data = await Squeal.aggregate(pipeline).exec();
 
@@ -311,11 +302,10 @@ module.exports = {
       data: squeal,
     };
   },
-
+  //TODO is_scheduled squeals
   /**
-   * @param options.squealInput.user_id Request sender's user id
    * @param options.squealInput.content_type Type of the squeal content, it can be "text", "image", "video" or "position"
-   * @param options.squealInput.content Squeal content based on the content_type, fill it in content.text, an content.image, content.video or content.position
+   * @param options.squealInput.content Squeal content, it can be a string, an image url, a video url or a position object
    * @param options.squealInput.is_scheduled It tells you whether or not the squeal is scheduled
    * @param options.squealInput.recipients Array of users, channels or keywords, with no limit and no impact on the quota.
    */
@@ -549,6 +539,11 @@ module.exports = {
     }
   },
 
+  /**
+   * @param j  Squeal's identifier, can be either id
+   *
+   *
+   */
   getHomeSqueals: async (options) => {
     const { user_id, is_logged_in } = options;
     let { last_loaded, pag_size } = options;
@@ -729,6 +724,7 @@ module.exports = {
    * @param options.inlineReqJson.recipients Array of users and channels (no keywords allowed)
    * @param options.inlineReqJson.reactions Array like {like: 0, love: 0, laugh: 0, dislike: 0, disgust: 0, disagree: 0}
    */
+  //TODO aggiungere anche le keywords
   updateSqueal: async (options) => {
     const { identifier, user_id } = options;
     const recipients = options.inlineReqJson.recipients;

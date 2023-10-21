@@ -6,7 +6,6 @@ const router = new express.Router();
 
 router.get("/", verifyToken, async (req, res, next) => {
   //if user is not logged in, filter only official channels
-  console.log(req.isTokenValid);
   let options = {
     content_type: req.query.content_type,
     created_after: req.query.created_after,
@@ -19,7 +18,7 @@ router.get("/", verifyToken, async (req, res, next) => {
     sort_by: req.query.sort_by,
     pag_size: req.query.pag_size,
     last_loaded: req.query.last_loaded,
-    is_in_official_channel: !req.isTokenValid || req.query.isInOfficialChannel,
+    is_in_official_channel: !req.isTokenValid || req.query.is_in_official_channel,
   };
 
   try {
@@ -120,7 +119,7 @@ router.delete("/:identifier", verifyToken, async (req, res, next) => {
   }
 });
 
-router.patch("/:identifier/:reaction", verifyToken, async (req, res, next) => {
+router.patch("/:identifier/reaction/:reaction", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,

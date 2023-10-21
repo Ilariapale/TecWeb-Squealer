@@ -15,7 +15,15 @@ const {
   addedAndRemoved,
   checkIfArrayIsValid,
 } = require("./utils");
-const { MAX_DESCRIPTION_LENGTH, CHANNEL_NAME_MIN_LENGTH, CHANNEL_NAME_MAX_LENGTH, OFFICIAL_CHANNEL_NAME_MIN_LENGTH, OFFICIAL_CHANNEL_NAME_MAX_LENGTH } = require("./constants");
+const {
+  MAX_DESCRIPTION_LENGTH,
+  CHANNEL_NAME_MIN_LENGTH,
+  CHANNEL_NAME_MAX_LENGTH,
+  OFFICIAL_CHANNEL_NAME_MIN_LENGTH,
+  OFFICIAL_CHANNEL_NAME_MAX_LENGTH,
+  DEFAULT_PAGE_SIZE,
+  MAX_PAGE_SIZE,
+} = require("./constants");
 module.exports = {
   //DONE Controllati i casi in cui l'utente che fa richiesta è bannato
 
@@ -29,12 +37,14 @@ module.exports = {
    * @param options.max_subscribers Filter channels by maximum subscribers
    * @param options.min_squeals Filter channels by minimum squeals
    * @param options.max_squeals Filter channels by maximum squeals
-   *
    * @param options.sort_order Sorts channels, can be either "asc" or "desc"
    * @param options.sort_by Sorts channels by the specified field, it can be "name", "date", "squeals", "subscribers"
+   * @param options.pag_size Number of channels to retrieve
+   * @param options.last_loaded Last loaded channel's id
    */
   getChannels: async (options) => {
-    const { name, created_after, created_before, is_official, min_subscribers, max_subscribers, min_squeals, max_squeals, sort_order, sort_by, user_id } = options;
+    const { last_loaded, name, created_after, created_before, is_official, min_subscribers, max_subscribers, min_squeals, max_squeals, sort_order, sort_by, user_id } = options;
+    let { pag_size } = options;
     const sort_orders = ["asc", "desc"];
     const sort_types = ["name", "date", "squeals", "subscribers"];
     const pipeline = [];
@@ -48,6 +58,17 @@ module.exports = {
       };
     }
     const reqSender = response.data;
+
+    if (last_loaded) {
+      if (!mongooseObjectIdRegex.test(last_loaded)) {
+        return {
+          status: 400,
+          data: { error: `'last_loaded' must be a valid ObjectId.` },
+        };
+      }
+      pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
+    }
+
     if (reqSender.account_type !== "moderator") {
       pipeline.push({ $match: { is_blocked: false } });
     }
@@ -161,25 +182,34 @@ module.exports = {
         data: { error: `Both 'sort_order' and 'sort_by' must be specified.` },
       };
     }
-    try {
-      if (sort_order && sort_by) {
-        if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
-          return {
-            status: 400,
-            data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join(`', '`)}'. 'sort_order' options are '${sort_orders.join(`', '`)}'.` },
-          };
-        }
-
-        const order = sort_order === "asc" ? 1 : -1;
-
-        if (sort_by === "name") pipeline.push({ $sort: { name: order } });
-        if (sort_by === "date") pipeline.push({ $sort: { created_at: order } });
-        if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order } });
-        if (sort_by === "subscribers") pipeline.push({ $sort: { subscribers_count: order } });
+    if (sort_order && sort_by) {
+      if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+        return {
+          status: 400,
+          data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join(`', '`)}'. 'sort_order' options are '${sort_orders.join(`', '`)}'.` },
+        };
       }
-    } catch (err) {
-      console.log(err);
+
+      const order = sort_order === "asc" ? 1 : -1;
+
+      if (sort_by === "name") pipeline.push({ $sort: { name: order } });
+      if (sort_by === "date") pipeline.push({ $sort: { created_at: order } });
+      if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order } });
+      if (sort_by === "subscribers") pipeline.push({ $sort: { subscribers_count: order } });
     }
+
+    if (!pag_size) {
+      pag_size = DEFAULT_PAGE_SIZE;
+    } else {
+      pag_size = parseInt(pag_size);
+      if (isNaN(pag_size || pag_size <= 0 || pag_size > MAX_PAGE_SIZE)) {
+        return {
+          status: 400,
+          data: { error: `'pag_size' must be a number between 1 and 100.` },
+        };
+      }
+    }
+    pipeline.push({ $limit: pag_size });
 
     const data = await Channel.aggregate(pipeline).exec();
 
@@ -724,7 +754,7 @@ module.exports = {
   /**
    * Toggle is_blocked field in user object, means that the channel is blocked or not
    * @param options.identifier Channel's identifier, can be either username or userId
-   * @param options.query.value Query value which can be either "true"  or "false"
+   * @param options.value Query value which can be either "true"  or "false"
    */
   //TESTED
   channelBlockedStatus: async (options) => {

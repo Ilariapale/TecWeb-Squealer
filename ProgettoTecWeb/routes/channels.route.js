@@ -17,6 +17,8 @@ router.get("/", verifyToken, async (req, res, next) => {
       sort_by: req.query.sort_by,
       sort_order: req.query.sort_order,
       user_id: req.user_id,
+      pag_size: req.query.pag_size,
+      last_loaded: req.query.last_loaded,
     };
 
     try {
@@ -198,11 +200,11 @@ router.patch("/:identifier/muted-status", verifyToken, async (req, res, next) =>
   }
 });
 
-router.patch("/:identifier/:squealIdentifier", verifyToken, async (req, res, next) => {
+router.patch("/:identifier/:squeal_identifier", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,
-      squealIdentifier: req.params.squealIdentifier,
+      squealIdentifier: req.params.squeal_identifier,
       user_id: req.user_id,
     };
     try {
