@@ -950,6 +950,14 @@ module.exports = {
   //TODO testare
   removeVIP: async (options) => {
     const { identifier, user_id } = options;
+
+    if (!identifier || identifier === "" || !mongooseObjectIdRegex.test(identifier)) {
+      return {
+        status: 400,
+        data: { error: `Missing or invalid value for 'identifier' field.` },
+      };
+    }
+
     let response = await findUser(user_id);
     if (response.status >= 300) {
       //if the response is an error
@@ -966,7 +974,7 @@ module.exports = {
         data: { error: `You are not a SMM.` },
       };
     }
-    //TODO identifier è obbligatorio.
+
     //check if the user has a VIP
     if (!user.managed_accounts.includes(identifier)) {
       return {

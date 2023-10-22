@@ -49,6 +49,24 @@ const reactionTypes = ["like", "dislike", "love", "laugh", "disgust", "disagree"
 
 const contentTypes = ["text", "image", "video", "position", "deleted"];
 
+function replaceString(string, num, date) {
+  const date_options = { year: "numeric", month: "long", day: "numeric" };
+  const english_date = date.toLocaleDateString("en-US", date_options);
+  const italian_date = date.toLocaleDateString("it-IT", date_options);
+
+  const time_options = { hour: "numeric", minute: "numeric", hour12: false, timeZone: "Europe/Rome", timeZoneName: "short" };
+  const english_time = date.toLocaleTimeString("en-US", time_options);
+  const italian_time = date.toLocaleTimeString("it-IT", time_options);
+
+  string = string.replace(/{num}/g, num);
+
+  string = string.replace(/{date-it}/g, italian_date).replace(/{time-it}/g, italian_time);
+
+  string = string.replace(/{date-en}/g, english_date).replace(/{time-en}/g, english_time);
+
+  return string;
+}
+
 //FINDERS
 async function findUser(identifier) {
   let response = {};
@@ -683,6 +701,7 @@ function verifyToken(req, res, next) {
 module.exports = {
   jwt,
   bcrypt,
+  replaceString,
   verifyToken,
   findUser,
   findSqueal,

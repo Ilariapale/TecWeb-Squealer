@@ -32,6 +32,7 @@ router.get("/", verifyToken, async (req, res, next) => {
   }
 });
 
+//TODO lato client, aggiungere gli squeal temporalizzati
 router.post("/", verifyToken, async (req, res) => {
   // Verifica la proprietà req.utenteLoggato per decidere come gestire la richiesta
   if (req.isTokenValid) {

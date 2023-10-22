@@ -8,6 +8,7 @@ const {
   mongooseObjectIdRegex,
   reactionTypes,
   contentTypes,
+  replaceString,
   findUser,
   findSqueal,
   findChannel,
@@ -445,6 +446,8 @@ module.exports = {
         };
       }
 
+      const date = new Date();
+
       //create the hex_id from the length of the user squeals array
       hex_id = author.squeals?.posted?.length || 0;
       //create the squeal object
@@ -453,14 +456,14 @@ module.exports = {
         user_id: author._id,
         is_scheduled: is_scheduled || false,
         content_type: content_type,
-        content: content,
+        content: replaceString(content, hex_id, date),
         recipients: {
           users: usersArray,
           channels: channelsArray,
           keywords: keywords,
         },
-        created_at: new Date(),
-        last_modified: new Date(),
+        created_at: date,
+        last_modified: date,
         is_in_official_channel: hasOfficialChannels,
       });
 
@@ -721,10 +724,9 @@ module.exports = {
 
   /**
    * @param options.identifier Squeal's id
-   * @param options.inlineReqJson.recipients Array of users and channels (no keywords allowed)
+   * @param options.inlineReqJson.recipients Array of users and channels
    * @param options.inlineReqJson.reactions Array like {like: 0, love: 0, laugh: 0, dislike: 0, disgust: 0, disagree: 0}
    */
-  //TODO aggiungere anche le keywords
   updateSqueal: async (options) => {
     const { identifier, user_id } = options;
     const recipients = options.inlineReqJson.recipients;
