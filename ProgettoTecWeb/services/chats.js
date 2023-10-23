@@ -1,14 +1,14 @@
 const mongoose = require("mongoose");
 const { Notification, User, Squeal, Channel, Keyword, Chat } = require("./schemas");
-const { findUser, findChat } = require("./utils");
-const { DIRECT_MESSAGE_MAX_LENGTH } = require("./constants");
+const { findUser, findChat, mongooseObjectIdRegex } = require("./utils");
+const { DIRECT_MESSAGE_MAX_LENGTH, MESSAGES_TO_LOAD } = require("./constants");
 
 module.exports = {
   /**
    * @param options.identifier The identifier of the chat
    */
-  getChat: async (options) => {
-    const { identifier, user_id } = options;
+  getChatById: async (options) => {
+    const { identifier, user_id, last_loaded_message } = options;
 
     let response = await findChat(identifier);
     if (response.status >= 300) {
@@ -39,6 +39,73 @@ module.exports = {
         data: { error: `Chat not found.` },
       };
     }
+
+    //check if the last_loaded_message is valid and exists
+    if (!last_loaded_message) {
+      chat.messages = chat.messages.slice(-MESSAGES_TO_LOAD);
+      return {
+        status: 200,
+        data: chat,
+      };
+    }
+    if (!mongooseObjectIdRegex.test(last_loaded_message)) {
+      return {
+        status: 400,
+        data: { error: `Invalid last_loaded_message.` },
+      };
+    }
+
+    let targetMessageIndex = chat.messages.findIndex((message) => message._id == last_loaded_message);
+
+    let from = targetMessageIndex - MESSAGES_TO_LOAD >= 0 ? targetMessageIndex - MESSAGES_TO_LOAD : 0;
+    let to = targetMessageIndex >= 0 ? targetMessageIndex : 0;
+
+    chat.messages = chat.messages.slice(from, to);
+
+    if (chat.messages.length == 0) {
+      return {
+        status: 404,
+        data: { error: `No messages found.` },
+      };
+    }
+
+    return {
+      status: 200,
+      data: chat,
+    };
+  },
+
+  getChatByUser: async (options) => {
+    const { identifier, user_id } = options;
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const sender = response.data;
+
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const recipient = response.data;
+
+    let chat = await Chat.findOne({ partecipants: { $all: [sender._id, recipient._id] } });
+
+    if (!chat) {
+      return {
+        status: 404,
+        data: { error: `Chat not found.` },
+      };
+    }
+
+    //prendi gli ultimi 20 messaggi
+    chat.messages = chat.messages.slice(-MESSAGES_TO_LOAD);
 
     return {
       status: 200,
@@ -109,6 +176,8 @@ module.exports = {
     recipient.direct_chats.push(chat._id);
     await sender.save();
     await recipient.save();
+
+    chat.messages = chat.messages.slice(-MESSAGES_TO_LOAD);
     return {
       status: 200,
       data: chat,

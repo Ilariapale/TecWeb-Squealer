@@ -24,13 +24,15 @@ const {
   updateRecipientsKeywords,
   containsOfficialChannels,
 } = require("./utils");
+const { COMMENTS_TO_LOAD } = require("./constants");
 
 const { mentionNotification, squealInOfficialChannel, someoneCommentedYourSqueal } = require("./messages");
+
 module.exports = {
   getCommentSection: async (options) => {
-    const { identifier, user_id } = options;
+    const { identifier, user_id, last_comment_loaded, is_token_valid } = options;
 
-    let response = findCommentSection(identifier);
+    let response = await findCommentSection(identifier);
     if (response.status >= 300) {
       return {
         status: response.status,
@@ -39,9 +41,55 @@ module.exports = {
     }
     const commentSection = response.data;
 
+    if (!is_token_valid) {
+      let response = await findSqueal(commentSection.squeal_ref);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const squeal = response.data;
+
+      if (!squeal.is_in_official_channel) {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to see this comment section.` },
+        };
+      }
+    }
+
+    if (!last_comment_loaded) {
+      commentSection.comments_array = commentSection.comments_array.slice(-COMMENTS_TO_LOAD);
+      return {
+        status: 200,
+        data: commentSection,
+      };
+    }
+    if (!mongooseObjectIdRegex.test(last_comment_loaded)) {
+      return {
+        status: 400,
+        data: { error: `Invalid last_loaded_message.` },
+      };
+    }
+
+    let targetCommentIndex = commentSection.comments_array.findIndex((comment) => comment._id == last_comment_loaded);
+
+    let from = targetCommentIndex - COMMENTS_TO_LOAD >= 0 ? targetCommentIndex - COMMENTS_TO_LOAD : 0;
+    let to = targetCommentIndex >= 0 ? targetCommentIndex : 0;
+
+    commentSection.comments_array = commentSection.comments_array.slice(from, to);
+
+    if (commentSection.comments_array.length == 0) {
+      return {
+        status: 404,
+        data: { error: `No messages found.` },
+      };
+    }
+
     return {
       status: 200,
-      data: { commentSection },
+      data: commentSection,
     };
   },
 

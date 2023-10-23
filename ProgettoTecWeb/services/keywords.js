@@ -92,7 +92,24 @@ module.exports = {
    * @param options.identifier Identifier is the keyword's name
    */
   deleteKeyword: async (options) => {
-    const { identifier } = options;
+    const { identifier, user_id } = options;
+
+    //check if the user is an admin
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const user = response.data;
+    if (user.account_type !== "moderator") {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to delete keywords.` },
+      };
+    }
+
     if (!identifier) {
       return {
         status: 400,
@@ -105,8 +122,8 @@ module.exports = {
         data: { error: `Invalid 'identifier'.` },
       };
     }
-    const data = await Keyword.findOne({ name: identifier });
-    if (!data) {
+    const keyword = await Keyword.findOne({ name: identifier });
+    if (!keyword) {
       return {
         status: 404,
         data: { error: `Keyword not found.` },
@@ -115,8 +132,8 @@ module.exports = {
 
     //delete the keyword from the squeals and from the db
     const updateSquealsPromises = [];
-    for (const squeal of data.squeals) {
-      let promise = Squeal.findByIdAndUpdate(squeal, { $pull: { "recipient.keywords": identifier } });
+    for (const squeal of keyword.squeals) {
+      let promise = Squeal.findByIdAndUpdate(squeal, { $pull: { "recipients.keywords": keyword.name } });
       updateSquealsPromises.push(promise);
     }
     await Promise.all(updateSquealsPromises);

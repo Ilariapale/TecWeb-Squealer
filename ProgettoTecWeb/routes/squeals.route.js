@@ -18,6 +18,7 @@ router.get("/", verifyToken, async (req, res, next) => {
     sort_by: req.query.sort_by,
     pag_size: req.query.pag_size,
     last_loaded: req.query.last_loaded,
+    keywords: req.query.keywords,
     is_in_official_channel: !req.isTokenValid || req.query.is_in_official_channel,
   };
 

@@ -25,6 +25,7 @@ const {
   updateRecipientsKeywords,
   containsOfficialChannels,
   checkIfRecipientsAreValid,
+  checkIfArrayIsValid,
 } = require("./utils");
 
 const { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } = require("./constants");
@@ -52,8 +53,20 @@ module.exports = {
    */
   //TODO controllare squeal in canale ufficiale, canale cancellato
   getSqueals: async (options) => {
-    const { last_loaded, content_type, created_after, created_before, is_scheduled, min_reactions, min_balance, max_balance, is_in_official_channel, sort_order, sort_by } =
-      options;
+    const {
+      keywords,
+      last_loaded,
+      content_type,
+      created_after,
+      created_before,
+      is_scheduled,
+      min_reactions,
+      min_balance,
+      max_balance,
+      is_in_official_channel,
+      sort_order,
+      sort_by,
+    } = options;
     let { pag_size } = options;
     const sort_types = ["reactions", "impressions", "date"];
     const sort_orders = ["asc", "desc"];
@@ -99,6 +112,14 @@ module.exports = {
         };
       }
       pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
+    }
+
+    if (keywords) {
+      let keywordsArray = keywords;
+      if (!Array.isArray(keywords)) {
+        keywordsArray = [keywords];
+      }
+      pipeline.push({ $match: { "recipients.keywords": { $all: keywordsArray } } });
     }
 
     //check if the request has specified is_scheduled
@@ -188,6 +209,8 @@ module.exports = {
       pipeline.push({ $match: { reactions_count: { $gte: minReactions } } });
     }
 
+    //check if the ------------------------
+
     if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
       return {
         status: 400,
@@ -220,7 +243,6 @@ module.exports = {
     }
     pipeline.push({ $limit: pag_size });
 
-    console.log(pipeline);
     //execute the query
     const data = await Squeal.aggregate(pipeline).exec();
 
