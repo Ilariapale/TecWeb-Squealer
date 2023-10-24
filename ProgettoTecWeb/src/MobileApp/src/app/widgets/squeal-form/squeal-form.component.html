@@ -5,7 +5,7 @@
   <div class="squeal-header">
     <img src="../../assets/imgs/logo.png" alt="" class="avatar" />
     <div class="squeal-header-info">
-      Nickname<span>@username</span><span></span>
+      {{user.account_type}}<span>@{{user.username}}</span><span></span>
       <form [formGroup]="squealForm" (ngSubmit)="createSqueal()">
         <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
           placeholder="Scrivi il tuo squeal"></textarea>

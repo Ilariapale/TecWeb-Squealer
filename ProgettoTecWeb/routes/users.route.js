@@ -27,6 +27,20 @@ const { stringify } = require("querystring");
  }
 */
 
+router.get("/username", async (req, res, next) => {
+  if (req.isTokenValid) {
+    const options = { userInput: req.body };
+    try {
+      const result = await users.getUsername(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({ error: err || "Something went wrong." });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
 //Token not required for creating an account
 router.post("/", async (req, res, next) => {
   const options = { userInput: req.body };
@@ -34,8 +48,7 @@ router.post("/", async (req, res, next) => {
     const result = await users.createUser(options);
     res.status(result.status || 200).send(result.data);
   } catch (err) {
-    console.error(err);
-    return res.status(500).send(err.message);
+    return res.status(500).send({ error: err || "Something went wrong." });
   }
 });
 

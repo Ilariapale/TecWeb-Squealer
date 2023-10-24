@@ -41,7 +41,7 @@ module.exports = {
       //username not valid
       return {
         status: 400,
-        data: { error: `'username' not valid.` },
+        data: { error: `'username' format is not valid.` },
       };
     }
 
@@ -63,7 +63,7 @@ module.exports = {
         data: { error: `Wrong credentials.` },
       };
     }
-    const token = generateToken(username); // Funzione per generare il token JWT (da implementare)
+    const token = generateToken(user.data); // Funzione per generare il token JWT (da implementare)
     return {
       status: 200,
       data: { token },

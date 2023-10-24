@@ -142,6 +142,7 @@ module.exports = {
     pipeline.push({
       $project: {
         _id: 1,
+        username: 1,
         hex_id: 1,
         user_id: 1,
         is_scheduled: 1,
@@ -305,7 +306,6 @@ module.exports = {
           data: { error: `Squeal not found.` },
         };
       }
-      console.log(is_in_official_channel);
       const squeal_response = await findSqueal(user.squeals.posted[hex], is_in_official_channel);
       if (squeal_response.status >= 300) {
         return {
@@ -474,6 +474,7 @@ module.exports = {
       hex_id = author.squeals?.posted?.length || 0;
       //create the squeal object
       const newSqueal = new Squeal({
+        username: author.username,
         hex_id: hex_id,
         user_id: author._id,
         is_scheduled: is_scheduled || false,
@@ -565,9 +566,9 @@ module.exports = {
   },
 
   /**
-   * @param j  Squeal's identifier, can be either id
-   *
-   *
+   * @param is_logged_in  Whether the user is logged in or not
+   * @param last_loaded   Last loaded squeal id
+   * @param pag_size      Number of squeals to retrieve
    */
   getHomeSqueals: async (options) => {
     const { user_id, is_logged_in } = options;
@@ -675,8 +676,8 @@ module.exports = {
   },
 
   /**
-   * @param options.identifier
-   * @param options.reaction
+   * @param options.identifier  Squeal's identifier, can be either id
+   * @param options.reaction    Reaction type one of the following: (like, love, laugh, dislike, disgust, disagree)
    */
   addReaction: async (options) => {
     const { identifier, reaction, user_id } = options;

@@ -36,8 +36,14 @@ app.use(upload.array());
 app.use(express.static("public"));
 
 //app.use(cookieParser());
-
 require("./routes")(app);
+
+//Angular app -------------------
+app.use(express.static(__dirname + "\\public\\dist\\mobile-app"));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "\\public\\dist\\mobile-app\\index.html"));
+});
+//End angular app ---------------
 
 // catch 404
 app.use((req, res, next) => {
@@ -57,6 +63,7 @@ module.exports = app;
 
 app.listen(PORT, () => {
   console.log(`Express Server started on Port ${app.get("port")} | Environment : ${app.get("env")}`);
+  console.log("" + __dirname + "\\src\\MobileApp");
 });
 
 db.dbconnect();

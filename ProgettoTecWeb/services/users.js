@@ -36,6 +36,23 @@ const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } = require("./con
 //--------------------------------------------------------------------------
 
 module.exports = {
+  getUsername: async (options) => {
+    const { user_id } = options;
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const user = response.data;
+    return {
+      status: 200,
+      data: user.username,
+    };
+  },
+
   /**
    * Get users list filtering by creationDate and squeals count
    * @param options.created_after Filter users created after the specified date, object with year, month and day properties
@@ -49,6 +66,7 @@ module.exports = {
    * @param options.pag_size Number of users to return
    * @param options.last_loaded Last user loaded, used for pagination
    **/
+
   getUserList: async (options) => {
     try {
       const { last_loaded, created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id, sort_order, sort_by } = options;
@@ -292,6 +310,7 @@ module.exports = {
       }
       // Create the first squeal and save it
       const newSqueal = new Squeal({
+        username: user.username,
         hex_id: 0,
         user_id: user._id,
         content_type: "text",

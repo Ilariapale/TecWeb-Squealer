@@ -225,6 +225,7 @@ const SquealSchema = new mongoose.Schema({
   //_id: { type: mongoose.Types.ObjectId },
   hex_id: { type: Number, index: true },
   user_id: { type: mongoose.Types.ObjectId, ref: "User", required: true },
+  username: { type: String, required: true },
   is_scheduled: { type: Boolean, default: false },
   content_type: { type: String, enum: ["text", "image", "video", "position", "deleted"], default: "text" },
   content: { type: String, default: "" },

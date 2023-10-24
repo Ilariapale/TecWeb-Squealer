@@ -1,6 +1,7 @@
 import {
   Component,
   Output,
+  Input,
   EventEmitter,
   ViewChild,
   ElementRef,
@@ -12,6 +13,8 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { UserService } from 'src/app/services/user.service';
+import { User } from 'src/app/models/user.interface';
 
 @Component({
   selector: 'app-squeal-form',
@@ -21,11 +24,21 @@ import { HttpClient } from '@angular/common/http';
 export class SquealFormComponent {
   @ViewChild('textarea') textarea!: ElementRef;
   @Output() squealSubmitted: EventEmitter<any> = new EventEmitter();
+  @Input() user!: User;
   squealForm!: FormGroup;
 
-  constructor(private formBuilder: FormBuilder, private http: HttpClient) {}
+  constructor(
+    private formBuilder: FormBuilder,
+    private http: HttpClient,
+    private userService: UserService
+  ) {}
 
   ngOnInit() {
+    this.userService.getUserData().subscribe((userData) => {
+      this.user = userData;
+      console.log(this.user); // Verifica se ricevi correttamente i dati dell'utente
+    });
+
     this.squealForm = this.formBuilder.group({
       text: ['', Validators.required],
     });

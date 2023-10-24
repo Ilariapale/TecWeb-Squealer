@@ -662,9 +662,9 @@ function addedAndRemoved(oldArray, newArray) {
 }
 
 //TOKEN FUNCTIONS
-function generateToken(userId) {
+function generateToken(user) {
   //Aggiungere dati al token se necessario
-  const payload = { userId };
+  const payload = { user };
   const secretKey = config.secretKey; // Sostituisci con una chiave segreta robusta e casuale
 
   // Crea il token con una data di scadenza (1 ora in questo esempio)
@@ -691,7 +691,7 @@ function verifyToken(req, res, next) {
         req.isTokenValid = false;
       } else {
         req.isTokenValid = true;
-        req.user_id = decodedToken.userId;
+        req.user_id = decodedToken.user.username;
       }
       next();
     });

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../services/api/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-signup',
@@ -12,36 +13,24 @@ export class SignupComponent {
     username: '',
     password: '',
   };
-  constructor(private http: HttpClient) {}
-  ngOnInit() {
-    const forms = document.querySelectorAll('.needs-validation');
+  errorMessage: string = '';
 
-    Array.prototype.slice.call(forms).forEach((form: HTMLFormElement) => {
-      form.addEventListener(
-        'submit',
-        (event: Event) => {
-          if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-          }
-
-          form.classList.add('was-validated');
+  constructor(private authService: AuthService, private router: Router) {}
+  onSubmit(): void {
+    // Chiamare il servizio di autenticazione per fare il login
+    this.authService
+      .signup(this.user.email, this.user.username, this.user.password)
+      .subscribe(
+        (response) => {
+          // Gestisci la risposta dal servizio se necessario
+          //console.log('Login successful', response);
+          this.router.navigate(['/login']);
+          // Reindirizza l'utente a un'altra pagina se il login è riuscito
         },
-        false
+        (error) => {
+          // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
+          this.errorMessage = error.error.error;
+        }
       );
-    });
-  }
-
-  createAccount() {
-    this.http.post('/user/', this.user).subscribe(
-      (response) => {
-        console.log('Richiesta inviata con successo!', response);
-        // Puoi fare altre azioni dopo l'invio del form, come reindirizzare l'utente o mostrare un messaggio di successo
-      },
-      (error) => {
-        console.error("Errore durante l'invio della richiesta:", error);
-        // Puoi gestire gli errori qui, ad esempio mostrando un messaggio di errore all'utente
-      }
-    );
   }
 }
