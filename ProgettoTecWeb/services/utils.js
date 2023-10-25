@@ -588,17 +588,25 @@ function checkIfReactionsAreValid(reactions) {
 
 function checkIfRecipientsAreValid(recipients) {
   try {
-    var { users, channels, keywords } = JSON.parse(recipients);
-    if (!((users === undefined || Array.isArray(users)) && (keywords === undefined || Array.isArray(keywords)) && (channels === undefined || Array.isArray(channels))))
-      return { isValid: false, value: undefined };
-    return {
-      isValid: true,
-      value: {
-        users: users || [],
-        channels: channels || [],
-        keywords: keywords || [],
-      },
-    };
+    //check if recipients is already an object
+    if (typeof recipients !== "object") {
+      var { users, channels, keywords } = JSON.parse(recipients);
+      if (!((users === undefined || Array.isArray(users)) && (keywords === undefined || Array.isArray(keywords)) && (channels === undefined || Array.isArray(channels))))
+        return { isValid: false, value: undefined };
+      return {
+        isValid: true,
+        value: {
+          users: users || [],
+          channels: channels || [],
+          keywords: keywords || [],
+        },
+      };
+    } else {
+      return {
+        isValid: true,
+        value: recipients,
+      };
+    }
   } catch (err) {
     return {
       isValid: false,

@@ -36,12 +36,12 @@ export class SquealService {
     const body: { [key: string]: any } = { content };
 
     recipients
-      ? (body['recipients'] = JSON.stringify(recipients))
-      : (body['recipients'] = JSON.stringify({
+      ? (body['recipients'] = recipients)
+      : (body['recipients'] = {
           users: [],
           channels: [],
           keywords: [],
-        }));
+        });
     if (content_type) body['content_type'] = content_type;
     if (is_scheduled) body['is_scheduled'] = is_scheduled;
     console.log(body);

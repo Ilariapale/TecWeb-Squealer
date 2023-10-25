@@ -73,6 +73,7 @@ export class SquealFormComponent {
         console.log(squeal);
       });
       this.squealSubmitted.emit(squeal_content);
+      this.squealForm.reset();
     } else {
       // Gestisci il caso in cui il form non sia valido
       console.log('Form non valido');
