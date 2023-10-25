@@ -327,22 +327,24 @@ module.exports = {
   },
   //TODO is_scheduled squeals
   /**
-   * @param options.squealInput.content_type Type of the squeal content, it can be "text", "image", "video" or "position"
-   * @param options.squealInput.content Squeal content, it can be a string, an image url, a video url or a position object
-   * @param options.squealInput.is_scheduled It tells you whether or not the squeal is scheduled
-   * @param options.squealInput.recipients Array of users, channels or keywords, with no limit and no impact on the quota.
+   * @param options.content_type Type of the squeal content, it can be "text", "image", "video" or "position"
+   * @param options.content Squeal content, it can be a string, an image url, a video url or a position object
+   * @param options.is_scheduled It tells you whether or not the squeal is scheduled
+   * @param options.recipients Array of users, channels or keywords, with no limit and no impact on the quota.
    */
   //TESTED
   createSqueal: async (options) => {
     try {
-      //vietare di postare in un canale ufficiale
-      const { user_id, vip_id, content, recipients } = options.squealInput;
+      //TODO controllare post squeals e oggetti recipients
 
+      //vietare di postare in un canale ufficiales
+      const { user_id, vip_id, content, recipients } = options;
       //set the default value for content_type
-      const content_type = options.squealInput.content_type || "text";
-      const is_scheduled = options.squealInput.is_scheduled == "true" ? true : options.squealInput.is_scheduled == "false" ? false : undefined;
+      const content_type = options.content_type || "text";
+      const is_scheduled = options.is_scheduled == "true" ? true : options.is_scheduled == "false" ? false : undefined;
 
       //check for the request sender's id
+
       let response = await findUser(user_id);
       if (response.status >= 300) {
         return {
@@ -351,7 +353,6 @@ module.exports = {
         };
       }
       const reqSender = response.data;
-
       //check in the db if the vip_id is valid
       let vip_user;
       if (vip_id) {
@@ -407,6 +408,7 @@ module.exports = {
       }
 
       //check if the content is specified and correctly formatted
+      //console.log(content);
       if (!content || content?.length == 0) {
         return {
           status: 400,

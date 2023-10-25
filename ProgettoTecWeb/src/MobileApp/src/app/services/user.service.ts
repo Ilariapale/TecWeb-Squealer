@@ -19,7 +19,10 @@ export class UserService {
       const savedUserData =
         sessionStorage.getItem('user') || localStorage.getItem('user');
       if (savedUserData) {
-        this.userDataSubject.next(JSON.parse(savedUserData));
+        this.setUserData(JSON.parse(savedUserData));
+      } else {
+        //we have a guest user
+        this.setUserData({ account_type: 'guest', username: 'user' });
       }
     }
     return this.userDataSubject.asObservable();

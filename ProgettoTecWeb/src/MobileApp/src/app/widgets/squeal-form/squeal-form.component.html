@@ -6,15 +6,21 @@
     <img src="../../assets/imgs/logo.png" alt="" class="avatar" />
     <div class="squeal-header-info">
       {{user.account_type}}<span>@{{user.username}}</span><span></span>
-      <form [formGroup]="squealForm" (ngSubmit)="createSqueal()">
-        <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
-          placeholder="Scrivi il tuo squeal"></textarea>
-        <button type="submit" class="submit-button">Send</button>
-      </form>
+      <ng-container *ngIf='user.account_type!="guest"'>
+        <form [formGroup]="squealForm" (ngSubmit)="createSqueal()">
+          <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
+            placeholder="Scrivi il tuo squeal"></textarea>
+          <button type="submit" class="submit-button">Send</button>
+        </form>
+      </ng-container>
+
+      <ng-container *ngIf='user.account_type=="guest"'>
+        <div class="guest-message">Log-in if you want to post a squeal</div>
+      </ng-container>
     </div>
   </div>
   <div class="squeal-img-wrap">
-    <img src="" alt="img" class="squeal-img" />
+    <!--img src="" alt="img" class="squeal-img" /-->
   </div>
 </div>
 

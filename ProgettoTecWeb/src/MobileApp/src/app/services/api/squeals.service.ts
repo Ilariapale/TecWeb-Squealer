@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { ContentType } from 'src/app/models/squeal.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -10,21 +11,47 @@ export class SquealService {
 
   constructor(private http: HttpClient) {}
 
-  getSqueals(): Observable<any> {
-    return this.http.get(`${this.apiUrl}`);
-  }
-  postSqueals(): Observable<any> {
-    return this.http.post(`${this.apiUrl}`, {});
-  }
-  getHome(lastLoaded?: number, pagSize?: number): Observable<any> {
+  headersGenerator() {
     const token =
       sessionStorage.getItem('Authorization') ||
       localStorage.getItem('Authorization');
     // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
     const headers = new HttpHeaders().set('Authorization', `${token}`);
     const requestOptions = { headers: headers };
+    return requestOptions;
+  }
+
+  getSqueals(): Observable<any> {
+    return this.http.get(`${this.apiUrl}`);
+  }
+  postSqueal(
+    content: string,
+    recipients?: object,
+    content_type?: ContentType,
+    is_scheduled?: boolean
+  ): Observable<any> {
+    //TODO controllare post squeals e oggetti recipients
+    const requestOptions = this.headersGenerator();
+    console.log('AAAAA');
+    const body: { [key: string]: any } = { content };
+
+    recipients
+      ? (body['recipients'] = JSON.stringify(recipients))
+      : (body['recipients'] = JSON.stringify({
+          users: [],
+          channels: [],
+          keywords: [],
+        }));
+    if (content_type) body['content_type'] = content_type;
+    if (is_scheduled) body['is_scheduled'] = is_scheduled;
+    console.log(body);
+    return this.http.post(`${this.apiUrl}/`, body, requestOptions);
+  }
+  getHome(lastLoaded?: number, pagSize?: number): Observable<any> {
+    //TODO controllare se funziona
+    const requestOptions = this.headersGenerator();
     let url = `${this.apiUrl}/home`;
-    console.log(url, headers);
+    //console.log(url, headers);
     if (lastLoaded !== undefined && pagSize !== undefined)
       return this.http.get(
         url + `?lastLoaded=${lastLoaded}&pageSize=${pagSize}`,

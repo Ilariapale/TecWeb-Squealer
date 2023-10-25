@@ -34,14 +34,25 @@ router.get("/", verifyToken, async (req, res, next) => {
 });
 
 //TODO lato client, aggiungere gli squeal temporalizzati
-router.post("/", verifyToken, async (req, res) => {
+router.post("/", verifyToken, async (req, res, next) => {
+  //TODO controllare post squeals e oggetti recipients
+
   // Verifica la proprietà req.utenteLoggato per decidere come gestire la richiesta
   if (req.isTokenValid) {
     // Utente loggato, gestisci la richiesta come vuoi
-    let options = {};
-    options.squealInput = req.body;
-    options.squealInput.user_id = req.user_id;
-
+    console.log("req.body", req.body);
+    console.log("req.body.content", req.body.content);
+    console.log("typeof req.body", typeof req.body);
+    console.log("--------------------");
+    let options = {
+      user_id: req.user_id,
+      content: req.body["content"],
+      content_type: req.body.content_type,
+      is_scheduled: req.body.is_scheduled,
+      recipients: req.body.recipients,
+    };
+    console.log("req.user_id", options.user_id);
+    console.log("options", options);
     try {
       const result = await squeals.createSqueal(options);
       res.status(result.status || 200).send(result.data);

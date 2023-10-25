@@ -14,12 +14,10 @@ export class HomeComponent {
   constructor(private squealService: SquealService) {}
 
   ngOnInit() {
-    console.log('afjiowephfpwioau');
     this.squealService.getHome().subscribe(
       (response: any) => {
         //.slice().reverse()
         this.squeals = response;
-        console.log('AAA');
         console.log(this.squeals);
       },
       (error) => {

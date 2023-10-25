@@ -21,14 +21,4 @@ export class SquealComponent {
   reactions = {};
   is_in_official_channel = false;
   impressions = 42;
-  // @Input() content = 'Squeal Content';
-  // up_count = 42;
-  // down_count = 42;
-  // comments_count = 42; //rimuovere
-  // favourites_count = 42;
-  // resqueals_count = 42;
-  // comments_list = ['a', 'b', 'c'];
-  // constructor() {
-  //   this.date = new Date().toJSON();
-  // }
 }

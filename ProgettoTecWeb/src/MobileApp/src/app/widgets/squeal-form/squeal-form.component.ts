@@ -14,6 +14,7 @@ import {
 } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { UserService } from 'src/app/services/user.service';
+import { SquealService } from 'src/app/services/api/squeals.service';
 import { User } from 'src/app/models/user.interface';
 
 @Component({
@@ -30,7 +31,8 @@ export class SquealFormComponent {
   constructor(
     private formBuilder: FormBuilder,
     private http: HttpClient,
-    private userService: UserService
+    private userService: UserService,
+    private squealService: SquealService
   ) {}
 
   ngOnInit() {
@@ -65,26 +67,15 @@ export class SquealFormComponent {
   createSqueal() {
     if (this.squealForm.valid) {
       // Invia il nuovo squeal al tuo backend o a un servizio API
-      const squealText = this.squealForm.value.text;
+      const squeal_content = this.squealForm.value.text;
       //console.log('Nuovo squeal:', squealText);
-      const squeal = { text: squealText };
-      this.postSqueal(squeal);
-      this.squealSubmitted.emit(squeal);
+      this.squealService.postSqueal(squeal_content).subscribe((squeal) => {
+        console.log(squeal);
+      });
+      this.squealSubmitted.emit(squeal_content);
     } else {
       // Gestisci il caso in cui il form non sia valido
       console.log('Form non valido');
-    }
-  }
-
-  async postSqueal(squeal: any, userId: String = '6471009fc6d59f541ad74776') {
-    try {
-      const url = `/user/${userId}/squeal`; // L'URL del tuo endpoint API
-      const response = await this.http.post(url, { squeal }).subscribe();
-      // Gestisci la risposta del server qui
-      //console.log(response);
-    } catch (error) {
-      // Gestisci gli errori qui
-      console.error(error);
     }
   }
 

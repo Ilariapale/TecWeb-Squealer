@@ -1,13 +1,22 @@
+enum AccountType {
+  guest = 'guest',
+  standard = 'standard',
+  verified = 'verified',
+  professional = 'professional',
+  moderator = 'moderator',
+}
+enum ProfessionalType {
+  none = 'none',
+  VIP = 'VIP',
+  SMM = 'SMM',
+}
+
 export interface User {
-  id: number;
-  account_type: {
-    type: String;
-    enum: ['standard', 'verified', 'professional', 'moderator'];
-    default: 'standard';
-  };
+  _id: number;
+  account_type: AccountType;
   professional_type: {
     type: String;
-    enum: ['none', 'VIP', 'SMM'];
+    enum: ProfessionalType;
     default: 'none';
   };
   email: { type: String; required: true; unique: true };
