@@ -5,11 +5,26 @@
   <div class="squeal-header">
     <img src="../../assets/imgs/logo.png" alt="" class="avatar" />
     <div class="squeal-header-info">
-      {{user.account_type}}<span>@{{user.username}}</span><span></span>
+      {{user.account_type}}
+      <span>@{{user.username}}</span>
+      <div *ngIf='enoughChars' class="char_left squeal-form-text">
+        {{user.char_quota.daily}}<span class="quota_letter">D</span>
+        {{user.char_quota.weekly}}<span class="quota_letter">W</span>
+        {{user.char_quota.monthly}}<span class="quota_letter">M</span>
+        {{user.char_quota.extra_daily}}<span class="quota_letter">E</span>
+      </div>
+
+      <div *ngIf='enoughChars == false' class="char_left squeal-form-text">Not enough chars left!</div>
       <ng-container *ngIf='user.account_type!="guest"'>
         <form [formGroup]="squealForm" (ngSubmit)="createSqueal()">
           <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
-            placeholder="Scrivi il tuo squeal"></textarea>
+            placeholder="Scrivi il tuo squeal" class="col-12"></textarea>
+
+          <input type="text" placeholder="Users" class="highlight-input user-input col-12">
+          <input type="text" placeholder="Channels" class="highlight-input channel-input col-12">
+          <input type="text" placeholder="Keywords" class="highlight-input keyword-input col-12">
+
+
           <button type="submit" class="submit-button">Send</button>
         </form>
       </ng-container>
@@ -17,11 +32,11 @@
       <ng-container *ngIf='user.account_type=="guest"'>
         <div class="guest-message">Log-in if you want to post a squeal</div>
       </ng-container>
+
+
     </div>
   </div>
   <div class="squeal-img-wrap">
     <!--img src="" alt="img" class="squeal-img" /-->
   </div>
 </div>
-
-<!-- I want the text input to be required to submit the form -->

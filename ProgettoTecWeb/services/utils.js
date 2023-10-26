@@ -670,8 +670,18 @@ function addedAndRemoved(oldArray, newArray) {
 }
 
 //TOKEN FUNCTIONS
-function generateToken(user) {
+function generateToken(user_data) {
   //Aggiungere dati al token se necessario
+
+  const user = {
+    account_type: user_data.account_type,
+    professional_type: user_data.professional_type,
+    email: user_data.email,
+    username: user_data.username,
+    char_quota: user_data.char_quota,
+    preferences: user_data.preferences,
+  };
+
   const payload = { user };
   const secretKey = config.secretKey; // Sostituisci con una chiave segreta robusta e casuale
 

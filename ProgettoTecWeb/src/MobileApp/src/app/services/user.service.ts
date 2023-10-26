@@ -5,9 +5,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
   providedIn: 'root',
 })
 export class UserService {
-  private userDataSubject: BehaviorSubject<any> = new BehaviorSubject<any>(
-    null
-  );
+  private userDataSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
   setUserData(userData: any) {
     this.userDataSubject.next(userData);
@@ -16,8 +14,7 @@ export class UserService {
 
   getUserData(): Observable<any> {
     if (!this.userDataSubject.value) {
-      const savedUserData =
-        sessionStorage.getItem('user') || localStorage.getItem('user');
+      const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
       if (savedUserData) {
         this.setUserData(JSON.parse(savedUserData));
       } else {

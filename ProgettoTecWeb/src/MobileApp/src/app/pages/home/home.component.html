@@ -7,6 +7,7 @@
 <div class="content" role="main">
   <app-squeal-form (squealSubmitted)="onSquealSubmitted($event)"></app-squeal-form>
 
+  <div *ngIf="squeals.length == 0">Caricamento...</div>
   <app-squeal *ngFor="let squeal of squeals" [content]="squeal.content" [hex_id]="squeal.hex_id"
     [username]="squeal.username" [created_at]="squeal.created_at"></app-squeal>
 

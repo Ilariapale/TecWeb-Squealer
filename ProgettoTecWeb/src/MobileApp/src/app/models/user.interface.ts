@@ -30,15 +30,15 @@ export interface User {
     reacted_to: { type: [type: String]; default: [] };
   };
   char_quota: {
-    daily: { type: Number; default: 100 };
-    weekly: { type: Number; default: 500 };
-    monthly: { type: Number; default: 1500 };
-    extra_daily: { type: Number; default: 20 };
+    daily: number;
+    weekly: number;
+    monthly: number;
+    extra_daily: number;
   };
   weekly_reaction_metrics: {
-    positive_squeals: { type: Number; default: 0 };
-    negative_squeals: { type: Number; default: 0 };
-    controversial_squeals: { type: Number; default: 0 };
+    positive_squeals: Number;
+    negative_squeals: Number;
+    controversial_squeals: Number;
   };
   direct_chats: { type: [type: String]; default: [] };
   subscribed_channels: { type: [type: String]; default: [] };
