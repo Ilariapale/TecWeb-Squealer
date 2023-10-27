@@ -4,7 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { UserService } from 'src/app/services/user.service';
 import { SquealService } from 'src/app/services/api/squeals.service';
 import { User } from 'src/app/models/user.interface';
-
+import { Recipients } from 'src/app/models/squeal.interface';
+//TODOfare in modo che quando scrivo un recipient nel form questo si stilizzi
 @Component({
   selector: 'app-squeal-form',
   templateUrl: './squeal-form.component.html',
@@ -12,8 +13,19 @@ import { User } from 'src/app/models/user.interface';
 })
 export class SquealFormComponent {
   @ViewChild('textarea') textarea!: ElementRef;
+  @ViewChild('usersInput') usersInput!: ElementRef;
+  @ViewChild('channelsInput') channelsInput!: ElementRef;
+  @ViewChild('keywordsInput') keywordsInput!: ElementRef;
+
   @Output() squealSubmitted: EventEmitter<any> = new EventEmitter();
   @Input() user!: User;
+
+  recipients: Recipients = {
+    users: [],
+    channels: [],
+    keywords: [],
+  };
+
   squealForm!: FormGroup;
   lastLength: number = 0;
   enoughChars: boolean = true;
@@ -81,13 +93,21 @@ export class SquealFormComponent {
     this.user.char_quota.extra_daily = this.char_left.extra_daily <= 0 ? 0 : this.char_left.extra_daily;
   }
 
+  getRecipients() {
+    const users = this.usersInput.nativeElement.value.split(' ');
+    const channels = this.channelsInput.nativeElement.value.split(' ');
+    const keywords = this.keywordsInput.nativeElement.value.split(' ');
+
+    this.recipients.users = users.filter((elemento: any) => elemento !== '');
+    this.recipients.channels = channels.filter((elemento: any) => elemento !== '');
+    this.recipients.keywords = keywords.filter((elemento: any) => elemento !== '');
+  }
+
   adjustTextareaHeight() {
     const nativeElement = this.textarea.nativeElement;
     nativeElement.style.height = 'auto'; // Ripristina l'altezza predefinita
     nativeElement.style.height = nativeElement.scrollHeight + 'px'; // Imposta l'altezza in base allo scrollHeight
   }
-
-  //text: string = '';
 
   getRowCount(): number {
     // Calcola il numero di righe necessarie in base alla lunghezza del testo
@@ -97,10 +117,11 @@ export class SquealFormComponent {
 
   createSqueal() {
     if (this.squealForm.valid) {
+      this.getRecipients();
       // Invia il nuovo squeal al tuo backend o a un servizio API
       const squeal_content = this.squealForm.value.text;
       //console.log('Nuovo squeal:', squealText);
-      this.squealService.postSqueal(squeal_content).subscribe(
+      this.squealService.postSqueal(squeal_content, this.recipients).subscribe(
         (response: any) => {
           console.log('Success:', response);
           this.squealSubmitted.emit(squeal_content);
@@ -110,8 +131,12 @@ export class SquealFormComponent {
             : localStorage.setItem('user', JSON.stringify(this.user));
           this.lastLength = 0;
           this.squealForm.reset();
+          this.usersInput.nativeElement.value = '';
+          this.channelsInput.nativeElement.value = '';
+          this.keywordsInput.nativeElement.value = '';
         },
         (error) => {
+          //TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
           // Gestisci il caso in cui il form non sia valido
           const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
           if (element) {
@@ -123,8 +148,6 @@ export class SquealFormComponent {
           }
         }
       );
-
-      console.log(this.user);
     } else {
       // Gestisci il caso in cui il form non sia valido
       console.log('Form non valido');

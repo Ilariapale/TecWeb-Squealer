@@ -8,8 +8,7 @@
   <app-squeal-form (squealSubmitted)="onSquealSubmitted($event)"></app-squeal-form>
 
   <div *ngIf="squeals.length == 0">Caricamento...</div>
-  <app-squeal *ngFor="let squeal of squeals" [content]="squeal.content" [hex_id]="squeal.hex_id"
-    [username]="squeal.username" [created_at]="squeal.created_at"></app-squeal>
+  <app-squeal *ngFor="let squeal of squeals" [squeal]="squeal"></app-squeal>
 
   <!--app-squeal *ngFor="let numer of [0, 1, 2, 3, 4]"></!--app-squeal-->
   <!--I want the squeal-form component to add here a app-squeal on submit-->

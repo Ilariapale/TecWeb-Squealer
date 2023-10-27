@@ -5,23 +5,22 @@
     <div class="col-12 col-md-6">
       <div class="card text-center border border-primary shadow-0">
         <div class="bg-image hover-overlay ripple" data-mdb-ripple-color="light">
-          <!--img src="../../assets/imgs/vulture-306727_960_720.webp" class="img-fluid" /-->
+          <!-- <img src="../../assets/imgs/vulture-306727_960_720.webp" class="img-fluid" /> -->
           <a href="#!">
             <div class="mask" style="background-color: rgba(251, 251, 251, 0.15)"></div>
           </a>
         </div>
-        <div class="card-header">HEX{{hex_id}}</div>
+        <div class="card-header">HEX{{squeal.hex_id}}</div>
         <div class="card-body p-2">
-          <h5 class="card-title">@{{username}}</h5>
-          <p class="card-text">
-            {{content}}
-          </p>
+          <h5 class="card-title">@{{squeal.username}}</h5>
+          <p class="card-text">{{squeal.content}}</p>
 
           <div class="card-icons container">
             <div class="row flex-nowrap justify-content-between d-flex align-items-center">
 
               <div class="col-auto px-1">
-                <button type="button" class="btn btn-secondary btn-rounded">
+                <button id="comment_button" type="button" class="btn btn-secondary btn-rounded"
+                  (click)="toggleComments()">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="white" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path
@@ -32,9 +31,9 @@
                 </button>
               </div>
 
-              <div class="reactions col-auto px-1 ">
+              <div class="reactions col-auto px-1">
                 <div type="button" class="btn btn-secondary btn-floating" style="height: 55px; width: 55px;">
-                  <app-reactions-menu></app-reactions-menu>
+                  <app-reactions-menu [squealId]="squeal._id ?? '0'"></app-reactions-menu>
                 </div>
               </div>
 
@@ -51,8 +50,25 @@
             </div>
           </div>
 
+          <div class="card-footer">CREATED AT</div>
 
-          <div class="card-footer">{{created_at}}</div>
+          <div *ngIf="showComments" class="mt-3">
+            <h4>Commenti</h4>
+            <button (click)="loadMoreComments()">Carica altri commenti</button>
+            <!-- Lista dei commenti -->
+            <ul class="list-unstyled">
+              <li *ngFor="let comment of comment_section.comments_array">
+                <p><strong>{{comment.author_username}}</strong>: {{comment.text}}</p>
+              </li>
+            </ul>
+
+            <!-- Modulo per aggiungere un nuovo commento -->
+            <div class="mt-3">
+              <input [(ngModel)]="newCommentText" placeholder="Inserisci il tuo commento..." class="form-control">
+              <button (click)="addComment()" class="btn btn-primary mt-2">Aggiungi Commento</button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>

@@ -20,9 +20,9 @@
           <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
             placeholder="Scrivi il tuo squeal" class="col-12"></textarea>
 
-          <input type="text" placeholder="Users" class="highlight-input user-input col-12">
-          <input type="text" placeholder="Channels" class="highlight-input channel-input col-12">
-          <input type="text" placeholder="Keywords" class="highlight-input keyword-input col-12">
+          <input #usersInput type="text" placeholder="Users" class="highlight-input user-input col-12">
+          <input #channelsInput type="text" placeholder="Channels" class="highlight-input channel-input col-12">
+          <input #keywordsInput type="text" placeholder="Keywords" class="highlight-input keyword-input col-12">
 
 
           <button type="submit" class="submit-button">Send</button>

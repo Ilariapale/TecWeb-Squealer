@@ -5,38 +5,35 @@ export enum ContentType {
   position = 'position',
   deleted = 'deleted',
 }
+
+export interface Recipients {
+  users: string[];
+  channels: string[];
+  keywords: string[];
+}
+
 export interface Squeal {
-  _id: String;
-  hex_id: { type: Number; index: true };
-  user_id: String;
-  username: { type: String };
-  is_scheduled: { type: Boolean; default: false };
-  content_type: ContentType;
-  content: { type: String; default: '' };
-  recipients: {
-    users: {
-      type: [String];
-      default: [];
-    };
-    channels: {
-      type: [String];
-      default: [];
-    };
-    keywords: { type: [{ type: String }]; default: [] };
+  _id?: string;
+  hex_id?: Number;
+  user_id?: String;
+  username?: String;
+  is_scheduled?: Boolean;
+  content_type?: ContentType;
+  content?: String;
+  recipients?: Recipients;
+  created_at?: Date;
+  last_modified?: Date;
+  comment_section?: string;
+  reactions?: {
+    positive_reactions?: Number;
+    negative_reactions?: Number;
+    like?: Number;
+    love?: Number;
+    laugh?: Number;
+    dislike?: Number;
+    disgust?: Number;
+    disagree?: Number;
   };
-  created_at: { type: Date };
-  last_modified: { type: Date };
-  comment_section: String;
-  reactions: {
-    positive_reactions: { type: Number; default: 0 };
-    negative_reactions: { type: Number; default: 0 };
-    like: { type: Number; default: 0 };
-    love: { type: Number; default: 0 };
-    laugh: { type: Number; default: 0 };
-    dislike: { type: Number; default: 0 };
-    disgust: { type: Number; default: 0 };
-    disagree: { type: Number; default: 0 };
-  };
-  is_in_official_channel: { type: Boolean; default: false };
-  impressions: { type: Number; default: 0 };
+  is_in_official_channel?: Boolean;
+  impressions?: Number;
 }

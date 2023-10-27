@@ -716,7 +716,7 @@ module.exports = {
     const squeal = response.data;
     if (squeal.content_type == "deleted") {
       return {
-        status: 403,
+        status: 404,
         data: { error: `You can't react to a deleted squeal` },
       };
     }
@@ -730,7 +730,7 @@ module.exports = {
     //check if the user already reacted to the squeal
     if (user.squeals.reacted_to.includes(squeal._id)) {
       return {
-        status: 400,
+        status: 409,
         data: { error: `You already reacted to this squeal.` },
       };
     }

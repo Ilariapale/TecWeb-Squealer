@@ -95,6 +95,12 @@ module.exports = {
 
   addComment: async (options) => {
     const { identifier, user_id, message } = options;
+    if (!message || message.length <= 0) {
+      return {
+        status: 400,
+        data: { error: `Message cannot be empty.` },
+      };
+    }
 
     let response = await findUser(user_id);
     if (response.status >= 300) {
