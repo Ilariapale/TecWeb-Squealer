@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthService } from '../../services/api/auth.service';
 import { Router } from '@angular/router';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-login',
@@ -12,13 +13,23 @@ export class LoginComponent {
   password: string = '';
   errorMessage: string = '';
   rememberMe: boolean = false;
+  guestMode: boolean = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router, private userService: UserService) {}
+  ngOnInit() {
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
+      this.router.navigate(['/home']);
+    //TODO check if the token is valid
+  }
   onSubmit(): void {
     // Chiamare il servizio di autenticazione per fare il login
-    this.authService
-      .login(this.username, this.password, this.rememberMe)
-      .subscribe(
+    if (this.guestMode) {
+      localStorage.clear();
+      sessionStorage.clear();
+      this.userService.setUserData({ account_type: 'guest' });
+      this.router.navigate(['/home']);
+    } else
+      this.authService.login(this.username, this.password, this.rememberMe).subscribe(
         (response) => {
           // Gestisci la risposta dal servizio se necessario
           //console.log('Login successful', response);

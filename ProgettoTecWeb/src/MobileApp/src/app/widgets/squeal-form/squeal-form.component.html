@@ -7,7 +7,7 @@
     <div class="squeal-header-info">
       {{user.account_type}}
       <span>@{{user.username}}</span>
-      <div *ngIf='enoughChars' class="char_left squeal-form-text">
+      <div *ngIf="enoughChars && isLogged" class="char_left squeal-form-text">
         {{user.char_quota.daily}}<span class="quota_letter">D</span>
         {{user.char_quota.weekly}}<span class="quota_letter">W</span>
         {{user.char_quota.monthly}}<span class="quota_letter">M</span>
@@ -20,17 +20,16 @@
           <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
             placeholder="Scrivi il tuo squeal" class="col-12"></textarea>
 
-          <input #usersInput type="text" placeholder="Users" class="highlight-input user-input col-12">
-          <input #channelsInput type="text" placeholder="Channels" class="highlight-input channel-input col-12">
-          <input #keywordsInput type="text" placeholder="Keywords" class="highlight-input keyword-input col-12">
-
+          <app-tag-input #usersInput [placeholder]="'Add a user...'"></app-tag-input>
+          <app-tag-input #channelsInput [placeholder]="'Add a channel...'"></app-tag-input>
+          <app-tag-input #keywordsInput [placeholder]="'Add a keyword...'"></app-tag-input>
 
           <button type="submit" class="submit-button">Send</button>
         </form>
       </ng-container>
 
       <ng-container *ngIf='user.account_type=="guest"'>
-        <div class="guest-message">Log-in if you want to post a squeal</div>
+        <div class="guest-message"> <a href="/login">Log-in</a> if you want to post a squeal</div>
       </ng-container>
 
 

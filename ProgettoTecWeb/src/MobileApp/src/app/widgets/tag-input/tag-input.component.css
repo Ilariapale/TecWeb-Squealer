@@ -1,0 +1,20 @@
+.tag {
+  display: inline-block;
+  margin: 5px;
+  padding: 5px 10px;
+  background-color: #f2f2f2;
+  border-radius: 5px;
+}
+
+.tag span {
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.tag span.delete {
+  color: red;
+}
+
+input {
+  margin-top: 10px;
+}

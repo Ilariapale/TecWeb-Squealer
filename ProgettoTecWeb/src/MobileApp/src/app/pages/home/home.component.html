@@ -2,12 +2,13 @@
   <img width="40" alt="Squealer Logo" src="assets/imgs/logo.png" />
   <span>Squealer</span>
   <div class="spacer"></div>
+  <button (click)="logout()">Logout</button>
 </div>
 
 <div class="content" role="main">
   <app-squeal-form (squealSubmitted)="onSquealSubmitted($event)"></app-squeal-form>
 
-  <div *ngIf="squeals.length == 0">Caricamento...</div>
+  <div *ngIf="squeals.length == 0">Loading...</div>
   <app-squeal *ngFor="let squeal of squeals" [squeal]="squeal"></app-squeal>
 
   <!--app-squeal *ngFor="let numer of [0, 1, 2, 3, 4]"></!--app-squeal-->

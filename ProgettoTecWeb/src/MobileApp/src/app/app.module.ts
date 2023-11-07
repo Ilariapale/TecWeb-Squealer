@@ -15,6 +15,7 @@ import { SquealFormComponent } from './widgets/squeal-form/squeal-form.component
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { TagInputComponent } from './widgets/tag-input/tag-input.component';
 
 @NgModule({
   declarations: [
@@ -26,6 +27,7 @@ import { HttpClientModule } from '@angular/common/http';
     ReactionsMenuComponent,
     SquealComponent,
     SquealFormComponent,
+    TagInputComponent,
   ],
   imports: [
     BrowserModule,

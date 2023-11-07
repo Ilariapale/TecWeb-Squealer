@@ -5,6 +5,8 @@ import { UserService } from 'src/app/services/user.service';
 import { SquealService } from 'src/app/services/api/squeals.service';
 import { User } from 'src/app/models/user.interface';
 import { Recipients } from 'src/app/models/squeal.interface';
+import { TagInputComponent } from '../tag-input/tag-input.component';
+import { firstValueFrom } from 'rxjs';
 //TODOfare in modo che quando scrivo un recipient nel form questo si stilizzi
 @Component({
   selector: 'app-squeal-form',
@@ -13,9 +15,9 @@ import { Recipients } from 'src/app/models/squeal.interface';
 })
 export class SquealFormComponent {
   @ViewChild('textarea') textarea!: ElementRef;
-  @ViewChild('usersInput') usersInput!: ElementRef;
-  @ViewChild('channelsInput') channelsInput!: ElementRef;
-  @ViewChild('keywordsInput') keywordsInput!: ElementRef;
+  @ViewChild('usersInput') usersComponent!: TagInputComponent;
+  @ViewChild('channelsInput') channelsComponent!: TagInputComponent;
+  @ViewChild('keywordsInput') keywordsComponent!: TagInputComponent;
 
   @Output() squealSubmitted: EventEmitter<any> = new EventEmitter();
   @Input() user!: User;
@@ -29,6 +31,7 @@ export class SquealFormComponent {
   squealForm!: FormGroup;
   lastLength: number = 0;
   enoughChars: boolean = true;
+  isLogged: boolean = false;
   char_left: {
     daily: number;
     weekly: number;
@@ -44,19 +47,34 @@ export class SquealFormComponent {
   constructor(
     private formBuilder: FormBuilder,
     private http: HttpClient,
-    private userService: UserService,
+    public userService: UserService,
     private squealService: SquealService
-  ) {}
+  ) {
+    console.log('Constructor of squeal-form');
+    firstValueFrom(this.userService.getUserData()).then((userData) => {
+      console.log('AAAAAAAAAAAAAAAAAA');
+      this.user = userData;
+      console.log('BBBBBBBBBBBBBBBBBB');
+      if (userData.account_type == 'guest') {
+        console.log('CCCCCCCCCCCCCCCCCCC');
+        this.isLogged = false;
+      } else {
+        console.log('0');
+        this.isLogged = true;
+        console.log('A');
+        this.char_left.daily = this.user.char_quota.daily;
+        console.log('B');
+        this.char_left.weekly = this.user.char_quota.weekly;
+        console.log('C');
+        this.char_left.monthly = this.user.char_quota.monthly;
+        console.log('D');
+        this.char_left.extra_daily = this.user.char_quota.extra_daily;
+        console.log('E');
+      }
+    });
+  }
 
   ngOnInit() {
-    this.userService.getUserData().subscribe((userData) => {
-      this.user = userData;
-      console.log(this.user); // Verifica se ricevi correttamente i dati dell'utente
-      this.char_left.daily = this.user.char_quota.daily;
-      this.char_left.weekly = this.user.char_quota.weekly;
-      this.char_left.monthly = this.user.char_quota.monthly;
-      this.char_left.extra_daily = this.user.char_quota.extra_daily;
-    });
     this.squealForm = this.formBuilder.group({
       text: ['', Validators.required],
     });
@@ -94,13 +112,9 @@ export class SquealFormComponent {
   }
 
   getRecipients() {
-    const users = this.usersInput.nativeElement.value.split(' ');
-    const channels = this.channelsInput.nativeElement.value.split(' ');
-    const keywords = this.keywordsInput.nativeElement.value.split(' ');
-
-    this.recipients.users = users.filter((elemento: any) => elemento !== '');
-    this.recipients.channels = channels.filter((elemento: any) => elemento !== '');
-    this.recipients.keywords = keywords.filter((elemento: any) => elemento !== '');
+    this.recipients.users = this.usersComponent.getTags();
+    this.recipients.channels = this.channelsComponent.getTags();
+    this.recipients.keywords = this.keywordsComponent.getTags();
   }
 
   adjustTextareaHeight() {
@@ -131,9 +145,9 @@ export class SquealFormComponent {
             : localStorage.setItem('user', JSON.stringify(this.user));
           this.lastLength = 0;
           this.squealForm.reset();
-          this.usersInput.nativeElement.value = '';
-          this.channelsInput.nativeElement.value = '';
-          this.keywordsInput.nativeElement.value = '';
+          this.usersComponent.removeAllTags();
+          this.channelsComponent.removeAllTags();
+          this.keywordsComponent.removeAllTags();
         },
         (error) => {
           //TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore

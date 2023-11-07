@@ -573,7 +573,7 @@ module.exports = {
    * @param pag_size      Number of squeals to retrieve
    */
   getHomeSqueals: async (options) => {
-    const { user_id, is_logged_in } = options;
+    const { user_id, is_logged_in, token_error } = options;
     let { last_loaded, pag_size } = options;
     const query = {};
     //check the parameters
@@ -598,10 +598,20 @@ module.exports = {
       }
       query._id = { $lt: last_loaded };
     }
-
+    //console.log("is_logged_in", is_logged_in);
     if (!is_logged_in) {
-      query.is_in_official_channel = true;
       //Utente non loggato, vede solo gli squeal nei canali ufficiali
+      if (token_error == "noToken") query.is_in_official_channel = true;
+      else if (token_error == "invalidTokenFormat")
+        return {
+          status: 400,
+          data: { error: token_error },
+        };
+      else if (token_error == "TokenExpiredError")
+        return {
+          status: 401,
+          data: { error: token_error },
+        };
     } else {
       //Utente loggato, vede gli squeal dei canali a cui è iscritto e quelli dei canali ufficiali, ma non quelli dei canali silenziati
       const response = await findUser(user_id);

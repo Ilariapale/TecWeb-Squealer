@@ -693,13 +693,15 @@ function generateToken(user_data) {
 
 function verifyToken(req, res, next) {
   if (!req.headers) {
-    return res.status(400).send(`No headers in request.`);
+    res.status(400).send(`No headers in request.`);
+    return;
   }
 
   const token = req.headers.authorization;
 
   if (!token || !token.startsWith("Bearer ")) {
     req.isTokenValid = false;
+    req.tokenError = !token ? "noToken" : "invalidTokenFormat";
     next(); // If the token is not valid, continue without setting req.user_id
   } else {
     const tokenValue = token.slice(7); // Remove "Bearer " from token
@@ -707,12 +709,13 @@ function verifyToken(req, res, next) {
     jwt.verify(tokenValue, config.secretKey, (err, decodedToken) => {
       if (err) {
         req.isTokenValid = false;
+        req.tokenError = err.name;
       } else {
         req.isTokenValid = true;
         req.user_id = decodedToken.user.username;
       }
-      next();
     });
+    next();
   }
 }
 

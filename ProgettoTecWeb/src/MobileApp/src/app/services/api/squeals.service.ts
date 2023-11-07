@@ -12,7 +12,7 @@ export class SquealService {
 
   constructor(private http: HttpClient) {}
 
-  headersGenerator() {
+  authenticatedHeadersGenerator() {
     const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
     // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
     const headers = new HttpHeaders().set('Authorization', `${token}`);
@@ -21,8 +21,14 @@ export class SquealService {
     return requestOptions;
   }
 
+  guestHeadersGenerator() {
+    const headers = new HttpHeaders();
+    const requestOptions = { headers: headers };
+    return requestOptions;
+  }
+
   getSqueals(): Observable<any> {
-    const requestOptions = this.headersGenerator();
+    const requestOptions = this.authenticatedHeadersGenerator();
     return this.http.get(`${this.apiUrl}`, requestOptions);
   }
   postSqueal(
@@ -31,7 +37,7 @@ export class SquealService {
     content_type?: ContentType,
     is_scheduled?: boolean
   ): Observable<any> {
-    const requestOptions = this.headersGenerator();
+    const requestOptions = this.authenticatedHeadersGenerator();
     const body: { [key: string]: any } = { content };
 
     recipients
@@ -46,9 +52,9 @@ export class SquealService {
     console.log(body);
     return this.http.post(`${this.apiUrl}/`, body, requestOptions);
   }
-  getHome(lastLoaded?: number, pagSize?: number): Observable<any> {
+  getHome(isGuest: boolean, lastLoaded?: number, pagSize?: number): Observable<any> {
     //TODO controllare se funziona
-    const requestOptions = this.headersGenerator();
+    const requestOptions = isGuest ? this.guestHeadersGenerator() : this.authenticatedHeadersGenerator();
 
     let url = `${this.apiUrl}/home`;
     //console.log(url, headers);
@@ -68,7 +74,7 @@ export class SquealService {
     return this.http.delete(`${this.apiUrl}`);
   }
   addReaction(reaction: String, squeal_id: String): Observable<any> {
-    const requestOptions = this.headersGenerator();
+    const requestOptions = this.authenticatedHeadersGenerator();
     return this.http.patch(`${this.apiUrl}/${squeal_id}/reaction/${reaction}`, {}, requestOptions);
   }
   updateSqueal(): Observable<any> {

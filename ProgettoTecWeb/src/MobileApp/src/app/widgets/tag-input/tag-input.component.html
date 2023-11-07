@@ -1,0 +1,7 @@
+<div *ngFor="let tag of tags" class="tag">
+  <span>@</span>{{tag}}
+  <span class="delete" (click)="removeTag(tag)">x</span>
+</div>
+<div>
+  <input [(ngModel)]="tagInput" (keyup.space)="addTag()" placeholder="{{placeholder}}">
+</div>

@@ -21,7 +21,7 @@
                 <div class="mb-3">
                   <label class="mb-2 text-muted" for="username">Username</label>
                   <input id="username" type="text" class="form-control" name="username" [(ngModel)]="username" required
-                    autofocus autocomplete="username">
+                    autofocus autocomplete="username" [disabled]="guestMode">
                   <div class="invalid-feedback">
                     Username is required
                   </div>
@@ -35,7 +35,7 @@
                     </a>
                   </div>
                   <input id="password" type="password" class="form-control" name="password" [(ngModel)]="password"
-                    required autocomplete="current-password">
+                    required autocomplete="current-password" [disabled]="guestMode">
                   <div class="invalid-feedback">
                     Password is required
                   </div>
@@ -44,7 +44,7 @@
                 <div class="d-flex align-items-center">
                   <div class="form-check">
                     <input type="checkbox" name="rememberMe" id="rememberMe" class="form-check-input"
-                      [(ngModel)]="rememberMe">
+                      [(ngModel)]="rememberMe" [disabled]="guestMode">
                     <label for="rememberMe" class="form-check-label">Remember Me</label>
                   </div>
 
@@ -55,6 +55,10 @@
                 <!-- Messaggio di errore -->
                 <div *ngIf="errorMessage" class="alert alert-danger mt-3">{{ errorMessage }}</div>
               </form>
+              <div class="form-check mt-3">
+                <input type="checkbox" class="form-check-input" id="guestModeCheckbox" [(ngModel)]="guestMode">
+                <label class="form-check-label" for="guestModeCheckbox">Browse as Guest</label>
+              </div>
             </div>
             <div class="card-footer py-3 border-0">
               <div class="text-center">

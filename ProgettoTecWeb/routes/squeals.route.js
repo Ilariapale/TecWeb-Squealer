@@ -64,22 +64,21 @@ router.post("/", verifyToken, async (req, res, next) => {
 });
 
 router.get("/home", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      user_id: req.user_id,
-      is_logged_in: req.isTokenValid,
-      last_loaded: req.query.last_loaded,
-      pag_size: req.query.pag_size,
-    };
-    try {
-      const result = await squeals.getHomeSqueals(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      console.log(err);
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
+  let options = {
+    user_id: req.user_id,
+    is_logged_in: req.isTokenValid,
+    token_error: req.tokenError || "",
+    last_loaded: req.query.last_loaded,
+    pag_size: req.query.pag_size,
+  };
+  try {
+    const result = await squeals.getHomeSqueals(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
   }
 });
 
