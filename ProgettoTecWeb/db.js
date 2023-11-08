@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 const schemas = require("./services/schemas");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { securityLvl } = require("./config");
 module.exports = {
   dbconnect: async () => {
-    let dbname = "test";
+    let dbname = "squealerDB";
     let credentials;
     const salt = await bcrypt.genSalt(securityLvl);
     const hashedPassword = await bcrypt.hash("password", salt);
@@ -30,6 +30,7 @@ module.exports = {
     } catch (error) {
       credentials = undefined;
       console.log("credentials undefined");
+      dbname = "test";
     }
     const mongouri = credentials
       ? `mongodb://${credentials.user}:${credentials.pwd}@${credentials.site}/${dbname}?authSource=admin&writeConcern=majority`

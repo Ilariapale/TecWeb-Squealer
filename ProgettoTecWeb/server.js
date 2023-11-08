@@ -39,9 +39,10 @@ app.use(express.static("public"));
 require("./routes")(app);
 
 //Angular app -------------------
-app.use(express.static(__dirname + "\\public\\dist\\mobile-app"));
+console.log("dirname: " + __dirname);
+app.use(express.static(__dirname + "/public/dist/mobile-app"));
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "\\public\\dist\\mobile-app\\index.html"));
+  res.sendFile(path.join(__dirname, "/public/dist/mobile-app/index.html"));
 });
 //End angular app ---------------
 
@@ -55,7 +56,7 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   const msg = err.error || err.message;
-  log.error(`Error ${status} (${msg}) on ${req.method} ${req.url} with payload ${req.body}.`);
+  console.error(`Error ${status} (${msg}) on ${req.method} ${req.url} with payload ${req.body}.`);
   res.status(status).send({ status, error: msg });
 });
 
@@ -63,7 +64,7 @@ module.exports = app;
 
 app.listen(PORT, () => {
   console.log(`Express Server started on Port ${app.get("port")} | Environment : ${app.get("env")}`);
-  console.log("" + __dirname + "\\src\\MobileApp");
+  console.log("" + __dirname + "/src/MobileApp");
 });
 
 db.dbconnect();
