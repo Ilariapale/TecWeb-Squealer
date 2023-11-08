@@ -7,7 +7,8 @@ import { SignupComponent } from './pages/signup/signup.component';
 import { MapComponent } from './widgets/map/map.component';
 
 const routes: Routes = [
-  //{ path: '', redirectTo: 'login', pathMatch: 'full' },
+  //redirect the empty path to the home page
+  { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'home', component: HomeComponent },
   { path: 'signup', component: SignupComponent },
