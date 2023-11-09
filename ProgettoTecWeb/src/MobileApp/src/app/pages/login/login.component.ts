@@ -17,8 +17,14 @@ export class LoginComponent {
 
   constructor(private authService: AuthService, private router: Router, private userService: UserService) {}
   ngOnInit() {
-    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
+    console.log('LoginComponent ngOnInit');
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) {
       this.router.navigate(['/home']);
+      console.log('already logged in');
+    } else {
+      console.log('not logged in');
+    }
+
     //TODO check if the token is valid
   }
   onSubmit(): void {
@@ -26,7 +32,7 @@ export class LoginComponent {
     if (this.guestMode) {
       localStorage.clear();
       sessionStorage.clear();
-      this.userService.setUserData({ account_type: 'guest' });
+      this.userService.setUserData({ account_type: 'guest', username: 'user' });
       this.router.navigate(['/home']);
     } else
       this.authService.login(this.username, this.password, this.rememberMe).subscribe(

@@ -1,0 +1,14 @@
+<!-- messages.component.html -->
+<app-navbar></app-navbar>
+<div class="messages">
+  <h1>Messaggi dell'utente</h1>
+
+  <div *ngFor="let message of messages">
+    <div class="message" [ngClass]="{'unread': !message.read}">
+      {{ message.text }}
+    </div>
+  </div>
+
+  <button (click)="markAllAsRead()">Segna tutti come letti</button>
+</div>
+<app-footer></app-footer>

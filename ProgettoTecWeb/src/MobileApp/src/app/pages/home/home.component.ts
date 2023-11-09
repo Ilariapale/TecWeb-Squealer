@@ -59,6 +59,10 @@ export class HomeComponent {
   logout() {
     this.authService.logout(); // Chiama il metodo di logout dal tuo servizio di autenticazione
   }
+
+  deleteProfile() {
+    //TODO delete profile
+  }
 }
 
 /*  <div class="card-container">

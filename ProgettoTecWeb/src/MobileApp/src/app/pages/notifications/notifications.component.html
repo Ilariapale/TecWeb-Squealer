@@ -1,0 +1,15 @@
+<!-- notifications.component.html -->
+<app-navbar></app-navbar>
+
+<div class="notifications">
+  <h1>Notifiche dell'utente</h1>
+
+  <div *ngFor="let notification of notifications">
+    <div class="notification" [ngClass]="{'unread': !notification.read}">
+      {{ notification.message }}
+    </div>
+  </div>
+
+  <button (click)="markAllAsRead()">Segna tutte come viste</button>
+</div>
+<app-footer></app-footer>

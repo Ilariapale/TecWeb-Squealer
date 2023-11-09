@@ -16,6 +16,13 @@ import { SquealFormComponent } from './widgets/squeal-form/squeal-form.component
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { TagInputComponent } from './widgets/tag-input/tag-input.component';
+import { ProfileComponent } from './pages/profile/profile.component';
+import { SearchComponent } from './pages/search/search.component';
+import { StoreComponent } from './pages/store/store.component';
+import { NavbarComponent } from './widgets/navbar/navbar.component';
+import { FooterComponent } from './widgets/footer/footer.component';
+import { NotificationsComponent } from './pages/notifications/notifications.component';
+import { MessagesComponent } from './pages/messages/messages.component';
 
 @NgModule({
   declarations: [
@@ -28,6 +35,13 @@ import { TagInputComponent } from './widgets/tag-input/tag-input.component';
     SquealComponent,
     SquealFormComponent,
     TagInputComponent,
+    ProfileComponent,
+    SearchComponent,
+    StoreComponent,
+    NavbarComponent,
+    FooterComponent,
+    NotificationsComponent,
+    MessagesComponent,
   ],
   imports: [
     BrowserModule,

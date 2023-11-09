@@ -1,0 +1,63 @@
+<nav class="navbar navbar-dark bg-dark fixed-top">
+  <div class="container-fluid">
+    <img width="40" alt="Squealer Logo" src="assets/imgs/logo.png" />
+    <a class="navbar-brand" href="#">Squealer</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"
+      aria-controls="offcanvasDarkNavbar" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar"
+      aria-labelledby="offcanvasDarkNavbarLabel">
+      <div class="offcanvas-header">
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">Menù</h5>
+
+      </div>
+      <div class="offcanvas-body">
+        <ul class="navbar-nav text-end flex-grow-1 pe-2 menu-font-size ">
+          <li class=" nav-item row py-3">
+            <a class="nav-link active col-10" aria-current="page" href="/home">
+              Home
+            </a>
+            <i class="bi bi-house-door col-2 d-flex justify-content-center align-items-center"></i>
+          </li>
+          <li class="nav-item row py-3">
+            <a class="nav-link col-10 " href="/profile">
+              Profile
+            </a>
+            <a class="nav-link bi bi-person col-2 d-flex justify-content-center align-items-center" href="/profile"></a>
+          </li>
+
+          <li class="nav-item row py-3">
+            <a class="nav-link col-10 " href="/store">
+              Store
+            </a>
+            <a class="nav-link bi bi-shop col-2 d-flex justify-content-center align-items-center" href="/store"></a>
+          </li>
+          <li class="nav-item row py-3">
+            <a class="nav-link col-10 " href="/search">
+              Search
+            </a>
+            <a class="nav-link bi bi-search col-2 d-flex justify-content-center align-items-center" href="/search"></a>
+          </li>
+          <hr class=" py-3">
+          <li class="nav-item row py-3">
+            <a class="nav-link col-10 " (click)="logout()">
+              Logout
+            </a>
+            <a class="nav-link bi bi-box-arrow-right col-2 d-flex justify-content-center align-items-center"
+              href="#"></a>
+          </li>
+          <li class="nav-item row py-3">
+            <a class="nav-link col-10 text-danger" (click)="logout()">
+              Delete account
+            </a>
+            <a class="nav-link bi bi-trash col-2 d-flex justify-content-center align-items-center text-danger"
+              href="#"></a>
+          </li>
+        </ul>
+
+      </div>
+    </div>
+  </div>
+</nav>

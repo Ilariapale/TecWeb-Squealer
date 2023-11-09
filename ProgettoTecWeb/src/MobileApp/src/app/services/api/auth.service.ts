@@ -39,12 +39,12 @@ export class AuthService {
   logout() {
     // Rimuovi il token di autorizzazione dal LocalStorage
     //TODO fix
-    this.router.navigate(['/login']);
     localStorage.removeItem('Authorization');
     sessionStorage.removeItem('Authorization');
     localStorage.removeItem('user');
     sessionStorage.removeItem('user');
     this.userService.setUserData({});
+    this.router.navigate(['/login']);
     //redirect to login page "/login"
   }
 
