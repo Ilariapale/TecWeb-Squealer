@@ -22,35 +22,41 @@
         <ul class="navbar-nav text-end flex-grow-1 pe-2 menu-font-size ">
           <li class=" nav-item row py-3">
             <a class="col"></a>
-            <a class="nav-link active col-auto" [class.text-dark]="getThemeClass()=='light-theme'" aria-current="page"
-              href="/home">
+            <a class="nav-link active col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'"
+              aria-current="page" (click)="goToPage('home')" data-bs-toggle="offcanvas"
+              data-bs-target="#offcanvasDarkNavbar">
               Home
             </a>
             <i class="bi bi-house-door col-2 d-flex justify-content-center align-items-center clickable"
-              href="/home"></i>
+              (click)="goToPage('home')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
           <li class="nav-item row py-3">
             <a class="col"></a>
-            <a class="nav-link col-auto " [class.text-dark]="getThemeClass()=='light-theme'" href="/profile">
+            <a class="nav-link col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'"
+              (click)="goToPage('profile')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar">
               Profile
             </a>
             <i class="bi bi-person col-2 d-flex justify-content-center align-items-center clickable"
-              href="/profile"></i>
+              (click)="goToPage('profile')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
 
           <li class="nav-item row py-3">
             <a class="col"></a>
-            <a class="nav-link col-auto " [class.text-dark]="getThemeClass()=='light-theme'" href="/store">
+            <a class="nav-link col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'"
+              (click)="goToPage('store')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar">
               Store
             </a>
-            <i class="bi bi-shop col-2 d-flex justify-content-center align-items-center clickable" href="/store"></i>
+            <i class=" bi bi-shop col-2 d-flex justify-content-center align-items-center clickable"
+              (click)="goToPage('store')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
           <li class="nav-item row py-3">
             <a class="col"></a>
-            <a class="nav-link col-auto " [class.text-dark]="getThemeClass()=='light-theme'" href="/search">
+            <a class="nav-link col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'"
+              (click)="goToPage('search')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar">
               Search
             </a>
-            <i class="bi bi-search col-2 d-flex justify-content-center align-items-center clickable" href="/search"></i>
+            <i class="bi bi-search col-2 d-flex justify-content-center align-items-center clickable"
+              (click)="goToPage('search')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
           <hr class="my-3">
           <li class="nav-item row py-3">

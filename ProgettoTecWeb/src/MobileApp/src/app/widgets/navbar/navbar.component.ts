@@ -1,4 +1,5 @@
 import { Component, Output } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/api/auth.service';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 
@@ -9,7 +10,7 @@ import { DarkModeService } from 'src/app/services/dark-mode.service';
 })
 export class NavbarComponent {
   @Output() textMode: string = 'Dark mode';
-  constructor(public authService: AuthService, private darkModeService: DarkModeService) {}
+  constructor(public authService: AuthService, private darkModeService: DarkModeService, public router: Router) {}
 
   logout() {
     this.authService.logout(); // Chiama il metodo di logout dal tuo servizio di autenticazione
@@ -22,6 +23,10 @@ export class NavbarComponent {
 
   getThemeClass() {
     return this.darkModeService.getThemeClass();
+  }
+
+  goToPage(page: string) {
+    this.router.navigate([`/${page}`]);
   }
 
   deleteProfile() {
