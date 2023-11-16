@@ -12,19 +12,20 @@
       </div>
 
       <div *ngIf='enoughChars == false' class="char_left squeal-form-text">Not enough chars left!</div>
-      <ng-container *ngIf='true || user.account_type!="guest"'>
+      <ng-container *ngIf='user.account_type!="guest"'>
         <form [formGroup]="squealForm" (ngSubmit)="createSqueal()">
 
           <div class="mb-1">
             <label for="squeal-txt-input" class="form-label"></label>
             <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
-              placeholder="Write your squeal..." class="form-control col-12" rows="3" id="squeal-txt-input"></textarea>
+              placeholder="Write your squeal..." class="form-control col-12 p-3" rows="3"
+              id="squeal-txt-input"></textarea>
           </div>
 
           <div class="accordion" id="accordionRecipients">
             <div class="accordion-item">
               <h2 class="accordion-header" id="recipientsHeader">
-                <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse"
+                <button class="accordion-button collapsed p-2 ps-3" type="button" data-bs-toggle="collapse"
                   data-bs-target="#collapsRecipients" aria-expanded="false" aria-controls="collapsRecipients"
                   id="recipients-button">
                   Recipients
@@ -51,7 +52,7 @@
       </ng-container>
 
       <ng-container *ngIf='user.account_type=="guest"'>
-        <div class="guest-message"> <a href="/login">Log-in</a> if you want to post a squeal</div>
+        <div class="guest-message pt-4"> <a href="/login">Log-in</a> if you want to post a squeal</div>
       </ng-container>
 
 

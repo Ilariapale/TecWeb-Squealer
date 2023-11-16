@@ -20,6 +20,10 @@ export class NavbarComponent {
     this.textMode = this.darkModeService.darkMode ? 'Light mode' : 'Dark mode';
   }
 
+  getThemeClass() {
+    return this.darkModeService.getThemeClass();
+  }
+
   deleteProfile() {
     //TODO delete profile
   }

@@ -1,6 +1,6 @@
 * {
   user-select: none;
-  font-family: "Roboto", sans-serif;
+  font-family: "Roboto", "Asap", sans-serif;
 }
 
 .main-content {
@@ -47,6 +47,13 @@
   background-color: rgb(233, 233, 233);
 }
 
+#squeal-form,
+.squeal,
+.side-menu {
+  transition: background-color 0.3s ease;
+}
+
+
 #squeal-form.dark-theme {
   background-color: rgb(33, 37, 41);
   color: #d4d4d4;
@@ -58,6 +65,8 @@
   color: rgb(33, 37, 41);
   border-color: rgb(150, 150, 150);
 }
+
+
 
 .submit-button.dark-theme {
   background-color: #ff4081;

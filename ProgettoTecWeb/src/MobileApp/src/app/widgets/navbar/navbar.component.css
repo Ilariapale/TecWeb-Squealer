@@ -5,3 +5,11 @@
 .menu-profile-size {
   font-size: 0.9em;
 }
+
+.navbar {
+  z-index: 1050;
+}
+
+.clickable {
+  cursor: pointer;
+}

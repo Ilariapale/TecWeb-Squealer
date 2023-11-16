@@ -1,66 +1,86 @@
 <nav class="navbar navbar-dark bg-dark fixed-top">
   <div class=" container-fluid">
-    <img width="40" alt="Squealer Logo" src="assets/imgs/logo.png" />
-    <a class="navbar-brand" href="#">Squealer</a>
+    <a href="/home">
+      <img width="40" alt="Squealer Logo" src="assets/imgs/logo.png" />
+    </a>
+    <a class="navbar-brand" href="/home">Squealer</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"
       aria-controls="offcanvasDarkNavbar" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar"
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasDarkNavbar"
       aria-labelledby="offcanvasDarkNavbarLabel">
-      <div class="offcanvas-header">
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      <div [class.bg-dark]="getThemeClass()=='dark-theme'" [class.bg-light]="getThemeClass()=='light-theme'"
+        class="offcanvas-header side-menu">
+        <button type="button" class="btn-close" [class.btn-close-white]="getThemeClass()=='dark-theme'"
+          data-bs-dismiss="offcanvas" aria-label="Close"></button>
         <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">Menù</h5>
 
       </div>
-      <div class="offcanvas-body">
+      <div [class.bg-dark]="getThemeClass()=='dark-theme'" [class.bg-light]="getThemeClass()=='light-theme'"
+        class="offcanvas-body side-menu" [class.text-dark]="getThemeClass()=='light-theme'">
         <ul class="navbar-nav text-end flex-grow-1 pe-2 menu-font-size ">
           <li class=" nav-item row py-3">
-            <a class="nav-link active col-10" aria-current="page" href="/home">
+            <a class="col"></a>
+            <a class="nav-link active col-auto" [class.text-dark]="getThemeClass()=='light-theme'" aria-current="page"
+              href="/home">
               Home
             </a>
-            <i class="bi bi-house-door col-2 d-flex justify-content-center align-items-center"></i>
+            <i class="bi bi-house-door col-2 d-flex justify-content-center align-items-center clickable"
+              href="/home"></i>
           </li>
           <li class="nav-item row py-3">
-            <a class="nav-link col-10 " href="/profile">
+            <a class="col"></a>
+            <a class="nav-link col-auto " [class.text-dark]="getThemeClass()=='light-theme'" href="/profile">
               Profile
             </a>
-            <a class="nav-link bi bi-person col-2 d-flex justify-content-center align-items-center" href="/profile"></a>
+            <i class="bi bi-person col-2 d-flex justify-content-center align-items-center clickable"
+              href="/profile"></i>
           </li>
 
           <li class="nav-item row py-3">
-            <a class="nav-link col-10 " href="/store">
+            <a class="col"></a>
+            <a class="nav-link col-auto " [class.text-dark]="getThemeClass()=='light-theme'" href="/store">
               Store
             </a>
-            <a class="nav-link bi bi-shop col-2 d-flex justify-content-center align-items-center" href="/store"></a>
+            <i class="bi bi-shop col-2 d-flex justify-content-center align-items-center clickable" href="/store"></i>
           </li>
           <li class="nav-item row py-3">
-            <a class="nav-link col-10 " href="/search">
+            <a class="col"></a>
+            <a class="nav-link col-auto " [class.text-dark]="getThemeClass()=='light-theme'" href="/search">
               Search
             </a>
-            <a class="nav-link bi bi-search col-2 d-flex justify-content-center align-items-center" href="/search"></a>
+            <i class="bi bi-search col-2 d-flex justify-content-center align-items-center clickable" href="/search"></i>
           </li>
-          <hr class=" py-3">
+          <hr class="my-3">
           <li class="nav-item row py-3">
-            <a class="nav-link col-10 " onmouseover="" style="cursor: pointer;" (click)="toggleDarkMode()">
+            <a class="col"></a>
+            <a class="nav-link col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'"
+              (click)="toggleDarkMode()" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar">
               {{textMode}}
             </a>
-            <a [class.bi-brightness-high]="textMode=='Light mode'" [class.bi-moon]="textMode=='Dark mode'"
-              class="nav-link bi col-2 d-flex justify-content-center align-items-center" (click)="toggleDarkMode()"></a>
+            <i [class.bi-brightness-high]="getThemeClass()=='dark-theme'"
+              [class.bi-moon]="getThemeClass()=='light-theme'"
+              class="bi col-2 d-flex justify-content-center align-items-center clickable" (click)="toggleDarkMode()"
+              data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
           <li class="nav-item row py-3">
-            <a class="nav-link col-10 " onmouseover="" style="cursor: pointer;" (click)="logout()">
+            <a class="col"></a>
+            <a class="nav-link col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'" (click)="logout()"
+              data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar">
               Logout
             </a>
-            <a class="nav-link bi bi-box-arrow-right col-2 d-flex justify-content-center align-items-center"
-              href="#"></a>
+            <i class="bi bi-box-arrow-right col-2 d-flex justify-content-center align-items-center clickable"
+              (click)="logout()" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
           <li class="nav-item row py-3">
-            <a class="nav-link col-10 text-danger" onmouseover="" style="cursor: pointer;" (click)="logout()">
+            <a class="col"></a>
+            <a class="nav-link col-auto text-danger clickable" (click)="deleteProfile()" data-bs-toggle="offcanvas"
+              data-bs-target="#offcanvasDarkNavbar">
               Delete account
             </a>
-            <a class="nav-link bi bi-trash col-2 d-flex justify-content-center align-items-center text-danger"
-              href="#"></a>
+            <i class="bi bi-trash col-2 d-flex justify-content-center align-items-center text-danger clickable"
+              (click)="deleteProfile()" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
         </ul>
 
