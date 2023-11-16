@@ -7,6 +7,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 })
 export class TagInputComponent {
   tags: string[] = [];
+  @Input() specialChar: string = '@';
   tagInput: string = '';
   @Input() placeholder: string = 'Add a tag';
   addTag() {
@@ -24,6 +25,7 @@ export class TagInputComponent {
   }
 
   getTags() {
+    console.log(this.specialChar, this.tags);
     return this.tags;
   }
 }

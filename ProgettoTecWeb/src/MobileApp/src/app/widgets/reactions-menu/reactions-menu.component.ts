@@ -13,20 +13,6 @@ export class ReactionsMenuComponent {
 
   constructor(private squealService: SquealService) {}
 
-  setMouseOverTrue() {
-    this.isMouseOver = true;
-    this.isMenuClosing = false;
-  }
-
-  setMouseOverFalse() {
-    this.isMenuClosing = true;
-    setTimeout(() => {
-      if (this.isMenuClosing) {
-        this.isMouseOver = false;
-      }
-    }, 500);
-  }
-
   addReaction(reaction: string, event: Event) {
     event.preventDefault();
     this.squealService.addReaction(reaction, this.squealId).subscribe(

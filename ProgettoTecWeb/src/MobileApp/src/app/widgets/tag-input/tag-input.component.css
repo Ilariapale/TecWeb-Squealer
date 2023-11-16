@@ -4,6 +4,7 @@
   padding: 5px 10px;
   background-color: #f2f2f2;
   border-radius: 5px;
+  color: rgb(33, 37, 41);
 }
 
 .tag span {
@@ -15,6 +16,7 @@
   color: red;
 }
 
-input {
-  margin-top: 10px;
+.special-char {
+  width: 40px;
+  justify-content: center;
 }

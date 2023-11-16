@@ -1,14 +1,41 @@
-<!-- messages.component.html -->
-<app-navbar></app-navbar>
-<div class="messages">
-  <h1>Messaggi dell'utente</h1>
+<div>
+  <div role="main">
+    <!-- Contenuto principale -->
+    <div>
+      <h1 class="m-1 pb-2">Messages</h1>
+    </div>
 
-  <div *ngFor="let message of messages">
-    <div class="message" [ngClass]="{'unread': !message.read}">
-      {{ message.text }}
+    <div class="card card-body">
+      <app-chat></app-chat>
+    </div>
+
+    <div class="accordion accordion-flush">
+      <div *ngFor="let message of messages; let i = index">
+        <!-- Contenuto del messaggio -->
+
+        <div class="accordion-item m-1" data-bs-toggle="collapse" [attr.href]="'#multiCollapse' + i" role="button"
+          aria-expanded="false" [attr.aria-controls]="'multiCollapse' + i">
+          <div class="accordion-button collapsed bg-opacity-10" [ngClass]="{
+                  'bg-secondary': message.read === false,
+                  'bg-light': message.read === true
+                }">
+            {{ message.text }}
+          </div>
+          <div class="accordion-body" [attr.id]="'card-body' + i">
+            <div class="row">
+              <div class="col">
+                <div class="collapse multi-collapse" [attr.id]="'multiCollapse' + i">
+                  <div class="card card-body">
+                    <app-chat></app-chat>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button (click)="markAllAsRead()">Segna tutti come letti</button>
     </div>
   </div>
-
-  <button (click)="markAllAsRead()">Segna tutti come letti</button>
 </div>
-<app-footer></app-footer>

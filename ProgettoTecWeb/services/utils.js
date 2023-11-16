@@ -87,6 +87,7 @@ async function findUser(identifier) {
     return response;
   }
   if (!response.data) {
+    console.log(identifier, response);
     response.error = `User not found.`;
     response.status = 404;
   } else {
@@ -351,6 +352,21 @@ async function containsOfficialChannels(channelArray) {
   return containsOfficial;
 }
 
+async function addCommentsCountToSqueals(squeals) {
+  const squealIds = squeals.map((squeal) => squeal._id);
+  const commentCounts = await CommentSection.aggregate([
+    { $match: { squeal_ref: { $in: squealIds } } },
+    { $project: { squeal_ref: 1, comments_count: { $size: "$comments_array" } } },
+  ]);
+
+  const commentCountsMap = new Map(commentCounts.map((count) => [count.squeal_ref.toString(), count.comments_count]));
+
+  return squeals.map((squeal) => ({
+    ...squeal.toObject(),
+    comments_count: commentCountsMap.get(squeal._id.toString()) || 0,
+  }));
+}
+
 function hasEnoughCharQuota(user, contentType, content) {
   const { extra_daily, daily, weekly, monthly } = user.char_quota;
   //if the user has no daily, weekly or monthly char_quota, return false
@@ -538,6 +554,9 @@ async function updateRecipientsChannels(channels, squeal) {
 
 function checkIfArrayIsValid(input_array) {
   if (!input_array) return { isValid: true, value: [] };
+  if (Array.isArray(input_array)) {
+    return { isValid: true, value: input_array };
+  }
   try {
     input_array = JSON.parse(input_array);
     if (!Array.isArray(input_array)) return { isValid: false, value: undefined };
@@ -680,6 +699,8 @@ function generateToken(user_data) {
     username: user_data.username,
     char_quota: user_data.char_quota,
     preferences: user_data.preferences,
+    notifications: user_data.notifications,
+    messages: user_data.messages,
   };
 
   const payload = { user };
@@ -738,6 +759,7 @@ module.exports = {
   checkIfArrayIsValid,
   verifyToken,
   generateToken,
+  addCommentsCountToSqueals,
   hasEnoughCharQuota,
   removeQuota,
   addedAndRemoved,

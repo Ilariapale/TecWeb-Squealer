@@ -36,4 +36,5 @@ export interface Squeal {
   };
   is_in_official_channel?: Boolean;
   impressions?: Number;
+  comments_count?: Number;
 }

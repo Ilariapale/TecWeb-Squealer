@@ -10,10 +10,14 @@ import { SearchComponent } from './pages/search/search.component';
 import { StoreComponent } from './pages/store/store.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
 import { MessagesComponent } from './pages/messages/messages.component';
+import { ReactionsMenuComponent } from './widgets/reactions-menu/reactions-menu.component';
+//import { PageLayoutComponent } from './pages/page-layout/page-layout.component';
 
 const routes: Routes = [
   //redirect the empty path to the home page
   { path: '', redirectTo: '/home', pathMatch: 'full' },
+  //redirect the empty path to the login page
+  //{ path: '', component: PageLayoutComponent, children: [{ path: '', component: HomeComponent }] },
   { path: 'login', component: LoginComponent },
   { path: 'home', component: HomeComponent },
   { path: 'signup', component: SignupComponent },
@@ -23,6 +27,7 @@ const routes: Routes = [
   { path: 'store', component: StoreComponent },
   { path: 'notifications', component: NotificationsComponent },
   { path: 'messages', component: MessagesComponent },
+  { path: 'menu', component: ReactionsMenuComponent },
 ];
 
 @NgModule({

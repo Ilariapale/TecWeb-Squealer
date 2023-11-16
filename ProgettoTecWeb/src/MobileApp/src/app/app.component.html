@@ -1,9 +1,7 @@
-<!-- google-maps-demo.component.html >
-<google-map height="400px" width="750px" [center]="center" [zoom]="zoom" (mapClick)="moveMap($event)"
-  (mapMousemove)="move($event)">
-</google-map>
-
-<div>Latitude: {{display?.lat}}</div>
-<div>Longitude: {{display?.lng}}</div -->
-
-<router-outlet></router-outlet>
+<body [class]="getThemeClass()">
+  <app-navbar></app-navbar>
+  <div class="main-content">
+    <router-outlet></router-outlet>
+  </div>
+  <app-footer></app-footer>
+</body>

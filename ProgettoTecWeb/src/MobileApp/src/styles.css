@@ -1,0 +1,88 @@
+* {
+  user-select: none;
+  font-family: "Roboto", sans-serif;
+}
+
+.main-content {
+  padding: 0 10px;
+  margin-top: 50px;
+  margin-bottom: 50px;
+  /* Altezza della barra di navigazione */
+}
+
+.sticky-footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+
+.light-theme {
+  background-color: #d4d4d4;
+  color: rgb(33, 37, 41);
+}
+
+/* Stili specifici per il tema scuro */
+.dark-theme {
+  background-color: rgb(33, 37, 41);
+  color: #d4d4d4;
+}
+
+.squeal.dark-theme {
+  background-color: rgb(33, 37, 41);
+  color: #d4d4d4;
+  border-color: rgb(80, 79, 79);
+}
+
+.squeal.dark-theme:hover {
+  background-color: rgb(50, 55, 61);
+}
+
+.squeal.light-theme {
+  background-color: rgb(248, 249, 250);
+  color: rgb(65, 73, 82);
+  border-color: rgb(150, 150, 150);
+}
+
+.squeal.light-theme:hover {
+  background-color: rgb(233, 233, 233);
+}
+
+#squeal-form.dark-theme {
+  background-color: rgb(33, 37, 41);
+  color: #d4d4d4;
+  border-color: rgb(80, 79, 79);
+}
+
+#squeal-form.light-theme {
+  background-color: #d4d4d4;
+  color: rgb(33, 37, 41);
+  border-color: rgb(150, 150, 150);
+}
+
+.submit-button.dark-theme {
+  background-color: #ff4081;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.submit-button.light-theme {
+  background-color: #ff4081;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #f50057;
+}

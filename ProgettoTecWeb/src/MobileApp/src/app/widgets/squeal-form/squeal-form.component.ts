@@ -7,6 +7,7 @@ import { User } from 'src/app/models/user.interface';
 import { Recipients } from 'src/app/models/squeal.interface';
 import { TagInputComponent } from '../tag-input/tag-input.component';
 import { firstValueFrom } from 'rxjs';
+import { DarkModeService } from 'src/app/services/dark-mode.service';
 //TODOfare in modo che quando scrivo un recipient nel form questo si stilizzi
 @Component({
   selector: 'app-squeal-form',
@@ -48,28 +49,19 @@ export class SquealFormComponent {
     private formBuilder: FormBuilder,
     private http: HttpClient,
     public userService: UserService,
-    private squealService: SquealService
+    private squealService: SquealService,
+    private darkModeService: DarkModeService
   ) {
-    console.log('Constructor of squeal-form');
     firstValueFrom(this.userService.getUserData()).then((userData) => {
-      console.log('AAAAAAAAAAAAAAAAAA');
       this.user = userData;
-      console.log('BBBBBBBBBBBBBBBBBB');
       if (userData.account_type == 'guest') {
-        console.log('CCCCCCCCCCCCCCCCCCC');
         this.isLogged = false;
       } else {
-        console.log('0');
         this.isLogged = true;
-        console.log('A');
         this.char_left.daily = this.user.char_quota.daily;
-        console.log('B');
         this.char_left.weekly = this.user.char_quota.weekly;
-        console.log('C');
         this.char_left.monthly = this.user.char_quota.monthly;
-        console.log('D');
         this.char_left.extra_daily = this.user.char_quota.extra_daily;
-        console.log('E');
       }
     });
   }
@@ -111,6 +103,10 @@ export class SquealFormComponent {
     this.user.char_quota.extra_daily = this.char_left.extra_daily <= 0 ? 0 : this.char_left.extra_daily;
   }
 
+  getThemeClass() {
+    return this.darkModeService.getThemeClass();
+  }
+
   getRecipients() {
     this.recipients.users = this.usersComponent.getTags();
     this.recipients.channels = this.channelsComponent.getTags();
@@ -132,6 +128,7 @@ export class SquealFormComponent {
   createSqueal() {
     if (this.squealForm.valid) {
       this.getRecipients();
+      console.log(this.recipients);
       // Invia il nuovo squeal al tuo backend o a un servizio API
       const squeal_content = this.squealForm.value.text;
       //console.log('Nuovo squeal:', squealText);

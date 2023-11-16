@@ -1,10 +1,7 @@
-<link href="https://fonts.googleapis.com/css?family=Asap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" />
-
-<div class="squeal-wrap">
+<div id="squeal-form" [class]="getThemeClass()" class="squeal-wrap">
   <div class="squeal-header">
-    <img src="../../assets/imgs/logo.png" alt="" class="avatar" />
     <div class="squeal-header-info">
+      <img src="../../assets/imgs/logo.png" alt="" class="avatar" />
       {{user.account_type}}
       <span>@{{user.username}}</span>
       <div *ngIf="enoughChars && isLogged" class="char_left squeal-form-text">
@@ -15,16 +12,41 @@
       </div>
 
       <div *ngIf='enoughChars == false' class="char_left squeal-form-text">Not enough chars left!</div>
-      <ng-container *ngIf='user.account_type!="guest"'>
+      <ng-container *ngIf='true || user.account_type!="guest"'>
         <form [formGroup]="squealForm" (ngSubmit)="createSqueal()">
-          <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
-            placeholder="Scrivi il tuo squeal" class="col-12"></textarea>
 
-          <app-tag-input #usersInput [placeholder]="'Add a user...'"></app-tag-input>
-          <app-tag-input #channelsInput [placeholder]="'Add a channel...'"></app-tag-input>
-          <app-tag-input #keywordsInput [placeholder]="'Add a keyword...'"></app-tag-input>
+          <div class="mb-1">
+            <label for="squeal-txt-input" class="form-label"></label>
+            <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
+              placeholder="Write your squeal..." class="form-control col-12" rows="3" id="squeal-txt-input"></textarea>
+          </div>
 
-          <button type="submit" class="submit-button">Send</button>
+          <div class="accordion" id="accordionRecipients">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="recipientsHeader">
+                <button class="accordion-button collapsed p-2" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapsRecipients" aria-expanded="false" aria-controls="collapsRecipients"
+                  id="recipients-button">
+                  Recipients
+                </button>
+              </h2>
+              <div id="collapsRecipients" class="accordion-collapse collapse" aria-labelledby="recipientsHeader"
+                data-bs-parent="#accordionRecipients">
+                <div class="accordion-body">
+                  <app-tag-input #usersInput [placeholder]="'Add a user...'" [specialChar]="'@'"></app-tag-input>
+                  <app-tag-input #channelsInput [placeholder]="'Add a channel...'" [specialChar]="'§'"></app-tag-input>
+                  <app-tag-input #keywordsInput [placeholder]="'Add a keyword...'" [specialChar]="'#'"></app-tag-input>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+
+          <div class="row">
+            <div class="col"></div>
+            <button type="submit" class="submit-button btn btn-secondary col-2 m-3 my-1">Post</button>
+          </div>
         </form>
       </ng-container>
 

@@ -1,15 +1,28 @@
 <!-- notifications.component.html -->
-<app-navbar></app-navbar>
 
-<div class="notifications">
-  <h1>Notifiche dell'utente</h1>
+
+<div role="main">
+  <div>
+    <h1 class="m-1 p-2 pt-3">Notifications</h1>
+  </div>
 
   <div *ngFor="let notification of notifications">
-    <div class="notification" [ngClass]="{'unread': !notification.read}">
-      {{ notification.message }}
+    <div class="card m-1" href="#">
+      <div class="card-body bg-opacity-10" [ngClass]="{
+          'bg-secondary': notification.is_unseen === true,
+          'bg-light': notification.is_unseen === false
+        }">
+        <h5 class="card-title" [ngClass]="{
+        'text-primary': notification.source === 'squeal',
+        'text-warning': notification.source === 'channel',
+        'text-info': notification.source === 'user',
+        'text-danger': notification.source === 'system'
+      }">{{ notification.source | titlecase }}</h5>
+        <p class="card-text">{{ notification.content }}</p>
+      </div>
     </div>
   </div>
 
+
   <button (click)="markAllAsRead()">Segna tutte come viste</button>
 </div>
-<app-footer></app-footer>

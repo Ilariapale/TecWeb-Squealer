@@ -1,5 +1,5 @@
 <nav class="navbar navbar-dark bg-dark fixed-top">
-  <div class="container-fluid">
+  <div class=" container-fluid">
     <img width="40" alt="Squealer Logo" src="assets/imgs/logo.png" />
     <a class="navbar-brand" href="#">Squealer</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"
@@ -42,14 +42,21 @@
           </li>
           <hr class=" py-3">
           <li class="nav-item row py-3">
-            <a class="nav-link col-10 " (click)="logout()">
+            <a class="nav-link col-10 " onmouseover="" style="cursor: pointer;" (click)="toggleDarkMode()">
+              {{textMode}}
+            </a>
+            <a [class.bi-brightness-high]="textMode=='Light mode'" [class.bi-moon]="textMode=='Dark mode'"
+              class="nav-link bi col-2 d-flex justify-content-center align-items-center" (click)="toggleDarkMode()"></a>
+          </li>
+          <li class="nav-item row py-3">
+            <a class="nav-link col-10 " onmouseover="" style="cursor: pointer;" (click)="logout()">
               Logout
             </a>
             <a class="nav-link bi bi-box-arrow-right col-2 d-flex justify-content-center align-items-center"
               href="#"></a>
           </li>
           <li class="nav-item row py-3">
-            <a class="nav-link col-10 text-danger" (click)="logout()">
+            <a class="nav-link col-10 text-danger" onmouseover="" style="cursor: pointer;" (click)="logout()">
               Delete account
             </a>
             <a class="nav-link bi bi-trash col-2 d-flex justify-content-center align-items-center text-danger"

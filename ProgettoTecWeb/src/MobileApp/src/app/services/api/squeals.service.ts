@@ -12,23 +12,23 @@ export class SquealService {
 
   constructor(private http: HttpClient) {}
 
-  authenticatedHeadersGenerator() {
-    const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
-    // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
-    const headers = new HttpHeaders().set('Authorization', `${token}`);
-    const requestOptions = { headers: headers };
-    console.log(requestOptions);
-    return requestOptions;
-  }
-
-  guestHeadersGenerator() {
-    const headers = new HttpHeaders();
-    const requestOptions = { headers: headers };
-    return requestOptions;
+  headersGenerator(authenticated: boolean) {
+    if (!authenticated) {
+      const headers = new HttpHeaders();
+      const requestOptions = { headers: headers };
+      return requestOptions;
+    } else {
+      const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
+      // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
+      const headers = new HttpHeaders().set('Authorization', `${token}`);
+      const requestOptions = { headers: headers };
+      console.log(requestOptions);
+      return requestOptions;
+    }
   }
 
   getSqueals(): Observable<any> {
-    const requestOptions = this.authenticatedHeadersGenerator();
+    const requestOptions = this.headersGenerator(true);
     return this.http.get(`${this.apiUrl}`, requestOptions);
   }
   postSqueal(
@@ -37,7 +37,7 @@ export class SquealService {
     content_type?: ContentType,
     is_scheduled?: boolean
   ): Observable<any> {
-    const requestOptions = this.authenticatedHeadersGenerator();
+    const requestOptions = this.headersGenerator(true);
     const body: { [key: string]: any } = { content };
 
     recipients
@@ -54,7 +54,7 @@ export class SquealService {
   }
   getHome(isGuest: boolean, lastLoaded?: number, pagSize?: number): Observable<any> {
     //TODO controllare se funziona
-    const requestOptions = isGuest ? this.guestHeadersGenerator() : this.authenticatedHeadersGenerator();
+    const requestOptions = this.headersGenerator(!isGuest);
 
     let url = `${this.apiUrl}/home`;
     //console.log(url, headers);
@@ -74,7 +74,7 @@ export class SquealService {
     return this.http.delete(`${this.apiUrl}`);
   }
   addReaction(reaction: String, squeal_id: String): Observable<any> {
-    const requestOptions = this.authenticatedHeadersGenerator();
+    const requestOptions = this.headersGenerator(true);
     return this.http.patch(`${this.apiUrl}/${squeal_id}/reaction/${reaction}`, {}, requestOptions);
   }
   updateSqueal(): Observable<any> {

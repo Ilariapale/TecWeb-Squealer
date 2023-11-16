@@ -26,6 +26,7 @@ const {
   containsOfficialChannels,
   checkIfRecipientsAreValid,
   checkIfArrayIsValid,
+  addCommentsCountToSqueals,
 } = require("./utils");
 
 const { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } = require("./constants");
@@ -263,6 +264,9 @@ module.exports = {
     }
     await Promise.all(squealImpressionsPromises);
 
+    //aggiungo il campo "comments_total" ad ogni squeal:
+    data = await addCommentsCountToSqueals(data);
+    console.log(data);
     //return the squeals
     return {
       status: 200,
@@ -320,6 +324,7 @@ module.exports = {
     squeal.impressions++;
     squeal.save();
 
+    squeal = await addCommentsCountToSqueals([squeal]);
     return {
       status: 200,
       data: squeal,
@@ -634,7 +639,8 @@ module.exports = {
         },
       ];
     }
-    const squeals_array = await Squeal.find(query).sort({ created_at: -1 }).limit(pag_size).exec();
+    let squeals_array = await Squeal.find(query).sort({ created_at: -1 }).limit(pag_size).exec();
+    squeals_array = await addCommentsCountToSqueals(squeals_array);
     return {
       status: 200,
       data: squeals_array,
@@ -751,6 +757,7 @@ module.exports = {
     //add the squeal to the user squeals.reacted_to
     user.squeals.reacted_to.push(squeal._id);
     await user.save();
+
     return {
       status: 200,
       data: squeal,

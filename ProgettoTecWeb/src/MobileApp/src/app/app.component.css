@@ -1,0 +1,10 @@
+body {
+  user-select: none;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s ease;
+  overflow: hidden;
+  /* Hide scrollbars */
+}
+
+/* Stili specifici per il tema chiaro */

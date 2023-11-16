@@ -41,6 +41,26 @@ router.get("/username", async (req, res, next) => {
   }
 });
 
+//users/notification
+router.get("/notifications", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+    };
+    try {
+      const result = await users.getNotifications(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    // Utente non loggato, invia una risposta di errore o reindirizza alla pagina di login
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
+  }
+});
+
 //Token not required for creating an account
 router.post("/", async (req, res, next) => {
   const options = { userInput: req.body };
@@ -200,6 +220,28 @@ router.delete("/VIP", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
+//users/notification?value=true   body:{notification_array: ["427618673", "427618674"]]}
+router.patch("/notification", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+      value: req.query.value,
+    };
+
+    options.inlineReqJson = req.body;
+
+    try {
+      const result = await users.setNotificationStatus(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
 //users/paulpaccy/type   body: {account_type:"professional", professional_type:"SMM"}
 router.patch("/:identifier/type", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
@@ -277,28 +319,6 @@ router.patch("/:identifier/ban-status", verifyToken, async (req, res, next) => {
 
     try {
       const result = await users.userBanStatus(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
-//users/notification?value=true   body:{notification_array: ["427618673", "427618674"]]}
-router.patch("/notification", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      user_id: req.user_id,
-      value: req.query.value,
-    };
-
-    options.inlineReqJson = req.body;
-
-    try {
-      const result = await users.setNotificationStatus(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       return res.status(500).send({

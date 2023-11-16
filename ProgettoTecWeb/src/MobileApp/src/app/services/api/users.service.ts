@@ -1,31 +1,58 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
+import { Notification } from 'src/app/models/notification.interface';
 
 @Injectable({
   providedIn: 'root',
 })
-export class UserService {
+export class UsersService {
   private apiUrl = '/users'; // Sostituisci con l'URL del tuo backend API
 
   constructor(private http: HttpClient) {}
 
-  getUsername(): Observable<any> {
-    //return this.http.get(`${this.apiUrl}`);
-
-    const token =
-      sessionStorage.getItem('Authorization') ||
-      localStorage.getItem('Authorization');
+  authenticatedHeadersGenerator() {
+    const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
     // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
     const headers = new HttpHeaders().set('Authorization', `${token}`);
     const requestOptions = { headers: headers };
-    let url = `${this.apiUrl}/home`;
-    console.log(url, headers);
+    console.log(requestOptions);
+    return requestOptions;
+  }
 
-    return this.http.get(url, requestOptions);
+  getUsername(): Observable<any> {
+    //return this.http.get(`${this.apiUrl}`);
+    let url = `${this.apiUrl}/home`;
+    return this.http.get(url, this.authenticatedHeadersGenerator());
   }
 
   postUsers(): Observable<any> {
     return this.http.post(`${this.apiUrl}`, {});
+  }
+
+  getNotifications(): Observable<Notification[]> {
+    let url = `${this.apiUrl}/notifications?`;
+    const notifications = this.http.get(url, this.authenticatedHeadersGenerator());
+
+    return this.http.get<Notification[]>(url, this.authenticatedHeadersGenerator()).pipe(
+      map((notificationsFromServer: any[]) => {
+        return notificationsFromServer.map((notificationData: any) => {
+          const notification: Notification = {
+            _id: notificationData._id,
+            content: notificationData.content,
+            is_unseen: notificationData.is_unseen,
+            created_at: notificationData.created_at,
+            user_ref: notificationData.user_ref,
+            squeal_ref: notificationData.squeal_ref,
+            channel_ref: notificationData.channel_ref,
+            comment_ref: notificationData.comment_ref,
+            reply: notificationData.reply,
+            source: notificationData.source,
+          };
+          // Map other properties as needed
+          return notification;
+        });
+      })
+    );
   }
 }

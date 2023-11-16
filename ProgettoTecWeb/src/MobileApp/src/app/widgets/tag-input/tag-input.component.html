@@ -1,7 +1,13 @@
 <div *ngFor="let tag of tags" class="tag">
-  <span>@</span>{{tag}}
+  <span>{{specialChar}}</span>{{tag}}
   <span class="delete" (click)="removeTag(tag)">x</span>
 </div>
-<div>
-  <input [(ngModel)]="tagInput" (keyup.space)="addTag()" placeholder="{{placeholder}}">
-</div>
+<nav class="navbar p-0">
+  <form class="container-fluid m-1">
+    <div class="input-group">
+      <span class="input-group-text special-char" id="basic-addon1">{{specialChar}}</span>
+      <input [(ngModel)]="tagInput" (focusout)="addTag()" (keyup.space)="addTag()" placeholder="{{placeholder}}"
+        type="text" class="form-control" aria-describedby="basic-addon1">
+    </div>
+  </form>
+</nav>

@@ -1,0 +1,17 @@
+.card {
+  /* Altri stili della card */
+
+  /* Impostazione iniziale */
+  background: rgba(0, 0, 0, 0);
+  border: 1px solid #ccc;
+
+  /* Transizione */
+  transition: background 0.3s ease, border 0.3s ease;
+}
+
+.card:hover {
+  /* Stile durante l'hover */
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid #a0a0a0;
+  /* Cambia colore del bordo durante l'hover */
+}

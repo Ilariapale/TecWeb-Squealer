@@ -1,5 +1,5 @@
 // messages.component.ts
-
+//TODO implementare la richiesta al server
 import { Component } from '@angular/core';
 
 interface Message {
@@ -17,6 +17,21 @@ export class MessagesComponent {
     { text: 'Nuovo messaggio 1', read: false },
     { text: 'Nuovo messaggio 2', read: true },
     { text: 'Nuovo messaggio 3', read: false },
+    { text: 'Nuovo messaggio 1', read: false },
+    { text: 'Nuovo messaggio 2', read: true },
+    { text: 'Nuovo messaggio 3', read: false },
+    { text: 'Nuovo messaggio 1', read: false },
+    { text: 'Nuovo messaggio 2', read: true },
+    { text: 'Nuovo messaggio 3', read: false },
+    { text: 'Nuovo messaggio 1', read: false },
+    { text: 'Nuovo messaggio 2', read: true },
+    { text: 'Nuovo messaggio 3', read: false },
+    { text: 'Nuovo messaggio 1', read: false },
+    { text: 'Nuovo messaggio 2', read: true },
+    { text: 'Nuovo messaggio 3', read: false },
+    { text: 'Nuovo messaggio 1', read: false },
+    { text: 'Nuovo messaggio 2', read: true },
+    { text: 'Nuovo messaggio 3', read: false },
     // Aggiungi altri messaggi secondo necessità
   ];
 
@@ -24,5 +39,11 @@ export class MessagesComponent {
     this.messages.forEach((message) => {
       message.read = true;
     });
+  }
+  scrollToAccordion(elementId: string) {
+    const element = document.querySelector(elementId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 }

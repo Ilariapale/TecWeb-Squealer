@@ -1249,7 +1249,7 @@ module.exports = {
       if (!data.isValid) {
         return {
           status: 400,
-          data: { error: `Notification 'identifier' is not valid.` },
+          data: { error: `Notification 'identifiers' are not valid.` },
         };
       }
       const array = data.value;
@@ -1305,5 +1305,27 @@ module.exports = {
         data: { error: `Internal server error.` },
       };
     }
+  },
+
+  /**
+   * @param options.identifiers
+   */
+  getNotifications: async (options) => {
+    const { user_id } = options;
+
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: `'user_id' in token is not valid.` },
+      };
+    }
+    const reqSender = response.data;
+    const notificatins = await Notification.find({ _id: { $in: reqSender.notifications } });
+    return {
+      status: 200,
+      data: notificatins,
+    };
   },
 };

@@ -23,6 +23,7 @@ import { NavbarComponent } from './widgets/navbar/navbar.component';
 import { FooterComponent } from './widgets/footer/footer.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
 import { MessagesComponent } from './pages/messages/messages.component';
+import { ChatComponent } from './widgets/chat/chat.component';
 
 @NgModule({
   declarations: [
@@ -42,15 +43,9 @@ import { MessagesComponent } from './pages/messages/messages.component';
     FooterComponent,
     NotificationsComponent,
     MessagesComponent,
+    ChatComponent,
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    GoogleMapsModule,
-    ReactiveFormsModule,
-    FormsModule,
-    HttpClientModule,
-  ],
+  imports: [BrowserModule, AppRoutingModule, GoogleMapsModule, ReactiveFormsModule, FormsModule, HttpClientModule],
   providers: [],
   bootstrap: [AppComponent],
 })
