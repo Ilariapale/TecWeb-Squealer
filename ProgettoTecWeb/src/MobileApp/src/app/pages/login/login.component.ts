@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AuthService } from '../../services/api/auth.service';
 import { Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
+import { DarkModeService } from '../../services/dark-mode.service';
 //TODO css in dark mode
 @Component({
   selector: 'app-login',
@@ -15,7 +16,12 @@ export class LoginComponent {
   rememberMe: boolean = false;
   guestMode: boolean = false;
 
-  constructor(private authService: AuthService, private router: Router, private userService: UserService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private userService: UserService,
+    private darkModeService: DarkModeService
+  ) {}
   ngOnInit() {
     console.log('LoginComponent ngOnInit');
     if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) {
@@ -47,5 +53,9 @@ export class LoginComponent {
           this.errorMessage = error.error.error;
         }
       );
+  }
+
+  getThemeClass() {
+    return this.darkModeService.getThemeClass();
   }
 }
