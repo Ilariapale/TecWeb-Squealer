@@ -2,7 +2,6 @@ import { Component, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/api/auth.service';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
-
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',

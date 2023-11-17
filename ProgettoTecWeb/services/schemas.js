@@ -15,7 +15,7 @@ const ChatSchema = new mongoose.Schema({
     ],
     default: [],
   },
-  created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+  last_modified: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
 });
 const Chat = mongoose.model("Chat", ChatSchema);
 

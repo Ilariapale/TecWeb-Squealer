@@ -4,6 +4,58 @@ const { findUser, findChat, mongooseObjectIdRegex } = require("./utils");
 const { DIRECT_MESSAGE_MAX_LENGTH, MESSAGES_TO_LOAD } = require("./constants");
 
 module.exports = {
+  getAllChatsPreview: async (options) => {
+    try {
+      const { user_id } = options;
+      const response = await findUser(user_id);
+
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+
+      const reqSender = response.data;
+      const chatIds = reqSender.direct_chats;
+
+      const chatPreviews = await Promise.all(
+        chatIds.map(async (chatId) => {
+          const chat = await Chat.findById(chatId).populate({
+            path: "partecipants",
+            select: "username",
+          });
+
+          if (!chat) {
+            return null;
+          }
+
+          const lastMessage = chat.messages[chat.messages.length - 1];
+          const sentByMe = chat.partecipants[lastMessage.sender] === reqSender.username;
+
+          const recipientIndex = chat.partecipants.findIndex((participant) => participant._id.toString() !== reqSender._id.toString());
+          const recipient = chat.partecipants[recipientIndex].username;
+          console.log(chat.last_modified.toJSON());
+          return {
+            _id: chat._id.toString(),
+            recipient: recipient,
+            last_message: lastMessage.text,
+            sent_by_me: sentByMe,
+            last_modified: chat.last_modified,
+          };
+        })
+      );
+
+      const filteredChatPreviews = chatPreviews.filter((chatPreview) => chatPreview !== null);
+
+      return {
+        status: 200,
+        data: filteredChatPreviews,
+      };
+    } catch (err) {
+      console.log(err);
+    }
+  },
   /**
    * @param options.identifier The identifier of the chat
    */
@@ -157,6 +209,7 @@ module.exports = {
     if (chat) {
       newMessage.sender = chat.partecipants.indexOf(sender._id);
       chat.messages.push(newMessage);
+      chat.last_modified = Date.now();
       await chat.save();
       return {
         status: 200,
@@ -168,7 +221,7 @@ module.exports = {
     chat = new Chat({
       partecipants: [sender._id, recipient._id],
       messages: [newMessage],
-      created_at: Date.now(),
+      last_modified: Date.now(),
     });
     await chat.save();
     // Add the chat to the sender and recipient

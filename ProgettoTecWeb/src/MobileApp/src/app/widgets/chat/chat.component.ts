@@ -24,6 +24,6 @@ export class ChatComponent {
       { sender: 0, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
       { sender: 1, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
     ],
-    created_at: new Date('1970-01-01T00:00:00Z'),
+    last_modified: new Date('1970-01-01T00:00:00Z'),
   };
 }

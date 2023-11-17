@@ -72,7 +72,7 @@ export class NotificationsComponent {
       } else {
         this.isGuest = false;
         this.usersService.getNotifications().subscribe((notifications) => {
-          this.notifications = notifications;
+          this.notifications = [...notifications].reverse();
         });
       }
     });

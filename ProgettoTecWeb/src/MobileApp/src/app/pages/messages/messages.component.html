@@ -1,41 +1,20 @@
 <div>
-  <div role="main">
-    <!-- Contenuto principale -->
-    <div>
-      <h1 class="m-1 pb-2">Messages</h1>
-    </div>
+  <div>
+    <h1 class="m-1 p-2 pt-3">Private messages</h1>
+  </div>
 
-    <div class="card card-body">
-      <app-chat></app-chat>
-    </div>
+  <div *ngFor="let chat of chatsPreview;">
+    <div class="card m-1" href="#">
+      <div class="card-body bg-opacity-10">
+        <h5 class="card-title">{{ chat.recipient}}</h5>
+        <div class="row">
+          <i class="card-text col"><i *ngIf="chat.sent_by_me">You: </i>{{ chat.last_message}}</i><i class="col">
+            {{ isToday(chat.last_modified) ? chat.last_modified.toLocaleTimeString() :
+            chat.last_modified.toLocaleDateString() }}
+          </i>
 
-    <div class="accordion accordion-flush">
-      <div *ngFor="let message of messages; let i = index">
-        <!-- Contenuto del messaggio -->
-
-        <div class="accordion-item m-1" data-bs-toggle="collapse" [attr.href]="'#multiCollapse' + i" role="button"
-          aria-expanded="false" [attr.aria-controls]="'multiCollapse' + i">
-          <div class="accordion-button collapsed bg-opacity-10" [ngClass]="{
-                  'bg-secondary': message.read === false,
-                  'bg-light': message.read === true
-                }">
-            {{ message.text }}
-          </div>
-          <div class="accordion-body" [attr.id]="'card-body' + i">
-            <div class="row">
-              <div class="col">
-                <div class="collapse multi-collapse" [attr.id]="'multiCollapse' + i">
-                  <div class="card card-body">
-                    <app-chat></app-chat>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-
-      <button (click)="markAllAsRead()">Segna tutti come letti</button>
     </div>
   </div>
 </div>
