@@ -16,13 +16,12 @@ export class UsersService {
     // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
     const headers = new HttpHeaders().set('Authorization', `${token}`);
     const requestOptions = { headers: headers };
-    console.log(requestOptions);
     return requestOptions;
   }
 
-  getUsername(): Observable<any> {
+  getUsername(user_id: string): Observable<any> {
     //return this.http.get(`${this.apiUrl}`);
-    let url = `${this.apiUrl}/home`;
+    let url = `${this.apiUrl}/${user_id}`;
     return this.http.get(url, this.authenticatedHeadersGenerator());
   }
 

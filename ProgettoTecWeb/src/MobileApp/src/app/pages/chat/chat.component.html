@@ -1,0 +1,24 @@
+<div role="main" class="m-3">
+  <div *ngFor="let message of chat.messages">
+
+    <div *ngIf="message.sender === reqSenderPosition" class="card text-dark bg-light mb-3 text-end float-end"
+      style="max-width: 20rem;">
+      <div class="card-header">You</div>
+      <div class="card-body">
+        <p class="card-text">{{message.text}}</p>
+        <div class="text-end timetext-color small">{{timeService.getRelativeTime(message.timestamp)}}</div>
+      </div>
+    </div>
+
+    <div *ngIf="message.sender !== reqSenderPosition" class="card text-white bg-primary mb-3 text-start float-start"
+      style="max-width: 20rem;">
+      <div class="card-header">{{recipient}}</div>
+      <div class="card-body">
+        <p class="card-text">{{message.text}}
+        </p>
+        <div class="timetext-color small">{{timeService.getRelativeTime(message.timestamp)}}</div>
+
+      </div>
+    </div>
+  </div>
+</div>

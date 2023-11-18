@@ -40,14 +40,10 @@ export class HomeComponent {
 
   ngOnInit() {
     //check if there is a token
-
-    console.log('isGuest: ' + this.isGuest);
-
     this.squealService.getHome(this.isGuest).subscribe(
       (response: any) => {
         //.slice().reverse()
         this.squeals = response;
-        console.log(this.squeals);
       },
       (error) => {
         const errorText = error.error.error;

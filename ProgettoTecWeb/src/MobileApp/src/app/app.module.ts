@@ -22,8 +22,8 @@ import { StoreComponent } from './pages/store/store.component';
 import { NavbarComponent } from './widgets/navbar/navbar.component';
 import { FooterComponent } from './widgets/footer/footer.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
-import { MessagesComponent } from './pages/messages/messages.component';
-import { ChatComponent } from './widgets/chat/chat.component';
+import { ChatsComponent } from './pages/chats/chats.component';
+import { ChatComponent } from './pages/chat/chat.component';
 
 @NgModule({
   declarations: [
@@ -42,7 +42,7 @@ import { ChatComponent } from './widgets/chat/chat.component';
     NavbarComponent,
     FooterComponent,
     NotificationsComponent,
-    MessagesComponent,
+    ChatsComponent,
     ChatComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, GoogleMapsModule, ReactiveFormsModule, FormsModule, HttpClientModule],

@@ -2,8 +2,8 @@
   <div class="squeal-header">
     <div class="squeal-header-info">
       <img src="../../assets/imgs/logo.png" alt="" class="avatar" />
-      {{user.account_type}}
-      <span>@{{user.username}}</span>
+      @{{user.username}}
+      <span>{{user.account_type}}</span>
       <div *ngIf="enoughChars && isLogged" class="char_left squeal-form-text">
         {{user.char_quota.daily}}<span class="quota_letter">D</span>
         {{user.char_quota.weekly}}<span class="quota_letter">W</span>

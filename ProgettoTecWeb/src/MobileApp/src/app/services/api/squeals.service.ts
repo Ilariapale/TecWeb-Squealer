@@ -22,7 +22,6 @@ export class SquealService {
       // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
       const headers = new HttpHeaders().set('Authorization', `${token}`);
       const requestOptions = { headers: headers };
-      console.log(requestOptions);
       return requestOptions;
     }
   }
@@ -49,7 +48,6 @@ export class SquealService {
         });
     if (content_type) body['content_type'] = content_type;
     if (is_scheduled) body['is_scheduled'] = is_scheduled;
-    console.log(body);
     return this.http.post(`${this.apiUrl}/`, body, requestOptions);
   }
   getHome(isGuest: boolean, lastLoaded?: number, pagSize?: number): Observable<any> {
@@ -57,7 +55,6 @@ export class SquealService {
     const requestOptions = this.headersGenerator(!isGuest);
 
     let url = `${this.apiUrl}/home`;
-    //console.log(url, headers);
     if (lastLoaded !== undefined && pagSize !== undefined)
       return this.http.get(url + `?lastLoaded=${lastLoaded}&pageSize=${pagSize}`, requestOptions);
 

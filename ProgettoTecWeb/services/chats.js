@@ -35,7 +35,6 @@ module.exports = {
 
           const recipientIndex = chat.partecipants.findIndex((participant) => participant._id.toString() !== reqSender._id.toString());
           const recipient = chat.partecipants[recipientIndex].username;
-          console.log(chat.last_modified.toJSON());
           return {
             _id: chat._id.toString(),
             recipient: recipient,
@@ -95,9 +94,10 @@ module.exports = {
     //check if the last_loaded_message is valid and exists
     if (!last_loaded_message) {
       chat.messages = chat.messages.slice(-MESSAGES_TO_LOAD);
+      const reqSenderPosition = chat.partecipants.indexOf(reqSender._id);
       return {
         status: 200,
-        data: chat,
+        data: { chat: chat, reqSenderPosition: reqSenderPosition },
       };
     }
     if (!mongooseObjectIdRegex.test(last_loaded_message)) {
@@ -121,9 +121,11 @@ module.exports = {
       };
     }
 
+    chat.reqSenderPosition = chat.partecipants.indexOf(reqSender._id);
+    const reqSenderPosition = chat.partecipants.indexOf(reqSender._id);
     return {
       status: 200,
-      data: chat,
+      data: { chat: chat, reqSenderPosition: reqSenderPosition },
     };
   },
 

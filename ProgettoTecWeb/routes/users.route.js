@@ -27,9 +27,9 @@ const { stringify } = require("querystring");
  }
 */
 
-router.get("/username", async (req, res, next) => {
+router.get("/username/:user_id", async (req, res, next) => {
   if (req.isTokenValid) {
-    const options = { userInput: req.body };
+    const options = { user_id: req.user_id };
     try {
       const result = await users.getUsername(options);
       res.status(result.status || 200).send(result.data);

@@ -23,14 +23,9 @@ export class LoginComponent {
     private darkModeService: DarkModeService
   ) {}
   ngOnInit() {
-    console.log('LoginComponent ngOnInit');
     if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) {
       this.router.navigate(['/home']);
-      console.log('already logged in');
-    } else {
-      console.log('not logged in');
     }
-
     //TODO check if the token is valid
   }
   onSubmit(): void {
@@ -44,7 +39,6 @@ export class LoginComponent {
       this.authService.login(this.username, this.password, this.rememberMe).subscribe(
         (response) => {
           // Gestisci la risposta dal servizio se necessario
-          //console.log('Login successful', response);
           this.router.navigate(['/home']);
           // Reindirizza l'utente a un'altra pagina se il login è riuscito
         },

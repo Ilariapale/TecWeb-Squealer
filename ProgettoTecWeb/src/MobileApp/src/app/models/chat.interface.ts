@@ -9,6 +9,7 @@ export interface Chat {
   partecipants: string[];
   messages: Message[];
   last_modified: string;
+  reqSenderPosition: number;
 }
 export interface ChatPreview {
   _id: string;

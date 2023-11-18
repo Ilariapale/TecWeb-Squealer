@@ -1,0 +1,35 @@
+<div role="main">
+  <div>
+    <div>
+      <h1 class="m-1 p-2 pt-3">Private messages</h1>
+    </div>
+    <div *ngIf="isGuest" class="m-3">
+      <a (click)="goToPage('login')" class="text-primary">Log-in</a> to view your private messages
+    </div>
+    <div *ngIf="!isGuest">
+      <div *ngFor="let chat of chatsPreview;">
+        <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center row">
+          <div class="col-1"></div>
+          <div class="toast show m-1 col col-md-2" [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert"
+            aria-live="assertive" aria-atomic="true" [routerLink]="['/private-chats/user', chat._id, chat.recipient]">
+            <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
+              <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
+                <rect width="100%" height="100%" [ngStyle]="{ 'fill': 'blue' }"></rect>
+              </svg>
+              <strong class="me-auto text-capitalize">{{ chat.recipient}}</strong>
+              <small>{{timeService.getRelativeTime(chat.last_modified)}}</small>
+              <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+              <i class="card-text col"><i *ngIf="chat.sent_by_me">You: </i>{{ chat.last_message}}</i><i class="col"></i>
+            </div>
+          </div>
+          <div class="col-1"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

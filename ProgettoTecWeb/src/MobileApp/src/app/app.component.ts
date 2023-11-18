@@ -12,6 +12,8 @@ export class AppComponent {
   constructor(private darkModeService: DarkModeService) {}
 
   getThemeClass() {
-    return this.darkModeService.getThemeClass();
+    let theme = this.darkModeService.getThemeClass(); //TODO body darktheme
+
+    return theme;
   }
 }

@@ -8,7 +8,7 @@ export enum Source {
 export interface Notification {
   _id?: string;
   is_unseen: Boolean;
-  created_at: String;
+  created_at: Date;
   content: String;
   squeal_ref?: String;
   channel_ref?: String;
