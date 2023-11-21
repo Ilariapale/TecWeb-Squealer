@@ -8,12 +8,15 @@ import { Source } from 'src/app/models/notification.interface';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { TimeService } from 'src/app/services/time.service';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.css'],
 })
 export class NotificationsComponent {
+  private notificationSubscription: Subscription = new Subscription();
+  private userSubscription: Subscription = new Subscription();
   notifications: Notification[] = [
     {
       _id: '1313',
@@ -74,33 +77,25 @@ export class NotificationsComponent {
     private router: Router
   ) {
     //ottieni l'array degli id delle notifiche
-    this.userService.getUserData().subscribe((userData) => {
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
+      this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
+    else {
+      this.router.navigate(['/login']);
+    }
+    //richiedi al server le notifiche con gli id specificati
+    this.userSubscription = this.userService.getUserData().subscribe((userData) => {
       if (userData.account_type === 'guest') {
         this.isGuest = true;
       } else {
         this.isGuest = false;
-        this.usersService.getNotifications().subscribe((notifications) => {
+        this.notificationSubscription = this.usersService.getNotifications().subscribe((notifications) => {
           this.notifications = [...notifications].reverse();
         });
       }
     });
-    //richiedi al server le notifiche con gli id specificati
   }
 
-  onInit() {
-    //ottieni l'array degli id delle notifiche
-    this.userService.getUserData().subscribe((userData) => {
-      if (userData.account_type === 'guest') {
-        this.isGuest = true;
-      } else {
-        this.isGuest = false;
-        this.usersService.getNotifications().subscribe((notifications) => {
-          this.notifications = [...notifications].reverse();
-        });
-      }
-    });
-    //richiedi al server le notifiche con gli id specificati
-  }
+  onInit() {}
 
   onMouseEnter() {
     this.isHovered = true;
@@ -132,5 +127,10 @@ export class NotificationsComponent {
   }
   goToPage(page: string) {
     this.router.navigate([`/${page}`]);
+  }
+
+  ngOnDestroy() {
+    this.userSubscription.unsubscribe();
+    this.notificationSubscription.unsubscribe();
   }
 }

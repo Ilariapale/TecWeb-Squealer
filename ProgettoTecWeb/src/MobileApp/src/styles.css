@@ -79,6 +79,27 @@ body {
   border-color: rgb(150, 150, 150);
 }
 
+.recipient-message-dark {
+  background-color: #30353b;
+  color: #ffffff;
+}
+
+.user-message-dark {
+  background-color: #0343a3;
+  color: #ffffff;
+}
+
+.recipient-message-light {
+  background-color: #30353b;
+  color: #ffffff;
+}
+
+.user-message-light {
+  background-color: #0D6EFD;
+  color: #ffffff;
+}
+
+
 
 
 .submit-button.dark-theme {

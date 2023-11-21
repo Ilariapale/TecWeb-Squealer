@@ -27,7 +27,7 @@ export class DarkModeService {
   }
 
   setLocalStorage() {
-    localStorage.setItem('dark-mode', JSON.stringify(this.darkMode));
+    localStorage.setItem(this.darkModeClass, JSON.stringify(this.darkMode));
   }
 
   darkModeOn() {

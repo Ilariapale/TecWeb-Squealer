@@ -3,6 +3,9 @@ import { SquealService } from 'src/app/services/api/squeals.service';
 import { Router } from '@angular/router';
 import { HttpHeaders } from '@angular/common/http';
 import { AuthService } from 'src/app/services/api/auth.service';
+import { Subscription } from 'rxjs';
+import { UserService } from 'src/app/services/user.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -10,6 +13,7 @@ import { AuthService } from 'src/app/services/api/auth.service';
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent {
+  private homeSubscription: Subscription = new Subscription();
   title = 'Home - Squealer';
   //TODO remove example squeal
   squeals: any[] = [
@@ -32,20 +36,36 @@ export class HomeComponent {
       username: 'ilapale',
     },
   ];
-  isGuest: boolean = false;
+  isGuest: boolean = true;
 
-  constructor(private squealService: SquealService, public authService: AuthService, private router: Router) {
-    this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
+  constructor(
+    private squealService: SquealService,
+    public authService: AuthService,
+    private router: Router,
+    private userService: UserService
+  ) {
+    firstValueFrom(this.userService.getUserData()).then((userData) => {
+      console.log(userData);
+      if (userData.account_type == 'guest') {
+        this.isGuest = true;
+      } else {
+        if (['standard', 'moderator', 'professional', 'verified'].includes(userData.account_type)) {
+          this.isGuest = false;
+        } else {
+          this.authService.logout();
+        }
+      }
+    });
   }
 
   ngOnInit() {
     //check if there is a token
-    this.squealService.getHome(this.isGuest).subscribe(
-      (response: any) => {
+    this.homeSubscription = this.squealService.getHome(this.isGuest).subscribe({
+      next: (response: any) => {
         //.slice().reverse()
         this.squeals = response;
       },
-      (error) => {
+      error: (error) => {
         const errorText = error.error.error;
         //TokenExpiredError, noToken, invalidTokenFormat
         if (errorText == 'TokenExpiredError') {
@@ -57,8 +77,8 @@ export class HomeComponent {
           console.log('invalidTokenFormat');
           this.router.navigate(['/login']);
         }
-      }
-    );
+      },
+    });
     //window.location.reload();
     //this.userService.getUser().subscribe();
   }
@@ -72,11 +92,11 @@ export class HomeComponent {
     this.squeals.push(event);
   }
 
-  logout() {
-    this.authService.logout(); // Chiama il metodo di logout dal tuo servizio di autenticazione
-  }
-
   deleteProfile() {
     //TODO delete profile
+  }
+
+  ngOnDestroy() {
+    this.homeSubscription.unsubscribe();
   }
 }

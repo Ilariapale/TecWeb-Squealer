@@ -9,6 +9,7 @@ import { ChatsService } from 'src/app/services/api/chats.service';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { TimeService } from 'src/app/services/time.service';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-chats',
@@ -16,6 +17,8 @@ import { Router } from '@angular/router';
   styleUrls: ['./chats.component.css'],
 })
 export class ChatsComponent {
+  private chatSubscription: Subscription = new Subscription();
+  private userSubscription: Subscription = new Subscription();
   chatsPreview: ChatPreview[] = [
     {
       last_message: 'Ciao',
@@ -36,12 +39,17 @@ export class ChatsComponent {
     public timeService: TimeService,
     private router: Router
   ) {
-    this.userService.getUserData().subscribe((userData) => {
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
+      this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
+    else {
+      this.router.navigate(['/login']);
+    }
+    this.userSubscription = this.userService.getUserData().subscribe((userData) => {
       if (userData.account_type === 'guest') {
         this.isGuest = true;
       } else {
         this.isGuest = false;
-        this.chatsService.getChats().subscribe((chats) => {
+        this.chatSubscription = this.chatsService.getChats().subscribe((chats) => {
           this.chatsPreview = chats;
           for (let i = 0; i < this.chatsPreview.length; i++) {
             this.chatsPreview[i].last_modified = new Date(this.chatsPreview[i].last_modified);
@@ -61,7 +69,15 @@ export class ChatsComponent {
   }
 
   goToPage(page: string) {
+    //this.userSubscription.unsubscribe();
+    //this.chatSubscription.unsubscribe();
+
     this.router.navigate([`/${page}`]);
+  }
+
+  ngOnDestroy() {
+    this.userSubscription.unsubscribe();
+    this.chatSubscription.unsubscribe();
   }
 }
 

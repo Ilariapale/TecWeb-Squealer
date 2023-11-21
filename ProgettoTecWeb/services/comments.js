@@ -82,8 +82,8 @@ module.exports = {
 
     if (commentSection.comments_array.length == 0) {
       return {
-        status: 404,
-        data: { error: `No messages found.` },
+        status: 200,
+        data: { error: `No more comments.` },
       };
     }
 

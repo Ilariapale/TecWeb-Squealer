@@ -4,15 +4,15 @@
       <img src="../../assets/imgs/logo.png" alt="" class="avatar" />
       @{{user.username}}
       <span>{{user.account_type}}</span>
-      <div *ngIf="enoughChars && isLogged" class="char_left squeal-form-text">
-        {{user.char_quota.daily}}<span class="quota_letter">D</span>
-        {{user.char_quota.weekly}}<span class="quota_letter">W</span>
-        {{user.char_quota.monthly}}<span class="quota_letter">M</span>
-        {{user.char_quota.extra_daily}}<span class="quota_letter">E</span>
-      </div>
 
-      <div *ngIf='enoughChars == false' class="char_left squeal-form-text">Not enough chars left!</div>
-      <ng-container *ngIf='user.account_type!="guest"'>
+      <ng-container *ngIf='!isGuest'>
+        <div *ngIf="enoughChars" class="squeal-form-text">
+          {{user.char_quota.daily}}<span class="quota_letter">D</span>
+          {{user.char_quota.weekly}}<span class="quota_letter">W</span>
+          {{user.char_quota.monthly}}<span class="quota_letter">M</span>
+          {{user.char_quota.extra_daily}}<span class="quota_letter">E</span>
+        </div>
+        <div *ngIf='!enoughChars' class="char_left squeal-form-text">Not enough chars left!</div>
         <form [formGroup]="squealForm" (ngSubmit)="createSqueal()">
 
           <div class="mb-1">
@@ -51,12 +51,14 @@
         </form>
       </ng-container>
 
-      <ng-container *ngIf='user.account_type=="guest"'>
-        <div class="guest-message pt-4"> <a href="/login">Log-in</a> if you want to post a squeal</div>
-      </ng-container>
 
 
     </div>
+    <ng-container *ngIf='user.account_type=="guest"'>
+      <div class="guest-message pt-4"> <a (click)="goToPage('login')" class="text-primary">Log-in</a> if you want to
+        post a squeal</div>
+    </ng-container>
+
   </div>
   <div class="squeal-img-wrap">
     <!--img src="" alt="img" class="squeal-img" /-->

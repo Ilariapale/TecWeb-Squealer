@@ -215,7 +215,7 @@ module.exports = {
       await chat.save();
       return {
         status: 200,
-        data: chat,
+        data: newMessage,
       };
     }
 

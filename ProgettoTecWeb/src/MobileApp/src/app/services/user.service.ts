@@ -19,7 +19,7 @@ export class UserService {
         this.setUserData(JSON.parse(savedUserData));
       } else {
         //we have a guest user
-        this.setUserData({ account_type: 'guest', username: 'user' });
+        this.setUserData({});
       }
     }
     return this.userDataSubject.asObservable();

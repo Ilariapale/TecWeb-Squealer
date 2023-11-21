@@ -31,22 +31,26 @@ export class LoginComponent {
   onSubmit(): void {
     // Chiamare il servizio di autenticazione per fare il login
     if (this.guestMode) {
-      localStorage.clear();
-      sessionStorage.clear();
+      localStorage.removeItem('Authorization');
+      sessionStorage.removeItem('Authorization');
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
       this.userService.setUserData({ account_type: 'guest', username: 'user' });
+      sessionStorage.setItem('user', JSON.stringify({ account_type: 'guest', username: 'user' }));
       this.router.navigate(['/home']);
-    } else
-      this.authService.login(this.username, this.password, this.rememberMe).subscribe(
-        (response) => {
+    } else {
+      this.authService.login(this.username, this.password, this.rememberMe).subscribe({
+        next: (response) => {
           // Gestisci la risposta dal servizio se necessario
           this.router.navigate(['/home']);
           // Reindirizza l'utente a un'altra pagina se il login è riuscito
         },
-        (error) => {
+        error: (error) => {
           // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
           this.errorMessage = error.error.error;
-        }
-      );
+        },
+      });
+    }
   }
 
   getThemeClass() {

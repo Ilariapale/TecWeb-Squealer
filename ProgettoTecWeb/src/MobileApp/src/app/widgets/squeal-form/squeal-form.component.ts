@@ -8,6 +8,7 @@ import { Recipients } from 'src/app/models/squeal.interface';
 import { TagInputComponent } from '../tag-input/tag-input.component';
 import { firstValueFrom } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
+import { Router } from '@angular/router';
 //TODOfare in modo che quando scrivo un recipient nel form questo si stilizzi
 @Component({
   selector: 'app-squeal-form',
@@ -32,7 +33,7 @@ export class SquealFormComponent {
   squealForm!: FormGroup;
   lastLength: number = 0;
   enoughChars: boolean = true;
-  isLogged: boolean = false;
+  isGuest: boolean = true;
   char_left: {
     daily: number;
     weekly: number;
@@ -50,18 +51,21 @@ export class SquealFormComponent {
     private http: HttpClient,
     public userService: UserService,
     private squealService: SquealService,
-    private darkModeService: DarkModeService
+    private darkModeService: DarkModeService,
+    private router: Router
   ) {
     firstValueFrom(this.userService.getUserData()).then((userData) => {
       this.user = userData;
       if (userData.account_type == 'guest') {
-        this.isLogged = false;
+        this.isGuest = true;
       } else {
-        this.isLogged = true;
-        this.char_left.daily = this.user.char_quota.daily;
-        this.char_left.weekly = this.user.char_quota.weekly;
-        this.char_left.monthly = this.user.char_quota.monthly;
-        this.char_left.extra_daily = this.user.char_quota.extra_daily;
+        if (['standard', 'moderator', 'professional', 'verified'].includes(userData.account_type)) {
+          this.isGuest = false;
+          this.char_left.daily = this.user.char_quota.daily;
+          this.char_left.weekly = this.user.char_quota.weekly;
+          this.char_left.monthly = this.user.char_quota.monthly;
+          this.char_left.extra_daily = this.user.char_quota.extra_daily;
+        }
       }
     });
   }
@@ -163,6 +167,10 @@ export class SquealFormComponent {
       // Gestisci il caso in cui il form non sia valido
       console.log('Form non valido');
     }
+  }
+
+  goToPage(page: string) {
+    this.router.navigate([`/${page}`]);
   }
 
   /*
