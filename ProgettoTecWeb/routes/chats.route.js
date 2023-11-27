@@ -72,8 +72,16 @@ router.post("/direct/:identifier", verifyToken, async (req, res, next) => {
     };
     try {
       const result = await chats.sendDirectMessage(options);
+
+      const recipientSocketId = req.connectedUsers[options.identifier];
+      //TODO se il destinatario non è online, invia una notifica push
+      if (recipientSocketId) {
+        req.io.to(recipientSocketId).emit("new_message", result.data);
+      }
+
       res.status(result.status || 200).send(result.data);
     } catch (err) {
+      console.log(err);
       return res.status(500).send({
         error: err || "Something went wrong.",
       });

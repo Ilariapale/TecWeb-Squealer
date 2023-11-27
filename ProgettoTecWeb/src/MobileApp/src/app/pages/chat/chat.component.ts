@@ -9,6 +9,7 @@ import { ChatsService } from 'src/app/services/api/chats.service';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { TimeService } from 'src/app/services/time.service';
 import { Subscription } from 'rxjs';
+import { io } from 'socket.io-client';
 
 @Component({
   selector: 'app-chat',
@@ -38,7 +39,10 @@ export class ChatComponent {
   };
   reqSenderPosition = 0;
   chatId = '0';
-  recipient = 'User';
+  recipient = 'Recipient';
+  user: any;
+  private socket: any; // Dichiarazione della variabile del socket
+
   constructor(
     private route: ActivatedRoute,
     private chatsService: ChatsService,
@@ -55,6 +59,8 @@ export class ChatComponent {
         this.isGuest = true;
       } else {
         this.isGuest = false;
+        this.user = userData;
+
         this.chatsService.getChat(this.chatId).subscribe((response) => {
           this.chat = response.chat;
           this.reqSenderPosition = response.reqSenderPosition;
@@ -64,6 +70,7 @@ export class ChatComponent {
               this.recipient = data.username;
             });
         });
+        this.connectWebSocket(); // Chiamata alla funzione per connettersi al WebSocket
       }
     });
   }
@@ -78,7 +85,25 @@ export class ChatComponent {
   ngOnDestroy() {
     this.userSubscription.unsubscribe();
     this.chatSubscription.unsubscribe();
+    this.socket.disconnect(); // Disconnetti il socket quando il componente viene distrutto
   }
+
+  private connectWebSocket(): void {
+    this.socket = io(); // Sostituisci con l'URL del tuo server WebSocket
+    this.socket.emit('authenticate', this.user.user_id);
+    this.socket.on('new_message', (message: any) => {
+      // Gestisci il messaggio ricevuto dal server
+      this.chat.messages.push({
+        sender: message.sender,
+        text: message.text,
+        timestamp: new Date(message.timestamp),
+      });
+      setTimeout(() => {
+        this.scrollToBottom();
+      }, 0);
+    });
+  }
+
   getThemeClass() {
     return this.darkModeService.getThemeClass();
   }
@@ -88,7 +113,7 @@ export class ChatComponent {
       .sendMessage(this.chat.partecipants[1 - this.reqSenderPosition].toString(), this.message_text)
       .subscribe({
         next: (response) => {
-          console.log(response);
+          //console.log(response);
           this.message_text = '';
           setTimeout(() => {
             this.chat.messages.push({

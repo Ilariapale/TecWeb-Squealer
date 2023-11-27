@@ -8,16 +8,36 @@ const express = require("express"),
   cors = require("cors"),
   multer = require("multer"),
   upload = multer(),
+  http = require("http"), // Aggiungi questa linea
+  socketIo = require("socket.io"), // Aggiungi questa linea
   app = express(),
   PORT = process.env.PORT || 8000,
   NODE_ENV = process.env.NODE_ENV || "development";
+const server = http.createServer(app); // Aggiungi questa linea
+const io = socketIo(server); // Aggiungi questa linea
+const connectedUsers = {};
 
 app.set("port", PORT);
 app.set("env", NODE_ENV);
 
 // https://stackoverflow.com/questions/40459511/in-express-js-req-protocol-is-not-picking-up-https-for-my-secure-link-it-alwa
 app.enable("trust proxy");
+io.on("connect", (socket) => {
+  // Ricevi l'identificativo dell'utente quando si connette
+  socket.on("authenticate", (userId) => {
+    // Associa l'identificativo dell'utente al suo socket.id
+    connectedUsers[userId] = socket.id;
+  });
 
+  // Disconnessione dell'utente
+  socket.on("disconnect", () => {
+    // Rimuovi l'utente dalla mappa quando si disconnette
+    const userIdToRemove = Object.keys(connectedUsers).find((key) => connectedUsers[key] === socket.id);
+    if (userIdToRemove) {
+      delete connectedUsers[userIdToRemove];
+    }
+  });
+});
 app.use(cors());
 app.use(log("tiny"));
 
@@ -35,6 +55,12 @@ app.use(cookieParser());
 app.use(upload.array());
 app.use(express.static("public"));
 
+// Aggiungi il gestore per i WebSocket
+app.use((req, res, next) => {
+  req.io = io;
+  req.connectedUsers = connectedUsers;
+  next();
+});
 //app.use(cookieParser());
 require("./routes")(app);
 
@@ -62,7 +88,7 @@ app.use((err, req, res, next) => {
 
 module.exports = app;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Express Server started on Port ${app.get("port")} | Environment : ${app.get("env")}`);
   console.log("" + __dirname + "/src/MobileApp");
 });

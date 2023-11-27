@@ -693,6 +693,7 @@ function generateToken(user_data) {
   //Aggiungere dati al token se necessario
 
   const user = {
+    user_id: user_data._id,
     account_type: user_data.account_type,
     professional_type: user_data.professional_type,
     email: user_data.email,
