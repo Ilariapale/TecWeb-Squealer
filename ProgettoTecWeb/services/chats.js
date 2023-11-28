@@ -235,7 +235,7 @@ module.exports = {
     chat.messages = chat.messages.slice(-MESSAGES_TO_LOAD);
     return {
       status: 200,
-      data: chat,
+      data: newMessage, //TODO decidere se restituire il messaggio o la chat
     };
   },
 };

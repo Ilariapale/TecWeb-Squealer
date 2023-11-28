@@ -2,7 +2,8 @@
   <div class="mesage-container" id="messageContainer">
     <div *ngFor="let message of chat.messages" class="chat-body mb-1">
 
-      <div *ngIf="message.sender === reqSenderPosition" [class.user-message-dark]="getThemeClass()=='dark-theme'"
+      <div *ngIf="message.sender === reqSenderPosition && chat_loaded"
+        [class.user-message-dark]="getThemeClass()=='dark-theme'"
         [class.user-message-light]="getThemeClass()=='light-theme'" class="card mb-1 text-end float-end"
         style="max-width: 20rem;">
         <div class="card-header">You</div>
@@ -12,7 +13,8 @@
         </div>
       </div>
 
-      <div *ngIf="message.sender !== reqSenderPosition" [class.recipient-message-dark]="getThemeClass()=='dark-theme'"
+      <div *ngIf="message.sender !== reqSenderPosition && chat_loaded"
+        [class.recipient-message-dark]="getThemeClass()=='dark-theme'"
         [class.recipient-message-light]="getThemeClass()=='light-theme'" class="card mb-1 text-start float-start"
         style="max-width: 20rem;">
         <div class="card-header">{{recipient}}</div>

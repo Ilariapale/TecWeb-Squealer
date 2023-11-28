@@ -22,18 +22,12 @@ export class ChatComponent {
   private chatSubscription: Subscription = new Subscription();
   private userSubscription: Subscription = new Subscription();
   isGuest = true;
-  chat = {
-    partecipants: ['000', '111'],
-    messages: [
-      { sender: 0, text: '0-Loading...', timestamp: new Date() },
-      { sender: 1, text: '1-Loading...', timestamp: new Date() },
-    ],
-    last_modified: new Date('1970-01-01T00:00:00Z'),
-  };
+  chat: Chat = {} as Chat;
   reqSenderPosition = 0;
   chatId = '0';
   recipient = 'Recipient';
   user: any;
+  chat_loaded = false;
   private socket: any; // Dichiarazione della variabile del socket
 
   constructor(
@@ -62,6 +56,7 @@ export class ChatComponent {
 
           this.chatsService.getChat(this.chatId).subscribe((response) => {
             this.chat = response.chat;
+            this.chat_loaded = true;
             this.reqSenderPosition = response.reqSenderPosition;
           });
         }
@@ -111,6 +106,7 @@ export class ChatComponent {
       )
       .subscribe({
         next: (response) => {
+          //TODO fixare il aN/NaN/NaN
           //console.log(response);
           this.message_text = '';
           setTimeout(() => {

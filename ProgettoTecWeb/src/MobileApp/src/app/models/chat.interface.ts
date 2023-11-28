@@ -1,18 +1,18 @@
 export interface Message {
-  _id: string;
+  _id?: string;
   sender: number;
   text: string;
-  timestamp: string;
+  timestamp: Date;
 }
 export interface Chat {
-  _id: string;
+  _id?: string;
   partecipants: string[];
   messages: Message[];
-  last_modified: string;
+  last_modified: Date;
   reqSenderPosition: number;
 }
 export interface ChatPreview {
-  _id: string;
+  _id?: string;
   recipient: string;
   last_message: string;
   sent_by_me: boolean;
