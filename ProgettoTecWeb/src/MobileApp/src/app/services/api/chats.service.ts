@@ -30,6 +30,11 @@ export class ChatsService {
     return this.http.get(url, this.authenticatedHeadersGenerator());
   }
 
+  getChatByUser(userIdentifier: string): Observable<any> {
+    let url = `${this.apiUrl}/direct/${userIdentifier}`;
+    return this.http.get(url, this.authenticatedHeadersGenerator());
+  }
+
   sendMessage(userIdentifier: string, message: string): Observable<any> {
     let url = `${this.apiUrl}/direct/${userIdentifier}`;
     return this.http.post(url, { message: message }, this.authenticatedHeadersGenerator());

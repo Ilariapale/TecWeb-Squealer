@@ -29,7 +29,8 @@ const routes: Routes = [
   { path: 'notifications', component: NotificationsComponent },
   { path: 'private-chats', component: ChatsComponent },
   { path: 'private-chats/user/:id/:recipient', component: ChatComponent },
-  { path: 'chat', component: ChatComponent },
+  { path: 'private-chats/user/:user', component: ChatComponent },
+  // { path: 'chat', component: ChatsComponent },
 ];
 
 @NgModule({

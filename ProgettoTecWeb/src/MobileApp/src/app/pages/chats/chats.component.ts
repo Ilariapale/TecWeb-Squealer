@@ -19,13 +19,14 @@ import { Subscription } from 'rxjs';
 export class ChatsComponent {
   private chatSubscription: Subscription = new Subscription();
   private userSubscription: Subscription = new Subscription();
+  newChatUsername: string = '';
   chatsPreview: ChatPreview[] = [
     {
-      last_message: 'Ciao',
-      recipient: 'paulpaccy',
-      sent_by_me: true,
+      last_message: '3-Loading...',
+      recipient: '2-Loading...',
+      sent_by_me: false,
       _id: '123',
-      last_modified: new Date('2023-10-23T15:20:06.470Z'),
+      last_modified: new Date(),
     },
   ];
 
@@ -39,18 +40,24 @@ export class ChatsComponent {
     public timeService: TimeService,
     private router: Router
   ) {
-    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
-      this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
-    else {
-      this.router.navigate(['/login']);
-    }
+    // if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
+    //   this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
+    // else {
+    //   this.router.navigate(['/login']);
+    // }
     this.userSubscription = this.userService.getUserData().subscribe((userData) => {
       if (userData.account_type === 'guest') {
-        this.isGuest = true;
+        this.isGuest = false;
+        // this.isGuest = true;
       } else {
         this.isGuest = false;
         this.chatSubscription = this.chatsService.getChats().subscribe((chats) => {
           this.chatsPreview = chats;
+          this.chatsPreview.sort((a, b) => {
+            if (a.last_modified > b.last_modified) return -1;
+            if (a.last_modified < b.last_modified) return 1;
+            return 0;
+          });
           for (let i = 0; i < this.chatsPreview.length; i++) {
             this.chatsPreview[i].last_modified = new Date(this.chatsPreview[i].last_modified);
           }
@@ -64,14 +71,35 @@ export class ChatsComponent {
   markAllAsRead(/*_ids: string[]*/) {}
   markAsRead(_id: string) {}
 
+  newChat() {
+    if (this.newChatUsername.trim() !== '') {
+      //if the chat with this user already exists, open it
+      const chatIndex = this.chatsPreview.findIndex((chat) => chat.recipient === this.newChatUsername);
+      if (chatIndex !== -1) {
+        const chat = this.chatsPreview[chatIndex];
+        this.router.navigate(['/private-chats/user', chat._id, this.newChatUsername]);
+        this.newChatUsername = '';
+      } else {
+        this.usersService.getUsername(this.newChatUsername).subscribe({
+          next: (response: any) => {
+            //user does not exist
+            this.router.navigate(['/private-chats/user', this.newChatUsername]);
+            console.log('user exists');
+          },
+          error: (error) => {
+            console.log('user does not exist');
+            this.newChatUsername = '';
+          },
+        });
+      }
+    }
+  }
+
   getDarkMode() {
     return this.darkModeService.getThemeClass();
   }
 
   goToPage(page: string) {
-    //this.userSubscription.unsubscribe();
-    //this.chatSubscription.unsubscribe();
-
     this.router.navigate([`/${page}`]);
   }
 

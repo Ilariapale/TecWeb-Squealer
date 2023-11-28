@@ -1,8 +1,23 @@
 <div role="main">
   <div>
-    <div>
-      <h1 class="m-1 p-2 pt-3">Private messages</h1>
+    <div class="m-1 p-2 pt-3 row">
+      <h1 class="col-auto">Private messages</h1>
+      <a class="btn btn-primary col-auto ms-auto px-3" data-bs-toggle="collapse" href="#newMessage" role="button"
+        aria-expanded="false" aria-controls="newMessage">+</a>
+      <div class="collapse multi-collapse" id="newMessage">
+        <div class="card card-body p-0">
+          <div class="input-group">
+            <span class="input-group-text" id="username-addon">@</span>
+            <input type="text" class="form-control" placeholder="Username" aria-label="Username"
+              aria-describedby="username-addon" [(ngModel)]="newChatUsername">
+            <button class="btn btn-outline-secondary" type="button" id="send-button" (click)="newChat()"><i
+                class="bi bi-send-plus"></i></button>
+          </div>
+        </div>
+      </div>
     </div>
+
+
     <div *ngIf="isGuest" class="m-3">
       <a (click)="goToPage('login')" class="text-primary">Log-in</a> to view your private messages
     </div>

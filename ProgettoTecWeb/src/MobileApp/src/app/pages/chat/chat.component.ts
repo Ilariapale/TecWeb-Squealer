@@ -10,6 +10,7 @@ import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { TimeService } from 'src/app/services/time.service';
 import { Subscription } from 'rxjs';
 import { io } from 'socket.io-client';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-chat',
@@ -22,18 +23,10 @@ export class ChatComponent {
   private userSubscription: Subscription = new Subscription();
   isGuest = true;
   chat = {
-    partecipants: ['28347198730', '28347198731'],
+    partecipants: ['000', '111'],
     messages: [
-      { sender: 0, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
-      { sender: 1, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
-      { sender: 0, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
-      { sender: 1, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
-      { sender: 0, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
-      { sender: 1, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
-      { sender: 0, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
-      { sender: 1, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
-      { sender: 0, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
-      { sender: 1, text: 'Ciao', timestamp: new Date('1970-01-01T00:00:00Z') },
+      { sender: 0, text: '0-Loading...', timestamp: new Date() },
+      { sender: 1, text: '1-Loading...', timestamp: new Date() },
     ],
     last_modified: new Date('1970-01-01T00:00:00Z'),
   };
@@ -49,27 +42,29 @@ export class ChatComponent {
     private userService: UserService,
     private usersService: UsersService,
     public timeService: TimeService,
-    public darkModeService: DarkModeService
+    public darkModeService: DarkModeService,
+    private router: Router
   ) {
     this.route.paramMap.subscribe((params) => {
+      this.recipient = params.get('recipient') || params.get('user') || '0';
       this.chatId = params.get('id') || '0';
     });
+
     this.userSubscription = this.userService.getUserData().subscribe((userData) => {
       if (userData.account_type === 'guest') {
         this.isGuest = true;
       } else {
         this.isGuest = false;
         this.user = userData;
+        if (this.chatId !== '0') {
+          console.log(this.chatId, 'this.chatId');
+          console.log(this.recipient, 'this.recipient');
 
-        this.chatsService.getChat(this.chatId).subscribe((response) => {
-          this.chat = response.chat;
-          this.reqSenderPosition = response.reqSenderPosition;
-          this.chatSubscription = this.usersService
-            .getUsername(this.chat.partecipants[1 - this.reqSenderPosition].toString())
-            .subscribe((data) => {
-              this.recipient = data.username;
-            });
-        });
+          this.chatsService.getChat(this.chatId).subscribe((response) => {
+            this.chat = response.chat;
+            this.reqSenderPosition = response.reqSenderPosition;
+          });
+        }
         this.connectWebSocket(); // Chiamata alla funzione per connettersi al WebSocket
       }
     });
@@ -85,7 +80,7 @@ export class ChatComponent {
   ngOnDestroy() {
     this.userSubscription.unsubscribe();
     this.chatSubscription.unsubscribe();
-    this.socket.disconnect(); // Disconnetti il socket quando il componente viene distrutto
+    if (this.socket) this.socket.disconnect(); // Disconnetti il socket quando il componente viene distrutto
   }
 
   private connectWebSocket(): void {
@@ -110,7 +105,10 @@ export class ChatComponent {
   sendMessage() {
     //use the chatservice to send a message
     this.chatsService
-      .sendMessage(this.chat.partecipants[1 - this.reqSenderPosition].toString(), this.message_text)
+      .sendMessage(
+        this.chatId !== '0' ? this.chat.partecipants[1 - this.reqSenderPosition].toString() : this.recipient,
+        this.message_text
+      )
       .subscribe({
         next: (response) => {
           //console.log(response);
@@ -131,6 +129,11 @@ export class ChatComponent {
           // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
         },
       });
+  }
+  //}
+
+  goToPage(page: string) {
+    this.router.navigate([`/${page}`]);
   }
   private scrollToBottom(): void {
     try {
