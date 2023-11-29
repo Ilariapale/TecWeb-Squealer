@@ -1,7 +1,8 @@
 <div role="main">
   <div class="mt-4">
-    <div class="row">
-      <img class="col-3" alt="Profile Picture" src="assets/imgs/logo.png" />
+    <div class="row p-3" [ngClass]="bannerClass">
+
+      <img class="col-3 p-0" alt="Profile Picture" style="height: 100%;" src="assets/imgs/logo.png" />
       <div class="col-auto">
         <h2 class="row ms-2 pt-4">{{user.username}}</h2>
         <span class="row ms-2 text-secondary">{{user.account_type}}</span>
@@ -11,13 +12,16 @@
       </span>
     </div>
     <div class="pt-3 ps-2">
-      <small><i class="bi bi-hourglass"></i> User since {{timeService.getRelativeTime(user.created_at)}}</small>
-      <p class="mt-4">{{user.bio}}</p>
+      <i class="bi bi-hourglass"></i> User since {{timeService.getRelativeTime(user.created_at)}}
+      <p class="mt-4">{{user.profile_info}}</p>
     </div>
   </div>
-  <hr>
-  <div>
-    <app-squeal *ngFor="let squeal of squeals"></app-squeal>
-
+  <hr class="mt-1">
+  <div class="pb-2">
+    <app-squeal *ngFor="let squeal of squeals" [squeal]="squeal"></app-squeal>
+  </div>
+  <div *ngIf="lastSquealLoaded>=0" class=" d-flex justify-content-center align-items-center py-2">
+    <button (click)="loadMoreSqueals()" type=" button" class="btn btn-outline-secondary rounded-pill"><i
+        class="bi bi-arrow-clockwise"></i></button>
   </div>
 </div>

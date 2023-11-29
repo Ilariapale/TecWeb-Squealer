@@ -64,8 +64,9 @@ export class SquealService {
 
     return this.http.get(url, requestOptions);
   }
-  getSqueal(): Observable<any> {
-    return this.http.get(`${this.apiUrl}`);
+  getSqueal(identifier: String): Observable<any> {
+    const requestOptions = this.headersGenerator(true);
+    return this.http.get(`${this.apiUrl}/${identifier}`, requestOptions);
   }
   deleteSqueal(): Observable<any> {
     return this.http.delete(`${this.apiUrl}`);

@@ -9,6 +9,9 @@ export class DarkModeService {
   darkModeClass: string = 'dark-theme';
   lightModeClass: string = 'light-theme';
 
+  //bannerColorDark = ['#170a47', '#144272', '#062925', '#044A42', '#4c0013', '#570530'];
+  //bannerColorLight = ['#8376f3', '#57a0e0', '#5dcfc4', '#B8E1DD', '#ff758c', '#e265aa'];
+
   constructor() {
     const localDarkMode = localStorage.getItem(this.darkModeClass);
     if (localDarkMode) {
@@ -48,6 +51,15 @@ export class DarkModeService {
     document.body.classList.toggle(this.darkModeClass);
     document.body.classList.toggle(this.lightModeClass);
     this.setLocalStorage();
+  }
+
+  getBannerClass() {
+    const number = 6;
+    if (this.darkMode) {
+      return 'darkBanner' + Math.floor(Math.random() * number);
+    } else {
+      return 'lightBanner' + Math.floor(Math.random() * number);
+    }
   }
 
   getThemeClass() {

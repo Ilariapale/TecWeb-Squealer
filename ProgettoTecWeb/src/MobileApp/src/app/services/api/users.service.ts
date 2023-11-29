@@ -20,8 +20,12 @@ export class UsersService {
   }
 
   getUsername(user_id: string): Observable<any> {
-    //return this.http.get(`${this.apiUrl}`);
     let url = `${this.apiUrl}/${user_id}`;
+    return this.http.get(url, this.authenticatedHeadersGenerator());
+  }
+
+  getUser(identifier: string): Observable<any> {
+    let url = `${this.apiUrl}/${identifier}`;
     return this.http.get(url, this.authenticatedHeadersGenerator());
   }
 

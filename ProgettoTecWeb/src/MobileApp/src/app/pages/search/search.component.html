@@ -1,1 +1,119 @@
-<p>search works!</p>
+<div role="main" class="mt-4">
+  <div class="row">
+    <div class="col-1 col-md-4"></div>
+    <div class="input-group col">
+      <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username"
+        aria-describedby="button-addon2">
+      <button class="btn btn-primary" type="button" id="button-addon2"><i class="bi bi-search"></i></button>
+    </div>
+    <div class="col-1 col-md-4"></div>
+  </div>
+  <div class="col-auto d-flex justify-content-center align-items-center py-3">
+
+    <input type="radio" class="btn-check " name="options-outlined" id="user-search" autocomplete="off" checked>
+    <label class="btn btn-outline-primary px-4" for="user-search">@Users</label>
+
+    <input type="radio" class="btn-check" name="options-outlined" id="channel-search" autocomplete="off">
+    <label class="btn btn-outline-primary" for="channel-search">§Channels</label>
+
+    <input type="radio" class="btn-check" name="options-outlined" id="keyword-search" autocomplete="off">
+    <label class="btn btn-outline-primary" for="keyword-search">#Keywords</label>
+  </div>
+
+  <div class="row">
+    <div class="col-1 col-md-4"></div>
+    <div class="accordion col-10 col-md-4" id="accordionExample">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+            aria-expanded="true" aria-controls="collapseOne">
+            Advanced Search
+          </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+          data-bs-parent="#accordionExample">
+          <div class="accordion-body">
+            <div class="card" style="width: 18rem;">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text" id="addon-wrapping">@</span>
+                    <input type="text" class="form-control" placeholder="Created Before" aria-label="Username"
+                      aria-describedby="addon-wrapping">
+                  </div>
+                </li>
+                <li class="list-group-item">
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text" id="addon-wrapping">@</span>
+                    <input type="text" class="form-control" placeholder="Created After" aria-label="Username"
+                      aria-describedby="addon-wrapping">
+                  </div>
+                </li>
+                <li class="list-group-item">
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text" id="addon-wrapping">@</span>
+                    <input type="text" class="form-control" placeholder="Max Squeals" aria-label="Username"
+                      aria-describedby="addon-wrapping">
+                  </div>
+                </li>
+                <li class="list-group-item">
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text" id="addon-wrapping">@</span>
+                    <input type="text" class="form-control" placeholder="Min Squeals" aria-label="Username"
+                      aria-describedby="addon-wrapping">
+                  </div>
+                </li>
+                <li class="list-group-item">
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text" id="addon-wrapping">@</span>
+                    <input type="text" class="form-control" placeholder="Account Type" aria-label="Username"
+                      aria-describedby="addon-wrapping">
+                  </div>
+                </li>
+                <li class="list-group-item">
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text" id="addon-wrapping">@</span>
+                    <input type="text" class="form-control" placeholder="Professional Type" aria-label="Username"
+                      aria-describedby="addon-wrapping">
+                  </div>
+                </li>
+                <div class="row">
+                  <li class="list-group-item">
+                    <div class="dropdown">
+                      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Sort Order
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                        <li><a class="dropdown-item">Asc</a></li>
+                        <li><a class="dropdown-item">Desc</a></li>
+                      </ul>
+                    </div>
+                  </li>
+                  <li class="list-group-item">
+                    <div class="dropdown">
+                      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Sort By
+                      </button>
+                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                        <li><a class="dropdown-item">Username</a></li>
+                        <li><a class="dropdown-item">Date</a></li>
+                        <li><a class="dropdown-item">Squeals</a></li>
+                      </ul>
+                    </div>
+                  </li>
+                </div>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="col-1 col-md-4"></div>
+  </div>
+
+
+
+</div>

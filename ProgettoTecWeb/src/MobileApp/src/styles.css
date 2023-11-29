@@ -4,6 +4,14 @@
   overflow-x: hidden;
 }
 
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   user-select: none;
   margin: 0;
@@ -150,4 +158,52 @@ body {
   --bs-toast-bg: #373f47;
   --bs-toast-header-bg: #30363d;
   --bs-toast-border-color: #6b6b6b;
+}
+
+.darkBanner1 {
+  background-color: #170a47;
+}
+
+.darkBanner2 {
+  background-color: #144272;
+}
+
+.darkBanner3 {
+  background-color: #062925;
+}
+
+.darkBanner4 {
+  background-color: #044A42;
+}
+
+.darkBanner5 {
+  background-color: #4c0013;
+}
+
+.darkBanner6 {
+  background-color: #570530;
+}
+
+.lightBanner1 {
+  background-color: #8376f3;
+}
+
+.lightBanner2 {
+  background-color: #57a0e0;
+}
+
+.lightBanner3 {
+  background-color: #5dcfc4;
+}
+
+.lightBanner4 {
+  background-color: #B8E1DD;
+}
+
+.lightBanner5 {
+  background-color: #ff758c;
+}
+
+.lightBanner6 {
+  background-color: #e265aa;
 }

@@ -1,38 +1,113 @@
-import { Component } from '@angular/core';
+import { Component, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { TimeService } from 'src/app/services/time.service';
-
+import { UsersService } from 'src/app/services/api/users.service';
+import { UserService } from 'src/app/services/user.service';
+import { User, AccountType, ProfessionalType } from 'src/app/models/user.interface';
+import { Subscription, last } from 'rxjs';
+import { DarkModeService } from 'src/app/services/dark-mode.service';
+import { SquealService } from 'src/app/services/api/squeals.service';
+import { Squeal } from 'src/app/models/squeal.interface';
+import { forkJoin } from 'rxjs';
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
-export class ProfileComponent {
-  constructor(public timeService: TimeService) {}
-  user = {
-    user_id: '6532b13897c37a449eee696e',
-    account_type: 'moderator',
-    professional_type: 'none',
-    email: 'ssimonesanna@gmail.com',
-    username: 'paulpaccy',
-    bio: 'I am a moderator',
-    created_at: new Date('2018-08-22T19:08:30.000Z'),
+export class ProfileComponent implements AfterViewInit {
+  MAX_SQUEALS = 5;
+  lastSquealLoaded = -1;
+
+  user: User = {
+    _id: '0',
+    profile_picture: '',
+    account_type: AccountType.standard,
+    professional_type: ProfessionalType.none,
+    email: 'email@email.com',
+    username: 'Username',
+    profile_info: 'I am a boring person',
+    created_at: new Date(),
+    is_active: true,
+    char_quota: {
+      daily: 0,
+      weekly: 0,
+      monthly: 0,
+      extra_daily: 0,
+    },
   };
 
-  squeals = [
-    {
-      _id: '5b7d4f9e8c1d2b0014f3a7f1',
-      user_id: '5b7d4f9e8c1d2b0014f3a7f0',
-      text: 'This is a squeal',
-      created_at: '2018-08-22T19:08:30.000Z',
-      likes: 0,
-      comments: 0,
-      user: {
-        user_id: '5b7d4f9e8c1d2b0014f3a7f0',
-        username: 'paulpaccy',
-        email: '',
-      },
-    },
-  ];
+  squeals: Squeal[] = [];
+
+  userSubscription: Subscription = new Subscription();
+  usersSubscription: Subscription = new Subscription();
+  isGuest = true;
+  bannerClass = '';
+
+  constructor(
+    public timeService: TimeService,
+    private usersService: UsersService,
+    private userService: UserService,
+    private squealsService: SquealService,
+    public darkModeService: DarkModeService,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.userSubscription = this.userService.getUserData().subscribe((userData) => {
+      if (userData.account_type === 'guest') {
+        this.isGuest = true;
+      } else {
+        this.isGuest = false;
+        this.usersSubscription = this.usersService.getUser(userData.username).subscribe((user) => {
+          this.user = user;
+          this.lastSquealLoaded = user.squeals.posted.length - 1;
+          const squealsRequests = [];
+          for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS; i--) {
+            squealsRequests.push(this.squealsService.getSqueal(user.squeals.posted[i]));
+          }
+          this.lastSquealLoaded -= this.MAX_SQUEALS;
+          forkJoin(squealsRequests).subscribe((squeals) => {
+            squeals.forEach((squeal) => {
+              this.squeals.push(squeal[0]);
+            });
+          });
+        });
+      }
+    });
+    //ottieni l'array degli id delle notifiche
+    // if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
+    //   this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
+    // else {
+    //   this.router.navigate(['/login']);
+    // }
+    //richiedi al server le notifiche con gli id specificati
+    this.bannerClass = this.darkModeService.getBannerClass();
+  }
+  ngOnInit() {
+    console.log('init');
+    console.log(this.squeals);
+  }
+
+  ngAfterViewInit() {
+    this.bannerClass = this.darkModeService.getBannerClass();
+    this.cdr.detectChanges();
+  }
+
+  ngOnDestroy() {
+    this.userSubscription.unsubscribe();
+    this.usersSubscription.unsubscribe();
+  }
+
+  loadMoreSqueals() {
+    const squealsRequests = [];
+    for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS; i--) {
+      const squeal_id = this.user?.squeals?.posted?.[i];
+      if (squeal_id) squealsRequests.push(this.squealsService.getSqueal(squeal_id));
+    }
+    this.lastSquealLoaded -= this.MAX_SQUEALS;
+    forkJoin(squealsRequests).subscribe((squeals) => {
+      squeals.forEach((squeal) => {
+        this.squeals.push(squeal[0]);
+      });
+    });
+  }
 }
 
 /*

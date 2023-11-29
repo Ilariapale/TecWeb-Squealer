@@ -6,9 +6,9 @@ import { Injectable } from '@angular/core';
 export class TimeService {
   constructor() {}
 
-  public getRelativeTime(input_date: Date): string {
+  public getRelativeTime(input_date: Date | undefined): string {
     const now = new Date();
-    const date = new Date(input_date);
+    const date = new Date(input_date || 0);
     let n = now.getTime();
     let d = new Date(date).getTime();
     const diff = now.getTime() - date.getTime();

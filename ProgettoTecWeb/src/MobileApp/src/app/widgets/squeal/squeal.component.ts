@@ -3,6 +3,7 @@ import { Squeal } from 'src/app/models/squeal.interface';
 import { CommentService } from 'src/app/services/api/comments.service';
 import { CommentSection } from 'src/app/models/comment.interface';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
+import { TimeService } from 'src/app/services/time.service';
 import * as e from 'express';
 
 @Component({
@@ -18,7 +19,11 @@ export class SquealComponent {
   loadMore = false;
   comment_section: CommentSection = {};
 
-  constructor(private commentService: CommentService, private darkModeService: DarkModeService) {
+  constructor(
+    private commentService: CommentService,
+    private darkModeService: DarkModeService,
+    public timeService: TimeService
+  ) {
     this.squeal = {};
   }
 
