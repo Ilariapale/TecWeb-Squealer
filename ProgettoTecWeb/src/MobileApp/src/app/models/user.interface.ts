@@ -36,21 +36,21 @@ export interface User {
     negative_squeals: Number;
     controversial_squeals: Number;
   };
-  direct_chats?: { type: [type: String]; default: [] };
-  subscribed_channels?: { type: [type: String]; default: [] };
-  owned_channels?: { type: [type: String]; default: [] };
-  editor_channels?: { type: [type: String]; default: [] };
+  direct_chats?: String[];
+  subscribed_channels?: String[];
+  owned_channels?: String[];
+  editor_channels?: String[];
   profile_info: String;
   profile_picture: String;
   smm?: String;
-  managed_accounts?: { type: [type: String]; default: [] };
+  managed_accounts?: String[];
   pending_requests?: {
-    SMM_requests: { type: [type: String]; default: [] }; //SMM FIELD: requests recieved from VIPs
-    VIP_requests: { type: [type: String]; default: [] }; //VIP FIELD: requests sent to SMMs
+    SMM_requests: String[]; //SMM FIELD: requests recieved from VIPs
+    VIP_requests: String[]; //VIP FIELD: requests sent to SMMs
   };
   preferences?: {
-    muted_channels: { type: [type: String]; default: [] };
+    muted_channels: String[];
   };
-  notifications?: { type: [type: String]; default: [] };
+  notifications?: String[];
   is_active: Boolean;
 }

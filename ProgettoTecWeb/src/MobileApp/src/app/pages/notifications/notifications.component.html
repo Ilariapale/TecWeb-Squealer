@@ -24,7 +24,6 @@
             </svg>
             <strong class="me-auto text-capitalize">{{notification.source}}</strong>
             <small>{{timeService.getRelativeTime(notification.created_at)}}</small>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
           </div>
           <div class="toast-body">
             {{notification.content}}

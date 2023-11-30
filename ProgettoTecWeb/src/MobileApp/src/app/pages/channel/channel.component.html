@@ -1,0 +1,24 @@
+<div class="content" role="main">
+  <div class="mt-4 sticky-top">
+    <div class="row p-3 " [ngClass]="bannerClass">
+      <div class="col-auto sticky-top">
+        <h2 class="row">{{channel.name}}</h2>
+      </div>
+      <span class="col d-flex flex-row-reverse">
+        <span *ngIf="channel.can_mute==true" (click)="toggleMute()" class="bi"
+          [ngClass]="{'bi-bell-fill': !muted, 'bi-bell-slash-fill': muted}"></span>
+      </span>
+    </div>
+    <div class="pt-3 ps-2">
+      <i class="bi bi-hourglass"></i> Online since {{timeService.getRelativeTime(channel.created_at)}}
+      <p class="mt-4">{{channel.description}}</p>
+    </div>
+  </div>
+  <hr class="mt-1">
+  <div class="pb-2">
+    <app-squeal *ngFor="let squeal of squeals" [squeal]="squeal"></app-squeal>
+  </div>
+  <div *ngIf="true" class=" d-flex justify-content-center align-items-center py-2">
+    <button type=" button" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-arrow-clockwise"></i></button>
+  </div>
+</div>

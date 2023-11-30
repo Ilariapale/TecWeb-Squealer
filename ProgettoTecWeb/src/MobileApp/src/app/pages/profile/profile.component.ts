@@ -1,13 +1,13 @@
 import { Component, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { TimeService } from 'src/app/services/time.service';
 import { UsersService } from 'src/app/services/api/users.service';
 import { UserService } from 'src/app/services/user.service';
 import { User, AccountType, ProfessionalType } from 'src/app/models/user.interface';
-import { Subscription, last } from 'rxjs';
+import { Subscription, last, forkJoin } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { SquealService } from 'src/app/services/api/squeals.service';
 import { Squeal } from 'src/app/models/squeal.interface';
-import { forkJoin } from 'rxjs';
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
@@ -48,8 +48,14 @@ export class ProfileComponent implements AfterViewInit {
     private userService: UserService,
     private squealsService: SquealService,
     public darkModeService: DarkModeService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) {
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
+      this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
+    else {
+      this.router.navigate(['/login']);
+    }
     this.userSubscription = this.userService.getUserData().subscribe((userData) => {
       if (userData.account_type === 'guest') {
         this.isGuest = true;
@@ -57,7 +63,7 @@ export class ProfileComponent implements AfterViewInit {
         this.isGuest = false;
         this.usersSubscription = this.usersService.getUser(userData.username).subscribe((user) => {
           this.user = user;
-          this.lastSquealLoaded = user.squeals.posted.length - 1;
+          this.lastSquealLoaded = user.squeals.posted.length > 0 ? user.squeals.posted.length - 1 : 0;
           const squealsRequests = [];
           for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS; i--) {
             squealsRequests.push(this.squealsService.getSqueal(user.squeals.posted[i]));
@@ -71,13 +77,7 @@ export class ProfileComponent implements AfterViewInit {
         });
       }
     });
-    //ottieni l'array degli id delle notifiche
-    // if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
-    //   this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
-    // else {
-    //   this.router.navigate(['/login']);
-    // }
-    //richiedi al server le notifiche con gli id specificati
+
     this.bannerClass = this.darkModeService.getBannerClass();
   }
   ngOnInit() {

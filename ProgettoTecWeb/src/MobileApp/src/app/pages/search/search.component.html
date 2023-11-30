@@ -3,117 +3,354 @@
     <div class="col-1 col-md-4"></div>
     <div class="input-group col">
       <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username"
-        aria-describedby="button-addon2">
-      <button class="btn btn-primary" type="button" id="button-addon2"><i class="bi bi-search"></i></button>
+        aria-describedby="searchButton" [(ngModel)]="searchInput">
+      <button class="btn btn-primary" type="button" id="searchButton"><i class="bi bi-search"></i></button>
     </div>
     <div class="col-1 col-md-4"></div>
   </div>
   <div class="col-auto d-flex justify-content-center align-items-center py-3">
 
-    <input type="radio" class="btn-check " name="options-outlined" id="user-search" autocomplete="off" checked>
+    <input type="radio" class="btn-check " name="options-outlined" id="user-search" autocomplete="off"
+      [(ngModel)]="selectedOption" value="user-search" checked>
     <label class="btn btn-outline-primary px-4" for="user-search">@Users</label>
 
-    <input type="radio" class="btn-check" name="options-outlined" id="channel-search" autocomplete="off">
-    <label class="btn btn-outline-primary" for="channel-search">§Channels</label>
+    <input type="radio" class="btn-check" name="options-outlined" id="channel-search" autocomplete="off"
+      [(ngModel)]="selectedOption" value="channel-search">
+    <label class=" btn btn-outline-primary" for="channel-search">§Channels</label>
 
-    <input type="radio" class="btn-check" name="options-outlined" id="keyword-search" autocomplete="off">
-    <label class="btn btn-outline-primary" for="keyword-search">#Keywords</label>
+    <input type="radio" class="btn-check" name="options-outlined" id="keyword-search" autocomplete="off"
+      [(ngModel)]="selectedOption" value="keyword-search">
+    <label class=" btn btn-outline-primary" for="keyword-search">#Keywords</label>
   </div>
 
   <div class="row">
     <div class="col-1 col-md-4"></div>
-    <div class="accordion col-10 col-md-4" id="accordionExample">
+
+    <div class="accordion col-10 col-md-4" id="advancedSearchAccordion">
       <div class="accordion-item">
-        <h2 class="accordion-header" id="headingOne">
-          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
-            aria-expanded="true" aria-controls="collapseOne">
+        <h2 class="accordion-header" id="advancedSearchLabel">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#advancedSearch"
+            aria-expanded="true" aria-controls="advancedSearch">
             Advanced Search
           </button>
         </h2>
-        <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
-          data-bs-parent="#accordionExample">
-          <div class="accordion-body">
-            <div class="card" style="width: 18rem;">
+        <!--TODO rimuovere "show" e cambiare tutti gli id/ariaLabel -->
+        <div id="advancedSearch" class="accordion-collapse collapse" aria-labelledby="advancedSearchLabel"
+          data-bs-parent="#advancedSearchAccordion">
+          <div class="accordion-body px-2">
+
+            <div class="card col" *ngIf="selectedOption === 'user-search'">
               <ul class="list-group list-group-flush">
-                <li class="list-group-item">
+                <li class="list-group-item p-2">
+                  <div class="input-group flex-nowrap pb-2">
+                    <span class="input-group-text col-6" id="user-created_before">Created before</span>
+                    <input type="date" class="form-control col-6" placeholder="Created Before"
+                      aria-label="Created before" aria-describedby="Account created before a certain date"
+                      [(ngModel)]="created_before">
+                  </div>
                   <div class="input-group flex-nowrap">
-                    <span class="input-group-text" id="addon-wrapping">@</span>
-                    <input type="text" class="form-control" placeholder="Created Before" aria-label="Username"
-                      aria-describedby="addon-wrapping">
+                    <span class="input-group-text col-6" id="user-created_after">Created after</span>
+                    <input type="date" class="form-control col-6" placeholder="Created After" aria-label="Created after"
+                      aria-describedby="Account created after a certain date" [(ngModel)]="created_after">
                   </div>
                 </li>
-                <li class="list-group-item">
+                <li class="list-group-item p-2">
+                  <div class="input-group flex-nowrap pb-2">
+                    <span class="input-group-text col-6" id="user-max_squeals">Max Squeals</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Max Squeals"
+                      aria-label="Max Squeals" aria-describedby="Maximum number of squeals the accounts have"
+                      [(ngModel)]="max_squeals">
+                  </div>
                   <div class="input-group flex-nowrap">
-                    <span class="input-group-text" id="addon-wrapping">@</span>
-                    <input type="text" class="form-control" placeholder="Created After" aria-label="Username"
-                      aria-describedby="addon-wrapping">
+                    <span class="input-group-text col-6" id="user-min_squeals">Min Squeals</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Min Squeals"
+                      aria-label="Min Squeals" aria-describedby="Minimum number of squeals the accounts have"
+                      [(ngModel)]="min_squeals">
                   </div>
                 </li>
-                <li class="list-group-item">
-                  <div class="input-group flex-nowrap">
-                    <span class="input-group-text" id="addon-wrapping">@</span>
-                    <input type="text" class="form-control" placeholder="Max Squeals" aria-label="Username"
-                      aria-describedby="addon-wrapping">
+
+                <li class="list-group-item p-2">
+                  <div class="input-group pb-2">
+                    <label class="input-group-text col-6" for="account-type">Account Type</label>
+                    <select class="form-select col-6" id="account-type" [(ngModel)]="account_type">
+                      <option value="none" selected>Select..</option>
+                      <option value="standard">Standard</option>
+                      <option value="verified">Verified</option>
+                      <option value="professional">Professional</option>
+                      <option value="moderator">Moderator</option>
+                    </select>
+                  </div>
+                  <div class="input-group" *ngIf="account_type === 'professional'">
+                    <label class="input-group-text col-6" for="account-type" [(ngModel)]="professional_type">Profess.
+                      Type</label>
+                    <select class="form-select col-6" id="professional-type">
+                      <option value="none" selected>Select..</option>
+                      <option value="vip">VIP</option>
+                      <option value="smm">SMM</option>
+                    </select>
                   </div>
                 </li>
-                <li class="list-group-item">
-                  <div class="input-group flex-nowrap">
-                    <span class="input-group-text" id="addon-wrapping">@</span>
-                    <input type="text" class="form-control" placeholder="Min Squeals" aria-label="Username"
-                      aria-describedby="addon-wrapping">
+
+                <li class="list-group-item p-2">
+                  <div class="input-group">
+                    <select class="form-select form-select-sm" aria-label="Sort order"
+                      aria-describedby="Search in the database ordering in:" [(ngModel)]="sort_order">
+                      <option value="none" selected>Sort Order</option>
+                      <option value="desc">Desc</option>
+                      <option value="asc">Asc</option>
+                    </select>
+                    <select class="form-select form-select-sm" aria-label="Sort by"
+                      aria-describedby="Search in the database ordering by:" [(ngModel)]="sort_by">
+                      <option value="none" selected>Sort By</option>
+                      <option value="username">Username</option>
+                      <option value="date">Date</option>
+                      <option value="squeals">Squeals</option>
+                    </select>
                   </div>
                 </li>
-                <li class="list-group-item">
-                  <div class="input-group flex-nowrap">
-                    <span class="input-group-text" id="addon-wrapping">@</span>
-                    <input type="text" class="form-control" placeholder="Account Type" aria-label="Username"
-                      aria-describedby="addon-wrapping">
-                  </div>
-                </li>
-                <li class="list-group-item">
-                  <div class="input-group flex-nowrap">
-                    <span class="input-group-text" id="addon-wrapping">@</span>
-                    <input type="text" class="form-control" placeholder="Professional Type" aria-label="Username"
-                      aria-describedby="addon-wrapping">
-                  </div>
-                </li>
-                <div class="row">
-                  <li class="list-group-item">
-                    <div class="dropdown">
-                      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        Sort Order
-                      </button>
-                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                        <li><a class="dropdown-item">Asc</a></li>
-                        <li><a class="dropdown-item">Desc</a></li>
-                      </ul>
-                    </div>
-                  </li>
-                  <li class="list-group-item">
-                    <div class="dropdown">
-                      <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        Sort By
-                      </button>
-                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                        <li><a class="dropdown-item">Username</a></li>
-                        <li><a class="dropdown-item">Date</a></li>
-                        <li><a class="dropdown-item">Squeals</a></li>
-                      </ul>
-                    </div>
-                  </li>
-                </div>
               </ul>
             </div>
-          </div>
 
+            <div class="card col" *ngIf="selectedOption === 'channel-search'">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item p-2">
+                  <div class="input-group flex-nowrap pb-2">
+                    <span class="input-group-text col-6" id="channel-created_before">Created before</span>
+                    <input type="date" class="form-control col-6" placeholder="Created Before"
+                      aria-label="Created before" aria-describedby="Account created before a certain date"
+                      [(ngModel)]="created_before">
+                  </div>
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text col-6" id="channel-created_after">Created after</span>
+                    <input type="date" class="form-control col-6" placeholder="Created After" aria-label="Created after"
+                      aria-describedby="Account created after a certain date" [(ngModel)]="created_after">
+                  </div>
+                </li>
+
+                <li class="list-group-item p-2">
+                  <div class="input-group flex-nowrap pb-2">
+                    <span class="input-group-text col-6" id="channel-max_squeals">Max Squeals</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Max Squeals"
+                      aria-label="Max Squeals" aria-describedby="Maximum number of squeals the channels have"
+                      [(ngModel)]="max_squeals">
+                  </div>
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text col-6" id="channel-min_squeals">Min Squeals</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Min Squeals"
+                      aria-label="Min Squeals" aria-describedby="Minimum number of squeals the channels have"
+                      [(ngModel)]="min_squeals">
+                  </div>
+                </li>
+                <li class="list-group-item p-2">
+                  <div class="input-group flex-nowrap pb-2">
+                    <span class="input-group-text col-6" id="channel-max_subscribers">Max Subs</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Max Subscribers"
+                      aria-label="Max Subscribers" aria-describedby="Maximum number of subscribers the channels have"
+                      [(ngModel)]="max_subscribers">
+                  </div>
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text col-6" id="channel-min_subscribers">Min Subs</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Min Subscribers"
+                      aria-label="Min Subscribers" aria-describedby="Minimum number of subscribers the channels have"
+                      [(ngModel)]="min_subscribers">
+                  </div>
+                </li>
+
+                <li class="list-group-item p-2">
+                  <div class="input-group">
+
+                    <select class="form-select form-select-sm" aria-label="Sort order"
+                      aria-describedby="Search in the database ordering in:" [(ngModel)]="sort_order">
+                      <option value="none" selected>Sort Order</option>
+                      <option value="desc">Desc</option>
+                      <option value="asc">Asc</option>
+                    </select>
+                    <select class="form-select form-select-sm" aria-label="Sort by"
+                      aria-describedby="Search in the database ordering by:" [(ngModel)]="sort_by">
+                      <option value="none" selected>Sort By</option>
+                      <option value="name">Name</option>
+                      <option value="date">Date</option>
+                      <option value="squeals">Squeals</option>
+                      <option value="subscribers">Subscribers</option>
+                    </select>
+                  </div>
+                </li>
+                <li class="list-group-item p-2">
+                  <div class="form-check form-switch bs-1 m-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="officialOnlySwitch"
+                      [(ngModel)]="is_official">
+                    <label class="form-check-label" for="officialOnlySwitch">Official only</label>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="card col" *ngIf="selectedOption === 'keyword-search'">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item p-2">
+                  <div class="input-group flex-nowrap pb-2">
+                    <span class="input-group-text col-6" id="channel-created_before">Created before</span>
+                    <input type="date" class="form-control col-6" placeholder="Created Before"
+                      aria-label="Created before" aria-describedby="Account created before a certain date"
+                      [(ngModel)]="created_before">
+                  </div>
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text col-6" id="channel-created_after">Created after</span>
+                    <input type="date" class="form-control col-6" placeholder="Created After" aria-label="Created after"
+                      aria-describedby="Account created after a certain date" [(ngModel)]="created_after">
+                  </div>
+                </li>
+
+                <li class="list-group-item p-2">
+                  <div class="input-group flex-nowrap pb-2">
+                    <span class="input-group-text col-6" id="channel-max_reaction">Max Reaction</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Max Reaction"
+                      aria-label="Max Reaction" aria-describedby="Maximum number of reaction the channels have"
+                      [(ngModel)]="max_reaction">
+                  </div>
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text col-6" id="channel-min_reaction">Min Reaction</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Min Reaction"
+                      aria-label="Min Reaction" aria-describedby="Minimum number of reaction the channels have"
+                      [(ngModel)]="min_reaction">
+                  </div>
+                </li>
+                <li class="list-group-item p-2">
+                  <div class="input-group flex-nowrap pb-2">
+                    <span class="input-group-text col-6" id="squeal-max_balance">Max Balance</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Max Balance"
+                      aria-label="Max Balance" aria-describedby="Maximum number of balance the squeals have"
+                      [(ngModel)]="max_balance">
+                  </div>
+                  <div class="input-group flex-nowrap">
+                    <span class="input-group-text col-6" id="squeal-min_balance">Min Balance</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Min Balance"
+                      aria-label="Min Balance" aria-describedby="Minimum number of balance the squeals have"
+                      [(ngModel)]="min_balance">
+                  </div>
+                </li>
+
+                <li class="list-group-item p-2">
+                  <div class="input-group">
+
+                    <select class="form-select form-select-sm" aria-label="Sort order"
+                      aria-describedby="Search in the database ordering in:" [(ngModel)]="sort_order">
+                      <option value="none" selected>Sort Order</option>
+                      <option value="desc">Desc</option>
+                      <option value="asc">Asc</option>
+                    </select>
+                    <select class="form-select form-select-sm" aria-label="Sort by"
+                      aria-describedby="Search in the database ordering by:" [(ngModel)]="sort_by">
+                      <option value="none" selected>Sort By</option>
+                      <option value="reactions">Reactions</option>
+                      <option value="impressions">Impressions</option>
+                      <option value="date">Date</option>
+                    </select>
+                  </div>
+                </li>
+                <li class="list-group-item p-2">
+                  <div class="form-check form-switch bs-1 m-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="officialOnlySwitch"
+                      [(ngModel)]="is_official">
+                    <label class="form-check-label" for="officialOnlySwitch">In Official channel only</label>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+
+
+          </div>
         </div>
       </div>
     </div>
+
     <div class="col-1 col-md-4"></div>
   </div>
 
+  <div class="row">
 
+    <div class="col-1 col-md-4"></div>
+
+    <div class="pt-3 col-10 col-md-4">
+
+      <div *ngIf="showUserResults" aria-live="polite" aria-atomic="true"
+        class="d-flex justify-content-center align-items-center row">
+        <div *ngFor="let test of testArray" class="toast show m-1 " [class.dark-toast]="getDarkMode()=='dark-theme'"
+          role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
+            <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
+              <rect width="100%" height="100%" [ngStyle]="{ 'fill': '#11111' }"></rect>
+            </svg>
+            <strong class="me-auto text-capitalize">@Username</strong>
+            <small>account-type</small>
+          </div>
+          <div class="toast-body row">
+            <div class="col"> Description</div>
+            <div class="col-auto">
+              <a class="btn btn-primary btn-sm" (click)="triggerTest()">
+                <i class="bi bi-send-plus-fill" role="status">
+                </i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="showChannelResults" aria-live="polite" aria-atomic="true"
+        class="d-flex justify-content-center align-items-center row">
+        <div *ngFor="let test of testArray" class="toast show m-1 " [class.dark-toast]="getDarkMode()=='dark-theme'"
+          role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
+            <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
+              <rect width="100%" height="100%" [ngStyle]="{ 'fill': '#11111' }"></rect>
+            </svg>
+            <strong class="me-auto text-capitalize">§Channel</strong>
+            <small>isOfficial</small>
+          </div>
+          <div class="toast-body row">
+            <div class="col"> Description</div>
+            <div class="col-auto">
+              <a class="btn btn-primary btn-sm" (click)="triggerTest()">
+                <i *ngIf="!loading" class="bi" [ngClass]="{'bi-check-lg': subscribed, 'bi-plus-lg': !subscribed}"></i>
+                <i class="spinner-border text-light" *ngIf="loading" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+
+      <div *ngIf="showKeywordResults" aria-live="polite" aria-atomic="true"
+        class="d-flex justify-content-center align-items-center row">
+        <div *ngFor="let test of testArray" class="toast show m-1 " [class.dark-toast]="getDarkMode()=='dark-theme'"
+          role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
+            <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
+              <rect width="100%" height="100%" [ngStyle]="{ 'fill': '#11111' }"></rect>
+            </svg>
+            <strong class="me-auto text-capitalize">#Keyword</strong>
+            <small>isOfficial</small>
+          </div>
+          <div class="toast-body row">
+            <div class="col"> Description</div>
+            <div class="col-auto">
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+    <div class="col-1 col-md-4"></div>
+
+  </div>
 
 </div>

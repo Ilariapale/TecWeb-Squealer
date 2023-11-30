@@ -11,6 +11,7 @@ import { StoreComponent } from './pages/store/store.component';
 import { NotificationsComponent } from './pages/notifications/notifications.component';
 import { ChatsComponent } from './pages/chats/chats.component';
 import { ChatComponent } from './pages/chat/chat.component';
+import { ChannelComponent } from './pages/channel/channel.component';
 import { ReactionsMenuComponent } from './widgets/reactions-menu/reactions-menu.component';
 //import { PageLayoutComponent } from './pages/page-layout/page-layout.component';
 
@@ -30,6 +31,7 @@ const routes: Routes = [
   { path: 'private-chats', component: ChatsComponent },
   { path: 'private-chats/user/:id/:recipient', component: ChatComponent },
   { path: 'private-chats/user/:user', component: ChatComponent },
+  { path: 'channel', component: ChannelComponent },
   // { path: 'chat', component: ChatsComponent },
 ];
 

@@ -34,7 +34,6 @@
               </svg>
               <strong class="me-auto text-capitalize">{{ chat.recipient}}</strong>
               <small>{{timeService.getRelativeTime(chat.last_modified)}}</small>
-              <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
             <div class="toast-body">
               <i class="card-text col"><i *ngIf="chat.sent_by_me">You: </i>{{ chat.last_message}}</i><i class="col"></i>
