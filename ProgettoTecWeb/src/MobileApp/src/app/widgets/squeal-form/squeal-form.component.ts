@@ -61,10 +61,10 @@ export class SquealFormComponent {
       } else {
         if (['standard', 'moderator', 'professional', 'verified'].includes(userData.account_type)) {
           this.isGuest = false;
-          this.char_left.daily = this.user.char_quota.daily;
-          this.char_left.weekly = this.user.char_quota.weekly;
-          this.char_left.monthly = this.user.char_quota.monthly;
-          this.char_left.extra_daily = this.user.char_quota.extra_daily;
+          this.char_left.daily = this.user?.char_quota?.daily ?? 0;
+          this.char_left.weekly = this.user?.char_quota?.weekly ?? 0;
+          this.char_left.monthly = this.user?.char_quota?.monthly ?? 0;
+          this.char_left.extra_daily = this.user?.char_quota?.extra_daily ?? 0;
         }
       }
     });
@@ -101,10 +101,12 @@ export class SquealFormComponent {
       else this.enoughChars = true;
     } else this.enoughChars = true;
 
-    this.user.char_quota.daily = this.char_left.daily <= 0 ? 0 : this.char_left.daily;
-    this.user.char_quota.weekly = this.char_left.weekly <= 0 ? 0 : this.char_left.weekly;
-    this.user.char_quota.monthly = this.char_left.monthly <= 0 ? 0 : this.char_left.monthly;
-    this.user.char_quota.extra_daily = this.char_left.extra_daily <= 0 ? 0 : this.char_left.extra_daily;
+    if (this.user.char_quota) {
+      this.user.char_quota.daily = this.char_left.daily <= 0 ? 0 : this.char_left.daily;
+      this.user.char_quota.weekly = this.char_left.weekly <= 0 ? 0 : this.char_left.weekly;
+      this.user.char_quota.monthly = this.char_left.monthly <= 0 ? 0 : this.char_left.monthly;
+      this.user.char_quota.extra_daily = this.char_left.extra_daily <= 0 ? 0 : this.char_left.extra_daily;
+    }
   }
 
   getThemeClass() {

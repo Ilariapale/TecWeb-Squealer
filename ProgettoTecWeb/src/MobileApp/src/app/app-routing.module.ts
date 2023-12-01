@@ -26,7 +26,7 @@ const routes: Routes = [
   { path: 'signup', component: SignupComponent },
   { path: 'map', component: MapComponent },
   { path: 'profile', component: ProfileComponent },
-  { path: 'profile/:id', component: ProfileComponent },
+  { path: 'profile/:identifier', component: ProfileComponent },
   { path: 'search', component: SearchComponent },
   { path: 'store', component: StoreComponent },
   { path: 'notifications', component: NotificationsComponent },

@@ -393,7 +393,7 @@ module.exports = {
    */
   //TESTED
   getUser: async (options) => {
-    const { identifier, user_id } = options;
+    const { identifier, user_id, isTokenValid } = options;
     let response = await findUser(identifier);
     if (response.status >= 300) {
       // If the response is an error, return the error message
@@ -411,7 +411,49 @@ module.exports = {
       profile_info: user.profile_info,
       profile_picture: user.profile_picture,
     };
+
+    const loggedUser = {
+      _id: user._id,
+      account_type: user.account_type,
+      professional_type: user.professional_type,
+      email: user.email,
+      created_at: user.created_at,
+      squeals: {
+        posted: user.squeals.posted,
+      },
+      profile_info: user.profile_info,
+      profile_picture: user.profile_picture,
+      is_active: user.is_active,
+    };
+
+    const self = {
+      _id: user._id,
+      account_type: user.account_type,
+      professional_type: user.professional_type,
+      email: user.email,
+      username: user.username,
+      created_at: user.created_at,
+      squeals: user.squeals,
+      char_quota: user.char_quota,
+      weekly_reaction_metrics: user.weekly_reaction_metrics,
+      direct_chats: user.direct_chats,
+      subscribed_channels: user.subscribed_channels,
+      owned_channels: user.owned_channels,
+      editor_channels: user.editor_channels,
+      profile_info: user.profile_info,
+      profile_picture: user.profile_picture,
+      smm: user.smm,
+      managed_accounts: user.managed_accounts,
+      pending_requests: user.pending_requests,
+      preferences: user.preferences,
+      notifications: user.notifications,
+      is_active: user.is_active,
+    };
+
     // Check if the request sender exists
+    if (!isTokenValid) {
+      return user.is_active ? { status: 200, data: publicUser } : { status: 404, data: { error: `User not found.` } };
+    }
     response = await findUser(user_id);
     if (response.status >= 300) {
       // If the response is an error, return the public user if the main user is active,
@@ -422,12 +464,21 @@ module.exports = {
 
     // If the main user is inactive and the request sender is not a moderator,
     // return "User not found" error
-    if (!user.is_active && reqSender.account_type !== "moderator") {
-      return { status: 404, data: { error: `User not found.` } };
+    if (user._id !== reqSender._id) {
+      if (!user.is_active && reqSender.account_type !== "moderator") {
+        return { status: 404, data: { error: `User not found.` } };
+      } else if (reqSender.account_type === "moderator") {
+        return { status: 200, data: self };
+      } else {
+        return { status: 200, data: loggedUser };
+      }
+    } else {
+      return { status: 200, data: self };
     }
+
     // Otherwise, return the full user if the main user is active or the request sender is a moderator,
     // otherwise return "User not found" error
-    return { status: 200, data: user.is_active || reqSender.account_type === "moderator" ? user : publicUser };
+    //return { status: 200, data: user.is_active || reqSender.account_type === "moderator" ? user : publicUser };
   },
 
   /**

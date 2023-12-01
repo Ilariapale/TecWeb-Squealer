@@ -194,7 +194,7 @@ export class SearchComponent {
   }
 
   visitUser(username: String) {
-    //this.router.navigate([`/${page}`]);
+    this.router.navigate([`/profile/${username}`]);
     console.log(`visitUser(${username})`);
   }
   visitChannel(channel: String) {

@@ -7,10 +7,10 @@
 
       <ng-container *ngIf='!isGuest'>
         <div *ngIf="enoughChars" class="squeal-form-text">
-          {{user.char_quota.daily}}<span class="quota_letter">D</span>
-          {{user.char_quota.weekly}}<span class="quota_letter">W</span>
-          {{user.char_quota.monthly}}<span class="quota_letter">M</span>
-          {{user.char_quota.extra_daily}}<span class="quota_letter">E</span>
+          {{user.char_quota?.daily || 0}}<span class="quota_letter">D</span>
+          {{user.char_quota?.weekly || 0}}<span class="quota_letter">W</span>
+          {{user.char_quota?.monthly|| 0}}<span class="quota_letter">M</span>
+          {{user.char_quota?.extra_daily|| 0}}<span class="quota_letter">E</span>
         </div>
         <div *ngIf='!enoughChars' class="char_left squeal-form-text">Not enough chars left!</div>
         <form [formGroup]="squealForm" (ngSubmit)="createSqueal()">

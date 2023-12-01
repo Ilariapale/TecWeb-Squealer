@@ -20,6 +20,9 @@
   <div class="pb-2">
     <app-squeal *ngFor="let squeal of squeals" [squeal]="squeal"></app-squeal>
   </div>
+  <i class="spinner-border text-light" *ngIf="loading" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </i>
   <div *ngIf="lastSquealLoaded>=0" class=" d-flex justify-content-center align-items-center py-2">
     <button (click)="loadMoreSqueals()" type=" button" class="btn btn-outline-secondary rounded-pill"><i
         class="bi bi-arrow-clockwise"></i></button>

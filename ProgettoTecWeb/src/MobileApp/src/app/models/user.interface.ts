@@ -35,12 +35,12 @@ export interface User {
   password?: String;
   created_at: Date;
   squeals?: {
-    posted: [];
-    scheduled: [];
-    mentioned_in: [];
-    reacted_to: [];
+    posted?: [];
+    scheduled?: [];
+    mentioned_in?: [];
+    reacted_to?: [];
   };
-  char_quota: {
+  char_quota?: {
     daily: number;
     weekly: number;
     monthly: number;

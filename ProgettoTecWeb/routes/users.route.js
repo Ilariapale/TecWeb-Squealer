@@ -106,6 +106,7 @@ router.get("/:identifier", verifyToken, async (req, res, next) => {
   let options = {
     identifier: req.params.identifier,
     user_id: req.user_id,
+    isTokenValid: req.isTokenValid,
   };
   // res.cookie("username", "john_doe");
   // console.log(req);
