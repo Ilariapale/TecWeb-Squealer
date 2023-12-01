@@ -154,6 +154,7 @@ module.exports = {
           professional_type: 1,
           account_type: 1,
           squeals_count: { $size: "$squeals.posted" },
+          is_active: 1,
         },
       });
 
