@@ -1,3 +1,19 @@
+export interface SquealQuery {
+  content_type?: string;
+  created_after?: String;
+  created_before?: String;
+  is_scheduled?: Boolean;
+  min_reactions?: Number;
+  min_balance?: Number;
+  max_balance?: Number;
+  sort_order?: String;
+  sort_by?: String;
+  pag_size?: Number;
+  last_loaded?: string;
+  keywords?: String[];
+  is_in_official_channel?: Boolean;
+}
+
 export enum ContentType {
   text = 'text',
   image = 'image',

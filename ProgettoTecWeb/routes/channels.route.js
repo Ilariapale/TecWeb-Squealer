@@ -4,34 +4,35 @@ const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
 router.get("/", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      name: req.query.name,
-      created_after: req.query.created_after,
-      created_before: req.query.created_before,
-      is_official: req.query.is_official,
-      min_subscribers: req.query.min_subscribers,
-      max_subscribers: req.query.max_subscribers,
-      min_squeals: req.query.min_squeals,
-      max_squeals: req.query.max_squeals,
-      sort_by: req.query.sort_by,
-      sort_order: req.query.sort_order,
-      user_id: req.user_id,
-      pag_size: req.query.pag_size,
-      last_loaded: req.query.last_loaded,
-    };
+  //if (req.isTokenValid) {
+  let options = {
+    name: req.query.name,
+    created_after: req.query.created_after,
+    created_before: req.query.created_before,
+    is_official: !req.isTokenValid || req.query.is_official === "true",
+    min_subscribers: req.query.min_subscribers,
+    max_subscribers: req.query.max_subscribers,
+    min_squeals: req.query.min_squeals,
+    max_squeals: req.query.max_squeals,
+    sort_by: req.query.sort_by,
+    sort_order: req.query.sort_order,
+    user_id: req.user_id,
+    pag_size: req.query.pag_size,
+    last_loaded: req.query.last_loaded,
+    is_token_valid: req.isTokenValid,
+  };
 
-    try {
-      const result = await channels.getChannels(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send({ error: "Token is either missing invalid or expired" });
+  try {
+    const result = await channels.getChannels(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
   }
+  // } else {
+  //   res.status(401).send({ error: "Token is either missing invalid or expired" });
+  // }
 });
 
 router.get("/:identifier", verifyToken, async (req, res, next) => {

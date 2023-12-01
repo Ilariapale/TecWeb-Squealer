@@ -1,8 +1,8 @@
 <div class="content" role="main">
   <div class="mt-4 sticky-top">
     <div class="row p-3 " [ngClass]="bannerClass">
-      <div class="col-auto sticky-top">
-        <h2 class="row">{{channel.name}}</h2>
+      <div class="col-auto">
+        <h1 class="row">{{channel.name}}</h1>
       </div>
       <span class="col d-flex flex-row-reverse">
         <span *ngIf="channel.can_mute==true" (click)="toggleMute()" class="bi"

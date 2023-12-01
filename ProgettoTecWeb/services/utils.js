@@ -362,7 +362,7 @@ async function addCommentsCountToSqueals(squeals) {
   const commentCountsMap = new Map(commentCounts.map((count) => [count.squeal_ref.toString(), count.comments_count]));
 
   return squeals.map((squeal) => ({
-    ...squeal.toObject(),
+    ...squeal,
     comments_count: commentCountsMap.get(squeal._id.toString()) || 0,
   }));
 }

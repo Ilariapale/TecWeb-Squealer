@@ -47,8 +47,7 @@ router.post("/", verifyToken, async (req, res, next) => {
       is_scheduled: req.body.is_scheduled,
       recipients: req.body.recipients,
     };
-    console.log("req.user_id", options.user_id);
-    console.log("options", options);
+
     try {
       const result = await squeals.createSqueal(options);
       res.status(result.status || 200).send(result.data);
@@ -113,7 +112,6 @@ router.delete("/:identifier", verifyToken, async (req, res, next) => {
       identifier: req.params.identifier,
       user_id: req.user_id,
     };
-    console.log(options);
     try {
       const result = await squeals.deleteSqueal(options);
       res.status(result.status || 200).send(result.data);

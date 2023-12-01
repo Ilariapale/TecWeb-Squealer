@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { SquealService } from 'src/app/services/api/squeals.service';
+import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Router } from '@angular/router';
 import { HttpHeaders } from '@angular/common/http';
 import { AuthService } from 'src/app/services/api/auth.service';
@@ -39,7 +39,7 @@ export class HomeComponent {
   isGuest: boolean = true;
 
   constructor(
-    private squealService: SquealService,
+    private squealService: SquealsService,
     public authService: AuthService,
     private router: Router,
     private userService: UserService

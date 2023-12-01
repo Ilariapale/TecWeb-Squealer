@@ -75,6 +75,7 @@ router.post("/", async (req, res, next) => {
 router.get("/", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
+      username: req.query.username,
       created_after: req.query.created_after,
       created_before: req.query.created_before,
       max_squeals: req.query.max_squeals,

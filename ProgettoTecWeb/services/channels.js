@@ -43,21 +43,42 @@ module.exports = {
    * @param options.last_loaded Last loaded channel's id
    */
   getChannels: async (options) => {
-    const { last_loaded, name, created_after, created_before, is_official, min_subscribers, max_subscribers, min_squeals, max_squeals, sort_order, sort_by, user_id } = options;
+    const {
+      is_token_valid,
+      last_loaded,
+      name,
+      created_after,
+      created_before,
+      is_official,
+      min_subscribers,
+      max_subscribers,
+      min_squeals,
+      max_squeals,
+      sort_order,
+      sort_by,
+      user_id,
+    } = options;
     let { pag_size } = options;
     const sort_orders = ["asc", "desc"];
     const sort_types = ["name", "date", "squeals", "subscribers"];
     const pipeline = [];
 
-    let response = await findUser(user_id);
-    if (response.status >= 300) {
-      //if the response is an error
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
+    if (is_token_valid) {
+      let response = await findUser(user_id);
+      if (response.status >= 300) {
+        //if the response is an error
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const reqSender = response.data;
+      if (reqSender.account_type !== "moderator") {
+        pipeline.push({ $match: { is_blocked: false } });
+      }
+    } else {
+      pipeline.push({ $match: { is_blocked: false } });
     }
-    const reqSender = response.data;
 
     if (last_loaded) {
       if (!mongooseObjectIdRegex.test(last_loaded)) {
@@ -69,14 +90,12 @@ module.exports = {
       pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
     }
 
-    if (reqSender.account_type !== "moderator") {
-      pipeline.push({ $match: { is_blocked: false } });
-    }
-
+    console.log(options);
     if (name) {
       const regex = new RegExp(name, "i");
       pipeline.push({ $match: { name: { $regex: regex } } });
     }
+
     if (created_after) {
       const date = Date.parse(created_after);
       if (isNaN(date)) {
@@ -98,13 +117,7 @@ module.exports = {
       pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
     }
     if (is_official) {
-      if (!["true", "false"].includes(is_official)) {
-        return {
-          status: 400,
-          data: { error: `'is_official' must be either 'true' or 'false'.` },
-        };
-      }
-      pipeline.push({ $match: { is_official: is_official == "true" ? true : false } });
+      pipeline.push({ $match: { is_official: is_official } });
     }
 
     pipeline.push({
@@ -116,6 +129,7 @@ module.exports = {
         squeals_count: { $size: "$squeals" },
         is_blocked: 1,
         created_at: 1, // Includi il campo 'created_at'
+        is_official: 1, // Includi il campo 'is_official'
         //immagine: 1, // Includi il campo 'immagine'
 
         // Aggiungi altri campi che desideri includere qui

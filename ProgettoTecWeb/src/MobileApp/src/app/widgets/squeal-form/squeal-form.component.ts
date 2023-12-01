@@ -2,7 +2,7 @@ import { Component, Output, Input, EventEmitter, ViewChild, ElementRef } from '@
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { UserService } from 'src/app/services/user.service';
-import { SquealService } from 'src/app/services/api/squeals.service';
+import { SquealsService } from 'src/app/services/api/squeals.service';
 import { User } from 'src/app/models/user.interface';
 import { Recipients } from 'src/app/models/squeal.interface';
 import { TagInputComponent } from '../tag-input/tag-input.component';
@@ -50,7 +50,7 @@ export class SquealFormComponent {
     private formBuilder: FormBuilder,
     private http: HttpClient,
     public userService: UserService,
-    private squealService: SquealService,
+    private squealService: SquealsService,
     private darkModeService: DarkModeService,
     private router: Router
   ) {

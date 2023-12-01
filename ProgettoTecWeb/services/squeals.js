@@ -39,6 +39,7 @@ const { mentionNotification, squealInOfficialChannel } = require("./messages");
 module.exports = {
   /**
    * Retrieve squeals with optional filters
+   * @param options.keywords Filter squeals by keywords
    * @param options.content_type Filter squeals by content type (text, image, video, position)
    * @param options.created_after Filter squeals created after the specified date
    * @param options.created_before Filter squeals created before the specified date
@@ -114,7 +115,6 @@ module.exports = {
       }
       pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
     }
-
     if (keywords) {
       let keywordsArray = keywords;
       if (!Array.isArray(keywords)) {
@@ -265,12 +265,11 @@ module.exports = {
     await Promise.all(squealImpressionsPromises);
 
     //aggiungo il campo "comments_total" ad ogni squeal:
-    data = await addCommentsCountToSqueals(data);
-    console.log(data);
+    const newData = await addCommentsCountToSqueals(data);
     //return the squeals
     return {
       status: 200,
-      data: data,
+      data: newData,
     };
   },
 

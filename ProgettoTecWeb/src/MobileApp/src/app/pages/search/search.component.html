@@ -2,24 +2,25 @@
   <div class="row">
     <div class="col-1 col-md-4"></div>
     <div class="input-group col">
-      <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username"
+      <input type="text" class="form-control" [placeholder]="placeholder" aria-label="Recipient's username"
         aria-describedby="searchButton" [(ngModel)]="searchInput">
-      <button class="btn btn-primary" type="button" id="searchButton"><i class="bi bi-search"></i></button>
+      <button class="btn btn-primary" type="button" id="searchButton" (click)="sendSearch()"><i
+          class="bi bi-search"></i></button>
     </div>
     <div class="col-1 col-md-4"></div>
   </div>
   <div class="col-auto d-flex justify-content-center align-items-center py-3">
 
     <input type="radio" class="btn-check " name="options-outlined" id="user-search" autocomplete="off"
-      [(ngModel)]="selectedOption" value="user-search" checked>
+      [(ngModel)]="selectedOption" value="user-search" (click)="changePlaceholder('Type username here...')" checked>
     <label class="btn btn-outline-primary px-4" for="user-search">@Users</label>
 
     <input type="radio" class="btn-check" name="options-outlined" id="channel-search" autocomplete="off"
-      [(ngModel)]="selectedOption" value="channel-search">
+      [(ngModel)]="selectedOption" value="channel-search" (click)="changePlaceholder('Type channel name here...')">
     <label class=" btn btn-outline-primary" for="channel-search">§Channels</label>
 
     <input type="radio" class="btn-check" name="options-outlined" id="keyword-search" autocomplete="off"
-      [(ngModel)]="selectedOption" value="keyword-search">
+      [(ngModel)]="selectedOption" value="keyword-search" (click)="changePlaceholder('Type keywords #like #this')">
     <label class=" btn btn-outline-primary" for="keyword-search">#Keywords</label>
   </div>
 
@@ -187,32 +188,49 @@
 
             <div class="card col" *ngIf="selectedOption === 'keyword-search'">
               <ul class="list-group list-group-flush">
+
+                <li class="list-group-item p-2">
+                  <div class="input-group">
+
+                    <select class="form-select form-select-sm" aria-label="Sort order"
+                      aria-describedby="Search in the database ordering in:" [(ngModel)]="content_type">
+                      <option value="none" selected>Content type</option>
+                      <option value="text">Text</option>
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                      <option value="position">Position</option>
+                    </select>
+
+                  </div>
+                </li>
+                <li class="list-group-item p-2">
+                  <div class="form-check form-switch bs-1 m-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="isScheduledSwitch"
+                      [(ngModel)]="is_scheduled">
+                    <label class="form-check-label" for="isScheduledSwitch">Scheduled squeals only</label>
+                  </div>
+                </li>
+
                 <li class="list-group-item p-2">
                   <div class="input-group flex-nowrap pb-2">
-                    <span class="input-group-text col-6" id="channel-created_before">Created before</span>
+                    <span class="input-group-text col-6" id="squeal-created_before">Created before</span>
                     <input type="date" class="form-control col-6" placeholder="Created Before"
                       aria-label="Created before" aria-describedby="Account created before a certain date"
                       [(ngModel)]="created_before">
                   </div>
                   <div class="input-group flex-nowrap">
-                    <span class="input-group-text col-6" id="channel-created_after">Created after</span>
+                    <span class="input-group-text col-6" id="squeal-created_after">Created after</span>
                     <input type="date" class="form-control col-6" placeholder="Created After" aria-label="Created after"
                       aria-describedby="Account created after a certain date" [(ngModel)]="created_after">
                   </div>
                 </li>
 
                 <li class="list-group-item p-2">
-                  <div class="input-group flex-nowrap pb-2">
-                    <span class="input-group-text col-6" id="channel-max_reaction">Max Reaction</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Max Reaction"
-                      aria-label="Max Reaction" aria-describedby="Maximum number of reaction the channels have"
-                      [(ngModel)]="max_reaction">
-                  </div>
                   <div class="input-group flex-nowrap">
-                    <span class="input-group-text col-6" id="channel-min_reaction">Min Reaction</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Min Reaction"
-                      aria-label="Min Reaction" aria-describedby="Minimum number of reaction the channels have"
-                      [(ngModel)]="min_reaction">
+                    <span class="input-group-text col-6" id="squeal-min_reactions">Min Reactions</span>
+                    <input type="number" min="0" class="form-control col-6" placeholder="Min Reactions"
+                      aria-label="Min Reactions" aria-describedby="Minimum number of reactions the squeals have"
+                      [(ngModel)]="min_reactions">
                   </div>
                 </li>
                 <li class="list-group-item p-2">
@@ -252,7 +270,7 @@
                   <div class="form-check form-switch bs-1 m-0">
                     <input class="form-check-input" type="checkbox" role="switch" id="officialOnlySwitch"
                       [(ngModel)]="is_official">
-                    <label class="form-check-label" for="officialOnlySwitch">In Official channel only</label>
+                    <label class="form-check-label" for="officialOnlySwitch">In Official channels only</label>
                   </div>
                 </li>
               </ul>
@@ -273,23 +291,26 @@
     <div class="col-1 col-md-4"></div>
 
     <div class="pt-3 col-10 col-md-4">
+      <i class="spinner-border text-light" *ngIf="loading" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </i>
 
       <div *ngIf="showUserResults" aria-live="polite" aria-atomic="true"
         class="d-flex justify-content-center align-items-center row">
-        <div *ngFor="let test of testArray" class="toast show m-1 " [class.dark-toast]="getDarkMode()=='dark-theme'"
+        <div *ngFor="let user of userResults" class="toast show m-1 " [class.dark-toast]="getDarkMode()=='dark-theme'"
           role="alert" aria-live="assertive" aria-atomic="true">
-          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
+          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'" (click)="visitUser(user.username)">
             <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
               aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
               <rect width="100%" height="100%" [ngStyle]="{ 'fill': '#11111' }"></rect>
             </svg>
-            <strong class="me-auto text-capitalize">@Username</strong>
-            <small>account-type</small>
+            <strong class="me-auto text-capitalize">@{{user.username}}</strong>
+            <small>{{user.account_type}}</small>
           </div>
           <div class="toast-body row">
-            <div class="col"> Description</div>
+            <div class="col">{{user.profile_info}}</div>
             <div class="col-auto">
-              <a class="btn btn-primary btn-sm" (click)="triggerTest()">
+              <a class="btn btn-primary btn-sm" (click)="sendDM(user.username)">
                 <i class="bi bi-send-plus-fill" role="status">
                 </i>
               </a>
@@ -300,24 +321,22 @@
 
       <div *ngIf="showChannelResults" aria-live="polite" aria-atomic="true"
         class="d-flex justify-content-center align-items-center row">
-        <div *ngFor="let test of testArray" class="toast show m-1 " [class.dark-toast]="getDarkMode()=='dark-theme'"
-          role="alert" aria-live="assertive" aria-atomic="true">
-          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
+        <div *ngFor="let channel of channelResults" class="toast show m-1 "
+          [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'"
+            (click)="visitChannel(channel.name)">
             <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
               aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
               <rect width="100%" height="100%" [ngStyle]="{ 'fill': '#11111' }"></rect>
             </svg>
-            <strong class="me-auto text-capitalize">§Channel</strong>
-            <small>isOfficial</small>
+            <strong class="me-auto text-capitalize">§{{channel.name}}</strong>
+            <small>{{channel.is_official ? "OFFICIAL":"unofficial"}}</small>
           </div>
           <div class="toast-body row">
-            <div class="col"> Description</div>
+            <div class="col"> {{channel.description}}</div>
             <div class="col-auto">
-              <a class="btn btn-primary btn-sm" (click)="triggerTest()">
+              <a class="btn btn-primary btn-sm" (click)="subscribeToChannel(channel.name)">
                 <i *ngIf="!loading" class="bi" [ngClass]="{'bi-check-lg': subscribed, 'bi-plus-lg': !subscribed}"></i>
-                <i class="spinner-border text-light" *ngIf="loading" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                </i>
               </a>
             </div>
           </div>
@@ -328,18 +347,18 @@
 
       <div *ngIf="showKeywordResults" aria-live="polite" aria-atomic="true"
         class="d-flex justify-content-center align-items-center row">
-        <div *ngFor="let test of testArray" class="toast show m-1 " [class.dark-toast]="getDarkMode()=='dark-theme'"
-          role="alert" aria-live="assertive" aria-atomic="true">
-          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
+        <div *ngFor="let squeal of keywordResults" class="toast show m-1 "
+          [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'" (click)="visitSqueal(squeal._id)">
             <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
               aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
               <rect width="100%" height="100%" [ngStyle]="{ 'fill': '#11111' }"></rect>
             </svg>
-            <strong class="me-auto text-capitalize">#Keyword</strong>
-            <small>isOfficial</small>
+            <strong class="me-auto text-capitalize">@{{squeal.username}}</strong>
+            <small>{{squeal.is_in_official_channel ? "OFFICIAL":"unofficial"}}</small>
           </div>
           <div class="toast-body row">
-            <div class="col"> Description</div>
+            <div class="col">{{squeal.content}}</div>
             <div class="col-auto">
             </div>
           </div>

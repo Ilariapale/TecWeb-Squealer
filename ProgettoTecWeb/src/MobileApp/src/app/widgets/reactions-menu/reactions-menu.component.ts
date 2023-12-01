@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { SquealService } from 'src/app/services/api/squeals.service';
+import { SquealsService } from 'src/app/services/api/squeals.service';
 
 @Component({
   selector: 'app-reactions-menu',
@@ -11,7 +11,7 @@ export class ReactionsMenuComponent {
   isMouseOver = false;
   isMenuClosing = false;
 
-  constructor(private squealService: SquealService) {}
+  constructor(private squealService: SquealsService) {}
 
   addReaction(reaction: string, event: Event) {
     event.preventDefault();

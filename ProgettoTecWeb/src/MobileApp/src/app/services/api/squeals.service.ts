@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { ContentType } from 'src/app/models/squeal.interface';
+import { ContentType, SquealQuery } from 'src/app/models/squeal.interface';
 import { request } from 'express';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SquealService {
+export class SquealsService {
   private apiUrl = '/squeals'; // Sostituisci con l'URL del tuo backend API
 
   constructor(private http: HttpClient) {}
@@ -26,10 +26,36 @@ export class SquealService {
     }
   }
 
-  getSqueals(): Observable<any> {
+  getSqueals(query: SquealQuery): Observable<any> {
+    console.log(query);
+    let url = `${this.apiUrl}`;
+    if (query) {
+      url += '?';
+      if (query.keywords) {
+        console.log(query.keywords);
+        query.keywords.forEach((keyword) => {
+          url += `keywords=${keyword}&`;
+        });
+      }
+      if (query.content_type) url += `content_type=${query.content_type}&`;
+      if (query.is_scheduled) url += `is_scheduled=${query.is_scheduled}&`;
+      if (query.created_after) url += `created_after=${query.created_after}&`;
+      if (query.created_before) url += `created_before=${query.created_before}&`;
+      if (query.min_reactions) url += `min_reactions=${query.min_reactions}&`;
+      if (query.max_balance) url += `max_balance=${query.max_balance}&`;
+      if (query.min_balance) url += `min_balance=${query.min_balance}&`;
+      if (query.sort_order) url += `sort_order=${query.sort_order}&`;
+      if (query.sort_by) url += `sort_by=${query.sort_by}&`;
+      if (query.pag_size) url += `pag_size=${query.pag_size}&`;
+      if (query.last_loaded) url += `last_loaded=${query.last_loaded}&`;
+      url = url.slice(0, -1);
+      console.log(url);
+    }
+
     const requestOptions = this.headersGenerator(true);
-    return this.http.get(`${this.apiUrl}`, requestOptions);
+    return this.http.get(`${url}`, requestOptions);
   }
+
   postSqueal(
     content: string,
     recipients?: object,

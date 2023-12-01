@@ -1,1 +1,50 @@
-<p>store works!</p>
+<div class="content" role="main">
+  <div class="mt-4">
+    <div class="row p-3 " [ngClass]="bannerClass">
+      <h1> STORE <i class="bi bi-shop"></i> </h1>
+
+    </div>
+    <div class="row row-cols-1 row-cols-2 g-4">
+      <div class="col ">
+        <div class="card" [class.bg-dark]="getThemeClass() == 'dark-theme' "
+          [class.border-light]="getThemeClass() == 'dark-theme'" [class.border-dark]="getThemeClass() == 'light-theme'">
+          <img class="card-img-top">
+          <div class="card-body">
+            <h5 class="card-title">Tier 1</h5>
+            <h1 class="card-text"><i class="bi bi-coin"></i></h1>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card border-light" [class.bg-dark]="getThemeClass() == 'dark-theme'"
+          [class.border-light]="getThemeClass() == 'dark-theme'" [class.border-dark]="getThemeClass() == 'light-theme'">
+          <img class="card-img-top">
+          <div class="card-body">
+            <h5 class="card-title">Tier 2</h5>
+            <h1 class="card-text"><i class="bi bi-cash"></i></h1>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card border-light" [class.bg-dark]="getThemeClass() == 'dark-theme'"
+          [class.border-light]="getThemeClass() == 'dark-theme'" [class.border-dark]="getThemeClass() == 'light-theme'">
+          <img class="card-img-top">
+          <div class="card-body">
+            <h5 class="card-title">Tier 3</h5>
+            <h1 class="card-text"><i class="bi bi-cash-coin"></i></h1>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card border-light" [class.bg-dark]="getThemeClass() == 'dark-theme'"
+          [class.border-light]="getThemeClass() == 'dark-theme'" [class.border-dark]="getThemeClass() == 'light-theme'">
+          <img class="card-img-top">
+          <div class="card-body">
+            <h5 class="card-title">Tier 4</h5>
+            <h1 class="card-text"><i class="bi bi-cash-stack"></i></h1>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

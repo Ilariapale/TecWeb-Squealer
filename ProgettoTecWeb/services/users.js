@@ -55,6 +55,7 @@ module.exports = {
 
   /**
    * Get users list filtering by creationDate and squeals count
+   * @param options.username Filter users by username
    * @param options.created_after Filter users created after the specified date, object with year, month and day properties
    * @param options.created_before Filter users created before the specified date, object with year, month and day properties
    * @param options.max_squeals Filters users with less than the specified number of squeals
@@ -69,7 +70,7 @@ module.exports = {
 
   getUserList: async (options) => {
     try {
-      const { last_loaded, created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id, sort_order, sort_by } = options;
+      const { username, last_loaded, created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id, sort_order, sort_by } = options;
       let { pag_size } = options;
       const sort_orders = ["asc", "desc"];
       const sort_types = ["username", "date", "squeals"];
@@ -105,6 +106,17 @@ module.exports = {
           };
         }
         pipeline.push({ $match: { professional_type: professional_type } });
+      }
+
+      //USERNAME
+      if (username) {
+        if (!usernameRegex.test(username)) {
+          return {
+            status: 400,
+            data: { error: "'username' format is not valid." },
+          };
+        }
+        pipeline.push({ $match: { username: { $regex: username, $options: "i" } } });
       }
 
       //CREATED AFTER

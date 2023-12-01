@@ -13,6 +13,7 @@ import { ChatsComponent } from './pages/chats/chats.component';
 import { ChatComponent } from './pages/chat/chat.component';
 import { ChannelComponent } from './pages/channel/channel.component';
 import { ReactionsMenuComponent } from './widgets/reactions-menu/reactions-menu.component';
+import { SquealComponent } from './widgets/squeal/squeal.component';
 //import { PageLayoutComponent } from './pages/page-layout/page-layout.component';
 
 const routes: Routes = [
@@ -25,6 +26,7 @@ const routes: Routes = [
   { path: 'signup', component: SignupComponent },
   { path: 'map', component: MapComponent },
   { path: 'profile', component: ProfileComponent },
+  { path: 'profile/:id', component: ProfileComponent },
   { path: 'search', component: SearchComponent },
   { path: 'store', component: StoreComponent },
   { path: 'notifications', component: NotificationsComponent },
@@ -32,6 +34,7 @@ const routes: Routes = [
   { path: 'private-chats/user/:id/:recipient', component: ChatComponent },
   { path: 'private-chats/user/:user', component: ChatComponent },
   { path: 'channel', component: ChannelComponent },
+  { path: 'squeal', component: SquealComponent },
   // { path: 'chat', component: ChatsComponent },
 ];
 

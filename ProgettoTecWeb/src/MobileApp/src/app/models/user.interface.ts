@@ -1,3 +1,18 @@
+export interface UserQuery {
+  username?: String;
+  created_after?: String;
+  created_before?: String;
+  max_squeals?: number;
+  min_squeals?: number;
+  account_type?: AccountType;
+  professional_type?: ProfessionalType;
+  sort_order?: 'asc' | 'desc';
+  sort_by?: 'username' | 'date' | 'squeals';
+  //user_id:
+  pag_size?: number;
+  last_loaded?: String;
+}
+
 export enum AccountType {
   guest = 'guest',
   standard = 'standard',
