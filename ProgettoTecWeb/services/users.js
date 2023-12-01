@@ -414,6 +414,7 @@ module.exports = {
 
     const loggedUser = {
       _id: user._id,
+      username: user.username,
       account_type: user.account_type,
       professional_type: user.professional_type,
       email: user.email,

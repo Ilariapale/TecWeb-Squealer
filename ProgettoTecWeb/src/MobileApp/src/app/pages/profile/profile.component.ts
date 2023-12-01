@@ -22,6 +22,8 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 
   identifier: string = '';
 
+  mySelf: boolean = false;
+
   user: User = {
     _id: '0',
     profile_picture: '',
@@ -63,9 +65,11 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 
       if (this.identifier) {
         this.usersSubscription = this.usersService.getUser(this.identifier).subscribe((user) => {
+          this.mySelf = this.userService.isMyself(user._id);
           this.loading = true;
           this.user = user;
-          this.lastSquealLoaded = user.squeals.posted.length > 0 ? user.squeals.posted.length - 1 : 0;
+          this.lastSquealLoaded =
+            user.squeals && user.squeals.posted && user.squeals.posted.length > 0 ? user.squeals.posted.length - 1 : 0;
           const squealsRequests = [];
 
           for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS && i >= 0; i--) {

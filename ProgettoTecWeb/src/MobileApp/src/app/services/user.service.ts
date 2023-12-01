@@ -24,4 +24,17 @@ export class UserService {
     }
     return this.userDataSubject.asObservable();
   }
+
+  isMyself(username: string): boolean {
+    // Ottieni i dati utente correnti
+    if (!this.userDataSubject.value) {
+      const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      if (savedUserData) {
+        this.setUserData(JSON.parse(savedUserData));
+      }
+    }
+
+    const currentUserData = this.userDataSubject.value;
+    return currentUserData && (currentUserData.username === username || currentUserData.user_id === username);
+  }
 }
