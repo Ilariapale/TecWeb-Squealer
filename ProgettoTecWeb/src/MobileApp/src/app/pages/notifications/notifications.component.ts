@@ -1,7 +1,7 @@
 // notifications.component.ts
 
 import { Component } from '@angular/core';
-import { Notification } from 'src/app/models/notification.interface';
+import { Notification, IdCode } from 'src/app/models/notification.interface';
 import { UsersService } from 'src/app/services/api/users.service';
 import { UserService } from 'src/app/services/user.service';
 import { Source } from 'src/app/models/notification.interface';
@@ -18,7 +18,7 @@ export class NotificationsComponent {
   private notificationSubscription: Subscription = new Subscription();
   private userSubscription: Subscription = new Subscription();
   notifications: Notification[] = [
-    {
+    /* {
       _id: '1313',
       is_unseen: true,
       created_at: new Date(),
@@ -29,6 +29,7 @@ export class NotificationsComponent {
       user_ref: 'String',
       reply: true,
       source: Source.squeal,
+      id_code: IdCode.newComment,
     },
     {
       _id: '1313',
@@ -41,10 +42,11 @@ export class NotificationsComponent {
       user_ref: 'String',
       reply: true,
       source: Source.channel,
+      id_code: IdCode.newComment,
     },
     {
       _id: '1313',
-      is_unseen: true,
+      is_unseen: false,
       created_at: new Date(),
       content: 'String3',
       squeal_ref: 'String',
@@ -53,6 +55,7 @@ export class NotificationsComponent {
       user_ref: 'String',
       reply: true,
       source: Source.system,
+      id_code: IdCode.newComment,
     },
     {
       _id: '1313',
@@ -65,7 +68,8 @@ export class NotificationsComponent {
       user_ref: 'String',
       reply: true,
       source: Source.user,
-    },
+      id_code: IdCode.newComment,
+    },*/
   ];
   isHovered: boolean = false;
   isGuest: boolean = true;
@@ -105,9 +109,9 @@ export class NotificationsComponent {
     this.isHovered = false;
   }
   markAllAsRead() {
-    this.notifications.forEach((notification) => {
-      //notification.read = true;
-    });
+    const notificationIds = this.notifications.map((notif) => notif._id).filter((id) => id !== undefined) as string[];
+    this.usersService.setNotificationStatus(notificationIds, false).subscribe();
+    this.notifications.forEach((notif) => (notif.is_unseen = false));
   }
 
   getDarkMode() {
@@ -125,8 +129,43 @@ export class NotificationsComponent {
       return '#007aff';
     }
   }
+
   goToPage(page: string) {
     this.router.navigate([`/${page}`]);
+  }
+
+  notificationLink(notif: Notification) {
+    //setta la notifica come letta
+    console.log(notif);
+    if (notif._id && notif.is_unseen) {
+      this.usersService.setNotificationStatus([notif._id], false).subscribe();
+    }
+    switch (notif.id_code) {
+      case IdCode.welcomeSqueal:
+      case IdCode.mentionedInSqueal:
+      case IdCode.newComment:
+      case IdCode.officialStatusUpdate:
+        this.router.navigate([`squeal/${notif.squeal_ref}`]);
+        break;
+      case IdCode.newOwner:
+        //this.router.navigate([`channel/${notif.channel_ref}`]);
+        console.log(`channel/${notif.channel_ref}`);
+        break;
+      case IdCode.SMMaccepted:
+        this.router.navigate([`profile/${notif.sender_ref}`]);
+        break;
+      case IdCode.banStatusUpdate:
+      case IdCode.accountUpdate:
+        this.router.navigate([`profile/${notif.user_ref}`]);
+        break;
+      case IdCode.SMMrequest:
+        //this.router.navigate([`SMM/${notif.sender_ref}`]);
+        console.log(`SMM/${notif.sender_ref}`);
+        break;
+      default:
+        //case IdCode.SMMdeclined, IdCode.noMoreVipSMM, IdCode.noMoreSmmVIP
+        break;
+    }
   }
 
   ngOnDestroy() {

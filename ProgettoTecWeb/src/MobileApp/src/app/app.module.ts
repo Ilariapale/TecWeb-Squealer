@@ -25,6 +25,7 @@ import { NotificationsComponent } from './pages/notifications/notifications.comp
 import { ChatsComponent } from './pages/chats/chats.component';
 import { ChatComponent } from './pages/chat/chat.component';
 import { ChannelComponent } from './pages/channel/channel.component';
+import { ErrorComponent } from './pages/error/error.component';
 
 @NgModule({
   declarations: [
@@ -46,6 +47,7 @@ import { ChannelComponent } from './pages/channel/channel.component';
     ChatsComponent,
     ChatComponent,
     ChannelComponent,
+    ErrorComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, GoogleMapsModule, ReactiveFormsModule, FormsModule, HttpClientModule],
   providers: [],

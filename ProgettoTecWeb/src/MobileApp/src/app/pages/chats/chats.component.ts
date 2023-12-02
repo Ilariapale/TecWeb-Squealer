@@ -21,13 +21,13 @@ export class ChatsComponent {
   private userSubscription: Subscription = new Subscription();
   newChatUsername: string = '';
   chatsPreview: ChatPreview[] = [
-    {
+    /* {
       last_message: '3-Loading...',
       recipient: '2-Loading...',
       sent_by_me: false,
       _id: '123',
       last_modified: new Date(),
-    },
+    },*/
   ];
 
   isGuest: boolean = true;
@@ -40,15 +40,14 @@ export class ChatsComponent {
     public timeService: TimeService,
     private router: Router
   ) {
-    // if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
-    //   this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
-    // else {
-    //   this.router.navigate(['/login']);
-    // }
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
+      this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
+    else {
+      this.router.navigate(['/login']);
+    }
     this.userSubscription = this.userService.getUserData().subscribe((userData) => {
       if (userData.account_type === 'guest') {
-        this.isGuest = false;
-        // this.isGuest = true;
+        this.isGuest = true;
       } else {
         this.isGuest = false;
         this.chatSubscription = this.chatsService.getChats().subscribe((chats) => {

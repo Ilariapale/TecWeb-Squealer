@@ -5,6 +5,9 @@ import { CommentSection } from 'src/app/models/comment.interface';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { TimeService } from 'src/app/services/time.service';
 import * as e from 'express';
+import { ActivatedRoute } from '@angular/router';
+import { SquealsService } from 'src/app/services/api/squeals.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-squeal',
@@ -14,6 +17,7 @@ import * as e from 'express';
 export class SquealComponent {
   title = 'Squeal';
   @Input() squeal: Squeal;
+  squeal_id: string = '';
   newCommentText: string = '';
   showComments = false;
   loadMore = false;
@@ -22,9 +26,37 @@ export class SquealComponent {
   constructor(
     private commentService: CommentService,
     private darkModeService: DarkModeService,
-    public timeService: TimeService
+    public timeService: TimeService,
+    private route: ActivatedRoute,
+    private squealsService: SquealsService,
+    private router: Router
   ) {
     this.squeal = {};
+    this.route.paramMap.subscribe((params) => {
+      this.squeal_id = params.get('identifier') ?? ' ';
+    });
+  }
+  ngOnInit(): void {
+    if (JSON.stringify(this.squeal) == JSON.stringify({}) && this.squeal_id != '' && this.squeal_id != ' ') {
+      this.squealsService.getSqueal(this.squeal_id).subscribe({
+        next: (response: any) => {
+          console.log(response);
+          this.squeal = response[0];
+          this.commentService.getComments(this.squeal.comment_section || '').subscribe({
+            next: (data: any) => {
+              console.log(data);
+              this.comment_section = data;
+            },
+            error: (error) => {
+              this.router.navigate(['/error', error.status]);
+            },
+          });
+        },
+        error: (error) => {
+          this.router.navigate(['/error', error.status]);
+        },
+      });
+    }
   }
 
   getThemeClass() {

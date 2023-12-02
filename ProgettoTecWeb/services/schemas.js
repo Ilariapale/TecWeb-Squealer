@@ -27,8 +27,26 @@ const NotificationSchema = new mongoose.Schema({
   squeal_ref: { type: mongoose.Types.ObjectId, ref: "Squeal" },
   channel_ref: { type: mongoose.Types.ObjectId, ref: "Channel" },
   comment_ref: { type: String },
+  sender_ref: { type: mongoose.Types.ObjectId, ref: "User" },
   user_ref: { type: mongoose.Types.ObjectId, ref: "User" },
   reply: { type: Boolean, default: false },
+  id_code: {
+    type: String,
+    enum: [
+      "newComment",
+      "newOwner",
+      "noMoreVipSMM",
+      "noMoreSmmVIP",
+      "mentionedInSqueal",
+      "welcomeSqueal",
+      "accountUpdate",
+      "SMMrequest",
+      "SMMaccepted",
+      "SMMdeclined",
+      "banStatusUpdate",
+      "officialStatusUpdate",
+    ],
+  },
   source: { type: String, enum: ["squeal", "channel", "user", "system"] },
 });
 const Notification = mongoose.model("Notification", NotificationSchema);
@@ -136,6 +154,8 @@ UserSchema.methods.Delete = async function () {
         user_ref: channel.owner,
         channel_ref: channel._id,
         created_at: new Date(),
+        source: "channel",
+        id_code: "newOwner",
       });
       await notification.save();
 
@@ -156,10 +176,11 @@ UserSchema.methods.Delete = async function () {
   if (this.smm != null && this.smm != undefined && this.smm != "") {
     //mando la notifica al smm
     const newNotification = new Notification({
-      squeal_ref: undefined,
       user_ref: this.smm,
       created_at: Date.now(),
       content: deletedManagedAccountNotification(this.username),
+      source: "system",
+      id_code: "noMoreVipSMM",
     });
     const notification = await newNotification.save();
 
@@ -171,10 +192,11 @@ UserSchema.methods.Delete = async function () {
     //mando la notifica a tutti gli smm
     const promises = this.managed_accounts.map(async (managed_account) => {
       const notification = new Notification({
-        squeal_ref: undefined,
         user_ref: managed_account,
         created_at: Date.now(),
         content: deletedSMMNotification(this.username),
+        source: "system",
+        id_code: "noMoreSmmVIP",
       });
 
       return Promise.all([

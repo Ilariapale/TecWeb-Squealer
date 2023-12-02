@@ -265,6 +265,7 @@ module.exports = {
     await Promise.all(squealImpressionsPromises);
 
     //aggiungo il campo "comments_total" ad ogni squeal:
+
     const newData = await addCommentsCountToSqueals(data);
     //return the squeals
     return {
@@ -321,7 +322,7 @@ module.exports = {
 
     //impressions increment with save()
     squeal.impressions++;
-    squeal.save();
+    await squeal.save();
 
     squeal = await addCommentsCountToSqueals([squeal]);
     return {
@@ -517,6 +518,7 @@ module.exports = {
           content: mentionNotification(author.username, content),
           created_at: new Date(),
           source: "squeal",
+          id_code: "mentionedInSqueal",
         });
         await notification.save();
 

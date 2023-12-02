@@ -129,6 +129,10 @@ export class SearchComponent {
   }
 
   createUserQuery(pag_size?: number, last_loaded?: string) {
+    this.userQuery = {};
+
+    this.account_type != 'professional' ? (this.professional_type = 'none') : null;
+
     this.searchInput != '' ? (this.userQuery.username = this.searchInput) : null;
     this.created_before != null ? (this.userQuery.created_before = this.created_before.toString()) : null;
     this.created_after != null ? (this.userQuery.created_after = this.created_after.toString()) : null;
@@ -195,16 +199,13 @@ export class SearchComponent {
 
   visitUser(username: String) {
     this.router.navigate([`/profile/${username}`]);
-    console.log(`visitUser(${username})`);
   }
   visitChannel(channel: String) {
-    //this.router.navigate([`/${channel}`]);
-    console.log(`visitChannel(${channel})`);
+    this.router.navigate([`/channel/${channel}`]);
   }
   visitSqueal(squeal: String | undefined) {
     if (squeal) {
-      //this.router.navigate([`/${squeal}`]);
-      console.log(`visitSqueal(${squeal})`);
+      this.router.navigate([`/squeal/${squeal}`]);
     }
   }
   sendDM(user: String) {

@@ -350,6 +350,7 @@ module.exports = {
         created_at: Date.now(),
         content: welcomeNotification(user.username),
         source: "squeal",
+        id_code: "welcomeSqueal",
       });
       const notification = await newNotification.save();
 
@@ -624,6 +625,7 @@ module.exports = {
           created_at: Date.now(),
           content: updatedManagedAccountNotification(userToUpdate.username),
           source: "system",
+          id_code: "noMoreVipSMM",
         });
         const notification = await newNotification.save();
         smm.notifications.push(notification._id);
@@ -667,6 +669,7 @@ module.exports = {
             created_at: Date.now(),
             content: updatedSMMNotification(userToUpdate.username),
             source: "system",
+            id_code: "noMoreSmmVIP",
           });
           const notification = await newNotification.save();
           managedAccount.notifications.push(notification._id);
@@ -702,6 +705,7 @@ module.exports = {
         created_at: Date.now(),
         content: updatedProfileTypeNotification(userToUpdate.username, old_account_type, userToUpdate.account_type, old_professional_type, userToUpdate.professional_type),
         source: "system",
+        id_code: "accountUpdate",
       });
       const notification = await newNotification.save();
       userToUpdate.notifications.push(notification._id);
@@ -831,6 +835,8 @@ module.exports = {
       content: newSMMrequestNotification(reqSender.username),
       source: "user",
       reply: true,
+      id_code: "SMMrequest",
+      sender_ref: reqSender._id,
     });
     await newNotification.save();
 
@@ -938,6 +944,8 @@ module.exports = {
         created_at: Date.now(),
         content: newSMMNotification(reqSender.username),
         source: "user",
+        id_code: "SMMaccepted",
+        sender_ref: reqSender._id,
       });
       const vipNotification = await newVipNotification.save();
       vip.notifications.push(vipNotification._id);
@@ -948,6 +956,8 @@ module.exports = {
         created_at: Date.now(),
         content: newManagedAccountNotification(vip.username),
         source: "user",
+        id_code: "SMMaccepted",
+        sender_ref: vip._id,
       });
       const smmNotification = await newSmmNotification.save();
       reqSender.notifications.push(smmNotification._id);
@@ -958,6 +968,8 @@ module.exports = {
         created_at: Date.now(),
         content: declinedSMMrequestNotification(reqSender.username),
         source: "user",
+        id_code: "SMMdeclined",
+        sender_ref: reqSender._id,
       });
       await newNotification.save();
       vip.notifications.push(newNotification._id);
@@ -1008,11 +1020,12 @@ module.exports = {
     }
 
     const notification = new Notification({
-      squeal_ref: undefined,
       user_ref: user.smm,
       created_at: Date.now(),
       content: noLongerSMM(user.username),
       source: "user",
+      id_code: "noMoreVipSMM",
+      sender_ref: user._id,
     });
     await notification.save();
 
@@ -1068,11 +1081,12 @@ module.exports = {
     }
 
     const notification = new Notification({
-      squeal_ref: undefined,
       user_ref: identifier,
       created_at: Date.now(),
       content: noLongerManagedAccount(user.username),
       source: "user",
+      id_code: "noMoreSmmVIP",
+      sender_ref: user._id,
     });
     await notification.save();
 
@@ -1286,6 +1300,7 @@ module.exports = {
       created_at: Date.now(),
       content: ban_status === "true" ? bannedUserNotification(userToUpdate.username) : unbannedUserNotification(userToUpdate.username),
       source: "system",
+      id_code: "banStatusUpdate",
     });
     await notification.save();
 

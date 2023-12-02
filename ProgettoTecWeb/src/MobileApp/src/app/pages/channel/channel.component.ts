@@ -1,7 +1,15 @@
-import { Component } from '@angular/core';
 import { Channel } from 'src/app/models/channel.interface';
 import { TimeService } from 'src/app/services/time.service';
 import { Squeal, ContentType, Recipients } from 'src/app/models/squeal.interface';
+import { Component, OnInit, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { UsersService } from 'src/app/services/api/users.service';
+import { UserService } from 'src/app/services/user.service';
+import { User, AccountType, ProfessionalType } from 'src/app/models/user.interface';
+import { Subscription, forkJoin } from 'rxjs';
+import { DarkModeService } from 'src/app/services/dark-mode.service';
+import { SquealsService } from 'src/app/services/api/squeals.service';
+import { ChannelsService } from 'src/app/services/api/channels.services';
 
 @Component({
   selector: 'app-channel',
@@ -9,6 +17,10 @@ import { Squeal, ContentType, Recipients } from 'src/app/models/squeal.interface
   styleUrls: ['./channel.component.css'],
 })
 export class ChannelComponent {
+  identifier: string = '';
+  loading: boolean = false;
+  lastSquealLoaded = -1;
+  MAX_SQUEALS = 5;
   channel: Channel = {
     _id: '123456789012345678901234',
     owner: '123456789012345678901234',
@@ -23,258 +35,74 @@ export class ChannelComponent {
     is_blocked: false,
   };
 
-  squeals: Squeal[] = [
-    {
-      _id: '123456789012345678901234',
-      hex_id: 1234567890,
-      user_id: '123456789012345678901234',
-      username: 'username',
-      is_scheduled: false,
-      content_type: ContentType.text,
-      content: 'squeal content',
-      recipients: {
-        users: ['123456789012345678901234', '123456789012345678901234'],
-        channels: ['123456789012345678901234', '123456789012345678901234'],
-        keywords: ['keyword', 'keyword'],
-      },
-      created_at: new Date(),
-      last_modified: new Date(),
-      comment_section: '123456789012345678901234',
-      reactions: {
-        positive_reactions: 0,
-        negative_reactions: 0,
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-      is_in_official_channel: false,
-      impressions: 0,
-      comments_count: 0,
-    },
-    {
-      _id: '123456789012345678901234',
-      hex_id: 1234567890,
-      user_id: '123456789012345678901234',
-      username: 'username',
-      is_scheduled: false,
-      content_type: ContentType.text,
-      content: 'squeal content',
-      recipients: {
-        users: ['123456789012345678901234', '123456789012345678901234'],
-        channels: ['123456789012345678901234', '123456789012345678901234'],
-        keywords: ['keyword', 'keyword'],
-      },
-      created_at: new Date(),
-      last_modified: new Date(),
-      comment_section: '123456789012345678901234',
-      reactions: {
-        positive_reactions: 0,
-        negative_reactions: 0,
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-      is_in_official_channel: false,
-      impressions: 0,
-      comments_count: 0,
-    },
-    {
-      _id: '123456789012345678901234',
-      hex_id: 1234567890,
-      user_id: '123456789012345678901234',
-      username: 'username',
-      is_scheduled: false,
-      content_type: ContentType.text,
-      content: 'squeal content',
-      recipients: {
-        users: ['123456789012345678901234', '123456789012345678901234'],
-        channels: ['123456789012345678901234', '123456789012345678901234'],
-        keywords: ['keyword', 'keyword'],
-      },
-      created_at: new Date(),
-      last_modified: new Date(),
-      comment_section: '123456789012345678901234',
-      reactions: {
-        positive_reactions: 0,
-        negative_reactions: 0,
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-      is_in_official_channel: false,
-      impressions: 0,
-      comments_count: 0,
-    },
-    {
-      _id: '123456789012345678901234',
-      hex_id: 1234567890,
-      user_id: '123456789012345678901234',
-      username: 'username',
-      is_scheduled: false,
-      content_type: ContentType.text,
-      content: 'squeal content',
-      recipients: {
-        users: ['123456789012345678901234', '123456789012345678901234'],
-        channels: ['123456789012345678901234', '123456789012345678901234'],
-        keywords: ['keyword', 'keyword'],
-      },
-      created_at: new Date(),
-      last_modified: new Date(),
-      comment_section: '123456789012345678901234',
-      reactions: {
-        positive_reactions: 0,
-        negative_reactions: 0,
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-      is_in_official_channel: false,
-      impressions: 0,
-      comments_count: 0,
-    },
-    {
-      _id: '123456789012345678901234',
-      hex_id: 1234567890,
-      user_id: '123456789012345678901234',
-      username: 'username',
-      is_scheduled: false,
-      content_type: ContentType.text,
-      content: 'squeal content',
-      recipients: {
-        users: ['123456789012345678901234', '123456789012345678901234'],
-        channels: ['123456789012345678901234', '123456789012345678901234'],
-        keywords: ['keyword', 'keyword'],
-      },
-      created_at: new Date(),
-      last_modified: new Date(),
-      comment_section: '123456789012345678901234',
-      reactions: {
-        positive_reactions: 0,
-        negative_reactions: 0,
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-      is_in_official_channel: false,
-      impressions: 0,
-      comments_count: 0,
-    },
-    {
-      _id: '123456789012345678901234',
-      hex_id: 1234567890,
-      user_id: '123456789012345678901234',
-      username: 'username',
-      is_scheduled: false,
-      content_type: ContentType.text,
-      content: 'squeal content',
-      recipients: {
-        users: ['123456789012345678901234', '123456789012345678901234'],
-        channels: ['123456789012345678901234', '123456789012345678901234'],
-        keywords: ['keyword', 'keyword'],
-      },
-      created_at: new Date(),
-      last_modified: new Date(),
-      comment_section: '123456789012345678901234',
-      reactions: {
-        positive_reactions: 0,
-        negative_reactions: 0,
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-      is_in_official_channel: false,
-      impressions: 0,
-      comments_count: 0,
-    },
-    {
-      _id: '123456789012345678901234',
-      hex_id: 1234567890,
-      user_id: '123456789012345678901234',
-      username: 'username',
-      is_scheduled: false,
-      content_type: ContentType.text,
-      content: 'squeal content',
-      recipients: {
-        users: ['123456789012345678901234', '123456789012345678901234'],
-        channels: ['123456789012345678901234', '123456789012345678901234'],
-        keywords: ['keyword', 'keyword'],
-      },
-      created_at: new Date(),
-      last_modified: new Date(),
-      comment_section: '123456789012345678901234',
-      reactions: {
-        positive_reactions: 0,
-        negative_reactions: 0,
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-      is_in_official_channel: false,
-      impressions: 0,
-      comments_count: 0,
-    },
-    {
-      _id: '123456789012345678901234',
-      hex_id: 1234567890,
-      user_id: '123456789012345678901234',
-      username: 'username',
-      is_scheduled: false,
-      content_type: ContentType.text,
-      content: 'squeal content',
-      recipients: {
-        users: ['123456789012345678901234', '123456789012345678901234'],
-        channels: ['123456789012345678901234', '123456789012345678901234'],
-        keywords: ['keyword', 'keyword'],
-      },
-      created_at: new Date(),
-      last_modified: new Date(),
-      comment_section: '123456789012345678901234',
-      reactions: {
-        positive_reactions: 0,
-        negative_reactions: 0,
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-      is_in_official_channel: false,
-      impressions: 0,
-      comments_count: 0,
-    },
-  ];
+  squeals: Squeal[] = [];
 
   bannerClass = '';
   muted: boolean = false;
 
-  constructor(public timeService: TimeService) {}
+  constructor(
+    private route: ActivatedRoute,
+    public timeService: TimeService,
+    private usersService: UsersService,
+    private userService: UserService,
+    private squealsService: SquealsService,
+    public darkModeService: DarkModeService,
+    private cdr: ChangeDetectorRef,
+    private router: Router,
+    private channelsService: ChannelsService
+  ) {}
 
-  ngOnInit(): void {}
+  ngOnInit() {
+    this.route.paramMap.subscribe((params: ParamMap) => {
+      this.identifier = params.get('identifier') || '';
+
+      if (this.identifier) {
+        this.channelsService.getChannel(this.identifier).subscribe({
+          next: (channel) => {
+            this.channel = channel;
+
+            this.loading = true;
+            this.lastSquealLoaded = channel.squeals && channel.squeals.length > 0 ? channel.squeals.length - 1 : 0;
+            const squealsRequests = [];
+
+            for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS && i >= 0; i--) {
+              squealsRequests.push(this.squealsService.getSqueal(channel.squeals[i]));
+            }
+
+            if (squealsRequests.length > 0) {
+              forkJoin(squealsRequests).subscribe((squeals) => {
+                squeals.forEach((squeal) => {
+                  this.squeals.push(squeal[0]); // Aggiungi il nuovo squeal all'inizio dell'array
+                });
+              });
+              this.lastSquealLoaded -= this.MAX_SQUEALS;
+            }
+            this.loading = false;
+          },
+          error: (error) => {},
+        });
+      }
+    });
+  }
 
   toggleMute() {
     this.muted = !this.muted;
+  }
+
+  loadMoreSqueals() {
+    this.loading = true;
+    const squealsRequests = [];
+    for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS; i--) {
+      const squeal_id = this.channel?.squeals?.[i];
+      if (squeal_id) squealsRequests.push(this.squealsService.getSqueal(squeal_id));
+    }
+    this.lastSquealLoaded -= this.MAX_SQUEALS;
+    forkJoin(squealsRequests).subscribe((squeals) => {
+      squeals.forEach((squeal) => {
+        this.squeals.push(squeal[0]);
+      });
+    });
+    this.loading = false;
   }
 }
 

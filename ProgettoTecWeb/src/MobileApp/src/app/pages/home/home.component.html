@@ -7,7 +7,7 @@
 
   <div *ngIf="squeals.length == 0">
     <div class="container">
-      <div class="row justify-content-center">Loading...</div>
+      <div class="row justify-content-center">No squeal available</div>
     </div>
   </div>
   <app-squeal *ngFor="let squeal of squeals" [squeal]="squeal"></app-squeal>

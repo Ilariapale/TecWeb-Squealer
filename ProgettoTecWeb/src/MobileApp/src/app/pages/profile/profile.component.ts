@@ -64,28 +64,35 @@ export class ProfileComponent implements OnInit, AfterViewInit {
       this.identifier = params.get('identifier') || '';
 
       if (this.identifier) {
-        this.usersSubscription = this.usersService.getUser(this.identifier).subscribe((user) => {
-          this.mySelf = this.userService.isMyself(user._id);
-          this.loading = true;
-          this.user = user;
-          this.lastSquealLoaded =
-            user.squeals && user.squeals.posted && user.squeals.posted.length > 0 ? user.squeals.posted.length - 1 : 0;
-          const squealsRequests = [];
+        this.usersSubscription = this.usersService.getUser(this.identifier).subscribe({
+          next: (user) => {
+            this.mySelf = this.userService.isMyself(user._id);
+            this.loading = true;
+            this.user = user;
+            this.lastSquealLoaded =
+              user.squeals && user.squeals.posted && user.squeals.posted.length > 0
+                ? user.squeals.posted.length - 1
+                : 0;
+            const squealsRequests = [];
 
-          for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS && i >= 0; i--) {
-            squealsRequests.push(this.squealsService.getSqueal(user.squeals.posted[i]));
-          }
+            for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS && i >= 0; i--) {
+              squealsRequests.push(this.squealsService.getSqueal(user.squeals.posted[i]));
+            }
 
-          if (squealsRequests.length > 0) {
-            forkJoin(squealsRequests).subscribe((squeals) => {
-              squeals.forEach((squeal) => {
-                this.squeals.unshift(squeal[0]); // Aggiungi il nuovo squeal all'inizio dell'array
+            if (squealsRequests.length > 0) {
+              forkJoin(squealsRequests).subscribe((squeals) => {
+                squeals.forEach((squeal) => {
+                  this.squeals.push(squeal[0]); // Aggiungi il nuovo squeal all'inizio dell'array
+                });
               });
-            });
 
-            this.lastSquealLoaded -= this.MAX_SQUEALS;
-          }
-          this.loading = false;
+              this.lastSquealLoaded -= this.MAX_SQUEALS;
+            }
+            this.loading = false;
+          },
+          error: (error) => {
+            this.router.navigate(['/error', error.status]);
+          },
         });
       } else {
         this.router.navigate(['/login']);

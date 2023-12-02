@@ -222,8 +222,8 @@ router.delete("/VIP", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
-//users/notification?value=true   body:{notification_array: ["427618673", "427618674"]]}
-router.patch("/notification", verifyToken, async (req, res, next) => {
+//users/notifications?value=true   body:{notification_array: ["427618673", "427618674"]]}
+router.patch("/notifications", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       user_id: req.user_id,

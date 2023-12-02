@@ -144,6 +144,7 @@ module.exports = {
       user_ref: (await Squeal.findById(commentSection.squeal_ref).select("user_id").exec()).user_id,
       created_at: Date.now(),
       source: "squeal",
+      id_code: "newComment",
     });
     await notification.save();
 

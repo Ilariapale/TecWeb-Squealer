@@ -43,10 +43,8 @@
             {{timeService.getRelativeTime(squeal.created_at)}}</div>
 
           <div *ngIf="showComments" class="mt-3">
-            <h4>Commenti</h4>
-            <button *ngIf="loadMore" (click)="loadMoreComments()">Carica
-              altri
-              commenti</button>
+            <h4>Comments</h4>
+            <button *ngIf="loadMore" (click)="loadMoreComments()">Load more</button>
             <!-- Lista dei commenti -->
             <ul class="list-unstyled">
               <li *ngFor="let comment of comment_section.comments_array">

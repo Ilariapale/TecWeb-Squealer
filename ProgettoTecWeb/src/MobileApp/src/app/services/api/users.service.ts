@@ -9,6 +9,7 @@ import { UserQuery } from 'src/app/models/user.interface';
 })
 export class UsersService {
   private apiUrl = '/users'; // Sostituisci con l'URL del tuo backend API
+  private notificationUrl = '/notifications';
 
   constructor(private http: HttpClient) {}
 
@@ -56,7 +57,7 @@ export class UsersService {
   }
 
   getNotifications(): Observable<Notification[]> {
-    let url = `${this.apiUrl}/notifications?`;
+    let url = `${this.apiUrl + this.notificationUrl}?`;
     const notifications = this.http.get(url, this.authenticatedHeadersGenerator());
 
     return this.http.get<Notification[]>(url, this.authenticatedHeadersGenerator()).pipe(
@@ -73,11 +74,18 @@ export class UsersService {
             comment_ref: notificationData.comment_ref,
             reply: notificationData.reply,
             source: notificationData.source,
+            id_code: notificationData.id_code,
+            sender_ref: notificationData.sender_ref,
           };
           // Map other properties as needed
           return notification;
         });
       })
     );
+  }
+
+  setNotificationStatus(notification_ids: string[], value: boolean): Observable<any> {
+    let url = `${this.apiUrl + this.notificationUrl}?value=${value}`;
+    return this.http.patch(url, { notification_array: notification_ids }, this.authenticatedHeadersGenerator());
   }
 }

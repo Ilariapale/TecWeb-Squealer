@@ -361,10 +361,13 @@ async function addCommentsCountToSqueals(squeals) {
 
   const commentCountsMap = new Map(commentCounts.map((count) => [count.squeal_ref.toString(), count.comments_count]));
 
-  return squeals.map((squeal) => ({
-    ...squeal.toObject(),
-    comments_count: commentCountsMap.get(squeal._id.toString()) || 0,
-  }));
+  return squeals.map((squeal) => {
+    const squealObject = squeal.toObject ? squeal.toObject() : squeal;
+    return {
+      ...squealObject,
+      comments_count: commentCountsMap.get(squeal._id.toString()) || 0,
+    };
+  });
 }
 
 function hasEnoughCharQuota(user, contentType, content) {
@@ -468,6 +471,7 @@ async function updateRecipientsUsers(users, squeal) {
         content: mentionNotification(squealAuthor.username, squeal.content),
         user_ref: user,
         source: "system",
+        id_code: "mentionedInSqueal",
       });
       //add the notification to the notifications array of the added user
       return User.findOneAndUpdate({ _id: user }, { $push: { notifications: (await notification.save())._id, "squeals.mentioned_in": squeal._id } }).exec();
@@ -541,6 +545,7 @@ async function updateRecipientsChannels(channels, squeal) {
       content: message,
       user_ref: squeal.user_id,
       source: "system",
+      id_code: "officialStatusUpdate",
     });
     await notification.save();
     await User.findOneAndUpdate({ _id: squeal.user_id }, { $push: { notifications: notification._id } }).exec();

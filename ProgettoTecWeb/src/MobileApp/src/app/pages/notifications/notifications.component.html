@@ -16,7 +16,7 @@
       <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center row">
         <div class="col-1"></div>
         <div class="toast show m-1 col col-md-2" [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert"
-          aria-live="assertive" aria-atomic="true">
+          aria-live="assertive" aria-atomic="true" (click)="notificationLink(notification)">
           <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
             <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
               aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
@@ -24,6 +24,7 @@
             </svg>
             <strong class="me-auto text-capitalize">{{notification.source}}</strong>
             <small>{{timeService.getRelativeTime(notification.created_at)}}</small>
+            <i *ngIf="notification.is_unseen" class="text-danger bi bi-record-fill"></i>
           </div>
           <div class="toast-body">
             {{notification.content}}
@@ -31,8 +32,11 @@
         </div>
         <div class="col-1"></div>
       </div>
+
+
+
+
     </div>
   </div>
-
 
 </div>

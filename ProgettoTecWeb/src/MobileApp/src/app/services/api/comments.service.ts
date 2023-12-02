@@ -24,8 +24,11 @@ export class CommentService {
   getComments(comment_section_id: string, last_comment_loaded?: string): Observable<any> {
     const requestOptions = this.headersGenerator();
     if (last_comment_loaded)
-      return this.http.get(`${this.apiUrl}/${comment_section_id}?last_comment_loaded=${last_comment_loaded}`);
-    else return this.http.get(`${this.apiUrl}/${comment_section_id}`);
+      return this.http.get(
+        `${this.apiUrl}/${comment_section_id}?last_comment_loaded=${last_comment_loaded}`,
+        requestOptions
+      );
+    else return this.http.get(`${this.apiUrl}/${comment_section_id}`, requestOptions);
   }
 
   addComment(comment_section_id: string, message: string): Observable<any> {

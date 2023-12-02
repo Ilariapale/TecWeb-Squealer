@@ -82,15 +82,16 @@
                     </select>
                   </div>
                   <div class="input-group" *ngIf="account_type === 'professional'">
-                    <label class="input-group-text col-6" for="account-type" [(ngModel)]="professional_type">Profess.
+                    <label class="input-group-text col-6" for="professional_type">Profess.
                       Type</label>
-                    <select class="form-select col-6" id="professional-type">
+                    <select class="form-select col-6" id="professional-type" [(ngModel)]="professional_type">
                       <option value="none" selected>Select..</option>
-                      <option value="vip">VIP</option>
-                      <option value="smm">SMM</option>
+                      <option value="VIP">VIP</option>
+                      <option value="SMM">SMM</option>
                     </select>
                   </div>
                 </li>
+
 
                 <li class="list-group-item p-2">
                   <div class="input-group">
@@ -348,8 +349,9 @@
       <div *ngIf="showKeywordResults" aria-live="polite" aria-atomic="true"
         class="d-flex justify-content-center align-items-center row">
         <div *ngFor="let squeal of keywordResults" class="toast show m-1 "
-          [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert" aria-live="assertive" aria-atomic="true">
-          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'" (click)="visitSqueal(squeal._id)">
+          [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert" aria-live="assertive" aria-atomic="true"
+          (click)="visitSqueal(squeal._id)">
+          <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
             <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
               aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
               <rect width="100%" height="100%" [ngStyle]="{ 'fill': '#11111' }"></rect>

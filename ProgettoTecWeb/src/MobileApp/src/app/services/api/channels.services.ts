@@ -49,5 +49,10 @@ export class ChannelsService {
     return this.http.get(url, requestOptions);
   }
 
+  getChannel(identifier: string): Observable<any> {
+    const requestOptions = this.headersGenerator(true);
+    return this.http.get(`${this.apiUrl}/${identifier}`, requestOptions);
+  }
+
   // Altre funzioni per il recupero password, aggiornamento del profilo, ecc. possono essere implementate qui.
 }
