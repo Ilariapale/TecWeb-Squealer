@@ -26,6 +26,7 @@ import { ChatsComponent } from './pages/chats/chats.component';
 import { ChatComponent } from './pages/chat/chat.component';
 import { ChannelComponent } from './pages/channel/channel.component';
 import { ErrorComponent } from './pages/error/error.component';
+import { ChannelManagerComponent } from './pages/channel-manager/channel-manager.component';
 
 @NgModule({
   declarations: [
@@ -48,6 +49,7 @@ import { ErrorComponent } from './pages/error/error.component';
     ChatComponent,
     ChannelComponent,
     ErrorComponent,
+    ChannelManagerComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, GoogleMapsModule, ReactiveFormsModule, FormsModule, HttpClientModule],
   providers: [],

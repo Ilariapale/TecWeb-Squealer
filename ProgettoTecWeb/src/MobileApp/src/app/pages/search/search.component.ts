@@ -55,7 +55,7 @@ export class SearchComponent {
     private darkModeService: DarkModeService,
     private usersService: UsersService,
     private squealService: SquealsService,
-    private channelService: ChannelsService,
+    private channelsService: ChannelsService,
     private router: Router
   ) {}
 
@@ -93,7 +93,7 @@ export class SearchComponent {
       });
     } else if (this.selectedOption === 'channel-search') {
       this.createChannelQuery();
-      this.channelService.getChannels(this.channelQuery).subscribe({
+      this.channelsService.getChannels(this.channelQuery).subscribe({
         next: (channels) => {
           console.log(channels);
           this.channelResults = channels as Channel[];
@@ -213,7 +213,15 @@ export class SearchComponent {
     console.log(`sendDM(${user})`);
   }
   subscribeToChannel(channel: String) {
-    //this.router.navigate([`/${channel}`]);
     console.log(`subscribeToChannel(${channel})`);
+    this.channelsService.subscribeToChannel(channel, true).subscribe({
+      next: (res) => {
+        console.log(res);
+        //TODO mettere la spunta invece del +
+      },
+      error: (err) => {
+        console.log(err);
+      },
+    });
   }
 }

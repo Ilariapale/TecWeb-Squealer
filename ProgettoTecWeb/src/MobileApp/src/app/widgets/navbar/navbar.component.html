@@ -49,6 +49,18 @@
             <i class=" bi bi-shop col-2 d-flex justify-content-center align-items-center clickable"
               (click)="goToPage('store')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
+
+          <li class="nav-item row py-3">
+            <a class="col"></a>
+            <a class="nav-link col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'"
+              (click)="goToPage('channel-manager')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar">
+              Channels
+            </a>
+            <i class=" bi bi-rss col-2 d-flex justify-content-center align-items-center clickable"
+              (click)="goToPage('channel-manager')" data-bs-toggle="offcanvas"
+              data-bs-target="#offcanvasDarkNavbar"></i>
+          </li>
+
           <li class="nav-item row py-3">
             <a class="col"></a>
             <a class="nav-link col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'"

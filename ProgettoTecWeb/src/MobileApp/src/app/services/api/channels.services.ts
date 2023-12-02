@@ -54,5 +54,19 @@ export class ChannelsService {
     return this.http.get(`${this.apiUrl}/${identifier}`, requestOptions);
   }
 
+  createChannel(name: string, description: string, can_mute?: boolean, is_official?: boolean): Observable<any> {
+    const requestOptions = this.headersGenerator(true);
+    const body = {
+      name: name,
+      description: description,
+    };
+    return this.http.post(`${this.apiUrl}`, body, requestOptions);
+  }
+
+  subscribeToChannel(identifier: String, value: boolean): Observable<any> {
+    const requestOptions = this.headersGenerator(true);
+    return this.http.patch(`${this.apiUrl}/${identifier}/subscription-status?value=${value}`, {}, requestOptions);
+  }
+
   // Altre funzioni per il recupero password, aggiornamento del profilo, ecc. possono essere implementate qui.
 }

@@ -1,0 +1,136 @@
+<div role="main">
+
+  <div class="m-1 p-2 pt-3 row">
+    <h1 class="col-auto ps-1">Channel Manager</h1>
+    <a class="btn btn-primary col-auto ms-auto d-flex justify-content-center align-items-center" data-bs-toggle="modal"
+      href="#toggleCreateNewChannel" role="button"><i class="bi bi-plus"></i></a>
+  </div>
+
+  <div *ngIf="isGuest" class="m-3">
+    <a (click)="goToPage('login')" class="text-primary">Log-in</a> to view your Channels
+  </div>
+  <div *ngIf="!isGuest">
+
+
+    <!--------------------------------------------------------------------------------------->
+    <ul class="nav nav-pills mb-3 ps-4" id="pills-tab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pills-owned-tab" data-bs-toggle="pill" data-bs-target="#pills-owned"
+          type="button" role="tab" aria-controls="pills-owned" aria-selected="true">Owned</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-Editor-tab" data-bs-toggle="pill" data-bs-target="#pills-Editor"
+          type="button" role="tab" aria-controls="pills-Editor" aria-selected="false">Editor</button>
+      </li>
+    </ul>
+    <div class="tab-content" id="pills-tabContent">
+      <div class="tab-pane fade show active" id="pills-owned" role="tabpanel" aria-labelledby="pills-owned-tab"
+        tabindex="0">
+        <div *ngFor="let channel of channelsOwned">
+          <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center row">
+            <div class="col-1"></div>
+            <div class="toast show m-1 col col-md-2" [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert"
+              aria-live="assertive" aria-atomic="true">
+              <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
+                <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
+                  <rect width="100%" height="100%" [ngStyle]="{ 'fill': getColor(channel.is_blocked) }"></rect>
+                </svg>
+                <strong class="me-auto">{{channel.name}}</strong>
+                <small>{{channel.subscribers.length}} Subscribers</small>
+              </div>
+              <div class="toast-body">
+                {{channel.description}}
+              </div>
+            </div>
+            <div class="col-1"></div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-pane fade" id="pills-Editor" role="tabpanel" aria-labelledby="pills-Editor-tab" tabindex="0">
+        <div *ngFor="let channel of channelsEditor">
+          <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center row">
+            <div class="col-1"></div>
+            <div class="toast show m-1 col col-md-2" [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert"
+              aria-live="assertive" aria-atomic="true">
+              <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
+                <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
+                  <rect width="100%" height="100%" [ngStyle]="{ 'fill': getColor(channel.is_blocked) }"></rect>
+                </svg>
+                <strong class="me-auto">{{channel.name}}</strong>
+                <small>{{channel.subscribers.length}} Subscribers</small>
+              </div>
+              <div class="toast-body">
+                {{channel.description}}
+              </div>
+            </div>
+            <div class="col-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--------------------------------------------------------------------------------------->
+
+    <div class="modal fade" id="toggleCreateNewChannel" aria-hidden="true" aria-labelledby="toggleCreateNewChannelLabel"
+      tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content " [class.border-secondary]="getDarkMode()=='dark-theme'"
+          [class.bg-dark]="getDarkMode()=='dark-theme'">
+          <div class="modal-header" [class.border-secondary]="getDarkMode()=='dark-theme'">
+            <h1 class="modal-title fs-5" id="toggleCreateNewChannelLabel">Create a new §Channel</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" [class.border-secondary]="getDarkMode()=='dark-theme'">
+            <form>
+              <div class="mb-3">
+                <label for="channel-name" class="col-form-label"></label>
+                <input type="text" class="form-control" id="recipient-name"
+                  [class.border-secondary]="getDarkMode()=='dark-theme'"
+                  [class.text-light]="getDarkMode()=='dark-theme'" name="channelName" placeholder="§Channel name"
+                  [(ngModel)]="newChannel.name" [class.bg-dark]="getDarkMode()=='dark-theme'">
+              </div>
+              <div class="mb-3">
+                <label for="message-text" class="col-form-label"></label>
+                <textarea class="form-control" id="message-text" name="channelDescription"
+                  placeholder="§Channel description" [(ngModel)]="newChannel.description"
+                  [class.border-secondary]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                  [class.text-light]="getDarkMode()=='dark-theme'"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer " [class.border-secondary]="getDarkMode()=='dark-theme'">
+            <button class="btn btn-secondary" data-bs-dismiss="modal" data-bs-toggle="Close">Cancel</button>
+            <button class="btn btn-primary" data-bs-target="#toggleCreateNewChannel2"
+              data-bs-toggle="modal">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="toggleCreateNewChannel2" aria-hidden="true"
+      aria-labelledby="toggleCreateNewChannelLabel2" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" [class.border-secondary]="getDarkMode()=='dark-theme'"
+          [class.bg-dark]="getDarkMode()=='dark-theme'">
+          <div class="modal-header" [class.border-secondary]="getDarkMode()=='dark-theme'">
+            <h1 class="modal-title fs-5" id="toggleCreateNewChannelLabel2">§{{newChannel.name}} creation confirmation
+            </h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" [class.border-secondary]="getDarkMode()=='dark-theme'">
+            Are you sure you want to create a new §Channel with this description?
+          </div>
+          <hr>
+          <div class="mx-3">{{newChannel.description}}</div>
+          <div class="modal-footer" [class.border-secondary]="getDarkMode()=='dark-theme'">
+            <button class="btn btn-secondary" data-bs-target="#toggleCreateNewChannel"
+              data-bs-toggle="modal">Back</button>
+            <button class="btn btn-primary" data-bs-dismiss="modal" data-bs-toggle="Close"
+              (click)="createChannel()">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>

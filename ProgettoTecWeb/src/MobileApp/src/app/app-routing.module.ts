@@ -14,6 +14,7 @@ import { ChatComponent } from './pages/chat/chat.component';
 import { ChannelComponent } from './pages/channel/channel.component';
 import { ReactionsMenuComponent } from './widgets/reactions-menu/reactions-menu.component';
 import { SquealComponent } from './widgets/squeal/squeal.component';
+import { ChannelManagerComponent } from './pages/channel-manager/channel-manager.component';
 import { ErrorComponent } from './pages/error/error.component';
 //import { PageLayoutComponent } from './pages/page-layout/page-layout.component';
 
@@ -36,6 +37,7 @@ const routes: Routes = [
   { path: 'private-chats/user/:user', component: ChatComponent },
   { path: 'channel/:identifier', component: ChannelComponent },
   { path: 'squeal/:identifier', component: SquealComponent },
+  { path: 'channel-manager', component: ChannelManagerComponent },
   { path: 'error/:code', component: ErrorComponent },
   // { path: 'chat', component: ChatsComponent },
 ];
