@@ -1,11 +1,11 @@
-<div id="squeal-form" [class]="getThemeClass()" class="squeal-wrap pt-4">
+<div id="squeal-form" [class]="getDarkMode()" class="squeal-wrap pt-4">
   <div class="squeal-header">
     <div class="squeal-header-info">
       <img src="../../assets/imgs/logo.png" alt="" class="avatar" />
       @{{user.username}}
       <span>{{user.account_type}}</span>
 
-      <ng-container *ngIf='!isGuest'>
+      <ng-container *ngIf='!isGuest || isGuest'>
         <div *ngIf="enoughChars" class="squeal-form-text">
           {{user.char_quota?.daily || 0}}<span class="quota_letter">D</span>
           {{user.char_quota?.weekly || 0}}<span class="quota_letter">W</span>
@@ -18,25 +18,32 @@
           <div class="mb-1">
             <label for="squeal-txt-input" class="form-label"></label>
             <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
-              placeholder="Write your squeal..." class="form-control col-12 p-3" rows="3"
-              id="squeal-txt-input"></textarea>
+              placeholder="Write your squeal..." class="form-control col-12 p-3" rows="3" id="squeal-txt-input"
+              [class.border-secondary]="getDarkMode()=='dark-theme'" [class.text-light]="getDarkMode()=='dark-theme'"
+              [class.bg-dark]="getDarkMode()=='dark-theme'"></textarea>
           </div>
 
           <div class="accordion" id="accordionRecipients">
-            <div class="accordion-item">
+            <div class="accordion-item border" [class.border-secondary]="getDarkMode()=='dark-theme'">
               <h2 class="accordion-header" id="recipientsHeader">
                 <button class="accordion-button collapsed p-2 ps-3" type="button" data-bs-toggle="collapse"
                   data-bs-target="#collapsRecipients" aria-expanded="false" aria-controls="collapsRecipients"
-                  id="recipients-button">
+                  id="recipients-button" [class.border-white]="getDarkMode()=='dark-theme'"
+                  [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'">
                   Recipients
                 </button>
               </h2>
               <div id="collapsRecipients" class="accordion-collapse collapse" aria-labelledby="recipientsHeader"
-                data-bs-parent="#accordionRecipients">
+                data-bs-parent="#accordionRecipients" [class.bg-dark]="getDarkMode()=='dark-theme'">
                 <div class="accordion-body">
-                  <app-tag-input #usersInput [placeholder]="'Add a user...'" [specialChar]="'@'"></app-tag-input>
-                  <app-tag-input #channelsInput [placeholder]="'Add a channel...'" [specialChar]="'§'"></app-tag-input>
-                  <app-tag-input #keywordsInput [placeholder]="'Add a keyword...'" [specialChar]="'#'"></app-tag-input>
+                  <app-tag-input class="mt-1" #usersInput [placeholder]="'Add a user...'"
+                    [specialChar]="'@'"></app-tag-input>
+                  <hr class="m-2 text-secondary">
+                  <app-tag-input class="mt-1" #channelsInput [placeholder]="'Add a channel...'"
+                    [specialChar]="'§'"></app-tag-input>
+                  <hr class="m-2 text-secondary">
+                  <app-tag-input class="mt-1" #keywordsInput [placeholder]="'Add a keyword...'"
+                    [specialChar]="'#'"></app-tag-input>
                 </div>
               </div>
             </div>
@@ -46,7 +53,7 @@
 
           <div class="row">
             <div class="col"></div>
-            <button type="submit" class="submit-button btn btn-secondary col-2 m-3 my-1">Post</button>
+            <button type="submit" class="submit-button btn btn-secondary col-2 m-3 my-1 px-1">Post</button>
           </div>
         </form>
       </ng-container>

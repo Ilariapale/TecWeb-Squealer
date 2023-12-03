@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { DarkModeService } from 'src/app/services/dark-mode.service';
 
 @Component({
   selector: 'app-tag-input',
@@ -6,7 +7,9 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   styleUrls: ['./tag-input.component.css'],
 })
 export class TagInputComponent {
-  tags: string[] = [];
+  constructor(private darkModeService: DarkModeService) {}
+  //TODO controllare se Input in tags crea problemi
+  @Input() tags: string[] = [];
   @Input() specialChar: string = '@';
   tagInput: string = '';
   @Input() placeholder: string = 'Add a tag';
@@ -27,5 +30,9 @@ export class TagInputComponent {
   getTags() {
     console.log(this.specialChar, this.tags);
     return this.tags;
+  }
+
+  getDarkMode() {
+    return this.darkModeService.getThemeClass();
   }
 }

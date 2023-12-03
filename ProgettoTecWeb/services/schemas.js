@@ -367,7 +367,16 @@ const KeywordSchema = new mongoose.Schema({
 });
 const Keyword = mongoose.model("Keyword", KeywordSchema);
 
-//PRE functions
+// ========== MEDIA ==========
+const mediaSchema = new mongoose.Schema({
+  // _id: { type: mongoose.Types.ObjectId },
+  original_name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
+  date: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+  content_type: { type: String, required: true },
+});
+
+const Media = mongoose.model("Media", mediaSchema);
 
 //EXPORTS
 module.exports = {
@@ -376,6 +385,7 @@ module.exports = {
   Squeal,
   Channel,
   Keyword,
+  Media,
   Chat,
   CommentSection,
 };

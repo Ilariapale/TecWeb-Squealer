@@ -160,6 +160,14 @@ body {
   --bs-toast-border-color: #6b6b6b;
 }
 
+.tag.bg-dark {
+  background-color: #2c353d !important;
+}
+
+.special-char.bg-dark {
+  background-color: #2c353d !important;
+}
+
 .darkBanner1 {
   background-color: #170a47;
 }

@@ -694,7 +694,7 @@ function addedAndRemoved(oldArray, newArray) {
 }
 
 //TOKEN FUNCTIONS
-function generateToken(user_data) {
+function generateToken(user_data, expireTime = config.tokenExpireTime) {
   //Aggiungere dati al token se necessario
 
   const user = {
@@ -713,7 +713,7 @@ function generateToken(user_data) {
   const secretKey = config.secretKey; // Sostituisci con una chiave segreta robusta e casuale
 
   // Crea il token con una data di scadenza (1 ora in questo esempio)
-  const token = jwt.sign(payload, secretKey, { expiresIn: config.tokenExpireTime });
+  const token = jwt.sign(payload, secretKey, { expiresIn: expireTime });
 
   return token;
 }

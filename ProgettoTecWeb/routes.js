@@ -9,4 +9,5 @@ module.exports = function (app) {
   app.use("/chats", require("./routes/chats.route"));
   app.use("/comments", require("./routes/comments.route"));
   app.use("/auth", require("./routes/auth.route"));
+  app.use("/media", require("./routes/media.route"));
 };

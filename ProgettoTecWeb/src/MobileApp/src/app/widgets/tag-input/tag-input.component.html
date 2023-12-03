@@ -1,13 +1,18 @@
-<div *ngFor="let tag of tags" class="tag">
+<div *ngFor="let tag of tags" class="tag border " [class.bg-dark]="getDarkMode()=='dark-theme'"
+  [class.border-secondary]="getDarkMode()=='dark-theme'" [class.text-light]="getDarkMode()=='dark-theme'">
   <span>{{specialChar}}</span>{{tag}}
   <span class="delete" (click)="removeTag(tag)">x</span>
 </div>
 <nav class="navbar p-0">
-  <form class="container-fluid m-1">
+  <form class="container-fluid  px-0">
     <div class="input-group">
-      <span class="input-group-text special-char" id="basic-addon1">{{specialChar}}</span>
+      <span class="input-group-text special-char" id="basic-addon1" [class.bg-dark]="getDarkMode()=='dark-theme'"
+        [class.border-secondary]="getDarkMode()=='dark-theme'"
+        [class.text-light]="getDarkMode()=='dark-theme'">{{specialChar}}</span>
       <input [(ngModel)]="tagInput" (focusout)="addTag()" (keyup.space)="addTag()" placeholder="{{placeholder}}"
-        type="text" class="form-control" aria-describedby="basic-addon1">
+        type="text" class="form-control" aria-describedby="basic-addon1" name="test"
+        [class.border-secondary]="getDarkMode()=='dark-theme'" [class.text-light]="getDarkMode()=='dark-theme'"
+        [class.bg-dark]="getDarkMode()=='dark-theme'">
     </div>
   </form>
 </nav>

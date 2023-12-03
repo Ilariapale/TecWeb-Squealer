@@ -67,6 +67,26 @@ export class ChannelsService {
     const requestOptions = this.headersGenerator(true);
     return this.http.patch(`${this.apiUrl}/${identifier}/subscription-status?value=${value}`, {}, requestOptions);
   }
+  /**
+  * body: {
+  * identifier: string,
+    newName?: string,
+    newDescription?: string,
+    newOwner?: string,
+    editorsArray?: string[]
+  }
+ */
 
+  updateChannel(body: UpdateChannelBody): Observable<any> {
+    const requestOptions = this.headersGenerator(true);
+    return this.http.patch(`${this.apiUrl}/${body.identifier}`, body, requestOptions);
+  }
   // Altre funzioni per il recupero password, aggiornamento del profilo, ecc. possono essere implementate qui.
+}
+interface UpdateChannelBody {
+  identifier: string;
+  new_name?: string;
+  new_description?: string;
+  new_owner?: string;
+  editors_array?: string[];
 }

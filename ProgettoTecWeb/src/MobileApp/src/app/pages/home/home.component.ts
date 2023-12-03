@@ -1,12 +1,11 @@
 import { Component } from '@angular/core';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Router } from '@angular/router';
-import { HttpHeaders } from '@angular/common/http';
 import { AuthService } from 'src/app/services/api/auth.service';
 import { Subscription } from 'rxjs';
 import { UserService } from 'src/app/services/user.service';
 import { firstValueFrom } from 'rxjs';
-
+//TODO quando il token è presente ma scaduto, il client continua a mandare richieste e fallire, controllare il fix
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
@@ -39,7 +38,7 @@ export class HomeComponent {
   isGuest: boolean = true;
 
   constructor(
-    private squealService: SquealsService,
+    private squealsService: SquealsService,
     public authService: AuthService,
     private router: Router,
     private userService: UserService
@@ -60,7 +59,7 @@ export class HomeComponent {
 
   ngOnInit() {
     //check if there is a token
-    this.homeSubscription = this.squealService.getHome(this.isGuest).subscribe({
+    this.homeSubscription = this.squealsService.getHome(this.isGuest).subscribe({
       next: (response: any) => {
         //.slice().reverse()
         this.squeals = response;
@@ -71,10 +70,12 @@ export class HomeComponent {
         if (errorText == 'TokenExpiredError') {
           //redirect to login page "/login"
           console.log('TokenExpiredError');
+          this.userService.setUserData(null);
           this.router.navigate(['/login']);
         }
         if (errorText == 'invalidTokenFormat') {
           console.log('invalidTokenFormat');
+          this.userService.setUserData(null);
           this.router.navigate(['/login']);
         }
       },
@@ -90,6 +91,24 @@ export class HomeComponent {
   onSquealSubmitted(event: any) {
     // Aggiungi un nuovo squeal all'array
     this.squeals.push(event);
+  }
+
+  uploadImage(event: any) {
+    event.preventDefault(); // Previeni il comportamento predefinito del form
+
+    const fileInput = event.target.querySelector('input[type="file"]');
+
+    if (fileInput.files && fileInput.files[0]) {
+      this.squealsService.postMedia(fileInput.files[0]).subscribe({
+        next: (response: any) => {
+          console.log(response);
+          //TODO
+        },
+        error: (error) => {
+          console.log(error);
+        },
+      });
+    }
   }
 
   deleteProfile() {

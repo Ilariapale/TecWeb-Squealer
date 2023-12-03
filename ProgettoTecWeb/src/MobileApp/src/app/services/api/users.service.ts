@@ -22,7 +22,7 @@ export class UsersService {
   }
 
   getUsername(user_id: string): Observable<any> {
-    let url = `${this.apiUrl}/${user_id}`;
+    let url = `${this.apiUrl}/username/${user_id}`;
     return this.http.get(url, this.authenticatedHeadersGenerator());
   }
 

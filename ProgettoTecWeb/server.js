@@ -52,7 +52,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // parse multipart/form-data
-app.use(upload.array());
+//app.use(upload.array());
 app.use(express.static("public"));
 
 // Aggiungi il gestore per i WebSocket

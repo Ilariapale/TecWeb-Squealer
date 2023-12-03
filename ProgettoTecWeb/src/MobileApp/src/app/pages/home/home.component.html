@@ -5,6 +5,13 @@
     <div class="col"></div>
   </div>
 
+  <form action="/upload" method="POST" enctype="multipart/form-data" (submit)="uploadImage($event)">
+    <input type="file" name="image" accept="image/*">
+    <button type="submit">Upload Image</button>
+  </form>
+
+
+
   <div *ngIf="squeals.length == 0">
     <div class="container">
       <div class="row justify-content-center">No squeal available</div>

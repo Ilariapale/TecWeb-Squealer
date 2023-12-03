@@ -26,7 +26,8 @@
     <div class="tab-content" id="pills-tabContent">
       <div class="tab-pane fade show active" id="pills-owned" role="tabpanel" aria-labelledby="pills-owned-tab"
         tabindex="0">
-        <div *ngFor="let channel of channelsOwned">
+        <div *ngFor="let channel of channelsOwned" data-bs-toggle="modal" data-bs-target="#owndedChannelModif"
+          (click)="selectChannel(channel)">
           <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center row">
             <div class="col-1"></div>
             <div class="toast show m-1 col col-md-2" [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert"
@@ -71,7 +72,7 @@
       </div>
     </div>
 
-    <!--------------------------------------------------------------------------------------->
+    <!----------------------------------------CREATE A CHANNEL MODAL----------------------------------------------->
 
     <div class="modal fade" id="toggleCreateNewChannel" aria-hidden="true" aria-labelledby="toggleCreateNewChannelLabel"
       tabindex="-1">
@@ -133,4 +134,117 @@
       </div>
     </div>
 
+    <!------------------------------MODIFY CHANNELS--------------------------------------------------------->
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#owndedChannelModif">
+      Owned
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="owndedChannelModif" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+      aria-labelledby="owndedChannelModifLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content" [class.border-secondary]="getDarkMode()=='dark-theme'"
+          [class.bg-dark]="getDarkMode()=='dark-theme'">
+          <div class="modal-header" [class.border-secondary]="getDarkMode()=='dark-theme'">
+            <h1 class="modal-title fs-5" id="owndedChannelModifLabel">Modify Channel:</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" [class.border-secondary]="getDarkMode()=='dark-theme'">
+            <!--  BODY   -->
+            <!-- Channel name-->
+            <div class="input-group mb-3">
+              <span class="input-group-text tag" id="basic-addon1" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                [class.border-secondary]="getDarkMode()=='dark-theme'"
+                [class.text-light]="getDarkMode()=='dark-theme'">§</span>
+              <input type="text" class="form-control" placeholder="Channel name" aria-label="Username"
+                aria-describedby="basic-addon1" [class.border-secondary]="getDarkMode()=='dark-theme'"
+                [class.text-light]="getDarkMode()=='dark-theme'" [(ngModel)]="selectedChannel.name"
+                [class.bg-dark]="getDarkMode()=='dark-theme'">
+            </div>
+            <!-- Channel description-->
+            <div class="input-group">
+              <span class="input-group-text tag" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                [class.border-secondary]="getDarkMode()=='dark-theme'"
+                [class.text-light]="getDarkMode()=='dark-theme'">Description</span>
+              <textarea class="form-control" aria-label="With textarea"
+                [class.border-secondary]="getDarkMode()=='dark-theme'" [class.text-light]="getDarkMode()=='dark-theme'"
+                [(ngModel)]="selectedChannel.description" [class.bg-dark]="getDarkMode()=='dark-theme'"></textarea>
+            </div>
+            <!-- New owner -->
+            <div class="input-group my-3">
+              <span class="input-group-text tag" id="basic-addon1" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                [class.border-secondary]="getDarkMode()=='dark-theme'"
+                [class.text-light]="getDarkMode()=='dark-theme'">New owner</span>
+              <input type="text" class="form-control" placeholder="Username" aria-label="Username"
+                aria-describedby="basic-addon1" [class.border-secondary]="getDarkMode()=='dark-theme'"
+                [class.text-light]="getDarkMode()=='dark-theme'" [(ngModel)]="selectedChannel.owner"
+                [class.bg-dark]="getDarkMode()=='dark-theme'">
+            </div>
+            <!-- Editors array -->
+            <app-tag-input #editorInput [placeholder]="'Add an editor...'" [specialChar]="'@'"
+              [tags]="selectedEditors"></app-tag-input>
+            <!--  END BODY   -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" (click)="updateOwnedChannel()">Modify</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--------------------------------------------------------------------------------------->
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editorChannelModif">
+      Editor
+    </button>
+    <div class="modal fade" id="editorChannelModif" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+      aria-labelledby="editorChannelModifLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header" [class.border-secondary]="getDarkMode()=='dark-theme'"
+            [class.bg-dark]="getDarkMode()=='dark-theme'">
+            <h1 class="modal-title fs-5" id="editorChannelModifLabel">Modify Channel:</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" [class.border-secondary]="getDarkMode()=='dark-theme'"
+            [class.bg-dark]="getDarkMode()=='dark-theme'">
+            <!--  BODY   -->
+            <!-- Channel name-->
+            <div class="input-group mb-3">
+              <span class="input-group-text tag" id="basic-addon1" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                [class.border-secondary]="getDarkMode()=='dark-theme'"
+                [class.text-light]="getDarkMode()=='dark-theme'">§</span>
+              <input type="text" class="form-control" placeholder="Channel name" aria-label="Username"
+                aria-describedby="basic-addon1" [class.border-secondary]="getDarkMode()=='dark-theme'"
+                [class.text-light]="getDarkMode()=='dark-theme'" [(ngModel)]="newChannel.name"
+                [class.bg-dark]="getDarkMode()=='dark-theme'">
+            </div>
+            <!-- Channel description-->
+            <div class="input-group mb-3">
+              <span class="input-group-text tag" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                [class.border-secondary]="getDarkMode()=='dark-theme'"
+                [class.text-light]="getDarkMode()=='dark-theme'">Description</span>
+              <textarea class="form-control" aria-label="With textarea"
+                [class.border-secondary]="getDarkMode()=='dark-theme'" [class.text-light]="getDarkMode()=='dark-theme'"
+                [(ngModel)]="newChannel.name" [class.bg-dark]="getDarkMode()=='dark-theme'"></textarea>
+            </div>
+            <!-- Editors array -->
+            <app-tag-input #usersInput [placeholder]="'Add an editor...'" [specialChar]="'@'"></app-tag-input>
+            <!--  END BODY   -->
+          </div>
+          <div class="modal-footer" [class.border-secondary]="getDarkMode()=='dark-theme'"
+            [class.bg-dark]="getDarkMode()=='dark-theme'">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Understood</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--------------------------------------------------------------------------------------->
+
+
+
   </div>
+</div>

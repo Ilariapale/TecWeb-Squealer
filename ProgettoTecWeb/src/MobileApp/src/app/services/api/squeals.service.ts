@@ -112,5 +112,11 @@ export class SquealsService {
     });
   }
 
+  postMedia(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('image', file);
+    const requestOptions = this.headersGenerator(true);
+    return this.http.post(`/media/upload`, formData, requestOptions);
+  }
   // Altre funzioni per il recupero password, aggiornamento del profilo, ecc. possono essere implementate qui.
 }

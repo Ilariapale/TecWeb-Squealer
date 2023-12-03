@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { TimeService } from 'src/app/services/time.service';
 import { UsersService } from 'src/app/services/api/users.service';
@@ -10,6 +10,7 @@ import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Squeal } from 'src/app/models/squeal.interface';
 import { Channel } from 'src/app/models/channel.interface';
 import { ChannelsService } from 'src/app/services/api/channels.services';
+import { TagInputComponent } from 'src/app/widgets/tag-input/tag-input.component';
 @Component({
   selector: 'app-channel-manager',
   templateUrl: './channel-manager.component.html',
@@ -31,21 +32,37 @@ export class ChannelManagerComponent {
   is_blocked: boolean;
 }
   */
+  @ViewChild('editorInput') editorComponent!: TagInputComponent;
+
   isGuest = false;
 
   channelsOwnedIds: string[] = [];
   channelsEditorIds: string[] = [];
 
   channelsOwned: Channel[] = [];
-
   channelsEditor: Channel[] = [];
   username = 'User';
+
+  selectedChannel: Channel = {
+    _id: '',
+    owner: '',
+    editors: [],
+    name: '',
+    description: '',
+    is_official: false,
+    can_mute: true,
+    created_at: new Date(),
+    squeals: [],
+    subscribers: [],
+    is_blocked: false,
+  };
+  selectedEditors: string[] = [];
 
   newChannel = {
     name: '',
     description: '',
   };
-
+  //TODO quando l'utente non ha canali viene un errore Cannot read properties of undefined (reading 'map')
   constructor(
     private route: ActivatedRoute,
     public timeService: TimeService,
@@ -62,13 +79,11 @@ export class ChannelManagerComponent {
         //this.isGuest = true;
         return;
       }
-      console.log(userData);
       //this.isGuest = false;
       this.username = userData.username;
 
       this.usersService.getUser(this.username).subscribe({
         next: (user) => {
-          console.log(user);
           this.channelsOwnedIds = user.owned_channels;
           this.channelsEditorIds = user.editor_channels;
 
@@ -118,4 +133,62 @@ export class ChannelManagerComponent {
   getColor(is_blocked: boolean) {
     return is_blocked ? 'red' : 'green';
   }
+
+  selectChannel(channel: Channel) {
+    this.selectedChannel = JSON.parse(JSON.stringify(channel));
+    this.selectedEditors = [];
+    //richiesta per ottenere i nomi degli editor
+    //ottengo lo username dell'owner
+    this.usersService.getUsername(this.selectedChannel.owner as string).subscribe({
+      next: (owner) => {
+        this.selectedChannel.owner = owner.username;
+      },
+      error: (err) => {
+        console.error('Error fetching owner:', err);
+      },
+    });
+    const editorsRequests = this.selectedChannel.editors.map((editorId) =>
+      this.usersService.getUsername(editorId as string)
+    );
+    forkJoin(editorsRequests).subscribe({
+      next: (editors) => {
+        this.selectedEditors = editors.map((editor) => editor.username);
+      },
+      error: (err) => {
+        console.error('Error fetching editors:', err);
+      },
+    });
+  }
+
+  updateOwnedChannel() {
+    //prendo il canale dall'array tramite l'id di quello updetato
+    const oldChannel = this.channelsOwned.find((channel) => channel._id === this.selectedChannel._id);
+    const updatedChannel = this.selectedChannel;
+    const newEditors = this.editorComponent.getTags();
+
+    const body: any = {
+      identifier: updatedChannel._id,
+    };
+
+    if (oldChannel?.name !== updatedChannel.name) body.new_name = updatedChannel.name;
+    if (oldChannel?.description !== updatedChannel.description) body.new_description = updatedChannel.description;
+    if (oldChannel?.owner !== updatedChannel.owner) body.new_owner = updatedChannel.owner;
+    if (oldChannel?.editors !== newEditors) body.editors_array = newEditors;
+
+    this.channelsService.updateChannel(body).subscribe({
+      next: (channel) => {
+        console.log(channel);
+        this.channelsOwned = this.channelsOwned.map((channel) => {
+          if (channel._id === updatedChannel._id) {
+            return channel;
+          }
+          return channel;
+        });
+      },
+      error: (err) => {
+        console.error('Error updating channel:', err);
+      },
+    });
+  }
+  updateEditorChannel() {}
 }

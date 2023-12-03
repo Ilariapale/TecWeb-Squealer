@@ -109,10 +109,6 @@ export class SquealFormComponent {
     }
   }
 
-  getThemeClass() {
-    return this.darkModeService.getThemeClass();
-  }
-
   getRecipients() {
     this.recipients.users = this.usersComponent.getTags();
     this.recipients.channels = this.channelsComponent.getTags();
@@ -173,5 +169,8 @@ export class SquealFormComponent {
 
   goToPage(page: string) {
     this.router.navigate([`/${page}`]);
+  }
+  getDarkMode() {
+    return this.darkModeService.getThemeClass();
   }
 }
