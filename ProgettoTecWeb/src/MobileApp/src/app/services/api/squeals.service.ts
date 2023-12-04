@@ -94,8 +94,9 @@ export class SquealsService {
     const requestOptions = this.headersGenerator(true);
     return this.http.get(`${this.apiUrl}/${identifier}`, requestOptions);
   }
-  deleteSqueal(): Observable<any> {
-    return this.http.delete(`${this.apiUrl}`);
+  deleteSqueal(identifier: string): Observable<any> {
+    const requestOptions = this.headersGenerator(true);
+    return this.http.delete(`${this.apiUrl}/${identifier}`, requestOptions);
   }
   addReaction(reaction: String, squeal_id: String): Observable<any> {
     const requestOptions = this.headersGenerator(true);
@@ -103,13 +104,6 @@ export class SquealsService {
   }
   updateSqueal(): Observable<any> {
     return this.http.patch(`${this.apiUrl}`, {});
-  }
-
-  updatePassword(old_password: string, new_password: string): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/users`, {
-      old_password,
-      new_password,
-    });
   }
 
   postMedia(file: File): Observable<any> {

@@ -18,23 +18,23 @@
           <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
             <li class="nav-item" role="presentation">
               <button class="nav-link active" id="pills-text-tab" data-bs-toggle="pill" data-bs-target="#pills-text"
-                type="button" role="tab" aria-controls="pills-text" aria-selected="true"><i
-                  class="bi bi-card-text"></i></button>
+                type="button" role="tab" aria-controls="pills-text" aria-selected="true"
+                (click)="selectedTab('text')"><i class="bi bi-card-text"></i></button>
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="pills-image-tab" data-bs-toggle="pill" data-bs-target="#pills-image"
-                type="button" role="tab" aria-controls="pills-image" aria-selected="false"><i
-                  class="bi bi-card-image"></i></button>
+                type="button" role="tab" aria-controls="pills-image" aria-selected="false"
+                (click)="selectedTab('image')"><i class="bi bi-card-image"></i></button>
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="pills-video-tab" data-bs-toggle="pill" data-bs-target="#pills-video"
-                type="button" role="tab" aria-controls="pills-video" aria-selected="false"><i
-                  class="bi bi-play-btn"></i></button>
+                type="button" role="tab" aria-controls="pills-video" aria-selected="false"
+                (click)="selectedTab('video')"><i class="bi bi-play-btn"></i></button>
             </li>
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="pills-position-tab" data-bs-toggle="pill" data-bs-target="#pills-position"
-                type="button" role="tab" aria-controls="pills-position" aria-selected="false"><i
-                  class="bi bi-cursor"></i></button>
+                type="button" role="tab" aria-controls="pills-position" aria-selected="false"
+                (click)="selectedTab('position')"><i class="bi bi-cursor"></i></button>
             </li>
           </ul>
           <div class="tab-content" id="pills-tabContent">
@@ -55,7 +55,8 @@
               <!--image-->
               <div class="mb-3">
                 <label for="formFile" class="form-label">Image input</label>
-                <input class="form-control" type="file" id="formFile" accept="image/*" name="image">
+                <input class="form-control" type="file" id="imageInput" accept="image/*" name="image"
+                  (change)="onFileSelected($event)">
               </div>
 
               <!--form action="/upload" method="POST" enctype="multipart/form-data" (submit)="uploadImage($event)">
@@ -69,7 +70,8 @@
               <!--video-->
               <div class="mb-3">
                 <label for="formFile" class="form-label">Video input</label>
-                <input class="form-control" type="file" id="formFile" accept="video/*" name="video">
+                <input class="form-control" type="file" id="videoInput" accept="video/*" name="video"
+                  (change)="onFileSelected($event)">
               </div>
               <!--End video-->
             </div>

@@ -8,13 +8,13 @@ const express = require("express"),
   cors = require("cors"),
   multer = require("multer"),
   upload = multer(),
-  http = require("http"), // Aggiungi questa linea
-  socketIo = require("socket.io"), // Aggiungi questa linea
+  http = require("http"),
+  socketIo = require("socket.io"),
   app = express(),
   PORT = process.env.PORT || 8000,
   NODE_ENV = process.env.NODE_ENV || "development";
-const server = http.createServer(app); // Aggiungi questa linea
-const io = socketIo(server); // Aggiungi questa linea
+const server = http.createServer(app);
+const io = socketIo(server);
 const connectedUsers = {};
 
 app.set("port", PORT);

@@ -281,23 +281,18 @@ SquealSchema.methods.DeleteAndPreserveInDB = async function () {
   const replaceString = "[deleted squeal]";
   //1) squeal.recipients.users are the target users and I have to remove the squeal from each user.squeals.mentioned_in
   await User.updateMany({ _id: { $in: this.recipients.users } }, { $pull: { "squeals.mentioned_in": this._id } });
-
   //2) squeal.recipients.channels are the target channels and I have to remove the squeal from each channel.squeals
   await Channel.updateMany({ _id: { $in: this.recipients.channels } }, { $pull: { squeals: this._id } });
-
   //3) squeal.recipients.keywords sono le keywords destinatarie e devo rimuovere lo squeal da ogni keyword.squeals
   await Keyword.updateMany({ name: { $in: this.recipients.keywords } }, { $pull: { squeals: this._id } });
-
   //4) cancello le notifiche che avevano come squeal_ref lo squeal cancellato
   await Notification.deleteMany({ squeal_ref: this._id });
-
   this.content_type = deleted_content_type;
   this.content = replaceString;
   this.recipients.users = [];
   this.recipients.channels = [];
   this.recipients.keywords = [];
   this.last_modified = new Date();
-
   await this.save();
 };
 
@@ -368,15 +363,15 @@ const KeywordSchema = new mongoose.Schema({
 const Keyword = mongoose.model("Keyword", KeywordSchema);
 
 // ========== MEDIA ==========
-const mediaSchema = new mongoose.Schema({
-  // _id: { type: mongoose.Types.ObjectId },
-  original_name: { type: String, required: true },
-  name: { type: String, required: true, unique: true },
-  date: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
-  content_type: { type: String, required: true },
-});
+//const mediaSchema = new mongoose.Schema({
+//  // _id: { type: mongoose.Types.ObjectId },
+//  original_name: { type: String, required: true },
+//  name: { type: String, required: true, unique: true },
+//  date: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+//  content_type: { type: String, required: true },
+//});
 
-const Media = mongoose.model("Media", mediaSchema);
+//const Media = mongoose.model("Media", mediaSchema);
 
 //EXPORTS
 module.exports = {
@@ -385,7 +380,7 @@ module.exports = {
   Squeal,
   Channel,
   Keyword,
-  Media,
+  //Media,
   Chat,
   CommentSection,
 };

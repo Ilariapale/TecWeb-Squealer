@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Squeal } from 'src/app/models/squeal.interface';
+import { ContentType, Squeal } from 'src/app/models/squeal.interface';
 import { CommentService } from 'src/app/services/api/comments.service';
 import { CommentSection } from 'src/app/models/comment.interface';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
@@ -8,7 +8,7 @@ import * as e from 'express';
 import { ActivatedRoute } from '@angular/router';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Router } from '@angular/router';
-
+import { UserService } from 'src/app/services/user.service';
 @Component({
   selector: 'app-squeal',
   templateUrl: './squeal.component.html',
@@ -22,6 +22,7 @@ export class SquealComponent {
   showComments = false;
   loadMore = false;
   comment_section: CommentSection = {};
+  mySqueal: boolean = false;
 
   constructor(
     private commentService: CommentService,
@@ -29,11 +30,12 @@ export class SquealComponent {
     public timeService: TimeService,
     private route: ActivatedRoute,
     private squealsService: SquealsService,
-    private router: Router
+    private router: Router,
+    private userService: UserService
   ) {
     this.squeal = {};
     this.route.paramMap.subscribe((params) => {
-      this.squeal_id = params.get('identifier') ?? ' ';
+      if ((this, route.snapshot.url[0].path == 'home')) this.squeal_id = params.get('identifier') ?? ' ';
     });
   }
   ngOnInit(): void {
@@ -42,6 +44,8 @@ export class SquealComponent {
         next: (response: any) => {
           console.log(response);
           this.squeal = response[0];
+          console.log(this.squeal);
+          //Check if the squeal is mine
           this.commentService.getComments(this.squeal.comment_section || '').subscribe({
             next: (data: any) => {
               console.log(data);
@@ -57,9 +61,10 @@ export class SquealComponent {
         },
       });
     }
+    this.mySqueal = this.userService.isMyself((this.squeal.username as string) || '');
   }
 
-  getThemeClass() {
+  getDarkMode() {
     return this.darkModeService.getThemeClass();
   }
 

@@ -7,7 +7,7 @@ import { User, AccountType, ProfessionalType } from 'src/app/models/user.interfa
 import { Subscription, forkJoin } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { SquealsService } from 'src/app/services/api/squeals.service';
-import { Squeal } from 'src/app/models/squeal.interface';
+import { Squeal, ContentType } from 'src/app/models/squeal.interface';
 
 @Component({
   selector: 'app-profile',
@@ -47,6 +47,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   usersSubscription: Subscription = new Subscription();
   isGuest = true;
   bannerClass = '';
+  squealToDelete = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -98,6 +99,19 @@ export class ProfileComponent implements OnInit, AfterViewInit {
         this.router.navigate(['/login']);
       }
     });
+
+    const exampleModal = document.getElementById('deleteConfirm') as HTMLElement;
+    exampleModal.addEventListener('show.bs.modal', (event: any) => {
+      const button = event.relatedTarget;
+      const squealId = button.getAttribute('data-bs-squealId');
+      const modalTitle = exampleModal.querySelector('.modal-title') as HTMLElement | null;
+      const modalBodyInput = exampleModal.querySelector('.modal-body input') as HTMLInputElement | null;
+      //if (modalTitle && modalBodyInput) {
+      //  modalTitle.textContent = `New message to ${recipient}`;
+      //  modalBodyInput.value = recipient;
+      //}
+      this.squealToDelete = squealId;
+    });
   }
 
   ngAfterViewInit() {
@@ -123,5 +137,25 @@ export class ProfileComponent implements OnInit, AfterViewInit {
       });
     });
     this.loading = false;
+  }
+  deleteSqueal() {
+    if (this.squealToDelete != '') {
+      this.squealsService.deleteSqueal(this.squealToDelete).subscribe({
+        next: (response: any) => {
+          console.log(response);
+          //this.router.navigate(['/home']);
+          const squeal = this.squeals.find((squeal) => squeal._id == this.squealToDelete);
+          squeal ? (squeal.content_type = ContentType.deleted) : null;
+          squeal ? (squeal.content = '[deleted squeal]') : null;
+        },
+        error: (error) => {
+          //console.error(error);
+        },
+      });
+    }
+  }
+
+  getDarkMode() {
+    return this.darkModeService.getThemeClass();
   }
 }

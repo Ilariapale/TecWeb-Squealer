@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { UserService } from 'src/app/services/user.service';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { User } from 'src/app/models/user.interface';
-import { Recipients } from 'src/app/models/squeal.interface';
+import { ContentType, Recipients } from 'src/app/models/squeal.interface';
 import { TagInputComponent } from '../tag-input/tag-input.component';
 import { firstValueFrom } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
@@ -29,6 +29,33 @@ export class SquealFormComponent {
     channels: [],
     keywords: [],
   };
+
+  sizeAndCost: {
+    cost: {
+      image: number;
+      video: number;
+      position: number;
+    };
+    size: {
+      image: number;
+      video: number;
+      position: number;
+    };
+  } = {
+    cost: {
+      image: 125,
+      video: 300,
+      position: 150,
+    },
+    size: {
+      image: 16,
+      video: 20,
+      position: 0,
+    },
+  };
+
+  selectedType: ContentType = ContentType.text;
+  lastSelectedTab: string = 'text';
 
   squealForm!: FormGroup;
   lastLength: number = 0;
@@ -76,18 +103,18 @@ export class SquealFormComponent {
     });
   }
 
-  onInput() {
+  onInput(value?: number) {
     this.adjustTextareaHeight();
 
-    const currentLength = this.squealForm.value.text.length;
+    const currentLength = this.squealForm.value.text?.length ?? 0;
     const previousLength = this.lastLength;
 
-    // Calcola la differenza tra la lunghezza attuale e quella precedente
-    const difference: number = currentLength - previousLength;
+    // Calculate the difference between the current length and the previous length
+    const difference: number = value ? value : currentLength - previousLength;
 
-    this.lastLength = currentLength; // Aggiorna la lunghezza precedente
-    // Aggiorna la quota in base alla differenza
+    this.lastLength = currentLength; // Update the previous length
 
+    // Update the quota based on the difference
     this.char_left.daily -= difference;
     this.char_left.weekly -= difference;
     this.char_left.monthly -= difference;
@@ -97,15 +124,20 @@ export class SquealFormComponent {
       ((this.char_left.daily <= 0 || this.char_left.weekly <= 0 || this.char_left.monthly <= 0) && difference <= 0)
     ) {
       this.char_left.extra_daily -= difference;
-      if (this.char_left.extra_daily < 0) this.enoughChars = false;
-      else this.enoughChars = true;
-    } else this.enoughChars = true;
+      if (this.char_left.extra_daily < 0) {
+        this.enoughChars = false;
+      } else {
+        this.enoughChars = true;
+      }
+    } else {
+      this.enoughChars = true;
+    }
 
     if (this.user.char_quota) {
-      this.user.char_quota.daily = this.char_left.daily <= 0 ? 0 : this.char_left.daily;
-      this.user.char_quota.weekly = this.char_left.weekly <= 0 ? 0 : this.char_left.weekly;
-      this.user.char_quota.monthly = this.char_left.monthly <= 0 ? 0 : this.char_left.monthly;
-      this.user.char_quota.extra_daily = this.char_left.extra_daily <= 0 ? 0 : this.char_left.extra_daily;
+      this.user.char_quota.daily = Math.max(this.char_left.daily, 0);
+      this.user.char_quota.weekly = Math.max(this.char_left.weekly, 0);
+      this.user.char_quota.monthly = Math.max(this.char_left.monthly, 0);
+      this.user.char_quota.extra_daily = Math.max(this.char_left.extra_daily, 0);
     }
   }
 
@@ -117,25 +149,43 @@ export class SquealFormComponent {
 
   adjustTextareaHeight() {
     const nativeElement = this.textarea.nativeElement;
-    nativeElement.style.height = 'auto'; // Ripristina l'altezza predefinita
-    nativeElement.style.height = nativeElement.scrollHeight + 'px'; // Imposta l'altezza in base allo scrollHeight
+    if (nativeElement != undefined && nativeElement.textContent != '') {
+      nativeElement.style.height = 'auto'; // Restore default height
+      nativeElement.style.height = `${nativeElement.scrollHeight}px`; // Set height based on scrollHeight
+    }
   }
 
   getRowCount(): number {
-    // Calcola il numero di righe necessarie in base alla lunghezza del testo
+    // Calculate the number of rows needed based on the text length
     const lineCount = this.squealForm.value.text.split('\n').length;
-    return Math.max(lineCount, 1); // Assicurati che ci sia sempre almeno una riga
+    return Math.max(lineCount, 1); // Make sure there is always at least one row
   }
 
   createSqueal() {
+    switch (this.selectedType) {
+      case ContentType.text:
+        this.createTextSqueal();
+        break;
+      case ContentType.image:
+        this.createImageSqueal();
+        break;
+      case ContentType.video:
+        this.createVideoSqueal();
+        break;
+      case ContentType.position:
+        this.createPositionSqueal();
+        break;
+    }
+  }
+  createTextSqueal() {
     if (this.squealForm.valid) {
       this.getRecipients();
-      console.log(this.recipients);
+      //console.log(this.recipients);
       // Invia il nuovo squeal al tuo backend o a un servizio API
       const squeal_content = this.squealForm.value.text;
       //console.log('Nuovo squeal:', squealText);
-      this.squealsService.postSqueal(squeal_content, this.recipients).subscribe(
-        (response: any) => {
+      this.squealsService.postSqueal(squeal_content, this.recipients).subscribe({
+        next: (response: any) => {
           console.log('Success:', response);
           this.squealSubmitted.emit(squeal_content);
           this.userService.setUserData(this.user);
@@ -148,8 +198,8 @@ export class SquealFormComponent {
           this.channelsComponent.removeAllTags();
           this.keywordsComponent.removeAllTags();
         },
-        (error) => {
-          //TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
+        error: (error) => {
+          // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
           // Gestisci il caso in cui il form non sia valido
           const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
           if (element) {
@@ -159,33 +209,215 @@ export class SquealFormComponent {
               element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
             }, 500);
           }
-        }
-      );
+        },
+      });
     } else {
       // Gestisci il caso in cui il form non sia valido
       console.log('Form non valido');
     }
   }
+  createImageSqueal() {
+    this.getRecipients();
+    //console.log(this.recipients);
 
-  uploadImage(event: any) {
-    const fileInput = event.target.querySelector('input[type="file"]');
+    const fileInput = document.getElementById('imageInput') as HTMLInputElement;
 
     if (fileInput.files && fileInput.files[0]) {
       this.squealsService.postMedia(fileInput.files[0]).subscribe({
         next: (response: any) => {
           console.log(response);
+          const imageName = response.name;
           //TODO
+          console.log('Nuovo squeal:', imageName);
+          this.squealsService.postSqueal(imageName, this.recipients, this.selectedType).subscribe({
+            next: (response: any) => {
+              console.log('Success:', response);
+              this.squealSubmitted.emit(imageName);
+              this.userService.setUserData(this.user);
+              sessionStorage.getItem('user')
+                ? sessionStorage.setItem('user', JSON.stringify(this.user))
+                : localStorage.setItem('user', JSON.stringify(this.user));
+              this.lastLength = 0;
+              this.squealForm.reset();
+              this.usersComponent.removeAllTags();
+              this.channelsComponent.removeAllTags();
+              this.keywordsComponent.removeAllTags();
+            },
+            error: (error) => {
+              // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
+              // Gestisci il caso in cui il form non sia valido
+              const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
+              if (element) {
+                console.log(element);
+                element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
+                setTimeout(() => {
+                  element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
+                }, 500);
+              }
+            },
+          });
         },
         error: (error) => {
           console.log(error);
         },
       });
+    } else {
+      console.log('No file selected');
     }
+    //Mando l'immagine al server e aspetto che mi restituisca il nome del file
+  }
+  createVideoSqueal() {
+    this.getRecipients();
+    //console.log(this.recipients);
+
+    const fileInput = document.getElementById('videoInput') as HTMLInputElement;
+
+    if (fileInput.files && fileInput.files[0]) {
+      this.squealsService.postMedia(fileInput.files[0]).subscribe({
+        next: (response: any) => {
+          console.log(response);
+          const imageName = response.name;
+          //TODO
+          console.log('Nuovo squeal:', imageName);
+          this.squealsService.postSqueal(imageName, this.recipients, this.selectedType).subscribe({
+            next: (response: any) => {
+              console.log('Success:', response);
+              this.squealSubmitted.emit(imageName);
+              this.userService.setUserData(this.user);
+              sessionStorage.getItem('user')
+                ? sessionStorage.setItem('user', JSON.stringify(this.user))
+                : localStorage.setItem('user', JSON.stringify(this.user));
+              this.lastLength = 0;
+              this.squealForm.reset();
+              this.usersComponent.removeAllTags();
+              this.channelsComponent.removeAllTags();
+              this.keywordsComponent.removeAllTags();
+            },
+            error: (error) => {
+              // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
+              // Gestisci il caso in cui il form non sia valido
+              const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
+              if (element) {
+                console.log(element);
+                element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
+                setTimeout(() => {
+                  element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
+                }, 500);
+              }
+            },
+          });
+        },
+        error: (error) => {
+          console.log(error);
+        },
+      });
+    } else {
+      console.log('No file selected');
+    }
+    //Mando l'immagine al server e aspetto che mi restituisca il nome del file
+  }
+  createPositionSqueal() {}
+
+  uploadImage(): string {
+    const fileInput = document.getElementById('imageInput') as HTMLInputElement;
+
+    if (fileInput.files && fileInput.files[0]) {
+      this.squealsService.postMedia(fileInput.files[0]).subscribe({
+        next: (response: any) => {
+          console.log(response);
+          return response;
+          //TODO
+        },
+        error: (error) => {
+          console.log(error);
+          return '';
+        },
+      });
+    } else {
+      return '';
+    }
+    return '';
+  }
+
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    const type: string = event.target.accept;
+    let charNeeded: number;
+    let maxSize: number;
+    switch (type) {
+      case 'image/*':
+        charNeeded = this.sizeAndCost.cost.image;
+        maxSize = this.sizeAndCost.size.image;
+        break;
+      case 'video/*':
+        charNeeded = this.sizeAndCost.cost.video;
+        maxSize = this.sizeAndCost.size.video;
+        break;
+      default:
+        console.log('Error: wrong type');
+        return;
+    }
+    if (file) {
+      //ha appena selezionato un file
+      this.onInput(charNeeded);
+
+      if (file.size > maxSize * 1024) {
+        // TODO: Handle file size error
+        console.log(
+          'File is ',
+          file.size / 1024,
+          ' * 1024 = ',
+          file.size,
+          ' bytes, but max size is ',
+          maxSize,
+          ' * 1024 = ',
+          maxSize * 1024,
+          ' bytes'
+        );
+      }
+    } else {
+      //ha appena deselezionato il file
+      this.onInput(-charNeeded);
+    }
+  }
+
+  selectedTab(type: string) {
+    this.selectedType = type as ContentType;
+    if (this.selectedType != ContentType.text) {
+      this.squealForm.value.text = '';
+      this.onInput();
+    }
+    if (this.selectedType != ContentType.image) {
+      //remove the image from the input
+      const fileInput = document.getElementById('imageInput') as HTMLInputElement;
+      if (fileInput.value != '') {
+        fileInput.value = '';
+        this.onInput(-this.sizeAndCost.cost.image);
+      }
+    }
+    if (this.selectedType != ContentType.video) {
+      //remove the video from the input
+      const fileInput = document.getElementById('videoInput') as HTMLInputElement;
+      if (fileInput.value != '') {
+        fileInput.value = '';
+        this.onInput(-this.sizeAndCost.cost.video);
+      }
+    }
+    if (this.selectedType != ContentType.position) {
+      if (this.lastSelectedTab == 'position') {
+        this.onInput(-this.sizeAndCost.cost.position);
+      }
+    }
+    if (this.selectedType == ContentType.position) {
+      this.onInput(this.sizeAndCost.cost.position);
+    }
+    this.lastSelectedTab = type;
   }
 
   goToPage(page: string) {
     this.router.navigate([`/${page}`]);
   }
+
   getDarkMode() {
     return this.darkModeService.getThemeClass();
   }
