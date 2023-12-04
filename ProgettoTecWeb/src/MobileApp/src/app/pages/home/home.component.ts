@@ -93,23 +93,23 @@ export class HomeComponent {
     this.squeals.push(event);
   }
 
-  uploadImage(event: any) {
-    event.preventDefault(); // Previeni il comportamento predefinito del form
+  // uploadImage(event: any) {
+  //   event.preventDefault(); // Previeni il comportamento predefinito del form
 
-    const fileInput = event.target.querySelector('input[type="file"]');
+  //   const fileInput = event.target.querySelector('input[type="file"]');
 
-    if (fileInput.files && fileInput.files[0]) {
-      this.squealsService.postMedia(fileInput.files[0]).subscribe({
-        next: (response: any) => {
-          console.log(response);
-          //TODO
-        },
-        error: (error) => {
-          console.log(error);
-        },
-      });
-    }
-  }
+  //   if (fileInput.files && fileInput.files[0]) {
+  //     this.squealsService.postMedia(fileInput.files[0]).subscribe({
+  //       next: (response: any) => {
+  //         console.log(response);
+  //         //TODO
+  //       },
+  //       error: (error) => {
+  //         console.log(error);
+  //       },
+  //     });
+  //   }
+  // }
 
   deleteProfile() {
     //TODO delete profile

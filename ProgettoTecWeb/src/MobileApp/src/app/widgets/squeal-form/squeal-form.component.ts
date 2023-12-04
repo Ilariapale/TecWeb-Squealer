@@ -50,7 +50,7 @@ export class SquealFormComponent {
     private formBuilder: FormBuilder,
     private http: HttpClient,
     public userService: UserService,
-    private squealService: SquealsService,
+    private squealsService: SquealsService,
     private darkModeService: DarkModeService,
     private router: Router
   ) {
@@ -134,7 +134,7 @@ export class SquealFormComponent {
       // Invia il nuovo squeal al tuo backend o a un servizio API
       const squeal_content = this.squealForm.value.text;
       //console.log('Nuovo squeal:', squealText);
-      this.squealService.postSqueal(squeal_content, this.recipients).subscribe(
+      this.squealsService.postSqueal(squeal_content, this.recipients).subscribe(
         (response: any) => {
           console.log('Success:', response);
           this.squealSubmitted.emit(squeal_content);
@@ -164,6 +164,22 @@ export class SquealFormComponent {
     } else {
       // Gestisci il caso in cui il form non sia valido
       console.log('Form non valido');
+    }
+  }
+
+  uploadImage(event: any) {
+    const fileInput = event.target.querySelector('input[type="file"]');
+
+    if (fileInput.files && fileInput.files[0]) {
+      this.squealsService.postMedia(fileInput.files[0]).subscribe({
+        next: (response: any) => {
+          console.log(response);
+          //TODO
+        },
+        error: (error) => {
+          console.log(error);
+        },
+      });
     }
   }
 

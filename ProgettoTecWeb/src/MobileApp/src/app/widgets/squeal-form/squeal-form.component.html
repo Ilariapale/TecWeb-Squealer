@@ -14,14 +14,74 @@
         </div>
         <div *ngIf='!enoughChars' class="char_left squeal-form-text">Not enough chars left!</div>
         <form [formGroup]="squealForm" (ngSubmit)="createSqueal()">
+          <!---->
+          <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="pills-text-tab" data-bs-toggle="pill" data-bs-target="#pills-text"
+                type="button" role="tab" aria-controls="pills-text" aria-selected="true"><i
+                  class="bi bi-card-text"></i></button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="pills-image-tab" data-bs-toggle="pill" data-bs-target="#pills-image"
+                type="button" role="tab" aria-controls="pills-image" aria-selected="false"><i
+                  class="bi bi-card-image"></i></button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="pills-video-tab" data-bs-toggle="pill" data-bs-target="#pills-video"
+                type="button" role="tab" aria-controls="pills-video" aria-selected="false"><i
+                  class="bi bi-play-btn"></i></button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="pills-position-tab" data-bs-toggle="pill" data-bs-target="#pills-position"
+                type="button" role="tab" aria-controls="pills-position" aria-selected="false"><i
+                  class="bi bi-cursor"></i></button>
+            </li>
+          </ul>
+          <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-text" role="tabpanel" aria-labelledby="pills-text-tab"
+              tabindex="0">
+              <!--Text-->
+              <div class="mb-1">
+                <label for="squeal-txt-input" class="form-label"></label>
+                <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
+                  placeholder="Write your squeal..." class="form-control col-12 p-3" rows="3" id="squeal-txt-input"
+                  [class.border-secondary]="getDarkMode()=='dark-theme'"
+                  [class.text-light]="getDarkMode()=='dark-theme'"
+                  [class.bg-dark]="getDarkMode()=='dark-theme'"></textarea>
+              </div>
+              <!--End text-->
+            </div>
+            <div class="tab-pane fade" id="pills-image" role="tabpanel" aria-labelledby="pills-image-tab" tabindex="0">
+              <!--image-->
+              <div class="mb-3">
+                <label for="formFile" class="form-label">Image input</label>
+                <input class="form-control" type="file" id="formFile" accept="image/*" name="image">
+              </div>
 
-          <div class="mb-1">
-            <label for="squeal-txt-input" class="form-label"></label>
-            <textarea #textarea [(ngModel)]="this.squealForm.value.text" (input)="onInput()" formControlName="text"
-              placeholder="Write your squeal..." class="form-control col-12 p-3" rows="3" id="squeal-txt-input"
-              [class.border-secondary]="getDarkMode()=='dark-theme'" [class.text-light]="getDarkMode()=='dark-theme'"
-              [class.bg-dark]="getDarkMode()=='dark-theme'"></textarea>
+              <!--form action="/upload" method="POST" enctype="multipart/form-data" (submit)="uploadImage($event)">
+                <input type="file" name="image" accept="image/*">
+                <button type="submit">Upload Image</button>
+              </form-->
+
+              <!--End image-->
+            </div>
+            <div class="tab-pane fade" id="pills-video" role="tabpanel" aria-labelledby="pills-video-tab" tabindex="0">
+              <!--video-->
+              <div class="mb-3">
+                <label for="formFile" class="form-label">Video input</label>
+                <input class="form-control" type="file" id="formFile" accept="video/*" name="video">
+              </div>
+              <!--End video-->
+            </div>
+            <div class="tab-pane fade" id="pills-position" role="tabpanel" aria-labelledby="pills-position-tab"
+              tabindex="0">
+              <!--position-->
+              <app-map></app-map>
+              <!--End position-->
+            </div>
           </div>
+          <!---->
+
 
           <div class="accordion" id="accordionRecipients">
             <div class="accordion-item border" [class.border-secondary]="getDarkMode()=='dark-theme'">
