@@ -8,7 +8,13 @@ const fs = require("fs");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    if (file.mimetype.includes("image")) {
+      cb(null, "uploads/image");
+    } else if (file.mimetype.includes("video")) {
+      cb(null, "uploads/video");
+    } else {
+      cb(null, "uploads/");
+    }
   },
   filename: (req, file, cb) => {
     const filename = "" + Date.now() + "-" + file.originalname;
@@ -34,7 +40,7 @@ router.post("/upload", upload.single("image"), async (req, res) => {
 router.get("/image/:name", async (req, res) => {
   const name = req.params.name;
   try {
-    const filePath = path.join(__dirname, "../uploads/", name);
+    const filePath = path.join(__dirname, "..", "uploads", "image", name);
     res.setHeader("Content-Type", "image/jpg");
     console.log;
     res.sendFile(filePath);
@@ -47,7 +53,7 @@ router.get("/image/:name", async (req, res) => {
 
 //http://localhost:8000/media/video/1701728495285-AT-cm_hlyCcbDLW6RyavYd83lGlw_COMPRESSO.mp4
 router.get("/video/:name", (req, res) => {
-  const videoPath = path.join(__dirname, "..", "uploads", req.params.name); // Path to your video file
+  const videoPath = path.join(__dirname, "..", "uploads", "video", req.params.name); // Path to your video file
   const stat = fs.statSync(videoPath);
   const fileSize = stat.size;
   const range = req.headers.range;
@@ -78,7 +84,39 @@ router.get("/video/:name", (req, res) => {
   }
 });
 
-app.delete("/delete-image/:imageName", (req, res) => {
+router.get("/thumbnail/:name", async (req, res) => {
+  const name = req.params.name;
+  try {
+    res.setHeader("Content-Type", "image/png");
+
+    const videoPath = path.join(__dirname, "..", "uploads", "video", name);
+    const thumbnailsDir = path.join(__dirname, "..", "uploads", "video-thumbnails");
+
+    const videoName = path.parse(videoPath).name; // Ottieni il nome del video senza l'estensione
+
+    const thumbnailPath = path.join(__dirname, "..", "uploads", "video-thumbnails", videoName + "-thumbnail.png");
+    if (fs.existsSync(thumbnailPath)) {
+      res.sendFile(thumbnailPath);
+    } else {
+      await media.generateThumbnail(videoPath, thumbnailsDir, (err) => {
+        if (err) {
+          console.error("An error occurred:", err);
+        } else {
+          console.log("Done! ", thumbnailPath);
+        }
+      });
+
+      res.sendFile(thumbnailsDir);
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
+router.delete("/delete-image/:imageName", (req, res) => {
   const imageName = req.params.imageName;
   const imagePath = path.join(__dirname, "upload", imageName); // Assicurati di adattare il percorso
 

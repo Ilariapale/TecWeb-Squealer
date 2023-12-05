@@ -33,7 +33,7 @@
             <img [src]="'media/image/'+squeal.content" class="img-fluid" />
           </div>
           <div *ngIf="squeal.content_type == 'video'">
-            <video controls poster="./../../../assets/imgs/logo.png " style="max-width: 100%; height: auto;"
+            <video controls [poster]="'media/thumbnail/'+squeal.content" style="max-width: 100%; height: auto;"
               preload="auto" playsinline>
               <source [src]="'media/video/'+squeal.content" type="video/mp4">
             </video>

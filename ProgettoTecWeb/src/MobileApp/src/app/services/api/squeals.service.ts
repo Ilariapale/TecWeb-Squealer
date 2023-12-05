@@ -112,5 +112,4 @@ export class SquealsService {
     const requestOptions = this.headersGenerator(true);
     return this.http.post(`/media/upload`, formData, requestOptions);
   }
-  // Altre funzioni per il recupero password, aggiornamento del profilo, ecc. possono essere implementate qui.
 }
