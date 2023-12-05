@@ -30,38 +30,51 @@ router.post("/upload", upload.single("image"), async (req, res) => {
   }
 });
 
-router.get("/:name", async (req, res) => {
+// http://localhost:8000/media/image/1701709870807-2023SkyDesktopAbyss.jpg
+router.get("/image/:name", async (req, res) => {
   const name = req.params.name;
   try {
-    res.setHeader("Content-Type", "video/mp4");
-    const filePath = path.join(__dirname, "..", "uploads", name);
-
-    // Utilizza la funzione fs.createReadStream per inviare il file in modo asincrono
-    const fileStream = fs.createReadStream(filePath);
-
-    // Gestisci gli errori durante la lettura del file
-    fileStream.on("error", (err) => {
-      console.error("Errore nella lettura del file:", err);
-      return res.status(500).send({
-        error: "Something went wrong while reading the file.",
-        details: err.message,
-      });
-    });
-
-    // Invia il file come risposta
-    fileStream.pipe(res);
-
-    // Aggiungi un listener per gestire l'evento di chiusura della risposta
-    fileStream.on("close", () => {
-      console.log("File inviato con successo:", filePath);
-      // Chiudi la risposta solo quando il file è completamente inviato
-      res.end();
-    });
+    const filePath = path.join(__dirname, "../uploads/", name);
+    res.setHeader("Content-Type", "image/jpg");
+    console.log;
+    res.sendFile(filePath);
   } catch (err) {
-    console.error("Errore:", err);
     return res.status(500).send({
       error: err || "Something went wrong.",
     });
+  }
+});
+
+//http://localhost:8000/media/video/1701728495285-AT-cm_hlyCcbDLW6RyavYd83lGlw_COMPRESSO.mp4
+router.get("/video/:name", (req, res) => {
+  const videoPath = path.join(__dirname, "..", "uploads", req.params.name); // Path to your video file
+  const stat = fs.statSync(videoPath);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+
+  if (range) {
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    const chunkSize = end - start + 1;
+    const file = fs.createReadStream(videoPath, { start, end });
+    const head = {
+      "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": chunkSize,
+      "Content-Type": "video/mp4",
+    };
+
+    res.writeHead(206, head);
+    file.pipe(res);
+  } else {
+    const head = {
+      "Content-Length": fileSize,
+      "Content-Type": "video/mp4",
+    };
+
+    res.writeHead(200, head);
+    fs.createReadStream(videoPath).pipe(res);
   }
 });
 

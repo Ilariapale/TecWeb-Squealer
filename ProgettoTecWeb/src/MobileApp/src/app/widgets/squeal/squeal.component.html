@@ -30,12 +30,12 @@
           <p *ngIf="squeal.content_type == 'text' || squeal.content_type == 'deleted'" class="card-text">
             {{squeal.content}}</p>
           <div *ngIf="squeal.content_type == 'image'" class="card-img-top ">
-            <img [src]="'media/'+squeal.content" class="img-fluid" />
+            <img [src]="'media/image/'+squeal.content" class="img-fluid" />
           </div>
           <div *ngIf="squeal.content_type == 'video'">
             <video controls poster="./../../../assets/imgs/logo.png " style="max-width: 100%; height: auto;"
               preload="auto" playsinline>
-              <source [src]="'media/'+squeal.content" type="video/mp4">
+              <source [src]="'media/video/'+squeal.content" type="video/mp4">
             </video>
           </div>
           <div class="card-icons container">
