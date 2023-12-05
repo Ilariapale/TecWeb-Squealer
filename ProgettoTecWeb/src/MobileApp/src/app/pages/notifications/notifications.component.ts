@@ -81,12 +81,12 @@ export class NotificationsComponent {
     private router: Router
   ) {
     //ottieni l'array degli id delle notifiche
-    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization'))
-      this.isGuest = !localStorage.getItem('Authorization') && !sessionStorage.getItem('Authorization');
-    else {
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
+      this.isGuest = true;
+    } else {
       this.router.navigate(['/login']);
-    }
-    //richiedi al server le notifiche con gli id specificati
+    } //richiedi al server le notifiche con gli id specificati
     this.userSubscription = this.userService.getUserData().subscribe((userData) => {
       if (userData.account_type === 'guest') {
         this.isGuest = true;

@@ -1,10 +1,10 @@
-import { Component, OnInit, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, AfterViewChecked, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { TimeService } from 'src/app/services/time.service';
 import { UsersService } from 'src/app/services/api/users.service';
 import { UserService } from 'src/app/services/user.service';
 import { User, AccountType, ProfessionalType } from 'src/app/models/user.interface';
-import { Subscription, forkJoin } from 'rxjs';
+import { Subscription, firstValueFrom, forkJoin } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Squeal, ContentType } from 'src/app/models/squeal.interface';
@@ -14,7 +14,7 @@ import { Squeal, ContentType } from 'src/app/models/squeal.interface';
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
-export class ProfileComponent implements OnInit, AfterViewInit {
+export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked {
   MAX_SQUEALS = 5;
   lastSquealLoaded = -1;
 
@@ -23,6 +23,8 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   identifier: string = '';
 
   mySelf: boolean = false;
+
+  listenerSet: boolean = false;
 
   user: User = {
     _id: '0',
@@ -45,7 +47,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   squeals: Squeal[] = [];
 
   usersSubscription: Subscription = new Subscription();
-  isGuest = true;
+  isGuest = false;
   bannerClass = '';
   squealToDelete = '';
 
@@ -58,15 +60,19 @@ export class ProfileComponent implements OnInit, AfterViewInit {
     public darkModeService: DarkModeService,
     private cdr: ChangeDetectorRef,
     private router: Router
-  ) {}
+  ) {
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    else if (localStorage.getItem('user') || sessionStorage.getItem('user')) this.isGuest = true;
+    else this.router.navigate(['/login']);
+  }
 
   ngOnInit() {
-    this.route.paramMap.subscribe((params: ParamMap) => {
-      this.identifier = params.get('identifier') || '';
+    if (!this.isGuest) {
+      this.route.paramMap.subscribe((params: ParamMap) => {
+        this.identifier = params.get('identifier') || '';
 
-      if (this.identifier) {
-        this.usersSubscription = this.usersService.getUser(this.identifier).subscribe({
-          next: (user) => {
+        if (this.identifier && !this.isGuest) {
+          firstValueFrom(this.usersService.getUser(this.identifier)).then((user) => {
             this.mySelf = this.userService.isMyself(user._id);
             this.loading = true;
             this.user = user;
@@ -90,38 +96,34 @@ export class ProfileComponent implements OnInit, AfterViewInit {
               this.lastSquealLoaded -= this.MAX_SQUEALS;
             }
             this.loading = false;
-          },
-          error: (error) => {
-            this.router.navigate(['/error', error.status]);
-          },
-        });
-      } else {
-        this.router.navigate(['/login']);
-      }
-    });
-
-    const exampleModal = document.getElementById('deleteConfirm') as HTMLElement;
-    exampleModal.addEventListener('show.bs.modal', (event: any) => {
-      const button = event.relatedTarget;
-      const squealId = button.getAttribute('data-bs-squealId');
-      const modalTitle = exampleModal.querySelector('.modal-title') as HTMLElement | null;
-      const modalBodyInput = exampleModal.querySelector('.modal-body input') as HTMLInputElement | null;
-      //if (modalTitle && modalBodyInput) {
-      //  modalTitle.textContent = `New message to ${recipient}`;
-      //  modalBodyInput.value = recipient;
-      //}
-      this.squealToDelete = squealId;
-    });
+          });
+        } else {
+          this.router.navigate(['/login']);
+        }
+      });
+    }
   }
 
   ngAfterViewInit() {
     this.bannerClass = this.darkModeService.getBannerClass();
     this.cdr.detectChanges();
   }
+  ngAfterViewChecked() {
+    if (!this.listenerSet) {
+      const exampleModal = document.getElementById('deleteConfirm') as HTMLElement;
 
-  ngOnDestroy() {
-    this.usersSubscription.unsubscribe();
+      exampleModal?.addEventListener('show.bs.modal', (event: any) => {
+        const button = event.relatedTarget;
+        const squealId = button.getAttribute('data-bs-squealId');
+        const modalTitle = exampleModal.querySelector('.modal-title') as HTMLElement | null;
+        const modalBodyInput = exampleModal.querySelector('.modal-body input') as HTMLInputElement | null;
+        this.squealToDelete = squealId;
+      });
+      this.listenerSet = true;
+    }
   }
+
+  ngOnDestroy() {}
 
   loadMoreSqueals() {
     this.loading = true;
@@ -157,5 +159,8 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 
   getDarkMode() {
     return this.darkModeService.getThemeClass();
+  }
+  goToPage(page: string) {
+    this.router.navigate([page]);
   }
 }

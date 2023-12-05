@@ -4,7 +4,10 @@
       <h1> STORE <i class="bi bi-shop"></i> </h1>
 
     </div>
-    <div class="row row-cols-1 row-cols-2 g-4">
+    <div *ngIf="isGuest" class="m-3">
+      <a (click)="goToPage('login')" class="text-primary">Log-in</a> to view the Store
+    </div>
+    <div *ngIf="!isGuest" class="row row-cols-1 row-cols-2 g-4">
       <div class="col ">
         <div class="card" [class.bg-dark]="getThemeClass() == 'dark-theme' "
           [class.border-light]="getThemeClass() == 'dark-theme'" [class.border-dark]="getThemeClass() == 'light-theme'">

@@ -1,54 +1,60 @@
 <div role="main">
-  <div class="mt-4">
-    <div class="row p-3" [ngClass]="bannerClass">
+  <div *ngIf="isGuest" class="m-3">
+    <h1 class="p-3">Profile</h1>
+    <a (click)="goToPage('login')" class="text-primary">Log-in</a> to view your Profile
+  </div>
+  <div *ngIf="!isGuest">
+    <div class="mt-4">
+      <div class="row p-3" [ngClass]="bannerClass">
 
-      <img class="col-3 p-0" alt="Profile Picture" style="height: 100%;" src="assets/imgs/logo.png" />
-      <div class="col-auto">
-        <h2 class="row ms-2 pt-4">@{{user.username}}</h2>
-        <span class="row ms-2 text-secondary">{{user.account_type}}</span>
+        <img class="col-3 p-0" alt="Profile Picture" style="height: 100%;" src="assets/imgs/logo.png" />
+        <div class="col-auto">
+          <h2 class="row ms-2 pt-4">@{{user.username}}</h2>
+          <span class="row ms-2 text-secondary">{{user.account_type}}</span>
+        </div>
+        <span *ngIf="mySelf" class="col d-flex flex-row-reverse">
+          <i class="bi bi-gear"></i>
+        </span>
       </div>
-      <span *ngIf="mySelf" class="col d-flex flex-row-reverse">
-        <i class="bi bi-gear"></i>
-      </span>
-    </div>
-    <div class="pt-3 ps-2">
-      <i class="bi bi-hourglass"></i> User since {{timeService.getRelativeTime(user.created_at)}}
-      <p class="mt-4">{{user.profile_info}}</p>
-    </div>
-  </div>
-  <hr class="mt-1">
-  <div class="pb-2">
-    <app-squeal *ngFor="let squeal of squeals" [squeal]="squeal"></app-squeal>
-  </div>
-  <i class="spinner-border text-light" *ngIf="loading" role="status">
-    <span class="visually-hidden">Loading...</span>
-  </i>
-  <div *ngIf="lastSquealLoaded>=0" class=" d-flex justify-content-center align-items-center py-2">
-    <button (click)="loadMoreSqueals()" type=" button" class="btn btn-outline-secondary rounded-pill"><i
-        class="bi bi-arrow-clockwise"></i></button>
-  </div>
-  <!-------------------------------------------------------->
-  <!-- Modal -->
-  <div class="modal fade" id="deleteConfirm" tabindex="-1" aria-labelledby="deleteConfirmLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content" [class.border-secondary]="getDarkMode()=='dark-theme'"
-        [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'">
-        <div class="modal-header" [class.border-secondary]="getDarkMode()=='dark-theme'"
-          [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'">
-          <h1 class="modal-title fs-5" id="deleteConfirmLabel">Selete Squeal</h1>
-          <button type="button" class="btn-close" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          Are you sure you want to delete this squeal? This action cannot be undone.
-        </div>
-        <div class="modal-footer" [class.border-secondary]="getDarkMode()=='dark-theme'"
-          [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Never mind</button>
-          <button type="button" class="btn btn-danger" data-bs-dismiss="modal" (click)="deleteSqueal()">Delete</button>
-        </div>
+      <div class="pt-3 ps-2">
+        <i class="bi bi-hourglass"></i> User since {{timeService.getRelativeTime(user.created_at)}}
+        <p class="mt-4">{{user.profile_info}}</p>
       </div>
     </div>
+    <hr class="mt-1">
+    <div class="pb-2">
+      <app-squeal *ngFor="let squeal of squeals" [squeal]="squeal"></app-squeal>
+    </div>
+    <i class="spinner-border text-light" *ngIf="loading" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </i>
+    <div *ngIf="lastSquealLoaded>=0" class=" d-flex justify-content-center align-items-center py-2">
+      <button (click)="loadMoreSqueals()" type=" button" class="btn btn-outline-secondary rounded-pill"><i
+          class="bi bi-arrow-clockwise"></i></button>
+    </div>
+    <!-------------------------------------------------------->
+    <!-- Modal -->
+    <div class="modal fade" id="deleteConfirm" tabindex="-1" aria-labelledby="deleteConfirmLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content" [class.border-secondary]="getDarkMode()=='dark-theme'"
+          [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'">
+          <div class="modal-header" [class.border-secondary]="getDarkMode()=='dark-theme'"
+            [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'">
+            <h1 class="modal-title fs-5" id="deleteConfirmLabel">Selete Squeal</h1>
+            <button type="button" class="btn-close" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Are you sure you want to delete this squeal? This action cannot be undone.
+          </div>
+          <div class="modal-footer" [class.border-secondary]="getDarkMode()=='dark-theme'"
+            [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Never mind</button>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal"
+              (click)="deleteSqueal()">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-
   <!-------------------------------------------------------->
 </div>

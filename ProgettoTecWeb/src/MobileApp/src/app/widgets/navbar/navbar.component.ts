@@ -10,16 +10,30 @@ import { UserService } from 'src/app/services/user.service';
 })
 export class NavbarComponent {
   user: string = '';
+  log_button: string = 'Login';
   @Output() textMode: string = 'Dark mode';
   constructor(
     public authService: AuthService,
     private darkModeService: DarkModeService,
     public router: Router,
     public userService: UserService
-  ) {}
+  ) {
+    userService.getUserData().subscribe((user) => {
+      if (!user) {
+        this.log_button = 'Login';
+      } else {
+        this.log_button = user.account_type == 'guest' || user.account_type == undefined ? 'Login' : 'Logout';
+      }
+    });
+  }
 
-  logout() {
-    this.authService.logout(); // Chiama il metodo di logout dal tuo servizio di autenticazione
+  log() {
+    if (this.log_button == 'Login') {
+      this.router.navigate(['/login']);
+    } else {
+      this.authService.logout();
+    }
+    // Chiama il metodo di logout dal tuo servizio di autenticazione
   }
 
   toggleDarkMode() {

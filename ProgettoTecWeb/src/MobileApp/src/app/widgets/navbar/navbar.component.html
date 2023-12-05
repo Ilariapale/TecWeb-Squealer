@@ -84,12 +84,14 @@
           </li>
           <li class="nav-item row py-3">
             <a class="col"></a>
-            <a class="nav-link col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'" (click)="logout()"
+            <a class="nav-link col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'" (click)="log()"
               data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar">
-              Logout
+              {{log_button}}
             </a>
-            <i class="bi bi-box-arrow-right col-2 d-flex justify-content-center align-items-center clickable"
-              (click)="logout()" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
+            <i [class.bi-box-arrow-right]="this.log_button=='Logout'"
+              [class.bi-box-arrow-in-left]="this.log_button=='Login'"
+              class="bi col-2 d-flex justify-content-center align-items-center clickable" (click)="log()"
+              data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
           <li class="nav-item row py-3">
             <a class="col"></a>

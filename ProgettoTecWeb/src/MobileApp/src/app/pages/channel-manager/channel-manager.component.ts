@@ -74,6 +74,12 @@ export class ChannelManagerComponent {
     private router: Router,
     private channelsService: ChannelsService
   ) {
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
+      this.isGuest = true;
+    } else {
+      this.router.navigate(['/login']);
+    }
     firstValueFrom(this.userService.getUserData()).then((userData) => {
       if (userData.account_type === 'guest') {
         //this.isGuest = true;

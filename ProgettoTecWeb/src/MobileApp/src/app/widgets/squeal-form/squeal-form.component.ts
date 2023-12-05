@@ -193,7 +193,7 @@ export class SquealFormComponent {
       this.squealsService.postSqueal(squeal_content, this.recipients).subscribe({
         next: (response: any) => {
           console.log('Success:', response);
-          this.squealSubmitted.emit(squeal_content);
+          //this.squealSubmitted.emit(response);
           this.userService.setUserData(this.user);
           sessionStorage.getItem('user')
             ? sessionStorage.setItem('user', JSON.stringify(this.user))
@@ -241,7 +241,7 @@ export class SquealFormComponent {
           this.squealsService.postSqueal(imageName, this.recipients, this.selectedType).subscribe({
             next: (response: any) => {
               console.log('Success:', response);
-              this.squealSubmitted.emit(imageName);
+              //this.squealSubmitted.emit(response);
               this.userService.setUserData(this.user);
               sessionStorage.getItem('user')
                 ? sessionStorage.setItem('user', JSON.stringify(this.user))
@@ -292,7 +292,7 @@ export class SquealFormComponent {
           this.squealsService.postSqueal(imageName, this.recipients, this.selectedType).subscribe({
             next: (response: any) => {
               console.log('Success:', response);
-              this.squealSubmitted.emit(imageName);
+              //this.squealSubmitted.emit(response);
               this.userService.setUserData(this.user);
               sessionStorage.getItem('user')
                 ? sessionStorage.setItem('user', JSON.stringify(this.user))

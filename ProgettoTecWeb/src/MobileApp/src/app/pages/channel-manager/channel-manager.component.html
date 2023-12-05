@@ -2,8 +2,8 @@
 
   <div class="m-1 p-2 pt-3 row">
     <h1 class="col-auto ps-1">Channel Manager</h1>
-    <a class="btn btn-primary col-auto ms-auto d-flex justify-content-center align-items-center" data-bs-toggle="modal"
-      href="#toggleCreateNewChannel" role="button"><i class="bi bi-plus"></i></a>
+    <a *ngIf="!isGuest" class="btn btn-primary col-auto ms-auto d-flex justify-content-center align-items-center"
+      data-bs-toggle="modal" href="#toggleCreateNewChannel" role="button"><i class="bi bi-plus"></i></a>
   </div>
 
   <div *ngIf="isGuest" class="m-3">

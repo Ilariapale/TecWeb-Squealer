@@ -26,7 +26,6 @@ export class AuthService {
             : sessionStorage.setItem('Authorization', authToken);
 
           const decodedToken: { user: User } = jwt_decode(authToken || '');
-          console.log('decodedToken', JSON.stringify(decodedToken));
           this.userService.setUserData(decodedToken.user || {});
           rememberMe
             ? localStorage.setItem('user', JSON.stringify(decodedToken.user))
