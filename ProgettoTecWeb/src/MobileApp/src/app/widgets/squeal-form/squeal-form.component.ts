@@ -21,8 +21,14 @@ export class SquealFormComponent {
   @ViewChild('channelsInput') channelsComponent!: TagInputComponent;
   @ViewChild('keywordsInput') keywordsComponent!: TagInputComponent;
 
+  @ViewChild('imageInput') imageInput!: ElementRef;
+  @ViewChild('videoInput') videoInput!: ElementRef;
+
   @Output() squealSubmitted: EventEmitter<any> = new EventEmitter();
   @Input() user!: User;
+
+  showSquealPostResponse: boolean = false;
+  postResponse: string = '';
 
   recipients: Recipients = {
     users: [],
@@ -197,6 +203,8 @@ export class SquealFormComponent {
           this.usersComponent.removeAllTags();
           this.channelsComponent.removeAllTags();
           this.keywordsComponent.removeAllTags();
+          this.postResponse = 'Text squeal posted successfully!';
+          this.showSquealPostResponse = true;
         },
         error: (error) => {
           // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
@@ -220,12 +228,13 @@ export class SquealFormComponent {
     this.getRecipients();
     //console.log(this.recipients);
 
-    const fileInput = document.getElementById('imageInput') as HTMLInputElement;
+    const imageInputElement = this.imageInput.nativeElement;
 
-    if (fileInput.files && fileInput.files[0]) {
-      this.squealsService.postMedia(fileInput.files[0]).subscribe({
+    if (imageInputElement.files && imageInputElement.files[0]) {
+      this.squealsService.postMedia(imageInputElement.files[0]).subscribe({
         next: (response: any) => {
-          console.log(response);
+          imageInputElement.value = null;
+
           const imageName = response.name;
           //TODO
           console.log('Nuovo squeal:', imageName);
@@ -242,6 +251,8 @@ export class SquealFormComponent {
               this.usersComponent.removeAllTags();
               this.channelsComponent.removeAllTags();
               this.keywordsComponent.removeAllTags();
+              this.postResponse = 'Image squeal posted successfully!';
+              this.showSquealPostResponse = true;
             },
             error: (error) => {
               // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
@@ -270,14 +281,13 @@ export class SquealFormComponent {
     this.getRecipients();
     //console.log(this.recipients);
 
-    const fileInput = document.getElementById('videoInput') as HTMLInputElement;
-
-    if (fileInput.files && fileInput.files[0]) {
-      this.squealsService.postMedia(fileInput.files[0]).subscribe({
+    const videoInputElement = this.videoInput.nativeElement;
+    if (videoInputElement.files && videoInputElement.files[0]) {
+      this.squealsService.postMedia(videoInputElement.files[0]).subscribe({
         next: (response: any) => {
           console.log(response);
+          videoInputElement.value = null;
           const imageName = response.name;
-          //TODO
           console.log('Nuovo squeal:', imageName);
           this.squealsService.postSqueal(imageName, this.recipients, this.selectedType).subscribe({
             next: (response: any) => {
@@ -292,6 +302,8 @@ export class SquealFormComponent {
               this.usersComponent.removeAllTags();
               this.channelsComponent.removeAllTags();
               this.keywordsComponent.removeAllTags();
+              this.postResponse = 'Video squeal posted successfully!';
+              this.showSquealPostResponse = true;
             },
             error: (error) => {
               // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
@@ -325,6 +337,14 @@ export class SquealFormComponent {
       this.squealsService.postMedia(fileInput.files[0]).subscribe({
         next: (response: any) => {
           console.log(response);
+          //rimuovo il file dall'input per evitare che venga caricato più volte
+
+          this.imageInput.nativeElement.value = '';
+          this.imageInput.nativeElement.files = null;
+          this.imageInput.nativeElement.files = undefined;
+          const fl = new FileList();
+          fileInput.files = fl;
+
           return response;
           //TODO
         },
@@ -382,6 +402,7 @@ export class SquealFormComponent {
   }
 
   selectedTab(type: string) {
+    this.showSquealPostResponse = false;
     this.selectedType = type as ContentType;
     if (this.selectedType != ContentType.text) {
       this.squealForm.value.text = '';
@@ -389,17 +410,26 @@ export class SquealFormComponent {
     }
     if (this.selectedType != ContentType.image) {
       //remove the image from the input
-      const fileInput = document.getElementById('imageInput') as HTMLInputElement;
-      if (fileInput.value != '') {
-        fileInput.value = '';
+      //const fileInput = document.getElementById('imageInput') as HTMLInputElement;
+      //if (fileInput.value != '') {
+      //  fileInput.value = '';
+      //  this.onInput(-this.sizeAndCost.cost.image);
+      //}
+
+      if (this.imageInput.nativeElement.value != '') {
+        this.imageInput.nativeElement.fileInput.value = '';
         this.onInput(-this.sizeAndCost.cost.image);
       }
     }
     if (this.selectedType != ContentType.video) {
       //remove the video from the input
-      const fileInput = document.getElementById('videoInput') as HTMLInputElement;
-      if (fileInput.value != '') {
-        fileInput.value = '';
+      //const fileInput = document.getElementById('videoInput') as HTMLInputElement;
+      //if (fileInput.value != '') {
+      //  fileInput.value = '';
+      //  this.onInput(-this.sizeAndCost.cost.video);
+      //}
+      if (this.videoInput.nativeElement.value != '') {
+        this.videoInput.nativeElement.value = '';
         this.onInput(-this.sizeAndCost.cost.video);
       }
     }

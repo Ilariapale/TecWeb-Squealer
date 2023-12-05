@@ -54,23 +54,17 @@
             <div class="tab-pane fade" id="pills-image" role="tabpanel" aria-labelledby="pills-image-tab" tabindex="0">
               <!--image-->
               <div class="mb-3">
-                <label for="formFile" class="form-label">Image input</label>
-                <input class="form-control" type="file" id="imageInput" accept="image/*" name="image"
+                <label for="imageInput" class="form-label">Image input</label>
+                <input class="form-control" type="file" #imageInput accept="image/*" name="image"
                   (change)="onFileSelected($event)">
               </div>
-
-              <!--form action="/upload" method="POST" enctype="multipart/form-data" (submit)="uploadImage($event)">
-                <input type="file" name="image" accept="image/*">
-                <button type="submit">Upload Image</button>
-              </form-->
-
               <!--End image-->
             </div>
             <div class="tab-pane fade" id="pills-video" role="tabpanel" aria-labelledby="pills-video-tab" tabindex="0">
               <!--video-->
               <div class="mb-3">
-                <label for="formFile" class="form-label">Video input</label>
-                <input class="form-control" type="file" id="videoInput" accept="video/*" name="video"
+                <label for="videoInput" class="form-label">Video input</label>
+                <input class="form-control" type="file" #videoInput accept="video/*" name="video"
                   (change)="onFileSelected($event)">
               </div>
               <!--End video-->
@@ -114,7 +108,11 @@
 
 
           <div class="row">
-            <div class="col"></div>
+            <div class="col">
+              <div *ngIf="showSquealPostResponse" id="squeal-post-response" class="text-success pt-3 ps-2">
+                {{postResponse}}
+              </div>
+            </div>
             <button type="submit" class="submit-button btn btn-secondary col-2 m-3 my-1 px-1">Post</button>
           </div>
         </form>

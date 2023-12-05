@@ -665,6 +665,13 @@ module.exports = {
     }
     const squeal = response.data;
 
+    if (squeal.content_type == "deleted") {
+      return {
+        status: 400,
+        data: { error: `Squeal already deleted` },
+      };
+    }
+
     //check if the user_id in the token is valid
     response = await findUser(user_id);
     if (response.status >= 300) {

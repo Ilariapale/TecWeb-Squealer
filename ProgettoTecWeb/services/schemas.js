@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { newOwnerNotification, deletedManagedAccountNotification, deletedSMMNotification } = require("./messages.js");
+const { removeMedia } = require("./media.js");
 
 // Chat
 const ChatSchema = new mongoose.Schema({
@@ -287,6 +288,13 @@ SquealSchema.methods.DeleteAndPreserveInDB = async function () {
   await Keyword.updateMany({ name: { $in: this.recipients.keywords } }, { $pull: { squeals: this._id } });
   //4) cancello le notifiche che avevano come squeal_ref lo squeal cancellato
   await Notification.deleteMany({ squeal_ref: this._id });
+  try {
+    if (this.content_type == "image" || this.content_type == "video") {
+      await removeMedia(this.content, this.content_type);
+    }
+  } catch (err) {
+    console.error(err);
+  }
   this.content_type = deleted_content_type;
   this.content = replaceString;
   this.recipients.users = [];

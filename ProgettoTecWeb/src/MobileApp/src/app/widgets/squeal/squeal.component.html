@@ -38,7 +38,7 @@
               <source [src]="'media/video/'+squeal.content" type="video/mp4">
             </video>
           </div>
-          <div class="card-icons container">
+          <div *ngIf="squeal.content_type!='deleted'" class="card-icons container">
             <div class="row flex-nowrap justify-content-between d-flex align-items-center my-2">
 
               <div class="col-5 px-1">
@@ -63,9 +63,10 @@
             </div>
           </div>
 
-          <div class="card-footer"><i class="bi bi-calendar4-week"></i>
+          <div *ngIf="squeal.content_type!='deleted'" class="card-footer"><i class="bi bi-calendar4-week"></i>
             {{timeService.getRelativeTime(squeal.created_at)}}</div>
-
+          <div *ngIf="squeal.content_type=='deleted'" class="card-footer"><i class="bi bi-trash-fill"></i>
+            {{timeService.getRelativeTime(squeal.last_modified)}}</div>
           <div *ngIf="showComments" class="mt-3">
             <h4>Comments</h4>
             <button *ngIf="loadMore" (click)="loadMoreComments()">Load more</button>

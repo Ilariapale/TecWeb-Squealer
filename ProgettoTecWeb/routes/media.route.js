@@ -20,21 +20,43 @@ const storage = multer.diskStorage({
     const filename = "" + Date.now() + "-" + file.originalname;
     cb(null, filename);
     req.filename = filename;
+    req.mimetype = file.mimetype;
   },
 });
 
 const upload = multer({ storage: storage });
 
-router.post("/upload", upload.single("image"), async (req, res) => {
-  try {
-    res.status(200).send({ name: req.filename });
-  } catch (err) {
-    console.log(err);
-    return res.status(500).send({
-      error: err || "Something went wrong.",
-    });
+router.post(
+  "/upload",
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "video", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      if (req.mimetype.includes("video")) {
+        const videoPath = path.join(__dirname, "..", "uploads", "video", req.filename);
+        const thumbnailsDir = path.join(__dirname, "..", "uploads", "video-thumbnails");
+        const videoName = path.parse(req.filename).name;
+        const thumbnailPath = path.join(thumbnailsDir, videoName + "-thumbnail.png");
+
+        await media.generateThumbnail(videoPath, thumbnailsDir, (err) => {
+          if (err) {
+            console.error("An error occurred:", err);
+          } else {
+            console.log("Done! ", thumbnailPath);
+          }
+        });
+      }
+      res.status(200).send({ name: req.filename });
+    } catch (err) {
+      console.log(err);
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
   }
-});
+);
 
 // http://localhost:8000/media/image/1701709870807-2023SkyDesktopAbyss.jpg
 router.get("/image/:name", async (req, res) => {
@@ -42,7 +64,6 @@ router.get("/image/:name", async (req, res) => {
   try {
     const filePath = path.join(__dirname, "..", "uploads", "image", name);
     res.setHeader("Content-Type", "image/jpg");
-    console.log;
     res.sendFile(filePath);
   } catch (err) {
     return res.status(500).send({
@@ -52,8 +73,8 @@ router.get("/image/:name", async (req, res) => {
 });
 
 //http://localhost:8000/media/video/1701728495285-AT-cm_hlyCcbDLW6RyavYd83lGlw_COMPRESSO.mp4
-router.get("/video/:name", (req, res) => {
-  const videoPath = path.join(__dirname, "..", "uploads", "video", req.params.name); // Path to your video file
+router.get("/video/:name", async (req, res) => {
+  const videoPath = path.join(__dirname, "..", "uploads", "video", req.params.name);
   const stat = fs.statSync(videoPath);
   const fileSize = stat.size;
   const range = req.headers.range;
@@ -87,26 +108,18 @@ router.get("/video/:name", (req, res) => {
 router.get("/thumbnail/:name", async (req, res) => {
   const name = req.params.name;
   try {
+    const videoName = path.parse(name).name;
+    const thumbnailPath = path.join(__dirname, "..", "uploads", "video-thumbnails", videoName + "-thumbnail.png");
+
     res.setHeader("Content-Type", "image/png");
 
-    const videoPath = path.join(__dirname, "..", "uploads", "video", name);
-    const thumbnailsDir = path.join(__dirname, "..", "uploads", "video-thumbnails");
-
-    const videoName = path.parse(videoPath).name; // Ottieni il nome del video senza l'estensione
-
-    const thumbnailPath = path.join(__dirname, "..", "uploads", "video-thumbnails", videoName + "-thumbnail.png");
     if (fs.existsSync(thumbnailPath)) {
       res.sendFile(thumbnailPath);
     } else {
-      await media.generateThumbnail(videoPath, thumbnailsDir, (err) => {
-        if (err) {
-          console.error("An error occurred:", err);
-        } else {
-          console.log("Done! ", thumbnailPath);
-        }
+      //errore, non esiste
+      return res.status(500).send({
+        error: "Thumbnail non trovata",
       });
-
-      res.sendFile(thumbnailsDir);
     }
   } catch (err) {
     console.log(err);
