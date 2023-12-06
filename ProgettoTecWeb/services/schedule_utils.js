@@ -83,6 +83,7 @@ async function scheduleSqueals(input, options) {
   }
 }
 
+// Post ogni tot per un tot di volte
 async function postPeriodicallyForLimitedTimes(tick_rate, repeat, options) {
   const tr = parseTickRate(tick_rate);
   const rep = parseInt(repeat);
@@ -132,6 +133,8 @@ async function postPeriodicallyForLimitedTimes(tick_rate, repeat, options) {
     message: "Squeals scheduled successfully",
   };
 }
+
+// Fare post ogni tot fino ad una specifica data
 async function postAtIntervalsUntilDate(tick_rate, scheduled_date, options) {
   const tr = parseTickRate(tick_rate);
   if (tr == null || scheduled_date == null) {
@@ -187,6 +190,8 @@ async function postAtIntervalsUntilDate(tick_rate, scheduled_date, options) {
     message: "Squeals scheduled successfully",
   };
 }
+
+// Fare un post tra tot minuti
 async function postAfterDelay(tick_rate, options) {
   const tr = parseTickRate(tick_rate);
   if (tr == null) {
@@ -226,6 +231,8 @@ async function postAfterDelay(tick_rate, options) {
     message: "Squeals scheduled successfully",
   };
 }
+
+// Fare un post ad una specifica data
 async function postAtDate(scheduled_date, options) {
   const date_to_run = new Date(scheduled_date);
   if (date_to_run == null || date_to_run == undefined) {
@@ -263,8 +270,3 @@ async function postAtDate(scheduled_date, options) {
   };
 }
 module.exports = { scheduleSqueals };
-
-// Post ogni tot per un tot di volte                -> postPeriodicallyForLimitedTimes
-// Fare post ogni tot fino ad una specifica data    -> postAtIntervalsUntilDate
-// Fare un post tra tot minuti                      -> postAfterDelay
-// Fare un post ad una specifica data               -> postAtDate
