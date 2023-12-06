@@ -9,6 +9,7 @@ import { TagInputComponent } from '../tag-input/tag-input.component';
 import { firstValueFrom } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { Router } from '@angular/router';
+import { MediaService } from 'src/app/services/api/media.service';
 //TODOfare in modo che quando scrivo un recipient nel form questo si stilizzi
 @Component({
   selector: 'app-squeal-form',
@@ -85,7 +86,8 @@ export class SquealFormComponent {
     public userService: UserService,
     private squealsService: SquealsService,
     private darkModeService: DarkModeService,
-    private router: Router
+    private router: Router,
+    private mediaService: MediaService
   ) {
     firstValueFrom(this.userService.getUserData()).then((userData) => {
       this.user = userData;
@@ -231,7 +233,7 @@ export class SquealFormComponent {
     const imageInputElement = this.imageInput.nativeElement;
 
     if (imageInputElement.files && imageInputElement.files[0]) {
-      this.squealsService.postMedia(imageInputElement.files[0]).subscribe({
+      this.mediaService.postImage(imageInputElement.files[0]).subscribe({
         next: (response: any) => {
           imageInputElement.value = null;
 
@@ -283,7 +285,7 @@ export class SquealFormComponent {
 
     const videoInputElement = this.videoInput.nativeElement;
     if (videoInputElement.files && videoInputElement.files[0]) {
-      this.squealsService.postMedia(videoInputElement.files[0]).subscribe({
+      this.mediaService.postVideo(videoInputElement.files[0]).subscribe({
         next: (response: any) => {
           console.log(response);
           videoInputElement.value = null;
@@ -334,7 +336,7 @@ export class SquealFormComponent {
     const fileInput = document.getElementById('imageInput') as HTMLInputElement;
 
     if (fileInput.files && fileInput.files[0]) {
-      this.squealsService.postMedia(fileInput.files[0]).subscribe({
+      this.mediaService.postImage(fileInput.files[0]).subscribe({
         next: (response: any) => {
           console.log(response);
           //rimuovo il file dall'input per evitare che venga caricato più volte
