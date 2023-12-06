@@ -45,11 +45,16 @@ const mongooseObjectIdRegex = /^[0-9a-fA-F]{24}$/;
 
 const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
+const scheduledSquealsNUM = /\{NUM\}/g;
+const scheduledSquealsDATE = /\{DATE\}/g;
+const scheduledSquealsTIME = /\{TIME\}/g;
+
 const reactionTypes = ["like", "dislike", "love", "laugh", "disgust", "disagree"];
 
 const contentTypes = ["text", "image", "video", "position", "deleted"];
 
-function replaceString(string, num, date) {
+function replaceString(string, num, date, scheduled_squeal_data) {
+  //TODO da rivedere e rimuovere il fuso orario, restituire la data e l'orario in UTC
   const date_options = { year: "numeric", month: "long", day: "numeric" };
   const english_date = date.toLocaleDateString("en-US", date_options);
   const italian_date = date.toLocaleDateString("it-IT", date_options);
@@ -63,6 +68,20 @@ function replaceString(string, num, date) {
   string = string.replace(/{date-it}/g, italian_date).replace(/{time-it}/g, italian_time);
 
   string = string.replace(/{date-en}/g, english_date).replace(/{time-en}/g, english_time);
+
+  //scheduled squeals only
+  if (scheduled_squeal_data) {
+    let date;
+
+    string = string.replace(scheduledSquealsNUM, scheduled_squeal_data.number);
+
+    scheduled_squeal_data.date ? (date = new Date(scheduled_squeal_data.date)) : null;
+    if (!date) {
+      date = new Date(scheduled_squeal_data.scheduled_date);
+    }
+    string = string.replace(scheduledSquealsDATE, date.getUTCDate() + "/" + (date.getUTCMonth() + 1) + "/" + date.getUTCFullYear());
+    string = string.replace(scheduledSquealsTIME, date.getUTCHours() + ":" + date.getUTCMinutes() + " UTC");
+  }
 
   return string;
 }
@@ -782,4 +801,7 @@ module.exports = {
   emailRegex,
   reactionTypes,
   contentTypes,
+  scheduledSquealsNUM,
+  scheduledSquealsDATE,
+  scheduledSquealsTIME,
 };

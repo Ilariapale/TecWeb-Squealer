@@ -1,6 +1,7 @@
 const express = require("express");
 const squeals = require("../services/squeals");
 const comments = require("../services/comments");
+const { scheduleSqueals } = require("../services/schedule_utils");
 const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
@@ -44,7 +45,7 @@ router.post("/", verifyToken, async (req, res, next) => {
       user_id: req.user_id,
       content: req.body["content"],
       content_type: req.body.content_type,
-      is_scheduled: req.body.is_scheduled,
+      is_scheduled: false,
       recipients: req.body.recipients,
     };
 
@@ -58,6 +59,40 @@ router.post("/", verifyToken, async (req, res, next) => {
     }
   } else {
     // Utente non loggato, invia una risposta di errore o reindirizza alla pagina di login
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
+  }
+});
+
+router.post("/scheduled", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    try {
+      let options = {
+        user_id: req.user_id,
+        content: req.body["content"],
+        content_type: req.body.content_type,
+        is_scheduled: true,
+        recipients: req.body.recipients,
+      };
+      const input = {
+        schedule_type: req.body.schedule_type,
+        tick_rate: req.body.tick_rate,
+        scheduled_date: req.body.scheduled_date,
+        repeat: req.body.repeat,
+      };
+
+      const result = await scheduleSqueals(input, options);
+      console.log(result);
+      if (result.status >= 300) {
+        return res.status(result.status).send({ error: result.message });
+      }
+      res.status(result.status || 200).send({ message: result.message });
+    } catch (err) {
+      console.error("Error creating cron job:", err);
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
     res.status(401).send({ error: "Token is either missing invalid or expired" });
   }
 });

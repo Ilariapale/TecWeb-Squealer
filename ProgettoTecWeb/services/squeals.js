@@ -8,6 +8,9 @@ const {
   mongooseObjectIdRegex,
   reactionTypes,
   contentTypes,
+  scheduledSquealsNUM,
+  scheduledSquealsDATE,
+  scheduledSquealsTIME,
   replaceString,
   findUser,
   findSqueal,
@@ -343,10 +346,9 @@ module.exports = {
       //TODO controllare post squeals e oggetti recipients
 
       //vietare di postare in un canale ufficiales
-      const { user_id, vip_id, content, recipients } = options;
+      const { user_id, vip_id, content, recipients, is_scheduled } = options;
       //set the default value for content_type
       const content_type = options.content_type || "text";
-      const is_scheduled = options.is_scheduled == "true" ? true : options.is_scheduled == "false" ? false : undefined;
 
       //check for the request sender's id
 
@@ -486,7 +488,7 @@ module.exports = {
         user_id: author._id,
         is_scheduled: is_scheduled || false,
         content_type: content_type,
-        content: replaceString(content, hex_id, date),
+        content: replaceString(content, hex_id, date, options.scheduled_squeal_data),
         recipients: {
           users: usersArray,
           channels: channelsArray,
