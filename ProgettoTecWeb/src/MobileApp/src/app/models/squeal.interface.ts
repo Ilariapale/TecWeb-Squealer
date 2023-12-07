@@ -22,6 +22,13 @@ export enum ContentType {
   deleted = 'deleted',
 }
 
+export enum ReactionTag {
+  popular = 'popular',
+  unpopular = 'unpopular',
+  controversial = 'controversial',
+  none = 'none',
+}
+
 export interface Recipients {
   users: string[];
   channels: string[];
@@ -53,4 +60,5 @@ export interface Squeal {
   is_in_official_channel?: Boolean;
   impressions?: Number;
   comments_count?: Number;
+  reaction_tag?: ReactionTag;
 }

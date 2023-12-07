@@ -18,6 +18,7 @@ export enum IdCode {
   SMMdeclined = 'SMMdeclined',
   banStatusUpdate = 'banStatusUpdate',
   officialStatusUpdate = 'officialStatusUpdate',
+  charQuotaUpdate = 'charQuotaUpdate',
 }
 
 export interface Notification {

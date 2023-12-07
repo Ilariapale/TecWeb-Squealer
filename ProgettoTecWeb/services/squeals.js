@@ -37,6 +37,7 @@ const { mentionNotification, squealInOfficialChannel } = require("./messages");
 
 //TODO tradurre tutti i commenti in inglese
 //TODO reagire se non sei autenticato
+//TODO se la get dello squeal viene fatta dal proprietario, non incrementare le impressions
 
 //DONE Controllati i casi in cui l'utente che fa richiesta è bannato
 module.exports = {

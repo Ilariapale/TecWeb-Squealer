@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const { newOwnerNotification, deletedManagedAccountNotification, deletedSMMNotification } = require("./messages.js");
 const { removeMedia } = require("./media.js");
+const { DAILY_CHAR_QUOTA, WEEKLY_CHAR_QUOTA, MONTHLY_CHAR_QUOTA, EXTRA_DAILY_CHAR_QUOTA } = require("./constants");
 
 // Chat
 const ChatSchema = new mongoose.Schema({
@@ -46,6 +47,7 @@ const NotificationSchema = new mongoose.Schema({
       "SMMdeclined",
       "banStatusUpdate",
       "officialStatusUpdate",
+      "charQuotaUpdate",
     ],
   },
   source: { type: String, enum: ["squeal", "channel", "user", "system"] },
@@ -70,16 +72,18 @@ const UserSchema = new mongoose.Schema({
     reacted_to: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
   },
   char_quota: {
-    daily: { type: Number, default: 100 },
-    weekly: { type: Number, default: 500 },
-    monthly: { type: Number, default: 1500 },
-    extra_daily: { type: Number, default: 20 },
+    daily: { type: Number, default: DAILY_CHAR_QUOTA },
+    weekly: { type: Number, default: WEEKLY_CHAR_QUOTA },
+    monthly: { type: Number, default: MONTHLY_CHAR_QUOTA },
+    extra_daily: { type: Number, default: EXTRA_DAILY_CHAR_QUOTA },
   },
-  weekly_reaction_metrics: {
+  reaction_metrics: {
     positive_squeals: { type: Number, default: 0 },
     negative_squeals: { type: Number, default: 0 },
-    controversial_squeals: { type: Number, default: 0 },
+    total_squeals: { type: Number, default: 0 },
+    last_checkpoint: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
   },
+
   direct_chats: {
     type: [{ type: mongoose.Types.ObjectId, ref: "Chat" }],
     default: [],
@@ -102,6 +106,7 @@ const UserSchema = new mongoose.Schema({
     type: [{ type: mongoose.Types.ObjectId, ref: "Notification" }],
     default: [],
   },
+
   is_active: { type: Boolean, default: true },
 });
 
@@ -270,6 +275,8 @@ const SquealSchema = new mongoose.Schema({
     disgust: { type: Number, default: 0 },
     disagree: { type: Number, default: 0 },
   },
+  reaction_tag: { type: String, enum: ["none", "popular", "unpopular", "controversial"], default: "none" },
+
   is_in_official_channel: { type: Boolean, default: false },
   impressions: { type: Number, default: 0 },
 });

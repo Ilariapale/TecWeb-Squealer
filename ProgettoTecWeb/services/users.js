@@ -437,7 +437,7 @@ module.exports = {
       created_at: user.created_at,
       squeals: user.squeals,
       char_quota: user.char_quota,
-      weekly_reaction_metrics: user.weekly_reaction_metrics,
+      reaction_metrics: user.reaction_metrics,
       direct_chats: user.direct_chats,
       subscribed_channels: user.subscribed_channels,
       owned_channels: user.owned_channels,

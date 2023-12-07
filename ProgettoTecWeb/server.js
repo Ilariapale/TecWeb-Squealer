@@ -16,6 +16,7 @@ const express = require("express"),
 const server = http.createServer(app);
 const io = socketIo(server);
 const connectedUsers = {};
+const { check_init } = require("./services/reaction_check.js");
 
 app.set("port", PORT);
 app.set("env", NODE_ENV);
@@ -86,11 +87,11 @@ app.use((err, req, res, next) => {
   res.status(status).send({ status, error: msg });
 });
 
-module.exports = app;
-
 server.listen(PORT, () => {
   console.log(`Express Server started on Port ${app.get("port")} | Environment : ${app.get("env")}`);
   console.log("" + __dirname + "/src/MobileApp");
 });
 
 db.dbconnect();
+check_init();
+module.exports = app;

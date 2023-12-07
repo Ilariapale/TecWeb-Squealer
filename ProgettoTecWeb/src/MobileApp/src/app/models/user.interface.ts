@@ -46,10 +46,11 @@ export interface User {
     monthly: number;
     extra_daily: number;
   };
-  weekly_reaction_metrics?: {
+  reaction_metrics?: {
     positive_squeals: Number;
     negative_squeals: Number;
-    controversial_squeals: Number;
+    total_squeals: Number;
+    last_checkpoint: Date;
   };
   direct_chats?: String[];
   subscribed_channels?: String[];
