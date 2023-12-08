@@ -5,7 +5,7 @@
       @{{user.username}}
       <span>{{user.account_type}}</span>
 
-      <ng-container *ngIf='!isGuest'>
+      <ng-container *ngIf='true'><!--MODIFICA !isGuest -->
         <div *ngIf="enoughChars" class="squeal-form-text">
           {{user.char_quota?.daily || 0}}<span class="quota_letter">D</span>
           {{user.char_quota?.weekly || 0}}<span class="quota_letter">W</span>
@@ -37,33 +37,113 @@
                   type="button" role="tab" aria-controls="pills-position" aria-selected="false"
                   (click)="selectedTab('position')"><i class="bi bi-cursor"></i></button>
               </li>
-              <!--li class="nav-item ms-auto fs-3" role="presentation">
-                <button class="nav-link" #delayedSquealsTab data-bs-toggle="collapse" data-bs-target="#delayedSqueal"
-                  type="button" role="tab" aria-controls="delayedSqueal" aria-selected="false" aria-expanded="false"
-                  (click)="selectedTab('position')"
+              <li class="nav-item ms-auto fs-3" role="presentation">
+                <button class="nav-link" id="delayedSquealsTab" #delayedSquealsTab data-bs-toggle="collapse"
+                  data-bs-target="#delayedSqueal" type="button" role="tab" aria-controls="delayedSqueal"
+                  aria-selected="false" aria-expanded="false" (click)="toggleScheduled()"
                   [class.bg-primary]="delayedSquealsTab.getAttribute('aria-expanded') === 'true'"
                   [class.text-white]="delayedSquealsTab.getAttribute('aria-expanded') === 'true'"><i
                     class="bi bi-clock"></i></button>
-              </li-->
+              </li>
             </ul>
+            <!--Delayed squeals-->
             <div class="accordion-item">
-
               <div id="delayedSqueal" class="accordion-collapse collapse" aria-label="Delayed squeal settings"
                 data-bs-parent="#accordionExample">
                 <div class="accordion-body">
-                  <div class="row">
-                    <div class="col-6">
-                      <label for="delayedSquealDate" class="form-label">Date</label>
-                      <input type="date" class="form-control" id="delayedSquealDate" name="delayedSquealDate">
+                  <!--body-->
+                  <!--TODO cambiare #accordionExample-->
+                  <label for="delayedSquealType" class="form-label m-0 mt-2">Type of delayed squeal</label>
+                  <div class="input-group">
+                    <select #delayedSquealType class="form-select" aria-label="Default select example">
+                      <option value="postPeriodicallyForLimitedTimes" default>Post
+                        every 'tickRate' for a 'repeat' number
+                        of times
+                      </option>
+                      <option value="postAtIntervalsUntilDate">Post every
+                        'tickRate' until a 'scheduled date'</option>
+                      <option value="postAfterDelay">Post after a
+                        'delay' time
+                      </option>
+                      <option value="postAtDate">Post in a specific
+                        'scheduled
+                        date'</option>
+
+                    </select>
+                    <button class="btn btn-outline-secondary" type="button"
+                      (click)="selectedDelayedSquealType()">Select</button>
+                  </div>
+
+
+                  <!--postPeriodicallyForLimitedTimes tick_rate, repeat-->
+                  <div class="row" #postPeriodicallyForLimitedTimesForm
+                    *ngIf='selectedDelayedSquealTypeValue == "postPeriodicallyForLimitedTimes"'>
+                    <div class="col-4 pe-1">
+                      <label for="tick" class="form-label m-0 mt-2">Tick</label>
+                      <input #tick id="tick" type="number" inputmode="numeric" pattern="\d*" class="form-control"
+                        min="1" max="60" value="1">
+                    </div>
+                    <div class="col-4 px-1">
+                      <label for="rate" class="form-label m-0 mt-2"> Rate</label>
+                      <select #rate id="rate" class="form-select px-1" aria-label="Default select example">
+                        <option value="mins" selected>mins</option>
+                        <option value="hours">hours</option>
+                      </select>
+                    </div>
+                    <div class="col-4">
+                      <label for="repeat" class="form-label m-0 mt-2">Repeat</label>
+                      <input #repeat id="repeat" type="number" inputmode="numeric" pattern="\d*" class="form-control"
+                        min="1" max="60" value="1">
+                    </div>
+
+                  </div>
+                  <!--postAtIntervalsUntilDate tick_rate, scheduled_date-->
+                  <div class="row" #postAtIntervalsUntilDateForm
+                    *ngIf='selectedDelayedSquealTypeValue == "postAtIntervalsUntilDate"'>
+                    <div class="col-3 pe-1">
+                      <label for="tick" class="form-label m-0 mt-2">Tick</label>
+                      <input #tick id="tick" type="number" inputmode="numeric" pattern="\d*" class="form-control"
+                        min="1" max="60" value="1">
+                    </div>
+                    <div class="col-3 px-1">
+                      <label for="rate" class="form-label m-0 mt-2"> Rate</label>
+                      <select #rate id="rate" class="form-select px-1" aria-label="Default select example">
+                        <option value="mins" selected>mins</option>
+                        <option value="hours">hours</option>
+                      </select>
                     </div>
                     <div class="col-6">
-                      <label for="delayedSquealTime" class="form-label">Time</label>
-                      <input type="time" class="form-control" id="delayedSquealTime" name="delayedSquealTime">
+                      <label for="date" class="form-label m-0 mt-2">Date</label>
+                      <input #date id="date" type="date" class="form-control px-1" name="delayedSquealDate">
+                    </div>
+
+                  </div>
+                  <!--postAfterDelay tick_rate-->
+                  <div class="row" #postAfterDelayForm *ngIf='selectedDelayedSquealTypeValue == "postAfterDelay"'>
+                    <div class="col-4">
+                      <label for="tick" class="form-label m-0 mt-2">Tick</label>
+                      <input #tick id="tick" type="number" inputmode="numeric" pattern="\d*" class="form-control"
+                        min="1" max="60" value="1">
+                    </div>
+                    <div class="col-5">
+                      <label for="rate" class="form-label m-0 mt-2"> Rate</label>
+                      <select #rate id="rate" class="form-select" aria-label="Default select example">
+                        <option value="mins" selected>mins</option>
+                        <option value="hours">hours</option>
+                      </select>
+                    </div>
+                  </div>
+                  <!--postAtDate scheduled_date-->
+                  <div class="row" #postAtDateForm *ngIf='selectedDelayedSquealTypeValue == "postAtDate"'>
+                    <div class="col-12">
+                      <label for="date" class="form-label">Date</label>
+                      <input #date id="date" type="datetime-local" class="form-control" name="delayedSquealDate">
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+            <!--End delayed squeals-->
 
           </div>
           <div class="tab-content" id="pills-tabContent">

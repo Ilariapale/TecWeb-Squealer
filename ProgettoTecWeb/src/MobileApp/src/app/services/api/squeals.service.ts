@@ -60,11 +60,12 @@ export class SquealsService {
     content: string,
     recipients?: object,
     content_type?: ContentType,
-    is_scheduled?: boolean
+    is_scheduled?: boolean,
+    schedule_type?: string,
+    schedule_options?: object
   ): Observable<any> {
     const requestOptions = this.headersGenerator(true);
     const body: { [key: string]: any } = { content };
-
     recipients
       ? (body['recipients'] = recipients)
       : (body['recipients'] = {
@@ -73,9 +74,20 @@ export class SquealsService {
           keywords: [],
         });
     if (content_type) body['content_type'] = content_type;
-    if (is_scheduled) body['is_scheduled'] = is_scheduled;
+    if (is_scheduled) {
+      body['is_scheduled'] = is_scheduled;
+      body['schedule_type'] = schedule_type;
+      if (schedule_options) {
+        const options: { [key: string]: any } = schedule_options;
+        body['tick_rate'] = options['tick_rate'] || '';
+        body['repeat'] = options['repeat'] || '';
+        body['scheduled_date'] = options['scheduled_date'] || '';
+      }
+      return this.http.post(`${this.apiUrl}/scheduled`, body, requestOptions);
+    }
     return this.http.post(`${this.apiUrl}/`, body, requestOptions);
   }
+
   getHome(isGuest: boolean, lastLoaded?: number, pagSize?: number): Observable<any> {
     //TODO controllare se funziona
     const requestOptions = this.headersGenerator(!isGuest);

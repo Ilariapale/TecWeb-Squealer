@@ -10,6 +10,7 @@ import { firstValueFrom } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { Router } from '@angular/router';
 import { MediaService } from 'src/app/services/api/media.service';
+import { View } from 'ol';
 //TODOfare in modo che quando scrivo un recipient nel form questo si stilizzi
 @Component({
   selector: 'app-squeal-form',
@@ -25,7 +26,11 @@ export class SquealFormComponent {
   @ViewChild('imageInput') imageInput!: ElementRef;
   @ViewChild('videoInput') videoInput!: ElementRef;
 
-  @Output() squealSubmitted: EventEmitter<any> = new EventEmitter();
+  @ViewChild('delayedSquealType') delayedSquealType!: ElementRef;
+  @ViewChild('delayedSquealsTab') delayedSquealsTab!: ElementRef;
+
+  @Output()
+  squealSubmitted: EventEmitter<any> = new EventEmitter();
   @Input() user!: User;
 
   showSquealPostResponse: boolean = false;
@@ -61,8 +66,11 @@ export class SquealFormComponent {
     },
   };
 
+  selectedDelayedSquealTypeValue: string = 'postPeriodicallyForLimitedTimes';
+  dateNow: string = new Date().toISOString();
   selectedType: ContentType = ContentType.text;
   lastSelectedTab: string = 'text';
+  is_scheduled: boolean = false;
 
   squealForm!: FormGroup;
   lastLength: number = 0;
@@ -185,6 +193,26 @@ export class SquealFormComponent {
         break;
     }
   }
+
+  getTickRate() {
+    const tick_value = (document.getElementById('tick') as HTMLInputElement)?.value;
+    const rate_value = (document.getElementById('rate') as HTMLInputElement)?.value;
+    return tick_value && rate_value ? `${tick_value} ${rate_value}` : null;
+  }
+
+  getRepeat() {
+    const value = (document.getElementById('repeat') as HTMLInputElement)?.value;
+    return value ? parseInt(value) : null;
+  }
+
+  getDate() {
+    return (document.getElementById('date') as HTMLInputElement)?.value;
+  }
+
+  toggleScheduled() {
+    this.is_scheduled = !document.getElementById('delayedSquealsTab')?.classList.contains('collapsed');
+  }
+
   createTextSqueal() {
     if (this.squealForm.valid) {
       this.getRecipients();
@@ -192,35 +220,52 @@ export class SquealFormComponent {
       // Invia il nuovo squeal al tuo backend o a un servizio API
       const squeal_content = this.squealForm.value.text;
       //console.log('Nuovo squeal:', squealText);
-      this.squealsService.postSqueal(squeal_content, this.recipients).subscribe({
-        next: (response: any) => {
-          console.log('Success:', response);
-          //this.squealSubmitted.emit(response);
-          this.userService.setUserData(this.user);
-          sessionStorage.getItem('user')
-            ? sessionStorage.setItem('user', JSON.stringify(this.user))
-            : localStorage.setItem('user', JSON.stringify(this.user));
-          this.lastLength = 0;
-          this.squealForm.reset();
-          this.usersComponent.removeAllTags();
-          this.channelsComponent.removeAllTags();
-          this.keywordsComponent.removeAllTags();
-          this.postResponse = 'Text squeal posted successfully!';
-          this.showSquealPostResponse = true;
-        },
-        error: (error) => {
-          // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
-          // Gestisci il caso in cui il form non sia valido
-          const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
-          if (element) {
-            console.log(element);
-            element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
-            setTimeout(() => {
-              element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
-            }, 500);
-          }
-        },
-      });
+      console.log('is_scheduled = ', this.is_scheduled);
+      console.log('this.selectedDelayedSquealTypeValue = ', this.selectedDelayedSquealTypeValue);
+      const schedule_options = {
+        tick_rate: this.getTickRate(),
+        repeat: this.getRepeat(),
+        scheduled_date: this.getDate(),
+      };
+      console.log(schedule_options, this.is_scheduled, this.selectedDelayedSquealTypeValue, schedule_options);
+      this.squealsService
+        .postSqueal(
+          squeal_content,
+          this.recipients,
+          ContentType.text,
+          this.is_scheduled,
+          this.selectedDelayedSquealTypeValue,
+          schedule_options
+        )
+        .subscribe({
+          next: (response: any) => {
+            console.log('Success:', response);
+            //this.squealSubmitted.emit(response);
+            this.userService.setUserData(this.user);
+            sessionStorage.getItem('user')
+              ? sessionStorage.setItem('user', JSON.stringify(this.user))
+              : localStorage.setItem('user', JSON.stringify(this.user));
+            this.lastLength = 0;
+            this.squealForm.reset();
+            this.usersComponent.removeAllTags();
+            this.channelsComponent.removeAllTags();
+            this.keywordsComponent.removeAllTags();
+            this.postResponse = 'Text squeal posted successfully!';
+            this.showSquealPostResponse = true;
+          },
+          error: (error) => {
+            // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
+            // Gestisci il caso in cui il form non sia valido
+            const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
+            if (element) {
+              console.log(element);
+              element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
+              setTimeout(() => {
+                element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
+              }, 500);
+            }
+          },
+        });
     } else {
       // Gestisci il caso in cui il form non sia valido
       console.log('Form non valido');
@@ -403,6 +448,10 @@ export class SquealFormComponent {
     }
   }
 
+  selectedDelayedSquealType() {
+    this.selectedDelayedSquealTypeValue = this.delayedSquealType.nativeElement.value;
+  }
+
   selectedTab(type: string) {
     this.showSquealPostResponse = false;
     this.selectedType = type as ContentType;
@@ -419,7 +468,7 @@ export class SquealFormComponent {
       //}
 
       if (this.imageInput.nativeElement.value != '') {
-        this.imageInput.nativeElement.fileInput.value = '';
+        this.imageInput.nativeElement.value = '';
         this.onInput(-this.sizeAndCost.cost.image);
       }
     }
