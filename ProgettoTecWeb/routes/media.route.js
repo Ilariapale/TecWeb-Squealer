@@ -8,55 +8,76 @@ const fs = require("fs");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    console.log("__dirname: " + __dirname);
+    console.log(path.join(__dirname, "../uploads/image"));
     if (file.mimetype.includes("image")) {
-      cb(null, "uploads/image");
+      cb(null, path.join(__dirname, "../uploads/image"));
     } else if (file.mimetype.includes("video")) {
-      cb(null, "uploads/video");
+      cb(null, path.join(__dirname, "../uploads/video"));
     } else {
-      cb(null, "uploads/");
-    }
+      cb(null, path.join(__dirname, "../uploads"));
+    } // server/routes
+    //(ENOENT: no such file or directory, open 'uploads/image/1702061662793-2023SkyDesktopAbyss.jpg')
   },
   filename: (req, file, cb) => {
+    console.log("filename");
     const filename = "" + Date.now() + "-" + file.originalname;
+    console.log(filename);
     cb(null, filename);
+    console.log("cb(null, filename);");
     req.filename = filename;
+    console.log("req.filename = filename");
     req.mimetype = file.mimetype;
+    console.log("req.mimetype = file.mimetype");
   },
 });
 
 const upload = multer({ storage: storage });
 
-router.post(
-  "/upload",
-  upload.fields([
-    { name: "image", maxCount: 1 },
-    { name: "video", maxCount: 1 },
-  ]),
-  async (req, res) => {
-    try {
-      if (req.mimetype.includes("video")) {
-        const videoPath = path.join(__dirname, "..", "uploads", "video", req.filename);
-        const thumbnailsDir = path.join(__dirname, "..", "uploads", "video-thumbnails");
-        const videoName = path.parse(req.filename).name;
-        const thumbnailPath = path.join(thumbnailsDir, videoName + "-thumbnail.png");
-
-        await media.generateThumbnail(videoPath, thumbnailsDir, (err) => {
-          if (err) {
-            console.error("An error occurred:", err);
-          } else {
-            console.log("Done! ", thumbnailPath);
-          }
-        });
-      }
-      res.status(200).send({ name: req.filename });
-    } catch (err) {
-      console.log(err);
-      return res.status(500).send({
-        error: err || "Something went wrong.",
+router.post("/upload/image", upload.single("image"), async (req, res) => {
+  console.log("upload image");
+  try {
+    if (!req.mimetype.includes("image")) {
+      return res.status(400).send({
+        error: "File not valid",
       });
     }
+    res.status(200).send({ name: req.filename });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
   }
-);
+});
+router.post("/upload/video", upload.single("video"), async (req, res) => {
+  try {
+    if (!req.mimetype.includes("video")) {
+      return res.status(400).send({
+        error: "File not valid",
+      });
+    }
+    const videoPath = path.join(__dirname, "..", "uploads", "video", req.filename);
+    const thumbnailsDir = path.join(__dirname, "..", "uploads", "video-thumbnails");
+    const videoName = path.parse(req.filename).name;
+    const thumbnailPath = path.join(thumbnailsDir, videoName + "-thumbnail.png");
+
+    await media.generateThumbnail(videoPath, thumbnailsDir, (err) => {
+      if (err) {
+        console.error("An error occurred:", err);
+      } else {
+        console.log("Done! ", thumbnailPath);
+      }
+    });
+
+    res.status(200).send({ name: req.filename });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
 
 // http://localhost:8000/media/image/1701709870807-2023SkyDesktopAbyss.jpg
 router.get("/image/:name", async (req, res) => {

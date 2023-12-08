@@ -83,7 +83,7 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   const msg = err.error || err.message;
-  console.error(`Error ${status} (${msg}) on ${req.method} ${req.url} with payload ${req.body}.`);
+  console.error(`Error ${status} (${msg}) on ${req.method} ${req.url} with payload ${"req.body"}.`);
   res.status(status).send({ status, error: msg });
 });
 

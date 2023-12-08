@@ -9,6 +9,7 @@ import { request } from 'express';
 })
 export class MediaService {
   constructor(private http: HttpClient) {}
+  private apiUrl = '/media'; // Sostituisci con l'URL del tuo backend API
 
   headersGenerator(authenticated: boolean) {
     if (!authenticated) {
@@ -29,7 +30,7 @@ export class MediaService {
     formData.append('image', file);
 
     const requestOptions = this.headersGenerator(true);
-    return this.http.post(`/media/image/upload`, formData, requestOptions);
+    return this.http.post(`${this.apiUrl}/upload/image`, formData, requestOptions);
   }
 
   postVideo(file: File): Observable<any> {
@@ -37,6 +38,6 @@ export class MediaService {
     formData.append('video', file);
 
     const requestOptions = this.headersGenerator(true);
-    return this.http.post(`/media/video/upload`, formData, requestOptions);
+    return this.http.post(`${this.apiUrl}/upload/video`, formData, requestOptions);
   }
 }
