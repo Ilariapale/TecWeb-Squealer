@@ -5,7 +5,9 @@ const app = express();
 const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
+const { checkChar, verifyToken } = require("../services/utils");
 
+//TODO fare in modo che se non hai abbastanza caratteri per postare la foto, non la posti oppure viene eliminata
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     console.log("__dirname: " + __dirname);
@@ -34,14 +36,17 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post("/upload/image", upload.single("image"), async (req, res) => {
-  console.log("upload image");
+router.post("/upload/image", verifyToken, media.setImageInReq, checkChar, upload.single("image"), async (req, res) => {
   try {
+    console.log("upload image");
+    if (!req.isTokenValid) return res.status(401).send({ error: "Unauthorized" });
+    if (!req.hasEnough) return res.status(400).send({ error: "Not enough characters" });
     if (!req.mimetype.includes("image")) {
       return res.status(400).send({
         error: "File not valid",
       });
     }
+
     res.status(200).send({ name: req.filename });
   } catch (err) {
     console.log(err);
@@ -50,7 +55,8 @@ router.post("/upload/image", upload.single("image"), async (req, res) => {
     });
   }
 });
-router.post("/upload/video", upload.single("video"), async (req, res) => {
+
+router.post("/upload/video", verifyToken, media.setVideoInReq, checkChar, upload.single("video"), async (req, res) => {
   try {
     if (!req.mimetype.includes("video")) {
       return res.status(400).send({

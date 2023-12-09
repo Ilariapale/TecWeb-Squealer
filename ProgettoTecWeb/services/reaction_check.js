@@ -205,6 +205,8 @@ const setRewards = async () => {
             "char_quota.daily": reward.daily,
             "char_quota.weekly": reward.weekly,
             "char_quota.monthly": reward.monthly,
+            "char_quota.earned_daily": reward.daily,
+            "char_quota.earned_weekly": reward.weekly,
           },
           $set: {
             "reaction_metrics.last_checkpoint": new Date(),

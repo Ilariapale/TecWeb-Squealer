@@ -39,17 +39,17 @@ export class LoginComponent {
       sessionStorage.setItem('user', JSON.stringify({ account_type: 'guest', username: 'user' }));
       this.router.navigate(['/home']);
     } else {
-      this.authService.login(this.username, this.password, this.rememberMe).subscribe({
-        next: (response) => {
+      this.authService
+        .login(this.username, this.password, this.rememberMe)
+        .then((response: boolean) => {
           // Gestisci la risposta dal servizio se necessario
           this.router.navigate(['/home']);
           // Reindirizza l'utente a un'altra pagina se il login è riuscito
-        },
-        error: (error) => {
+        })
+        .catch((error: any) => {
           // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
           this.errorMessage = error.error.error;
-        },
-      });
+        });
     }
   }
 

@@ -4,6 +4,7 @@ import { Observable, map } from 'rxjs';
 import { ContentType } from 'src/app/models/squeal.interface';
 import { request } from 'express';
 import { ChannelQuery } from 'src/app/models/channel.interface';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -27,7 +28,7 @@ export class ChannelsService {
     }
   }
 
-  getChannels(query: ChannelQuery): Observable<any> {
+  getChannels(query: ChannelQuery): Promise<any> {
     let url = `${this.apiUrl}`;
     if (query) {
       url += '?';
@@ -46,26 +47,28 @@ export class ChannelsService {
       url = url.slice(0, -1);
     }
     const requestOptions = this.headersGenerator(true);
-    return this.http.get(url, requestOptions);
+    return firstValueFrom(this.http.get(url, requestOptions));
   }
 
-  getChannel(identifier: string): Observable<any> {
+  getChannel(identifier: string): Promise<any> {
     const requestOptions = this.headersGenerator(true);
-    return this.http.get(`${this.apiUrl}/${identifier}`, requestOptions);
+    return firstValueFrom(this.http.get(`${this.apiUrl}/${identifier}`, requestOptions));
   }
 
-  createChannel(name: string, description: string, can_mute?: boolean, is_official?: boolean): Observable<any> {
+  createChannel(name: string, description: string, can_mute?: boolean, is_official?: boolean): Promise<any> {
     const requestOptions = this.headersGenerator(true);
     const body = {
       name: name,
       description: description,
     };
-    return this.http.post(`${this.apiUrl}`, body, requestOptions);
+    return firstValueFrom(this.http.post(`${this.apiUrl}`, body, requestOptions));
   }
 
-  subscribeToChannel(identifier: String, value: boolean): Observable<any> {
+  subscribeToChannel(identifier: String, value: boolean): Promise<any> {
     const requestOptions = this.headersGenerator(true);
-    return this.http.patch(`${this.apiUrl}/${identifier}/subscription-status?value=${value}`, {}, requestOptions);
+    return firstValueFrom(
+      this.http.patch(`${this.apiUrl}/${identifier}/subscription-status?value=${value}`, {}, requestOptions)
+    );
   }
   /**
   * body: {
@@ -77,9 +80,9 @@ export class ChannelsService {
   }
  */
 
-  updateChannel(body: UpdateChannelBody): Observable<any> {
+  updateChannel(body: UpdateChannelBody): Promise<any> {
     const requestOptions = this.headersGenerator(true);
-    return this.http.patch(`${this.apiUrl}/${body.identifier}`, body, requestOptions);
+    return firstValueFrom(this.http.patch(`${this.apiUrl}/${body.identifier}`, body, requestOptions));
   }
   // Altre funzioni per il recupero password, aggiornamento del profilo, ecc. possono essere implementate qui.
 }

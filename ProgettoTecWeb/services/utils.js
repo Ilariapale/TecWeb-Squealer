@@ -392,6 +392,7 @@ async function addCommentsCountToSqueals(squeals) {
 function hasEnoughCharQuota(user, contentType, content) {
   const { extra_daily, daily, weekly, monthly } = user.char_quota;
   //if the user has no daily, weekly or monthly char_quota, return false
+
   if (daily <= 0 || weekly <= 0 || monthly <= 0) {
     let reason = `You have 0 ` + (daily == 0 ? `daily` : weekly == 0 ? `weekly` : `monthly`) + ` char_quota.`;
 
@@ -736,6 +737,19 @@ function generateToken(user_data, expireTime = config.tokenExpireTime) {
 
   return token;
 }
+async function checkChar(req, res, next) {
+  //TODO vedere il caso in cui è il smm a mandare a nome del vip
+  let user;
+  if (mongooseObjectIdRegex.test(req.body.user_id)) user = await User.findById(req.user_id);
+  else if (usernameRegex.test(req.body.user_id)) user = await User.findOne({ username: req.user_id });
+  if (req.mediaType == "image" || req.mediaType == "video") {
+    const hasEnough = hasEnoughCharQuota(user, req.mediaType);
+    req.hasEnough = hasEnough.outcome;
+  } else {
+    req.hasEnough = false;
+  }
+  next();
+}
 
 function verifyToken(req, res, next) {
   if (!req.headers) {
@@ -793,6 +807,7 @@ module.exports = {
   updateRecipientsChannels,
   updateRecipientsKeywords,
   containsOfficialChannels,
+  checkChar,
   usernameRegex,
   channelNameRegex,
   officialChannelNameRegex,

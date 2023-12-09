@@ -3,6 +3,7 @@ import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Notification } from 'src/app/models/notification.interface';
 import { UserQuery } from 'src/app/models/user.interface';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -13,25 +14,31 @@ export class UsersService {
 
   constructor(private http: HttpClient) {}
 
-  authenticatedHeadersGenerator() {
-    const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
-    // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
-    const headers = new HttpHeaders().set('Authorization', `${token}`);
-    const requestOptions = { headers: headers };
-    return requestOptions;
+  headersGenerator(authenticated: boolean) {
+    if (!authenticated) {
+      const headers = new HttpHeaders();
+      const requestOptions = { headers: headers };
+      return requestOptions;
+    } else {
+      const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
+      // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
+      const headers = new HttpHeaders().set('Authorization', `${token}`);
+      const requestOptions = { headers: headers };
+      return requestOptions;
+    }
   }
 
-  getUsername(user_id: string): Observable<any> {
+  getUsername(user_id: string): Promise<any> {
     let url = `${this.apiUrl}/username/${user_id}`;
-    return this.http.get(url, this.authenticatedHeadersGenerator());
+    return firstValueFrom(this.http.get(url, this.headersGenerator(true)));
   }
 
-  getUser(identifier: string): Observable<any> {
+  getUser(identifier: string): Promise<any> {
     let url = `${this.apiUrl}/${identifier}`;
-    return this.http.get(url, this.authenticatedHeadersGenerator());
+    return firstValueFrom(this.http.get(url, this.headersGenerator(true)));
   }
 
-  getUsers(query?: UserQuery): Observable<any> {
+  getUsers(query?: UserQuery): Promise<any> {
     let url = `${this.apiUrl}`;
     if (query) {
       url += '?';
@@ -49,43 +56,16 @@ export class UsersService {
       url = url.slice(0, -1);
     }
     console.log(url);
-    return this.http.get(url, this.authenticatedHeadersGenerator());
+    return firstValueFrom(this.http.get(url, this.headersGenerator(true)));
   }
 
-  postUsers(): Observable<any> {
-    return this.http.post(`${this.apiUrl}`, {});
-  }
-
-  getNotifications(): Observable<Notification[]> {
+  getNotifications(): Promise<Notification[]> {
     let url = `${this.apiUrl + this.notificationUrl}?`;
-    const notifications = this.http.get(url, this.authenticatedHeadersGenerator());
-
-    return this.http.get<Notification[]>(url, this.authenticatedHeadersGenerator()).pipe(
-      map((notificationsFromServer: any[]) => {
-        return notificationsFromServer.map((notificationData: any) => {
-          const notification: Notification = {
-            _id: notificationData._id,
-            content: notificationData.content,
-            is_unseen: notificationData.is_unseen,
-            created_at: notificationData.created_at,
-            user_ref: notificationData.user_ref,
-            squeal_ref: notificationData.squeal_ref,
-            channel_ref: notificationData.channel_ref,
-            comment_ref: notificationData.comment_ref,
-            reply: notificationData.reply,
-            source: notificationData.source,
-            id_code: notificationData.id_code,
-            sender_ref: notificationData.sender_ref,
-          };
-          // Map other properties as needed
-          return notification;
-        });
-      })
-    );
+    return firstValueFrom(this.http.get<Notification[]>(url, this.headersGenerator(true)));
   }
 
-  setNotificationStatus(notification_ids: string[], value: boolean): Observable<any> {
+  setNotificationStatus(notification_ids: string[], value: boolean): Promise<any> {
     let url = `${this.apiUrl + this.notificationUrl}?value=${value}`;
-    return this.http.patch(url, { notification_array: notification_ids }, this.authenticatedHeadersGenerator());
+    return firstValueFrom(this.http.patch(url, { notification_array: notification_ids }, this.headersGenerator(true)));
   }
 }

@@ -3,6 +3,7 @@ import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ContentType, SquealQuery } from 'src/app/models/squeal.interface';
 import { request } from 'express';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -26,7 +27,7 @@ export class SquealsService {
     }
   }
 
-  getSqueals(query: SquealQuery): Observable<any> {
+  getSqueals(query: SquealQuery): Promise<any> {
     console.log(query);
     let url = `${this.apiUrl}`;
     if (query) {
@@ -53,7 +54,7 @@ export class SquealsService {
     }
 
     const requestOptions = this.headersGenerator(true);
-    return this.http.get(`${url}`, requestOptions);
+    return firstValueFrom(this.http.get(`${url}`, requestOptions));
   }
 
   postSqueal(
@@ -63,7 +64,7 @@ export class SquealsService {
     is_scheduled?: boolean,
     schedule_type?: string,
     schedule_options?: object
-  ): Observable<any> {
+  ): Promise<any> {
     const requestOptions = this.headersGenerator(true);
     const body: { [key: string]: any } = { content };
     recipients
@@ -83,38 +84,34 @@ export class SquealsService {
         body['repeat'] = options['repeat'] || '';
         body['scheduled_date'] = options['scheduled_date'] || '';
       }
-      return this.http.post(`${this.apiUrl}/scheduled`, body, requestOptions);
+      return firstValueFrom(this.http.post(`${this.apiUrl}/scheduled`, body, requestOptions));
     }
-    return this.http.post(`${this.apiUrl}/`, body, requestOptions);
+    return firstValueFrom(this.http.post(`${this.apiUrl}/`, body, requestOptions));
   }
 
-  getHome(isGuest: boolean, lastLoaded?: number, pagSize?: number): Observable<any> {
-    //TODO controllare se funziona
+  getHome(isGuest: boolean, lastLoaded?: number, pagSize?: number): Promise<any> {
     const requestOptions = this.headersGenerator(!isGuest);
+    let url = `${this.apiUrl}/home?`;
 
-    let url = `${this.apiUrl}/home`;
-    if (lastLoaded !== undefined && pagSize !== undefined)
-      return this.http.get(url + `?lastLoaded=${lastLoaded}&pageSize=${pagSize}`, requestOptions);
+    if (lastLoaded !== undefined) url += `lastLoaded=${lastLoaded}&`;
+    if (pagSize !== undefined) url += `pageSize=${pagSize}&`;
+    url = url.slice(0, -1);
 
-    if (lastLoaded !== undefined) return this.http.get(url + `?lastLoaded=${lastLoaded}`, requestOptions);
-
-    if (pagSize !== undefined) return this.http.get(url + `?pageSize=${pagSize}`, requestOptions);
-
-    return this.http.get(url, requestOptions);
+    return firstValueFrom(this.http.get(url, requestOptions));
   }
-  getSqueal(identifier: String): Observable<any> {
+  getSqueal(identifier: String): Promise<any> {
     const requestOptions = this.headersGenerator(true);
-    return this.http.get(`${this.apiUrl}/${identifier}`, requestOptions);
+    return firstValueFrom(this.http.get(`${this.apiUrl}/${identifier}`, requestOptions));
   }
-  deleteSqueal(identifier: string): Observable<any> {
+  deleteSqueal(identifier: string): Promise<any> {
     const requestOptions = this.headersGenerator(true);
-    return this.http.delete(`${this.apiUrl}/${identifier}`, requestOptions);
+    return firstValueFrom(this.http.delete(`${this.apiUrl}/${identifier}`, requestOptions));
   }
-  addReaction(reaction: String, squeal_id: String): Observable<any> {
+  addReaction(reaction: String, squeal_id: String): Promise<any> {
     const requestOptions = this.headersGenerator(true);
-    return this.http.patch(`${this.apiUrl}/${squeal_id}/reaction/${reaction}`, {}, requestOptions);
+    return firstValueFrom(this.http.patch(`${this.apiUrl}/${squeal_id}/reaction/${reaction}`, {}, requestOptions));
   }
-  updateSqueal(): Observable<any> {
-    return this.http.patch(`${this.apiUrl}`, {});
+  updateSqueal(): Promise<any> {
+    return firstValueFrom(this.http.patch(`${this.apiUrl}`, {}));
   }
 }

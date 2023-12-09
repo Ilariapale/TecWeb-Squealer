@@ -5,29 +5,7 @@ const router = new express.Router();
 const path = require("path");
 const { stringify } = require("querystring");
 
-/*
- try {
-   const result = await users.getUserList(options);
-   if (req.headers.accept.includes("text/html")) {
-     // Invia una pagina HTML come risposta
-     console.log("if");
-     res.status(result.status || 200).sendFile(path.join(__dirname, "..", "test.html"));
-   } else {
-     console.log("else");
-     // Invia un oggetto JSON come risposta
-     res.status(result.status || 200).json(result.data);
-   }
-
-   const result = await users.getUserList(options);
-   res.status(result.status || 200).send(result.data);
- } catch (err) {
-   return res.status(500).send({
-     error: err || "Something went wrong.",
-   });
- }
-*/
-
-router.get("/username/:user_id", async (req, res, next) => {
+router.get("/username/:user_id", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     const options = { user_id: req.user_id };
     try {

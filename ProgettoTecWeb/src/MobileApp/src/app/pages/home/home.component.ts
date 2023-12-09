@@ -5,6 +5,7 @@ import { AuthService } from 'src/app/services/api/auth.service';
 import { Subscription } from 'rxjs';
 import { UserService } from 'src/app/services/user.service';
 import { firstValueFrom } from 'rxjs';
+import { response } from 'express';
 //TODO quando il token è presente ma scaduto, il client continua a mandare richieste e fallire, controllare il fix
 @Component({
   selector: 'app-home',
@@ -59,12 +60,13 @@ export class HomeComponent {
 
   ngOnInit() {
     //check if there is a token
-    this.homeSubscription = this.squealsService.getHome(this.isGuest).subscribe({
-      next: (response: any) => {
+    this.squealsService
+      .getHome(this.isGuest)
+      .then((response) => {
         //.slice().reverse()
         this.squeals = response;
-      },
-      error: (error) => {
+      })
+      .catch((error) => {
         const errorText = error.error.error;
         //TokenExpiredError, noToken, invalidTokenFormat
         if (errorText == 'TokenExpiredError') {
@@ -78,8 +80,8 @@ export class HomeComponent {
           this.userService.setUserData(null);
           this.router.navigate(['/login']);
         }
-      },
-    });
+      });
+
     //window.location.reload();
     //this.userService.getUser().subscribe();
   }

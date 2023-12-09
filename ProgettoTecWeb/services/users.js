@@ -37,8 +37,8 @@ const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } = require("./con
 //TODO reportare gli squeal e fare in modo che i moderatori abbiano la possibilità di vedere gli squeal segnalati
 module.exports = {
   getUsername: async (options) => {
-    const { user_id, identifier } = options;
-    let response = await findUser(identifier);
+    const { user_id } = options;
+    let response = await findUser(user_id);
     if (response.status >= 300) {
       //if the response is an error
       return {

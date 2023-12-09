@@ -72,7 +72,8 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
         this.identifier = params.get('identifier') || '';
 
         if (this.identifier && !this.isGuest) {
-          firstValueFrom(this.usersService.getUser(this.identifier)).then((user) => {
+          this.usersService.getUser(this.identifier).then((user) => {
+            console.log(user);
             this.mySelf = this.userService.isMyself(user._id);
             this.loading = true;
             this.user = user;
@@ -142,18 +143,18 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
   }
   deleteSqueal() {
     if (this.squealToDelete != '') {
-      this.squealsService.deleteSqueal(this.squealToDelete).subscribe({
-        next: (response: any) => {
+      this.squealsService
+        .deleteSqueal(this.squealToDelete)
+        .then((response: any) => {
           console.log(response);
           //this.router.navigate(['/home']);
           const squeal = this.squeals.find((squeal) => squeal._id == this.squealToDelete);
           squeal ? (squeal.content_type = ContentType.deleted) : null;
           squeal ? (squeal.content = '[deleted squeal]') : null;
-        },
-        error: (error) => {
+        })
+        .catch((error) => {
           //console.error(error);
-        },
-      });
+        });
     }
   }
 

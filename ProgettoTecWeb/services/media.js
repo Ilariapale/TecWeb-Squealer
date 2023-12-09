@@ -59,6 +59,16 @@ module.exports = {
       console.error(err);
     }
   },
+
+  setImageInReq(req, res, next) {
+    req.mediaType = "image";
+    next();
+  },
+
+  setVideoInReq(req, res, next) {
+    req.mediaType = "video";
+    next();
+  },
 };
 //D:\Programmazione\Git\TecWeb-Squealer\ProgettoTecWeb\uploads\video-thumbnails\1701775366848-document_5999096777297367672-thumbnail.png
 //D:\Programmazione\Git\TecWeb-Squealer\ProgettoTecWeb\uploads\thumbnails\\1701775366848-document_5999096777297367672-thumbnail.png

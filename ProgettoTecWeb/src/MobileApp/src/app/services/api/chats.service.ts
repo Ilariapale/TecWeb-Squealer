@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Chat, Message, ChatPreview } from 'src/app/models/chat.interface';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -19,24 +20,24 @@ export class ChatsService {
     return requestOptions;
   }
 
-  getChats(): Observable<any> {
+  getChats(): Promise<any> {
     //return this.http.get(`${this.apiUrl}`);
     let url = `${this.apiUrl}/`;
-    return this.http.get(url, this.authenticatedHeadersGenerator());
+    return firstValueFrom(this.http.get(url, this.authenticatedHeadersGenerator()));
   }
 
-  getChat(chatId: string): Observable<any> {
+  getChat(chatId: string): Promise<any> {
     let url = `${this.apiUrl}/${chatId}`;
-    return this.http.get(url, this.authenticatedHeadersGenerator());
+    return firstValueFrom(this.http.get(url, this.authenticatedHeadersGenerator()));
   }
 
-  getChatByUser(userIdentifier: string): Observable<any> {
+  getChatByUser(userIdentifier: string): Promise<any> {
     let url = `${this.apiUrl}/direct/${userIdentifier}`;
-    return this.http.get(url, this.authenticatedHeadersGenerator());
+    return firstValueFrom(this.http.get(url, this.authenticatedHeadersGenerator()));
   }
 
-  sendMessage(userIdentifier: string, message: string): Observable<any> {
+  sendMessage(userIdentifier: string, message: string): Promise<any> {
     let url = `${this.apiUrl}/direct/${userIdentifier}`;
-    return this.http.post(url, { message: message }, this.authenticatedHeadersGenerator());
+    return firstValueFrom(this.http.post(url, { message: message }, this.authenticatedHeadersGenerator()));
   }
 }

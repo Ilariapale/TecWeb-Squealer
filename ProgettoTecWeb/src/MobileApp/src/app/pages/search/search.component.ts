@@ -7,13 +7,17 @@ import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Channel, ChannelQuery } from 'src/app/models/channel.interface';
 import { Squeal, SquealQuery, ContentType } from 'src/app/models/squeal.interface';
 import { Router } from '@angular/router';
+//TODO fixare la ricerca delle keyword che fa comparire tutti i risultati invece di filtrarli
 
+//TODO implementare il messaggio privato quando clicchi su uno user tra i risultati della ricerca
 @Component({
   selector: 'app-search',
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.css'],
 })
 export class SearchComponent {
+  isGuest: boolean = true;
+
   searchInput: string = '';
   selectedOption: string = 'user-search';
   professional_type: string = 'none';
@@ -57,7 +61,14 @@ export class SearchComponent {
     private squealService: SquealsService,
     private channelsService: ChannelsService,
     private router: Router
-  ) {}
+  ) {
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
+      this.isGuest = true;
+    } else {
+      this.router.navigate(['/login']);
+    } //richiedi al server le notifiche con gli id specificati
+  }
 
   triggerTest() {
     this.subscribed = !this.subscribed;
@@ -76,8 +87,9 @@ export class SearchComponent {
 
     if (this.selectedOption === 'user-search') {
       this.createUserQuery();
-      this.usersService.getUsers(this.userQuery).subscribe({
-        next: (users) => {
+      this.usersService
+        .getUsers(this.userQuery)
+        .then((users) => {
           console.log(users);
           this.userResults = users as User[];
           this.loading = false;
@@ -85,46 +97,45 @@ export class SearchComponent {
           this.showUserResults = true;
           this.showChannelResults = false;
           this.showKeywordResults = false;
-        },
-        error: (err) => {
+        })
+        .catch((err) => {
           console.log(err);
           this.loading = false;
-        },
-      });
+        });
     } else if (this.selectedOption === 'channel-search') {
       this.createChannelQuery();
-      this.channelsService.getChannels(this.channelQuery).subscribe({
-        next: (channels) => {
+      this.channelsService
+        .getChannels(this.channelQuery)
+        .then((channels: Channel[]) => {
           console.log(channels);
-          this.channelResults = channels as Channel[];
+          this.channelResults = channels;
           this.loading = false;
 
           this.showUserResults = false;
           this.showChannelResults = true;
           this.showKeywordResults = false;
-        },
-        error: (err) => {
+        })
+        .catch((err: any) => {
           console.log(err);
           this.loading = false;
-        },
-      });
+        });
     } else if (this.selectedOption === 'keyword-search') {
       this.createKeywordQuery();
-      this.squealService.getSqueals(this.keywordQuery).subscribe({
-        next: (squeals) => {
+      this.squealService
+        .getSqueals(this.keywordQuery)
+        .then((squeals: Squeal[]) => {
           console.log(squeals);
-          this.keywordResults = squeals as Squeal[];
+          this.keywordResults = squeals;
           this.loading = false;
 
           this.showUserResults = false;
           this.showChannelResults = false;
           this.showKeywordResults = true;
-        },
-        error: (err) => {
+        })
+        .catch((err: any) => {
           console.log(err);
           this.loading = false;
-        },
-      });
+        });
     }
   }
 
@@ -214,14 +225,14 @@ export class SearchComponent {
   }
   subscribeToChannel(channel: String) {
     console.log(`subscribeToChannel(${channel})`);
-    this.channelsService.subscribeToChannel(channel, true).subscribe({
-      next: (res) => {
+    this.channelsService
+      .subscribeToChannel(channel, true)
+      .then((res) => {
         console.log(res);
         //TODO mettere la spunta invece del +
-      },
-      error: (err) => {
+      })
+      .catch((err) => {
         console.log(err);
-      },
-    });
+      });
   }
 }

@@ -57,8 +57,9 @@ export class ChannelComponent {
       this.identifier = params.get('identifier') || '';
 
       if (this.identifier) {
-        this.channelsService.getChannel(this.identifier).subscribe({
-          next: (channel) => {
+        this.channelsService
+          .getChannel(this.identifier)
+          .then((channel: any) => {
             this.channel = channel;
 
             this.loading = true;
@@ -78,9 +79,10 @@ export class ChannelComponent {
               this.lastSquealLoaded -= this.MAX_SQUEALS;
             }
             this.loading = false;
-          },
-          error: (error) => {},
-        });
+          })
+          .catch((error: any) => {
+            // Handle error
+          });
       }
     });
   }

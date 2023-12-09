@@ -51,7 +51,7 @@ export class ChatsComponent {
         this.isGuest = true;
       } else {
         this.isGuest = false;
-        this.chatSubscription = this.chatsService.getChats().subscribe((chats) => {
+        this.chatsService.getChats().then((chats: any[]) => {
           this.chatsPreview = chats;
           this.chatsPreview.sort((a, b) => {
             if (a.last_modified > b.last_modified) return -1;
@@ -66,7 +66,6 @@ export class ChatsComponent {
     });
   }
   //TODO finire implementazione di messages
-  onInit() {}
 
   markAllAsRead(/*_ids: string[]*/) {}
   markAsRead(_id: string) {}
@@ -80,17 +79,17 @@ export class ChatsComponent {
         this.router.navigate(['/private-chats/user', chat._id, this.newChatUsername]);
         this.newChatUsername = '';
       } else {
-        this.usersService.getUsername(this.newChatUsername).subscribe({
-          next: (response: any) => {
+        this.usersService
+          .getUsername(this.newChatUsername)
+          .then((response: any) => {
             //user does not exist
             this.router.navigate(['/private-chats/user', this.newChatUsername]);
             console.log('user exists');
-          },
-          error: (error) => {
+          })
+          .catch((error: any) => {
             console.log('user does not exist');
             this.newChatUsername = '';
-          },
-        });
+          });
       }
     }
   }

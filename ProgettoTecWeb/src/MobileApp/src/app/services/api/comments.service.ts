@@ -3,7 +3,7 @@ import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ContentType } from 'src/app/models/squeal.interface';
 import { request } from 'express';
-
+import { firstValueFrom } from 'rxjs';
 @Injectable({
   providedIn: 'root',
 })
@@ -21,19 +21,16 @@ export class CommentService {
     return requestOptions;
   }
 
-  getComments(comment_section_id: string, last_comment_loaded?: string): Observable<any> {
+  getComments(comment_section_id: string, last_comment_loaded?: string): Promise<any> {
     const requestOptions = this.headersGenerator();
-    if (last_comment_loaded)
-      return this.http.get(
-        `${this.apiUrl}/${comment_section_id}?last_comment_loaded=${last_comment_loaded}`,
-        requestOptions
-      );
-    else return this.http.get(`${this.apiUrl}/${comment_section_id}`, requestOptions);
+    let url = `${this.apiUrl}/${comment_section_id}`;
+    if (last_comment_loaded) url += `?last_loaded=${last_comment_loaded}`;
+    return firstValueFrom(this.http.get(`${this.apiUrl}/${comment_section_id}`, requestOptions));
   }
 
-  addComment(comment_section_id: string, message: string): Observable<any> {
+  addComment(comment_section_id: string, message: string): Promise<any> {
     const requestOptions = this.headersGenerator();
     const body: { [key: string]: any } = { message };
-    return this.http.post(`${this.apiUrl}/${comment_section_id}`, body, requestOptions);
+    return firstValueFrom(this.http.post(`${this.apiUrl}/${comment_section_id}`, body, requestOptions));
   }
 }

@@ -2,6 +2,7 @@
   user-select: none;
   font-family: "Roboto", "Asap", sans-serif;
   overflow-x: hidden;
+  /* overflow-y: auto;*/
 }
 
 

@@ -1,6 +1,6 @@
 // notifications.component.ts
 
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Notification, IdCode } from 'src/app/models/notification.interface';
 import { UsersService } from 'src/app/services/api/users.service';
 import { UserService } from 'src/app/services/user.service';
@@ -8,69 +8,16 @@ import { Source } from 'src/app/models/notification.interface';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { TimeService } from 'src/app/services/time.service';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.css'],
 })
-export class NotificationsComponent {
+export class NotificationsComponent implements OnInit {
   private notificationSubscription: Subscription = new Subscription();
   private userSubscription: Subscription = new Subscription();
-  notifications: Notification[] = [
-    /* {
-      _id: '1313',
-      is_unseen: true,
-      created_at: new Date(),
-      content: 'String1',
-      squeal_ref: 'String',
-      channel_ref: 'String',
-      comment_ref: 'String',
-      user_ref: 'String',
-      reply: true,
-      source: Source.squeal,
-      id_code: IdCode.newComment,
-    },
-    {
-      _id: '1313',
-      is_unseen: true,
-      created_at: new Date(),
-      content: 'String2',
-      squeal_ref: 'String',
-      channel_ref: 'String',
-      comment_ref: 'String',
-      user_ref: 'String',
-      reply: true,
-      source: Source.channel,
-      id_code: IdCode.newComment,
-    },
-    {
-      _id: '1313',
-      is_unseen: false,
-      created_at: new Date(),
-      content: 'String3',
-      squeal_ref: 'String',
-      channel_ref: 'String',
-      comment_ref: 'String',
-      user_ref: 'String',
-      reply: true,
-      source: Source.system,
-      id_code: IdCode.newComment,
-    },
-    {
-      _id: '1313',
-      is_unseen: true,
-      created_at: new Date(),
-      content: 'String4',
-      squeal_ref: 'String',
-      channel_ref: 'String',
-      comment_ref: 'String',
-      user_ref: 'String',
-      reply: true,
-      source: Source.user,
-      id_code: IdCode.newComment,
-    },*/
-  ];
+  notifications: Notification[] = [];
   isHovered: boolean = false;
   isGuest: boolean = true;
   constructor(
@@ -87,19 +34,20 @@ export class NotificationsComponent {
     } else {
       this.router.navigate(['/login']);
     } //richiedi al server le notifiche con gli id specificati
-    this.userSubscription = this.userService.getUserData().subscribe((userData) => {
+  }
+
+  ngOnInit() {
+    firstValueFrom(this.userService.getUserData()).then((userData) => {
       if (userData.account_type === 'guest') {
         this.isGuest = true;
       } else {
         this.isGuest = false;
-        this.notificationSubscription = this.usersService.getNotifications().subscribe((notifications) => {
+        this.usersService.getNotifications().then((notifications) => {
           this.notifications = [...notifications].reverse();
         });
       }
     });
   }
-
-  onInit() {}
 
   onMouseEnter() {
     this.isHovered = true;
@@ -110,7 +58,10 @@ export class NotificationsComponent {
   }
   markAllAsRead() {
     const notificationIds = this.notifications.map((notif) => notif._id).filter((id) => id !== undefined) as string[];
-    this.usersService.setNotificationStatus(notificationIds, false).subscribe();
+    this.usersService
+      .setNotificationStatus(notificationIds, false)
+      .then(() => {})
+      .catch((err) => {});
     this.notifications.forEach((notif) => (notif.is_unseen = false));
   }
 
@@ -138,7 +89,10 @@ export class NotificationsComponent {
     //setta la notifica come letta
     console.log(notif);
     if (notif._id && notif.is_unseen) {
-      this.usersService.setNotificationStatus([notif._id], false).subscribe();
+      this.usersService
+        .setNotificationStatus([notif._id], false)
+        .then(() => {})
+        .catch((err) => {});
     }
     switch (notif.id_code) {
       case IdCode.welcomeSqueal:

@@ -11,6 +11,7 @@ import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { Router } from '@angular/router';
 import { MediaService } from 'src/app/services/api/media.service';
 import { View } from 'ol';
+import { response } from 'express';
 //TODOfare in modo che quando scrivo un recipient nel form questo si stilizzi
 @Component({
   selector: 'app-squeal-form',
@@ -121,6 +122,7 @@ export class SquealFormComponent {
 
   onInput(value?: number) {
     this.adjustTextareaHeight();
+    //TODO quando hai 0 caratteri in uno dei campi, non puoi più scrivere
 
     const currentLength = this.squealForm.value.text?.length ?? 0;
     const previousLength = this.lastLength;
@@ -237,34 +239,32 @@ export class SquealFormComponent {
           this.selectedDelayedSquealTypeValue,
           schedule_options
         )
-        .subscribe({
-          next: (response: any) => {
-            console.log('Success:', response);
-            //this.squealSubmitted.emit(response);
-            this.userService.setUserData(this.user);
-            sessionStorage.getItem('user')
-              ? sessionStorage.setItem('user', JSON.stringify(this.user))
-              : localStorage.setItem('user', JSON.stringify(this.user));
-            this.lastLength = 0;
-            this.squealForm.reset();
-            this.usersComponent.removeAllTags();
-            this.channelsComponent.removeAllTags();
-            this.keywordsComponent.removeAllTags();
-            this.postResponse = 'Text squeal posted successfully!';
-            this.showSquealPostResponse = true;
-          },
-          error: (error) => {
-            // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
-            // Gestisci il caso in cui il form non sia valido
-            const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
-            if (element) {
-              console.log(element);
-              element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
-              setTimeout(() => {
-                element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
-              }, 500);
-            }
-          },
+        .then((response: any) => {
+          console.log('Success:', response);
+          //this.squealSubmitted.emit(response);
+          this.userService.setUserData(this.user);
+          sessionStorage.getItem('user')
+            ? sessionStorage.setItem('user', JSON.stringify(this.user))
+            : localStorage.setItem('user', JSON.stringify(this.user));
+          this.lastLength = 0;
+          this.squealForm.reset();
+          this.usersComponent.removeAllTags();
+          this.channelsComponent.removeAllTags();
+          this.keywordsComponent.removeAllTags();
+          this.postResponse = 'Text squeal posted successfully!';
+          this.showSquealPostResponse = true;
+        })
+        .catch((error: any) => {
+          // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
+          // Gestisci il caso in cui il form non sia valido
+          const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
+          if (element) {
+            console.log(element);
+            element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
+            setTimeout(() => {
+              element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
+            }, 500);
+          }
         });
     } else {
       // Gestisci il caso in cui il form non sia valido
@@ -285,8 +285,9 @@ export class SquealFormComponent {
           const imageName = response.name;
           //TODO
           console.log('Nuovo squeal:', imageName);
-          this.squealsService.postSqueal(imageName, this.recipients, this.selectedType).subscribe({
-            next: (response: any) => {
+          this.squealsService
+            .postSqueal(imageName, this.recipients, this.selectedType)
+            .then((response: any) => {
               console.log('Success:', response);
               //this.squealSubmitted.emit(response);
               this.userService.setUserData(this.user);
@@ -300,8 +301,8 @@ export class SquealFormComponent {
               this.keywordsComponent.removeAllTags();
               this.postResponse = 'Image squeal posted successfully!';
               this.showSquealPostResponse = true;
-            },
-            error: (error) => {
+            })
+            .catch((error: any) => {
               // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
               // Gestisci il caso in cui il form non sia valido
               const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
@@ -312,8 +313,7 @@ export class SquealFormComponent {
                   element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
                 }, 500);
               }
-            },
-          });
+            });
         },
         error: (error) => {
           console.log(error);
@@ -336,8 +336,9 @@ export class SquealFormComponent {
           videoInputElement.value = null;
           const imageName = response.name;
           console.log('Nuovo squeal:', imageName);
-          this.squealsService.postSqueal(imageName, this.recipients, this.selectedType).subscribe({
-            next: (response: any) => {
+          this.squealsService
+            .postSqueal(imageName, this.recipients, this.selectedType)
+            .then((response: any) => {
               console.log('Success:', response);
               //this.squealSubmitted.emit(response);
               this.userService.setUserData(this.user);
@@ -351,8 +352,8 @@ export class SquealFormComponent {
               this.keywordsComponent.removeAllTags();
               this.postResponse = 'Video squeal posted successfully!';
               this.showSquealPostResponse = true;
-            },
-            error: (error) => {
+            })
+            .catch((error: any) => {
               // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
               // Gestisci il caso in cui il form non sia valido
               const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
@@ -363,8 +364,7 @@ export class SquealFormComponent {
                   element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
                 }, 500);
               }
-            },
-          });
+            });
         },
         error: (error) => {
           console.log(error);

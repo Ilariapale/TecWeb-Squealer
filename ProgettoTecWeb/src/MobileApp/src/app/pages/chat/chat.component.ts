@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { Message, Chat, ChatPreview } from 'src/app/models/chat.interface';
@@ -19,6 +19,8 @@ import { Router } from '@angular/router';
 })
 export class ChatComponent {
   @Input() message_text: string = '';
+  @ViewChild('messageContainer') chatContainer: ElementRef | undefined;
+
   private chatSubscription: Subscription = new Subscription();
   private userSubscription: Subscription = new Subscription();
   isGuest = true;
@@ -29,6 +31,7 @@ export class ChatComponent {
   user: any;
   chat_loaded = false;
   private socket: any; // Dichiarazione della variabile del socket
+  //TODO load more messages
 
   constructor(
     private route: ActivatedRoute,
@@ -54,10 +57,13 @@ export class ChatComponent {
           console.log(this.chatId, 'this.chatId');
           console.log(this.recipient, 'this.recipient');
 
-          this.chatsService.getChat(this.chatId).subscribe((response) => {
+          this.chatsService.getChat(this.chatId).then((response: any) => {
             this.chat = response.chat;
             this.chat_loaded = true;
             this.reqSenderPosition = response.reqSenderPosition;
+            setTimeout(() => {
+              this.scrollToBottom();
+            }, 10);
           });
         }
         this.connectWebSocket(); // Chiamata alla funzione per connettersi al WebSocket
@@ -67,9 +73,6 @@ export class ChatComponent {
 
   ngOnInit() {
     // Scroll to the bottom of the page
-    setTimeout(() => {
-      this.scrollToBottom();
-    }, 10);
   }
 
   ngOnDestroy() {
@@ -79,61 +82,77 @@ export class ChatComponent {
   }
 
   private connectWebSocket(): void {
-    this.socket = io(); // Sostituisci con l'URL del tuo server WebSocket
+    this.socket = io();
     this.socket.emit('authenticate', this.user.user_id);
-    this.socket.on('new_message', (message: any) => {
+    this.socket.on('new_message', (message: Message) => {
       // Gestisci il messaggio ricevuto dal server
       this.chat.messages.push({
         sender: message.sender,
         text: message.text,
         timestamp: new Date(message.timestamp),
       });
+      this.scrollToBottom();
       setTimeout(() => {
         this.scrollToBottom();
-      }, 0);
+      }, 50);
     });
+  }
+
+  loadMore() {
+    //TODO load more messages
+    //   console.log('loadMoreComments');
+    //   if (this.chat.messages && this.chat.messages.length > 0) {
+    //     this.chatsService
+    //       .getChat()
+    //       .then((response: any) => {
+    //         console.log(response);
+    //         if (response.comments_array != undefined && response.comments_array.length > 0)
+    //           this.comment_section.comments_array?.unshift(...response.comments_array);
+    //       })
+    //       .catch((error) => {
+    //         //console.error(error);
+    //       });
+    //   }
   }
 
   getThemeClass() {
     return this.darkModeService.getThemeClass();
   }
   sendMessage() {
-    //use the chatservice to send a message
+    // use the chatservice to send a message
     this.chatsService
       .sendMessage(
         this.chatId !== '0' ? this.chat.partecipants[1 - this.reqSenderPosition].toString() : this.recipient,
         this.message_text
       )
-      .subscribe({
-        next: (response) => {
-          //TODO fixare il aN/NaN/NaN
-          //console.log(response);
-          this.message_text = '';
-          setTimeout(() => {
-            this.chat.messages.push({
-              sender: this.reqSenderPosition,
-              text: response.text,
-              timestamp: response.timestamp,
-            });
-          }, 0);
+      .then((response) => {
+        // console.log(response);
+        this.message_text = '';
 
-          setTimeout(() => {
-            this.scrollToBottom();
-          }, 0);
-        },
-        error: (error) => {
-          // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
-        },
+        this.chat.messages.push({
+          sender: this.reqSenderPosition,
+          text: response.text,
+          timestamp: response.timestamp,
+        });
+
+        setTimeout(() => {
+          this.scrollToBottom();
+        }, 50);
+      })
+      .catch((error) => {
+        // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
       });
   }
-  //}
 
-  goToPage(page: string) {
-    this.router.navigate([`/${page}`]);
-  }
   private scrollToBottom(): void {
     try {
-      window.scrollTo(0, document.body.scrollHeight);
-    } catch (err) {}
+      const chatContainer = document.getElementById('chat-main'); //messageContainer
+      if (chatContainer) {
+        console.log(chatContainer);
+        chatContainer.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'end' });
+      }
+    } catch (err) {
+      console.error('Errore durante lo scroll:', err);
+    }
   }
 }

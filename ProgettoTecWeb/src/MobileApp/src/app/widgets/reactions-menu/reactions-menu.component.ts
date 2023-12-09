@@ -15,12 +15,12 @@ export class ReactionsMenuComponent {
 
   addReaction(reaction: string, event: Event) {
     event.preventDefault();
-    this.squealService.addReaction(reaction, this.squealId).subscribe(
+    this.squealService.addReaction(reaction, this.squealId).then(
       (response: any) => {
         console.log('OK REACTION AGGIUNTA');
         console.log(response);
       },
-      (error) => {
+      (error: any) => {
         console.log('REACTION NON AGGIUNTA');
         console.log(error);
       }

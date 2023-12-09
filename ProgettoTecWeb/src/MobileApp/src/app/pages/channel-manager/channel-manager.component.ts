@@ -80,6 +80,9 @@ export class ChannelManagerComponent {
     } else {
       this.router.navigate(['/login']);
     }
+  }
+
+  ngOnInit() {
     firstValueFrom(this.userService.getUserData()).then((userData) => {
       if (userData.account_type === 'guest') {
         //this.isGuest = true;
@@ -87,9 +90,10 @@ export class ChannelManagerComponent {
       }
       //this.isGuest = false;
       this.username = userData.username;
-
-      this.usersService.getUser(this.username).subscribe({
-        next: (user) => {
+      this.usersService
+        .getUser(this.username)
+        .then((user) => {
+          console.log(user);
           this.channelsOwnedIds = user.owned_channels;
           this.channelsEditorIds = user.editor_channels;
 
@@ -107,26 +111,25 @@ export class ChannelManagerComponent {
               console.error('Error fetching channels:', err);
             },
           });
-        },
-        error: (err) => {
+        })
+        .catch((err) => {
           console.error('Error fetching user data:', err);
-        },
-      });
+        });
     });
   }
 
   createChannel() {
-    this.channelsService.createChannel(this.newChannel.name, this.newChannel.description).subscribe({
-      next: (channel) => {
+    this.channelsService
+      .createChannel(this.newChannel.name, this.newChannel.description)
+      .then((channel: any) => {
         this.channelsOwnedIds.push(channel._id);
         this.channelsOwned.push(channel);
         this.newChannel.name = '';
         this.newChannel.description = '';
-      },
-      error: (err) => {
+      })
+      .catch((err: any) => {
         console.error('Error creating channel:', err);
-      },
-    });
+      });
   }
 
   goToPage(pageName: string): void {
@@ -145,14 +148,15 @@ export class ChannelManagerComponent {
     this.selectedEditors = [];
     //richiesta per ottenere i nomi degli editor
     //ottengo lo username dell'owner
-    this.usersService.getUsername(this.selectedChannel.owner as string).subscribe({
-      next: (owner) => {
+    console.log(this.selectedChannel);
+    this.usersService
+      .getUsername(this.selectedChannel.owner as string)
+      .then((owner: any) => {
         this.selectedChannel.owner = owner.username;
-      },
-      error: (err) => {
+      })
+      .catch((err: any) => {
         console.error('Error fetching owner:', err);
-      },
-    });
+      });
     const editorsRequests = this.selectedChannel.editors.map((editorId) =>
       this.usersService.getUsername(editorId as string)
     );
@@ -181,8 +185,9 @@ export class ChannelManagerComponent {
     if (oldChannel?.owner !== updatedChannel.owner) body.new_owner = updatedChannel.owner;
     if (oldChannel?.editors !== newEditors) body.editors_array = newEditors;
 
-    this.channelsService.updateChannel(body).subscribe({
-      next: (channel) => {
+    this.channelsService
+      .updateChannel(body)
+      .then((channel: any) => {
         console.log(channel);
         this.channelsOwned = this.channelsOwned.map((channel) => {
           if (channel._id === updatedChannel._id) {
@@ -190,11 +195,10 @@ export class ChannelManagerComponent {
           }
           return channel;
         });
-      },
-      error: (err) => {
+      })
+      .catch((err: any) => {
         console.error('Error updating channel:', err);
-      },
-    });
+      });
   }
   updateEditorChannel() {}
 }
