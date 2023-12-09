@@ -26,8 +26,9 @@ export class ChatsService {
     return firstValueFrom(this.http.get(url, this.authenticatedHeadersGenerator()));
   }
 
-  getChat(chatId: string): Promise<any> {
+  getChat(chatId: string, lastLoaded?: string): Promise<any> {
     let url = `${this.apiUrl}/${chatId}`;
+    if (lastLoaded) url += `?last_loaded_message=${lastLoaded}`;
     return firstValueFrom(this.http.get(url, this.authenticatedHeadersGenerator()));
   }
 

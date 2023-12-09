@@ -141,6 +141,7 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
     });
     this.loading = false;
   }
+
   deleteSqueal() {
     if (this.squealToDelete != '') {
       this.squealsService

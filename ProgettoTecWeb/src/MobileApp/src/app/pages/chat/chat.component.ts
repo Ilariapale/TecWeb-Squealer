@@ -21,6 +21,7 @@ export class ChatComponent {
   @Input() message_text: string = '';
   @ViewChild('messageContainer') chatContainer: ElementRef | undefined;
 
+  more_to_load = true;
   private chatSubscription: Subscription = new Subscription();
   private userSubscription: Subscription = new Subscription();
   isGuest = true;
@@ -98,21 +99,19 @@ export class ChatComponent {
     });
   }
 
-  loadMore() {
-    //TODO load more messages
-    //   console.log('loadMoreComments');
-    //   if (this.chat.messages && this.chat.messages.length > 0) {
-    //     this.chatsService
-    //       .getChat()
-    //       .then((response: any) => {
-    //         console.log(response);
-    //         if (response.comments_array != undefined && response.comments_array.length > 0)
-    //           this.comment_section.comments_array?.unshift(...response.comments_array);
-    //       })
-    //       .catch((error) => {
-    //         //console.error(error);
-    //       });
-    //   }
+  loadMoreMessages() {
+    if (this.chat.messages && this.chat.messages.length > 0) {
+      this.chatsService
+        .getChat(this.chatId, this.chat.messages[0]._id)
+        .then((response: any) => {
+          if (response.chat != undefined && response.chat.messages.length > 0)
+            this.chat.messages?.unshift(...response.chat.messages);
+          if (response.chat_length <= this.chat.messages.length) this.more_to_load = false;
+        })
+        .catch((error) => {
+          //console.error(error);
+        });
+    }
   }
 
   getThemeClass() {

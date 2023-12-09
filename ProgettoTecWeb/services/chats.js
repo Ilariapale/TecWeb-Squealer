@@ -90,6 +90,7 @@ module.exports = {
         data: { error: `Chat not found.` },
       };
     }
+    const chat_length = chat.messages.length;
 
     //check if the last_loaded_message is valid and exists
     if (!last_loaded_message) {
@@ -125,7 +126,7 @@ module.exports = {
     const reqSenderPosition = chat.partecipants.indexOf(reqSender._id);
     return {
       status: 200,
-      data: { chat: chat, reqSenderPosition: reqSenderPosition },
+      data: { chat: chat, reqSenderPosition: reqSenderPosition, chat_length: chat_length },
     };
   },
 

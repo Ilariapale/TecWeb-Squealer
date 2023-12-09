@@ -1,6 +1,10 @@
 <div id="chat-main" role="main" class="m-3">
   <div class="mesage-container" id="messageContainer">
-    <ng-container *ngIf="chat_loaded">
+    <div *ngIf="more_to_load" class=" d-flex justify-content-center align-items-center py-2">
+      <button (click)="loadMoreMessages()" type=" button" class="btn btn-outline-secondary rounded-pill"><i
+          class="bi bi-arrow-clockwise"></i></button>
+    </div><ng-container *ngIf="chat_loaded">
+
       <div *ngFor="let message of chat.messages" class="chat-body mb-1">
 
         <div *ngIf="message.sender === reqSenderPosition" [class.user-message-dark]="getThemeClass()=='dark-theme'"
@@ -27,9 +31,9 @@
       </div>
     </ng-container>
   </div>
-  <form class="input-group fixed-bottom mb-5 pb-2" id="message_input" (ngSubmit)="sendMessage()">
-    <input type="text" [(ngModel)]="this.message_text" class="form-control p-3 " placeholder="Type your message..."
-      aria-label="Type your message...">
+  <form class="input-group fixed-bottom mb-5 pb-2 px-1" id="message_input" (ngSubmit)="sendMessage()">
+    <input name="chat_message" type="text" [(ngModel)]="this.message_text" class="form-control p-3 "
+      placeholder="Type your message..." aria-label="Type your message...">
     <button class="btn btn-primary px-3 " type="submit"><i class="bi bi-send fs-3 "></i></button>
   </form>
 
