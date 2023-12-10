@@ -60,6 +60,7 @@ export class ChatComponent {
           this.chatsService.getChat(this.chatId).then((response: any) => {
             this.chat = response.chat;
             this.chat_loaded = true;
+            if (this.chat.messages.length < 6) this.more_to_load = false;
             this.reqSenderPosition = response.reqSenderPosition;
             setTimeout(() => {
               this.scrollToBottom();
@@ -85,6 +86,8 @@ export class ChatComponent {
     this.socket = io();
     this.socket.emit('authenticate', this.user.user_id);
     this.socket.on('new_message', (message: Message) => {
+      console.log('message from ', message.from, ', recipient ', this.recipient);
+      if (message.from != this.recipient) return;
       // Gestisci il messaggio ricevuto dal server
       this.chat.messages.push({
         sender: message.sender,
@@ -106,9 +109,11 @@ export class ChatComponent {
           if (response.chat != undefined && response.chat.messages.length > 0)
             this.chat.messages?.unshift(...response.chat.messages);
           if (response.chat_length <= this.chat.messages.length) this.more_to_load = false;
+          else this.more_to_load = true;
         })
         .catch((error) => {
           //console.error(error);
+          this.more_to_load = false;
         });
     }
   }
@@ -118,6 +123,8 @@ export class ChatComponent {
   }
   sendMessage() {
     // use the chatservice to send a message
+
+    if (this.message_text.length <= 0) return;
     this.chatsService
       .sendMessage(
         this.chatId !== '0' ? this.chat.partecipants[1 - this.reqSenderPosition].toString() : this.recipient,
@@ -126,12 +133,16 @@ export class ChatComponent {
       .then((response) => {
         // console.log(response);
         this.message_text = '';
+        if (response.chat_id) this.router.navigate(['/private-chats/user', response.chat_id, this.recipient]);
 
         this.chat.messages.push({
           sender: this.reqSenderPosition,
           text: response.text,
           timestamp: response.timestamp,
         });
+
+        if (this.chatId === '0') {
+        }
 
         setTimeout(() => {
           this.scrollToBottom();

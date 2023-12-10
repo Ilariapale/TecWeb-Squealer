@@ -3,6 +3,8 @@ export interface Message {
   sender: number;
   text: string;
   timestamp: Date;
+  from?: string;
+  chat_id?: string; //just for new chat's
 }
 export interface Chat {
   _id?: string;

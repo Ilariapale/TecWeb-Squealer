@@ -48,7 +48,7 @@ export class LoginComponent {
         })
         .catch((error: any) => {
           // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
-          this.errorMessage = error.error.error;
+          if (error.error?.error) this.errorMessage = error.error.error;
         });
     }
   }

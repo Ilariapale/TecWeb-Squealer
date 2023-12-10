@@ -204,6 +204,8 @@ module.exports = {
       sender: 0,
       text: message.replace(/\s+/g, ` `), // Replace multiple spaces with a single space
       timestamp: Date.now(),
+      from: "",
+      chat_id: "", //just for new chats
     };
 
     //Check if the sender already has a chat with the recipient
@@ -211,6 +213,7 @@ module.exports = {
     // If the chat exists, add the message to the chat
     if (chat) {
       newMessage.sender = chat.partecipants.indexOf(sender._id);
+      newMessage.from = sender.username;
       chat.messages.push(newMessage);
       chat.last_modified = Date.now();
       await chat.save();
@@ -234,6 +237,9 @@ module.exports = {
     await recipient.save();
 
     chat.messages = chat.messages.slice(-MESSAGES_TO_LOAD);
+    newMessage.chat_id = chat._id;
+    newMessage.from = sender.username;
+
     return {
       status: 200,
       data: newMessage,
