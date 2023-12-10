@@ -7,6 +7,7 @@ import { UserService } from 'src/app/services/user.service';
 import { firstValueFrom } from 'rxjs';
 import { response } from 'express';
 //TODO quando il token è presente ma scaduto, il client continua a mandare richieste e fallire, controllare il fix
+//TODO aggiungere l'onclick agli squeals
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',

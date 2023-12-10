@@ -34,11 +34,7 @@ router.get("/", verifyToken, async (req, res, next) => {
   }
 });
 
-//TODO lato client, aggiungere gli squeal temporalizzati
 router.post("/", verifyToken, async (req, res, next) => {
-  //TODO controllare post squeals e oggetti recipients
-
-  // Verifica la proprietà req.utenteLoggato per decidere come gestire la richiesta
   if (req.isTokenValid) {
     // Utente loggato, gestisci la richiesta come vuoi
     let options = {
@@ -116,6 +112,26 @@ router.get("/home", verifyToken, async (req, res, next) => {
   }
 });
 
+router.get("/reported", verifyToken, async (req, res, next) => {
+  let options = {
+    user_id: req.user_id,
+    checked: req.query.checked,
+    last_loaded: req.query.last_loaded,
+    pag_size: req.query.pag_size,
+    sort_by: req.query.sort_by,
+    sort_order: req.query.sort_order,
+  };
+  try {
+    const result = await squeals.getReportedSqueals(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
 //squeals/3284612219837
 //squeals/user_id/1928731293711/hex/23
 router.get(["/:identifier", "/user_id/:user_identifier/hex/:squeal_hex"], verifyToken, async (req, res, next) => {
@@ -149,6 +165,46 @@ router.delete("/:identifier", verifyToken, async (req, res, next) => {
     };
     try {
       const result = await squeals.deleteSqueal(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
+  }
+});
+
+router.patch("/checked/:identifier", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
+
+    try {
+      const result = await squeals.markAsChecked(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
+  }
+});
+
+router.patch("/report/:identifier", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
+
+    try {
+      const result = await squeals.reportSqueal(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       return res.status(500).send({

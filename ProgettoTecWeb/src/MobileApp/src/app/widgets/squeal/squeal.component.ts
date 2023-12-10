@@ -115,6 +115,17 @@ export class SquealComponent implements OnInit {
     }
   }
 
+  reportSqueal() {
+    this.squealsService
+      .reportSqueal(this.squeal._id || '')
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+
   addComment() {
     console.log(this.newCommentText);
     this.commentService

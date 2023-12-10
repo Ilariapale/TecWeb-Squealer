@@ -1,7 +1,6 @@
 const mentionNotification = (username, message, type = "text") =>
   `@${username} has mentioned you in a ${type} squeal! Check it out!\n'${message.substring(0, 30)}${message.length > 30 ? ".." : ""}'.`;
 //TODO controllare il tipo del messaggio ad esempio se è una posizione o una immagine, il substring non funziona
-//TODO controllare perchè quando si cambia il proprietario di un canale la notifica non viene inviata
 const squealInOfficialChannel = (message, channels) =>
   `Good news! Your squeal has been featured in ${channels.length > 1 ? "some" : "an"} official channel${channels.length > 1 ? "s" : ""}! It can now be found in §${channels.join(
     ", §"

@@ -37,7 +37,6 @@ const { mentionNotification, squealInOfficialChannel } = require("./messages");
 
 //TODO tradurre tutti i commenti in inglese
 //TODO reagire se non sei autenticato
-//TODO se la get dello squeal viene fatta dal proprietario, non incrementare le impressions
 
 //DONE Controllati i casi in cui l'utente che fa richiesta è bannato
 module.exports = {
@@ -240,7 +239,7 @@ module.exports = {
       pag_size = DEFAULT_PAGE_SIZE;
     } else {
       pag_size = parseInt(pag_size);
-      if (isNaN(pag_size || pag_size <= 0 || pag_size > MAX_PAGE_SIZE)) {
+      if (isNaN(pag_size) || pag_size <= 0 || pag_size > MAX_PAGE_SIZE) {
         return {
           status: 400,
           data: { error: `'pag_size' must be a number between 1 and 100.` },
@@ -325,7 +324,7 @@ module.exports = {
     }
 
     //impressions increment with save()
-    squeal.impressions++;
+    if (squeal.user_id != user_identifier) squeal.impressions++;
     await squeal.save();
 
     squeal = await addCommentsCountToSqueals([squeal]);
@@ -334,7 +333,6 @@ module.exports = {
       data: squeal,
     };
   },
-  //TODO is_scheduled squeals
   /**
    * @param options.content_type Type of the squeal content, it can be "text", "image", "video" or "position"
    * @param options.content Squeal content, it can be a string, an image url, a video url or a position object
@@ -344,8 +342,6 @@ module.exports = {
   //TESTED
   createSqueal: async (options) => {
     try {
-      //TODO controllare post squeals e oggetti recipients
-
       //vietare di postare in un canale ufficiales
       const { user_id, vip_id, content, recipients, is_scheduled } = options;
       //set the default value for content_type
@@ -590,7 +586,7 @@ module.exports = {
       pag_size = DEFAULT_PAGE_SIZE;
     } else {
       pag_size = parseInt(pag_size);
-      if (isNaN(pag_size || pag_size <= 0 || pag_size > MAX_PAGE_SIZE)) {
+      if (isNaN(pag_size) || pag_size <= 0 || pag_size > MAX_PAGE_SIZE) {
         return {
           status: 400,
           data: { error: `'pag_size' must be a number between 1 and 100.` },
@@ -772,6 +768,259 @@ module.exports = {
     return {
       status: 200,
       data: squeal,
+    };
+  },
+
+  reportSqueal: async (options) => {
+    const { identifier, user_id } = options;
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const user = response.data;
+
+    //check if the user is active
+    if (user.is_active == false) {
+      return {
+        status: 403,
+        data: { error: `You're not allowed to report to a squeal while banned` },
+      };
+    }
+    //check if the identifier is specified
+    response = await findSqueal(identifier);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const squeal = response.data;
+    if (squeal.content_type == "deleted") {
+      return {
+        status: 404,
+        data: { error: `You can't report a deleted squeal` },
+      };
+    }
+    if (squeal.reported.checked) {
+      return {
+        status: 200,
+        data: { message: `This squeal has already been checked.` },
+      };
+    }
+    if (squeal.reported.by.includes(user._id)) {
+      return {
+        status: 200,
+        data: { message: `You already reported this squeal.` },
+      };
+    }
+    console.log(squeal.reported, squeal.reported.by.length);
+    if (squeal.reported.by.length == 0) {
+      squeal.reported.first_report = Date.now();
+    }
+    squeal.reported.by.push(user._id);
+    await squeal.save();
+
+    return {
+      status: 200,
+      data: { message: "Squeal reported successfully" },
+    };
+  },
+
+  //first_report  ->  sort by the date of the first report
+  //report_number ->  sort by the number of reports
+  //ratio         ->  sort by the ratio between reports and impressions
+  //checked_date  ->  sort by the date of last check (only if checked is true)
+  getReportedSqueals: async (options) => {
+    let { user_id, last_loaded, pag_size, sort_by, sort_order, checked } = options;
+    const sort_types = ["first_report", "report_number", "ratio", "checked_date"];
+    const sort_orders = ["asc", "desc"];
+    const pipeline = [];
+    console.log(options);
+
+    if (user_id) {
+      const response = await findUser(user_id);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const user = response.data;
+      if (user.account_type != "moderator") {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to see reported squeals.` },
+        };
+      }
+    }
+
+    if (last_loaded) {
+      if (!mongooseObjectIdRegex.test(last_loaded)) {
+        return {
+          status: 400,
+          data: { error: `'last_loaded' must be a valid ObjectId.` },
+        };
+      }
+      pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
+    }
+
+    if (checked) {
+      if (!["true", "false"].includes(checked))
+        return {
+          status: 400,
+          data: { error: `Invalid 'checked' value. Must be either 'true' or 'false'.` },
+        };
+      pipeline.push({ $match: { "reported.checked": checked == "true" ? true : false } });
+      if (checked == "false") pipeline.push({ $match: { "reported.by": { $exists: true, $not: { $size: 0 } } } });
+    } else {
+      pipeline.push({ $match: { "reported.by": { $exists: true, $not: { $size: 0 } } } });
+    }
+
+    //PROJECTION
+    pipeline.push({
+      $project: {
+        _id: 1,
+        username: 1,
+        hex_id: 1,
+        user_id: 1,
+        is_scheduled: 1,
+        content_type: 1,
+        content: 1,
+        recipients: 1,
+        created_at: 1,
+        last_modified: 1,
+        reactions: 1,
+        is_in_official_channel: 1,
+        impressions: 1,
+        reactions: {
+          reactions_count: { $add: ["$reactions.positive_reactions", "$reactions.negative_reactions"] },
+          balance: { $subtract: ["$reactions.positive_reactions", "$reactions.negative_reactions"] },
+          positive_reactions: "$reactions.positive_reactions",
+          negative_reactions: "$reactions.negative_reactions",
+        },
+        reported: 1,
+      },
+    });
+    if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
+      return {
+        status: 400,
+        data: { error: `Both 'sort_order' and 'sort_by' must be specified.` },
+      };
+    }
+
+    if (sort_order && sort_by) {
+      if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+        return {
+          status: 400,
+          data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join("', '")}. 'sort_order' options are '${sort_orders.join("', '")}'.` },
+        };
+      }
+      const order = sort_order == "asc" ? 1 : -1;
+      if (sort_by == "first_report") {
+        pipeline.push({ $sort: { "reported.first_report": order } });
+      } else if (sort_by == "report_number") {
+        pipeline.push({ $sort: { "reported.by.length": order } });
+      } else if (sort_by == "ratio") {
+        pipeline.push({
+          $addFields: {
+            ratio: {
+              $cond: {
+                if: { $eq: ["$impressions", 0] },
+                then: 0,
+                else: { $divide: [{ $size: "$reported.by" }, "$impressions"] },
+              },
+            },
+          },
+        });
+        pipeline.push({ $sort: { ratio: order } });
+      } else if (sort_by == "checked_date") {
+        if (checked == "true") pipeline.push({ $sort: { "reported.checked_at": order } });
+        else return { status: 400, data: { error: `You can't sort by 'checked_date' if 'checked' is false or unspecified` } };
+      }
+    }
+    if (!pag_size) {
+      pag_size = DEFAULT_PAGE_SIZE;
+    } else {
+      pag_size = parseInt(pag_size);
+      if (isNaN(pag_size) || pag_size <= 0 || pag_size > MAX_PAGE_SIZE) {
+        return {
+          status: 400,
+          data: { error: `'pag_size' must be a number between 1 and 100.` },
+        };
+      }
+    }
+    pipeline.push({ $limit: pag_size });
+    console.log(pipeline);
+    //execute the query
+    const data = await Squeal.aggregate(pipeline).exec();
+
+    //check if the query returned any result
+    if (data.length <= 0) {
+      return {
+        status: 404,
+        data: { error: `No squeal found.` },
+      };
+    }
+    return {
+      status: 200,
+      data: data,
+    };
+  },
+
+  markAsChecked: async (options) => {
+    const { identifier, user_id } = options;
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const user = response.data;
+
+    //check if the user is active
+    if (user.is_active == false && user.account_type != "moderator") {
+      return {
+        status: 403,
+        data: { error: `You're not allowed to check a squeal if you're not a moderator or while banned` },
+      };
+    }
+    //check if the identifier is specified
+    response = await findSqueal(identifier);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const squeal = response.data;
+
+    if (squeal.content_type == "deleted") {
+      return {
+        status: 404,
+        data: { error: `You can't check a deleted squeal` },
+      };
+    }
+
+    if (squeal.reported.checked) {
+      return {
+        status: 200,
+        data: { message: `This squeal has already been checked.` },
+      };
+    }
+
+    squeal.reported.checked = true;
+    squeal.reported.checked_by = user._id;
+    squeal.reported.checked_at = Date.now();
+
+    await squeal.save();
+
+    return {
+      status: 200,
+      data: { message: "Squeal checked successfully" },
     };
   },
 

@@ -111,6 +111,12 @@ export class SquealsService {
     const requestOptions = this.headersGenerator(true);
     return firstValueFrom(this.http.patch(`${this.apiUrl}/${squeal_id}/reaction/${reaction}`, {}, requestOptions));
   }
+
+  reportSqueal(squeal_id: String): Promise<any> {
+    const requestOptions = this.headersGenerator(true);
+    return firstValueFrom(this.http.patch(`${this.apiUrl}/report/${squeal_id}`, {}, requestOptions));
+  }
+
   updateSqueal(): Promise<any> {
     return firstValueFrom(this.http.patch(`${this.apiUrl}`, {}));
   }

@@ -53,8 +53,10 @@ app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+app.use("/media", require("./routes/media.route"));
 // parse multipart/form-data
-//app.use(upload.array());
+app.use(upload.array());
+
 app.use(express.static("public"));
 
 // Aggiungi il gestore per i WebSocket
@@ -63,7 +65,7 @@ app.use((req, res, next) => {
   req.connectedUsers = connectedUsers;
   next();
 });
-//app.use(cookieParser());
+
 require("./routes")(app);
 
 //Angular app -------------------

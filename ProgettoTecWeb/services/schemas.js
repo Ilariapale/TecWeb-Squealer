@@ -281,6 +281,13 @@ const SquealSchema = new mongoose.Schema({
 
   is_in_official_channel: { type: Boolean, default: false },
   impressions: { type: Number, default: 0 },
+  reported: {
+    by: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
+    first_report: { type: Date },
+    checked: { type: Boolean, default: false },
+    checked_by: { type: mongoose.Types.ObjectId, ref: "User", default: null },
+    checked_at: { type: Date },
+  },
 });
 
 /**

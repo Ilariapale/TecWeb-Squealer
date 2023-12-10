@@ -34,7 +34,6 @@ const {
 } = require("./messages");
 const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } = require("./constants");
 //--------------------------------------------------------------------------
-//TODO reportare gli squeal e fare in modo che i moderatori abbiano la possibilità di vedere gli squeal segnalati
 module.exports = {
   getUsername: async (options) => {
     const { user_id } = options;

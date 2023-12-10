@@ -31,8 +31,7 @@ export class ChatComponent {
   recipient = 'Recipient';
   user: any;
   chat_loaded = false;
-  private socket: any; // Dichiarazione della variabile del socket
-  //TODO load more messages
+  private socket: any;
 
   constructor(
     private route: ActivatedRoute,

@@ -643,6 +643,29 @@ module.exports = {
       newOwnerUser.owned_channels.push(channel._id);
       oldOwnerUser.owned_channels.pull(channel._id);
 
+      //send notifications to the new owner and the old owner
+      const notificationNewOwner = new Notification({
+        content: newOwnerNotification(newOwnerUser.username, channel.name),
+        user_ref: newOwnerUser._id,
+        channel_ref: channel._id,
+        created_at: Date.now(),
+        source: "channel",
+        id_code: "newOwner",
+      });
+      await notificationNewOwner.save();
+      newOwnerUser.notifications.push(notificationNewOwner._id);
+
+      const notificationOldOwner = new Notification({
+        content: removedOwnerNotification(oldOwnerUser.username, channel.name),
+        user_ref: oldOwnerUser._id,
+        channel_ref: channel._id,
+        created_at: Date.now(),
+        source: "channel",
+        id_code: "oldOwner",
+      });
+      await notificationOldOwner.save();
+      oldOwnerUser.notifications.push(notificationOldOwner._id);
+
       await newOwnerUser.save();
       await oldOwnerUser.save();
     }
