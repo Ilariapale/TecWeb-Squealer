@@ -54,11 +54,11 @@ export class DarkModeService {
   }
 
   getBannerClass() {
-    const number = 6;
+    const number = 5;
     if (this.darkMode) {
-      return 'darkBanner' + Math.floor(Math.random() * number);
+      return 'darkBanner' + (Math.floor(Math.random() * number) + 1);
     } else {
-      return 'lightBanner' + Math.floor(Math.random() * number);
+      return 'lightBanner' + (Math.floor(Math.random() * number) + 1);
     }
   }
 

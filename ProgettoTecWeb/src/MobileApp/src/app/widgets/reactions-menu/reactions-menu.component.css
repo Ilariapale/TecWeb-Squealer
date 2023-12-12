@@ -19,9 +19,11 @@ a {
   text-decoration: none;
 }
 
+
+
 .menu-item,
 .menu-open-button {
-  background: #eeeeee;
+  background: #F8BD57;
   border-radius: 100%;
   width: 56px;
   height: 56px;
@@ -36,6 +38,24 @@ a {
   transition: -webkit-transform ease-out 200ms;
   transition: transform ease-out 200ms;
   transition: transform ease-out 200ms, -webkit-transform ease-out 200ms;
+}
+
+.reaction-image {
+  width: 52px;
+  height: 52px;
+  display: block;
+}
+
+.menu-open-button {
+  padding-top: 5px;
+  padding-right: 0px;
+  padding-bottom: 0px;
+  padding-left: 2px;
+  overflow: hidden;
+}
+
+.menu-open:checked+.menu-open-button .reaction-image {
+  content: url("./../../../assets/imgs/reactionsCOLORS.png");
 }
 
 .menu-open {

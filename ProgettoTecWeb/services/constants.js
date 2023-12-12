@@ -26,7 +26,47 @@ const MAX_DESCRIPTION_LENGTH = 140,
   CM_FACTOR = 25,
   BIG_CHAR_QUOTA_REWARD = 0.3,
   MIN_SQUEAL_PERCENTAGE = 0.1,
-  RESET_THRESHOLD = 50;
+  RESET_THRESHOLD = 50,
+  TIERS = {
+    tier1: {
+      daily: 10,
+      weekly: 30,
+      monthly: 100,
+    },
+    tier2: {
+      daily: 30,
+      weekly: 90,
+      monthly: 300,
+    },
+    tier3: {
+      daily: 70,
+      weekly: 210,
+      monthly: 700,
+    },
+    tier4: {
+      daily: 150,
+      weekly: 450,
+      monthly: 1500,
+    },
+    daily: {
+      tier1: 50,
+      tier2: 150,
+      tier3: 350,
+      tier4: 750,
+    },
+    weekly: {
+      tier1: 150,
+      tier2: 450,
+      tier3: 1050,
+      tier4: 2250,
+    },
+    monthly: {
+      tier1: 500,
+      tier2: 1500,
+      tier3: 3500,
+      tier4: 7500,
+    },
+  };
 
 module.exports = {
   MAX_DESCRIPTION_LENGTH,
@@ -58,4 +98,5 @@ module.exports = {
   CM_FACTOR,
   MIN_SQUEAL_PERCENTAGE,
   RESET_THRESHOLD,
+  TIERS,
 };

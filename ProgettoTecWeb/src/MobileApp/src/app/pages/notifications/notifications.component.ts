@@ -37,16 +37,15 @@ export class NotificationsComponent implements OnInit {
   }
 
   ngOnInit() {
-    firstValueFrom(this.userService.getUserData()).then((userData) => {
-      if (userData.account_type === 'guest') {
-        this.isGuest = true;
-      } else {
-        this.isGuest = false;
-        this.usersService.getNotifications().then((notifications) => {
-          this.notifications = [...notifications].reverse();
-        });
-      }
-    });
+    const userData = this.userService.getUserData();
+    if (userData.account_type === 'guest') {
+      this.isGuest = true;
+    } else {
+      this.isGuest = false;
+      this.usersService.getNotifications().then((notifications) => {
+        this.notifications = [...notifications].reverse();
+      });
+    }
   }
 
   onMouseEnter() {

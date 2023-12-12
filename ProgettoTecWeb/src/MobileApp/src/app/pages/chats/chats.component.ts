@@ -46,24 +46,23 @@ export class ChatsComponent {
     } else {
       this.router.navigate(['/login']);
     } //richiedi al server le notifiche con gli id specificati
-    this.userSubscription = this.userService.getUserData().subscribe((userData) => {
-      if (userData.account_type === 'guest') {
-        this.isGuest = true;
-      } else {
-        this.isGuest = false;
-        this.chatsService.getChats().then((chats: any[]) => {
-          this.chatsPreview = chats;
-          this.chatsPreview.sort((a, b) => {
-            if (a.last_modified > b.last_modified) return -1;
-            if (a.last_modified < b.last_modified) return 1;
-            return 0;
-          });
-          for (let i = 0; i < this.chatsPreview.length; i++) {
-            this.chatsPreview[i].last_modified = new Date(this.chatsPreview[i].last_modified);
-          }
+    const userData = this.userService.getUserData();
+    if (userData.account_type === 'guest') {
+      this.isGuest = true;
+    } else {
+      this.isGuest = false;
+      this.chatsService.getChats().then((chats: any[]) => {
+        this.chatsPreview = chats;
+        this.chatsPreview.sort((a, b) => {
+          if (a.last_modified > b.last_modified) return -1;
+          if (a.last_modified < b.last_modified) return 1;
+          return 0;
         });
-      }
-    });
+        for (let i = 0; i < this.chatsPreview.length; i++) {
+          this.chatsPreview[i].last_modified = new Date(this.chatsPreview[i].last_modified);
+        }
+      });
+    }
   }
   //TODO finire implementazione di messages
 

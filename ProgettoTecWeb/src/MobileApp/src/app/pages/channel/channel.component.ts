@@ -59,22 +59,26 @@ export class ChannelComponent {
       if (this.identifier) {
         this.channelsService
           .getChannel(this.identifier)
-          .then((channel: any) => {
+          .then(async (channel: any) => {
             this.channel = channel;
 
             this.loading = true;
-            this.lastSquealLoaded = channel.squeals && channel.squeals.length > 0 ? channel.squeals.length - 1 : 0;
+            console.log(channel);
+            this.lastSquealLoaded = channel.squeals && channel.squeals.length > 0 ? channel.squeals.length - 1 : -1;
+            console.log(this.lastSquealLoaded);
             const squealsRequests = [];
 
             for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS && i >= 0; i--) {
+              console.log('i = ', i);
+              console.log(i, ' > ', this.lastSquealLoaded - this.MAX_SQUEALS, ' && ', i, ' >= 0');
+              console.log('i, this.lastSquealLoaded, this.MAX_SQUEALS = ', i, this.lastSquealLoaded, this.MAX_SQUEALS);
               squealsRequests.push(this.squealsService.getSqueal(channel.squeals[i]));
             }
-
+            console.log(squealsRequests);
             if (squealsRequests.length > 0) {
-              forkJoin(squealsRequests).subscribe((squeals) => {
-                squeals.forEach((squeal) => {
-                  this.squeals.push(squeal[0]); // Aggiungi il nuovo squeal all'inizio dell'array
-                });
+              const squeals = await Promise.all(squealsRequests);
+              squeals.forEach((squeal) => {
+                this.squeals.push(squeal[0]); // Aggiungi il nuovo squeal all'inizio dell'array
               });
               this.lastSquealLoaded -= this.MAX_SQUEALS;
             }
@@ -107,48 +111,3 @@ export class ChannelComponent {
     this.loading = false;
   }
 }
-
-/*
-
-export enum ContentType {
-  text = 'text',
-  image = 'image',
-  video = 'video',
-  position = 'position',
-  deleted = 'deleted',
-}
-
-export interface Recipients {
-  users: string[];
-  channels: string[];
-  keywords: string[];
-}
-
-export interface Squeal {
-  _id?: string;
-  hex_id?: Number;
-  user_id?: String;
-  username?: String;
-  is_scheduled?: Boolean;
-  content_type?: ContentType;
-  content?: String;
-  recipients?: Recipients;
-  created_at?: Date;
-  last_modified?: Date;
-  comment_section?: string;
-  reactions?: {
-    positive_reactions?: Number;
-    negative_reactions?: Number;
-    like?: Number;
-    love?: Number;
-    laugh?: Number;
-    dislike?: Number;
-    disgust?: Number;
-    disagree?: Number;
-  };
-  is_in_official_channel?: Boolean;
-  impressions?: Number;
-  comments_count?: Number;
-}
-
-*/

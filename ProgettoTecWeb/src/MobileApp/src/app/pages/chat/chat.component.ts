@@ -47,29 +47,28 @@ export class ChatComponent {
       this.chatId = params.get('id') || '0';
     });
 
-    this.userSubscription = this.userService.getUserData().subscribe((userData) => {
-      if (userData.account_type === 'guest') {
-        this.isGuest = true;
-      } else {
-        this.isGuest = false;
-        this.user = userData;
-        if (this.chatId !== '0') {
-          console.log(this.chatId, 'this.chatId');
-          console.log(this.recipient, 'this.recipient');
+    const userData = this.userService.getUserData();
+    if (userData.account_type === 'guest') {
+      this.isGuest = true;
+    } else {
+      this.isGuest = false;
+      this.user = userData;
+      if (this.chatId !== '0') {
+        console.log(this.chatId, 'this.chatId');
+        console.log(this.recipient, 'this.recipient');
 
-          this.chatsService.getChat(this.chatId).then((response: any) => {
-            this.chat = response.chat;
-            this.chat_loaded = true;
-            if (this.chat.messages.length < 6) this.more_to_load = false;
-            this.reqSenderPosition = response.reqSenderPosition;
-            setTimeout(() => {
-              this.scrollToBottom();
-            }, 10);
-          });
-        }
-        this.connectWebSocket(); // Chiamata alla funzione per connettersi al WebSocket
+        this.chatsService.getChat(this.chatId).then((response: any) => {
+          this.chat = response.chat;
+          this.chat_loaded = true;
+          if (this.chat.messages.length < 6) this.more_to_load = false;
+          this.reqSenderPosition = response.reqSenderPosition;
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 10);
+        });
       }
-    });
+      this.connectWebSocket(); // Chiamata alla funzione per connettersi al WebSocket
+    }
   }
 
   ngOnInit() {
@@ -84,7 +83,7 @@ export class ChatComponent {
 
   private connectWebSocket(): void {
     this.socket = io();
-    this.socket.emit('authenticate', this.user.user_id);
+    this.socket.emit('authenticate', this.user._id);
     this.socket.on('new_message', (message: Message) => {
       console.log('message from ', message.from, ', recipient ', this.recipient);
       if (message.from != this.recipient) return;

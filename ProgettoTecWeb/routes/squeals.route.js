@@ -61,21 +61,27 @@ router.post("/", verifyToken, async (req, res, next) => {
 
 router.post("/scheduled", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
+    console.log("token is valid");
     try {
+      //user_id = nome utente
       let options = {
         user_id: req.user_id,
         content: req.body["content"],
         content_type: req.body.content_type,
         is_scheduled: true,
         recipients: req.body.recipients,
+        connected_users: req.connectedUsers,
+        io: req.io,
       };
+
+      console.log(options.user_id);
       const input = {
         schedule_type: req.body.schedule_type,
         tick_rate: req.body.tick_rate,
         scheduled_date: req.body.scheduled_date,
         repeat: req.body.repeat,
       };
-
+      console.log("const result = await scheduleSqueals(input, options);");
       const result = await scheduleSqueals(input, options);
       console.log(result);
       if (result.status >= 300) {

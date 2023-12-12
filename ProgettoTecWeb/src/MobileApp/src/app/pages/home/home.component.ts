@@ -6,6 +6,8 @@ import { Subscription } from 'rxjs';
 import { UserService } from 'src/app/services/user.service';
 import { firstValueFrom } from 'rxjs';
 import { response } from 'express';
+import { User } from 'src/app/models/user.interface';
+import { UsersService } from 'src/app/services/api/users.service';
 //TODO quando il token è presente ma scaduto, il client continua a mandare richieste e fallire, controllare il fix
 //TODO aggiungere l'onclick agli squeals
 @Component({
@@ -18,6 +20,13 @@ export class HomeComponent {
   title = 'Home - Squealer';
   //TODO remove example squeal
   squeals: any[] = [
+    {
+      content: '12.51133 41.89193 , 9.1881263 45.4636707 , 12.22133 41.99193 , 12.13133 41.89993',
+      hex_id: 2,
+      _id: '7698696',
+      username: 'paulpaccy',
+      content_type: 'position',
+    },
     {
       content: 'test',
       hex_id: 2,
@@ -38,25 +47,31 @@ export class HomeComponent {
     },
   ];
   isGuest: boolean = true;
+  user: User;
 
   constructor(
     private squealsService: SquealsService,
     public authService: AuthService,
     private router: Router,
-    private userService: UserService
+    private userService: UserService,
+    private usersService: UsersService
   ) {
-    firstValueFrom(this.userService.getUserData()).then((userData) => {
-      console.log(userData);
-      if (userData.account_type == 'guest') {
-        this.isGuest = true;
+    this.user = {} as User;
+
+    this.user = this.userService.getUserData();
+    if (this.user.account_type == 'guest') {
+      this.isGuest = true;
+    } else {
+      if (['standard', 'moderator', 'professional', 'verified'].includes(this.user.account_type)) {
+        this.isGuest = false;
+        this.usersService.getUser(this.user.username as string).then((response) => {
+          this.user = response;
+          this.userService.setUserData(this.user);
+        });
       } else {
-        if (['standard', 'moderator', 'professional', 'verified'].includes(userData.account_type)) {
-          this.isGuest = false;
-        } else {
-          this.authService.logout();
-        }
+        this.authService.logout();
       }
-    });
+    }
   }
 
   ngOnInit() {

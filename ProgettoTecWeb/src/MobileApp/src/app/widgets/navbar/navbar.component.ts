@@ -18,13 +18,12 @@ export class NavbarComponent {
     public router: Router,
     public userService: UserService
   ) {
-    userService.getUserData().subscribe((user) => {
-      if (!user) {
-        this.log_button = 'Login';
-      } else {
-        this.log_button = user.account_type == 'guest' || user.account_type == undefined ? 'Login' : 'Logout';
-      }
-    });
+    const user = userService.getUserData();
+    if (!user) {
+      this.log_button = 'Login';
+    } else {
+      this.log_button = user.account_type == 'guest' || user.account_type == undefined ? 'Login' : 'Logout';
+    }
   }
 
   log() {
@@ -46,12 +45,11 @@ export class NavbarComponent {
   }
 
   goToPage(page: string) {
+    //TODO controllare
     if (page === 'profile') {
-      this.userService.getUserData().subscribe((user) => {
-        this.user = user?.username || '';
-        const destination = this.user ? `/${page}/${this.user}` : '/login';
-        this.router.navigate([destination]);
-      });
+      this.user = this.userService.getUserData()?.username || '';
+      const destination = this.user ? `/${page}/${this.user}` : '/login';
+      this.router.navigate([destination]);
     } else {
       this.router.navigate([`/${page}`]);
     }

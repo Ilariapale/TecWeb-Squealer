@@ -138,4 +138,12 @@ export class SquealComponent implements OnInit {
         //console.error(error);
       });
   }
+
+  getLon(coord: String | undefined) {
+    return Number(coord?.split(' ')[0]);
+  }
+
+  getLat(coord: String | undefined) {
+    return Number(coord?.split(' ')[1]);
+  }
 }

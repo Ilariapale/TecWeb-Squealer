@@ -1,7 +1,8 @@
 <div class="content" role="main">
   <div class="row">
     <div class="col"></div>
-    <app-squeal-form (squealSubmitted)="onSquealSubmitted($event)" class="col-12 col-md-6"></app-squeal-form>
+    <app-squeal-form (squealSubmitted)="onSquealSubmitted($event)" [user]="user"
+      class="col-12 col-md-6"></app-squeal-form>
     <div class="col"></div>
   </div>
 

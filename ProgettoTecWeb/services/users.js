@@ -32,7 +32,7 @@ const {
   declinedSMMrequestNotification,
   updatedProfileTypeNotification,
 } = require("./messages");
-const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } = require("./constants");
+const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TIERS } = require("./constants");
 //--------------------------------------------------------------------------
 module.exports = {
   getUsername: async (options) => {
@@ -1169,10 +1169,11 @@ module.exports = {
     const { new_password, old_password } = options?.inlineReqJson || {};
 
     // Check if the required fields are present
+
     if (!new_password || !old_password) {
       return {
         status: 400,
-        data: { error: `'old_password' and 'new_password' are required.` },
+        data: { error: `'old_password' and 'new_password' are required to change you password.` },
       };
     }
 
@@ -1234,6 +1235,149 @@ module.exports = {
       status: 200,
       data: updatedUser,
     };
+  },
+
+  resetPassword: async (options) => {
+    const { identifier } = options;
+    const { email, new_password } = options.inlineReqJson;
+
+    // Check if the required fields are present
+    if (!new_password || !email) {
+      return {
+        status: 400,
+        data: { error: `'new_password' or 'email' is required.` },
+      };
+    }
+
+    if (new_password.length < PASSWORD_MIN_LENGTH) {
+      return {
+        status: 400,
+        data: { error: `'new_password' must be at least ${PASSWORD_MIN_LENGTH} characters long.` },
+      };
+    }
+
+    //controllare che gli utenti esistano e abbia la stessa email
+    const response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: response.error,
+      };
+    }
+    const userToUpdate = response.data;
+
+    if (userToUpdate.email !== email) {
+      return {
+        status: 400,
+        data: { error: `'email' is not correct.` },
+      };
+    }
+    //replace the old password with the new one
+    const salt = await bcrypt.genSalt(securityLvl);
+    const hashedPassword = await bcrypt.hash(new_password, salt);
+    userToUpdate.password = hashedPassword;
+
+    //save the updated user
+    const updatedUser = await userToUpdate.save();
+
+    // Return the result
+    return {
+      status: 200,
+      data: updatedUser,
+    };
+  },
+
+  /**
+   * @param identifier User's identifier, can be either username or userId
+   */
+  addCharacters: async (options) => {
+    const { identifier, user_id, inlineReqJson } = options; //user_id is who sent the request
+    const { tier, char_quota_daily, char_quota_weekly, char_quota_monthly } = inlineReqJson;
+
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: response.error,
+      };
+    }
+    const reqSender = response.data; //who sent the request
+
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: response.error,
+      };
+    }
+    const user = response.data; //who needs the characters
+
+    const isThemselves = user.username == reqSender.username;
+    const isModerator = reqSender.account_type === "moderator";
+    const isSMM = reqSender.account_type === "professional" && reqSender.professional_type === "SMM" && reqSender.managed_accounts.includes(identifier);
+
+    if (!isThemselves && !isModerator && !isSMM) {
+      //caso qualcuno che vuole updateare il profilo di un altro utente
+      return {
+        status: 400,
+        data: { error: "You don't have the permissions to update this user's character quota" },
+      };
+    }
+    if (isThemselves || isSMM) {
+      if (["tier1", "tier2", "tier3", "tier4"].includes(tier)) {
+        user.char_quota.daily += TIERS[tier].daily;
+        user.char_quota.weekly += TIERS[tier].weekly;
+        user.char_quota.monthly += TIERS[tier].monthly;
+      } else if (["dailytier1", "dailytier2", "dailytier3", "dailytier4"].includes(tier)) {
+        user.char_quota.daily += TIERS.daily[tier.slice(5)];
+      } else if (["weeklytier1", "weeklytier2", "weeklytier3", "weeklytier4"].includes(tier)) {
+        user.char_quota.weekly += TIERS.weekly[tier.slice(6)];
+      } else if (["monthlytier1", "monthlytier2", "monthlytier3", "monthlytier4"].includes(tier)) {
+        user.char_quota.monthly += TIERS.monthly[tier.slice(7)];
+      } else {
+        return {
+          status: 400,
+          data: { error: "No valid tier field" },
+        };
+      }
+
+      await user.save();
+      return {
+        status: 200,
+        data: { message: "Character quota added successfully." },
+      };
+    }
+    if (isModerator) {
+      if (!(char_quota_daily || char_quota_weekly || char_quota_monthly)) {
+        return {
+          status: 400,
+          data: { error: "No valid char_quota field" },
+        };
+      }
+      if (char_quota_daily && !isNaN(char_quota_daily)) user.char_quota.daily += char_quota_daily;
+      else if (char_quota_weekly && !isNaN(char_quota_weekly)) user.char_quota.weekly += char_quota_weekly;
+      else if (char_quota_monthly && !isNaN(char_quota_monthly)) user.char_quota.monthly += char_quota_monthly;
+      else {
+        return {
+          status: 400,
+          data: { error: "No valid char_quota field" },
+        };
+      }
+
+      await user.save();
+      return {
+        status: 200,
+        data: { message: "Character quota added successfully." },
+      };
+    } else {
+      return {
+        status: 400,
+        data: { error: "You do not have permissions to modify user's character quota" },
+      };
+    }
   },
 
   /**

@@ -1,20 +1,32 @@
-import { Component, OnInit, AfterViewInit, AfterViewChecked, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  AfterViewChecked,
+  ChangeDetectorRef,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { TimeService } from 'src/app/services/time.service';
 import { UsersService } from 'src/app/services/api/users.service';
 import { UserService } from 'src/app/services/user.service';
 import { User, AccountType, ProfessionalType } from 'src/app/models/user.interface';
-import { Subscription, firstValueFrom, forkJoin } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Squeal, ContentType } from 'src/app/models/squeal.interface';
+import { MediaService } from 'src/app/services/api/media.service';
 
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
-export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked {
+export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
+  @ViewChild('imageInput') imageInput!: ElementRef;
+
   MAX_SQUEALS = 5;
   lastSquealLoaded = -1;
 
@@ -46,10 +58,15 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
 
   squeals: Squeal[] = [];
 
-  usersSubscription: Subscription = new Subscription();
+  subscription: Subscription[] = [];
   isGuest = false;
   bannerClass = '';
   squealToDelete = '';
+  old_password = '';
+  new_password = '';
+  new_password_confirm = '';
+  new_bio = '';
+  new_pic = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -59,49 +76,49 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
     private squealsService: SquealsService,
     public darkModeService: DarkModeService,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private mediaService: MediaService
   ) {
-    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
-    else if (localStorage.getItem('user') || sessionStorage.getItem('user')) this.isGuest = true;
-    else this.router.navigate(['/login']);
+    //if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    //else if (localStorage.getItem('user') || sessionStorage.getItem('user')) this.isGuest = true;
+    //else this.router.navigate(['/login']);
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     if (!this.isGuest) {
-      this.route.paramMap.subscribe((params: ParamMap) => {
-        this.identifier = params.get('identifier') || '';
+      const params: ParamMap | undefined = await firstValueFrom(this.route.paramMap);
+      this.identifier = params?.get('identifier') || '';
 
-        if (this.identifier && !this.isGuest) {
-          this.usersService.getUser(this.identifier).then((user) => {
-            console.log(user);
-            this.mySelf = this.userService.isMyself(user._id);
-            this.loading = true;
-            this.user = user;
-            this.lastSquealLoaded =
-              user.squeals && user.squeals.posted && user.squeals.posted.length > 0
-                ? user.squeals.posted.length - 1
-                : 0;
-            const squealsRequests = [];
+      if (this.identifier && !this.isGuest) {
+        try {
+          const user = await this.usersService.getUser(this.identifier);
+          console.log(user);
+          this.mySelf = this.userService.isMyself(user._id);
+          this.loading = true;
+          this.user = user;
+          this.lastSquealLoaded =
+            user.squeals && user.squeals.posted && user.squeals.posted.length > 0 ? user.squeals.posted.length - 1 : 0;
 
-            for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS && i >= 0; i--) {
-              squealsRequests.push(this.squealsService.getSqueal(user.squeals.posted[i]));
-            }
+          const squealsPromises = [];
 
-            if (squealsRequests.length > 0) {
-              forkJoin(squealsRequests).subscribe((squeals) => {
-                squeals.forEach((squeal) => {
-                  this.squeals.push(squeal[0]); // Aggiungi il nuovo squeal all'inizio dell'array
-                });
-              });
+          for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS && i >= 0; i--) {
+            squealsPromises.push(this.squealsService.getSqueal(user.squeals.posted[i]));
+          }
 
-              this.lastSquealLoaded -= this.MAX_SQUEALS;
-            }
-            this.loading = false;
+          const squeals = await Promise.all(squealsPromises);
+          squeals.forEach((squeal) => {
+            this.squeals.push(squeal[0]); // Add the new squeal at the beginning of the array
           });
-        } else {
-          this.router.navigate(['/login']);
+          this.lastSquealLoaded -= this.MAX_SQUEALS;
+          this.loading = false;
+        } catch (error) {
+          // Handle error
+          console.error(error);
+          this.loading = false;
         }
-      });
+      } else {
+        this.router.navigate(['/login']);
+      }
     }
   }
 
@@ -134,11 +151,13 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
       if (squeal_id) squealsRequests.push(this.squealsService.getSqueal(squeal_id));
     }
     this.lastSquealLoaded -= this.MAX_SQUEALS;
-    forkJoin(squealsRequests).subscribe((squeals) => {
+
+    Promise.all(squealsRequests).then((squeals) => {
       squeals.forEach((squeal) => {
         this.squeals.push(squeal[0]);
       });
     });
+
     this.loading = false;
   }
 
@@ -164,5 +183,57 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
   }
   goToPage(page: string) {
     this.router.navigate([page]);
+  }
+
+  onDestroy() {
+    this.subscription.forEach((sub) => sub.unsubscribe());
+  }
+
+  sendUpdate() {
+    const imageInputElement = this.imageInput.nativeElement;
+    if (!imageInputElement.files || !imageInputElement.files[0]) {
+      this.updateProfileData();
+      return;
+    }
+    this.updateImageFirst(imageInputElement.files[0]);
+  }
+
+  updateProfileData(image?: string) {
+    if (this.new_password != '' && this.new_password_confirm != '' && this.new_password === this.new_password_confirm) {
+      this.usersService
+        .updatePassword(this.identifier, this.old_password, this.new_password)
+        .then((response) => {})
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+    if (this.new_bio != '' || image) {
+      let body: any = {};
+      console.log(this.new_bio);
+      if (this.new_bio != '') body['profile_info'] = this.new_bio;
+      if (image != '') body['profile_picture'] = image;
+      this.usersService
+        .updateProfile(this.identifier, body)
+        .then((response) => {})
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  }
+
+  updateImageFirst(image: any) {
+    this.mediaService.postImage(image).subscribe({
+      next: (response) => {
+        console.log('immagine caricata');
+        console.log(response.name); //url dell'immagine caricata
+        //----------------------------------------
+        this.updateProfileData(response.name);
+        //----------------------------------------
+      },
+      error: (err) => {
+        console.log('immagine non caricata');
+        console.error(err);
+      },
+    });
   }
 }

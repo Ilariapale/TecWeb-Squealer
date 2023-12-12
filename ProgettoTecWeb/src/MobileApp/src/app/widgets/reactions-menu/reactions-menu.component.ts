@@ -12,7 +12,7 @@ export class ReactionsMenuComponent {
   isMenuClosing = false;
 
   constructor(private squealService: SquealsService) {}
-
+  //TODO mostrare il numero di reaction di ogni tipo quando si apre lo squeal in una pagina dedicata
   addReaction(reaction: string, event: Event) {
     event.preventDefault();
     this.squealService.addReaction(reaction, this.squealId).then(

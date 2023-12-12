@@ -7,13 +7,16 @@
     <div class="mt-4">
       <div class="row p-3" [ngClass]="bannerClass">
 
-        <img class="col-3 p-0" alt="Profile Picture" style="height: 100%;" src="assets/imgs/logo.png" />
+        <img class="col-3 p-0" alt="Profile Picture" style="height: 100%;" [src]="'media/image/'+user.profile_picture"
+          onerror="this.src='assets/imgs/logo.png'" />
         <div class="col-auto">
           <h2 class="row ms-2 pt-4">@{{user.username}}</h2>
           <span class="row ms-2 text-secondary">{{user.account_type}}</span>
         </div>
+        <!---->
         <span *ngIf="mySelf" class="col d-flex flex-row-reverse">
-          <i class="bi bi-gear"></i>
+          <button type="button" class="btn bi bi-gear h-50 no-overflow" [class.text-light]="getDarkMode()=='dark-theme'"
+            data-bs-toggle="modal" data-bs-target="#settingsModal"></button>
         </span>
       </div>
       <div class="pt-3 ps-2">
@@ -56,5 +59,93 @@
       </div>
     </div>
   </div>
+
+  <div class=" modal " id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content" [class.bg-dark]="getDarkMode()=='dark-theme'">
+        <div class="modal-header" [class.border-secondary]="getDarkMode()=='dark-theme'"
+          [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'">
+          <h1 class="modal-title fs-5" id="settingsModalLabel">Profile Settings</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="accordion accordion-flush" id="accordionFlushProfileSettings">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="flush-headingOne">
+                <button class="accordion-button collapsed" [class.border-secondary]="getDarkMode()=='dark-theme'"
+                  [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                  type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false"
+                  aria-controls="flush-collapseOne">
+                  Change Profile Bio
+                </button>
+              </h2>
+              <div [class.bg-dark]="getDarkMode()=='dark-theme'" id="flush-collapseOne"
+                class="accordion-collapse collapse" aria-labelledby="flush-headingOne"
+                data-bs-parent="#accordionFlushProfileSettings">
+                <div class="accordion-body">
+                  <input [class.border-secondary]="getDarkMode()=='dark-theme'"
+                    [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                    [(ngModel)]="new_bio" name="new bio" type="text" class="form-control" placeholder="New Bio">
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="flush-headingTwo">
+                <button class="accordion-button collapsed" [class.border-secondary]="getDarkMode()=='dark-theme'"
+                  [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                  type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseTwo" aria-expanded="false"
+                  aria-controls="flush-collapseTwo">
+                  Change Profile Picture
+                </button>
+              </h2>
+              <div [class.bg-dark]="getDarkMode()=='dark-theme'" id="flush-collapseTwo"
+                class="accordion-collapse collapse" aria-labelledby="flush-headingTwo"
+                data-bs-parent="#accordionFlushProfileSettings">
+                <div class="accordion-body">
+                  <input type="file" [class.border-secondary]="getDarkMode()=='dark-theme'"
+                    [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                    name="new pic" class="form-control" accept="image/*" placeholder="New Profile Picture" #imageInput>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="flush-headingThree">
+                <button class="accordion-button collapsed" [class.border-secondary]="getDarkMode()=='dark-theme'"
+                  [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                  type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseThree" aria-expanded="false"
+                  aria-controls="flush-collapseThree">
+                  Change password
+                </button>
+              </h2>
+              <div [class.bg-dark]="getDarkMode()=='dark-theme'" id="flush-collapseThree"
+                class="accordion-collapse collapse" aria-labelledby="flush-headingThree"
+                data-bs-parent="#accordionFlushProfileSettings">
+                <div class="accordion-body">
+                  <input [class.border-secondary]="getDarkMode()=='dark-theme'"
+                    [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                    type="text" [(ngModel)]="old_password" name="old password" class="form-control"
+                    placeholder="Old Password">
+                  <input [class.border-secondary]="getDarkMode()=='dark-theme'"
+                    [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                    type="text" [(ngModel)]="new_password" name="new password" class="form-control mt-2"
+                    placeholder="New Password">
+                  <input [class.border-secondary]="getDarkMode()=='dark-theme'"
+                    [class.text-light]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                    type="text" [(ngModel)]="new_password_confirm" name="new password confirm" class="form-control mt-2"
+                    placeholder="Confirm New Password">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="sendUpdate()">Save
+            changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-------------------------------------------------------->
 </div>

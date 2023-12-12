@@ -49,7 +49,8 @@
         </div>
       </div>
       <div class="tab-pane fade" id="pills-Editor" role="tabpanel" aria-labelledby="pills-Editor-tab" tabindex="0">
-        <div *ngFor="let channel of channelsEditor">
+        <div *ngFor="let channel of channelsEditor" data-bs-toggle="modal" data-bs-target="#editorChannelModif"
+          (click)="selectChannel(channel)">
           <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center row">
             <div class="col-1"></div>
             <div class="toast show m-1 col col-md-2" [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert"
@@ -99,6 +100,13 @@
                   [class.border-secondary]="getDarkMode()=='dark-theme'" [class.bg-dark]="getDarkMode()=='dark-theme'"
                   [class.text-light]="getDarkMode()=='dark-theme'"></textarea>
               </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" [(ngModel)]="is_official"
+                  name="is official checkbox">
+                <label class="form-check-label" for="flexCheckDefault">
+                  Official channel
+                </label>
+              </div>
             </form>
           </div>
           <div class="modal-footer " [class.border-secondary]="getDarkMode()=='dark-theme'">
@@ -137,7 +145,7 @@
     <!------------------------------MODIFY CHANNELS--------------------------------------------------------->
     <!-- Button trigger modal -->
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#owndedChannelModif">
-      Owned
+      Owned a
     </button>
 
     <!-- Modal -->
@@ -194,10 +202,8 @@
       </div>
     </div>
     <!--------------------------------------------------------------------------------------->
+    <!--TODO QUI AGGIUNGERE / RIMUOVERE CAMPI PER FARE LA RICHIESTA DA EDITOR-->
     <!-- Button trigger modal -->
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editorChannelModif">
-      Editor
-    </button>
     <div class="modal fade" id="editorChannelModif" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
       aria-labelledby="editorChannelModifLabel" aria-hidden="true">
       <div class="modal-dialog">

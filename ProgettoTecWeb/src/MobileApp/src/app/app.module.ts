@@ -26,6 +26,7 @@ import { ChatComponent } from './pages/chat/chat.component';
 import { ChannelComponent } from './pages/channel/channel.component';
 import { ErrorComponent } from './pages/error/error.component';
 import { ChannelManagerComponent } from './pages/channel-manager/channel-manager.component';
+import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
 
 @NgModule({
   declarations: [
@@ -49,6 +50,7 @@ import { ChannelManagerComponent } from './pages/channel-manager/channel-manager
     ChannelComponent,
     ErrorComponent,
     ChannelManagerComponent,
+    ResetPasswordComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule, FormsModule, HttpClientModule],
   providers: [],

@@ -38,6 +38,12 @@
               <source [src]="'media/video/'+squeal.content" type="video/mp4">
             </video>
           </div>
+          <!--position-->
+          <div *ngIf="squeal.content_type == 'position'" class="w-100">
+            <app-map [squeal_content]="squeal.content || ''" [lng]="getLon(squeal.content)"
+              [lat]="getLat(squeal.content)" [squeal_id]="squeal._id || '0'" class="w-100"></app-map>
+          </div>
+          <!--end position-->
           <div *ngIf="squeal.content_type!='deleted'" class="card-icons container">
             <div class="row flex-nowrap justify-content-between d-flex align-items-center my-2">
 

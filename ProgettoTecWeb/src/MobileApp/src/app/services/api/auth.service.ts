@@ -72,12 +72,5 @@ export class AuthService {
   //  return this.http.post(`${this.apiUrl}/logout`, {});
   //}
 
-  updatePassword(old_password: string, new_password: string): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/users`, {
-      old_password,
-      new_password,
-    });
-  }
-
   // Altre funzioni per il recupero password, aggiornamento del profilo, ecc. possono essere implementate qui.
 }

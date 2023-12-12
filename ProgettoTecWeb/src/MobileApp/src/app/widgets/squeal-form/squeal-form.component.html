@@ -5,7 +5,7 @@
       @{{user.username}}
       <span>{{user.account_type}}</span>
 
-      <ng-container *ngIf='true'><!--MODIFICA !isGuest -->
+      <ng-container *ngIf='!isGuest || true'>
         <div *ngIf="enoughChars" class="squeal-form-text">
           {{user.char_quota?.daily || 0}}<span class="quota_letter">D</span>
           {{user.char_quota?.weekly || 0}}<span class="quota_letter">W</span>
@@ -146,6 +146,7 @@
             <!--End delayed squeals-->
 
           </div>
+          <!--Squeal Type-->
           <div class="tab-content" id="pills-tabContent">
             <div class="tab-pane fade show active" id="pills-text" role="tabpanel" aria-labelledby="pills-text-tab"
               tabindex="0">
@@ -181,13 +182,13 @@
             <div class="tab-pane fade" id="pills-position" role="tabpanel" aria-labelledby="pills-position-tab"
               tabindex="0">
               <!--position-->
-              <app-map></app-map>
+              <app-map class="pb-3"></app-map>
               <!--End position-->
             </div>
           </div>
-          <!---->
+          <!--End Squeal Type-->
 
-
+          <!--Recipients-->
           <div class="accordion" id="accordionRecipients">
             <div class="accordion-item border" [class.border-secondary]="getDarkMode()=='dark-theme'">
               <h2 class="accordion-header" id="recipientsHeader">
@@ -214,15 +215,17 @@
             </div>
 
           </div>
-
+          <!--End Recipients-->
 
           <div class="row">
             <div class="col">
-              <div *ngIf="showSquealPostResponse" id="squeal-post-response" class="text-success pt-3 ps-2">
+              <div *ngIf="showSquealPostResponse" id="squeal-post-response" class="pt-3 ps-2"
+                [class.text-success]="request_outcome" [class.text-danger]="!request_outcome">
                 {{postResponse}}
               </div>
             </div>
-            <button type="submit" class="submit-button btn btn-secondary col-2 m-3 my-1 px-1">Post</button>
+            <button id="submit_squeal" type="submit"
+              class="submit-button btn btn-secondary col-2 m-3 my-1 px-1">Post</button>
           </div>
         </form>
       </ng-container>
@@ -230,7 +233,7 @@
 
 
     </div>
-    <ng-container *ngIf='user.account_type=="guest"'>
+    <ng-container *ngIf='user?.account_type=="guest"'>
       <div class="guest-message pt-4"> <a (click)="goToPage('login')" class="text-primary">Log-in</a> if you want to
         post a squeal</div>
     </ng-container>

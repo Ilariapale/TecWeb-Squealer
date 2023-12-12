@@ -55,12 +55,15 @@ export class ChannelsService {
     return firstValueFrom(this.http.get(`${this.apiUrl}/${identifier}`, requestOptions));
   }
 
-  createChannel(name: string, description: string, can_mute?: boolean, is_official?: boolean): Promise<any> {
+  createChannel(name: string, description: string, is_official?: boolean, can_mute?: boolean): Promise<any> {
     const requestOptions = this.headersGenerator(true);
-    const body = {
+    let body: any = {
       name: name,
       description: description,
     };
+    if (is_official !== undefined) body.is_official = is_official;
+    if (can_mute !== undefined) body.can_mute = can_mute;
+
     return firstValueFrom(this.http.post(`${this.apiUrl}`, body, requestOptions));
   }
 

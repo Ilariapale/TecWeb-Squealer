@@ -42,7 +42,7 @@ export class ChannelManagerComponent {
   channelsOwned: Channel[] = [];
   channelsEditor: Channel[] = [];
   username = 'User';
-
+  is_official = false;
   selectedChannel: Channel = {
     _id: '',
     owner: '',
@@ -74,53 +74,52 @@ export class ChannelManagerComponent {
     private router: Router,
     private channelsService: ChannelsService
   ) {
-    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
-    else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
-      this.isGuest = true;
-    } else {
-      this.router.navigate(['/login']);
-    }
+    // if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    // else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
+    //   this.isGuest = true;
+    // } else {
+    //   this.router.navigate(['/login']);
+    // }
   }
 
   ngOnInit() {
-    firstValueFrom(this.userService.getUserData()).then((userData) => {
-      if (userData.account_type === 'guest') {
-        //this.isGuest = true;
-        return;
-      }
-      //this.isGuest = false;
-      this.username = userData.username;
-      this.usersService
-        .getUser(this.username)
-        .then((user) => {
-          console.log(user);
-          this.channelsOwnedIds = user.owned_channels;
-          this.channelsEditorIds = user.editor_channels;
+    const userData = this.userService.getUserData();
+    if (userData.account_type === 'guest') {
+      //this.isGuest = true;
+      return;
+    }
+    //this.isGuest = false;
+    this.username = userData.username;
+    this.usersService
+      .getUser(this.username)
+      .then((user) => {
+        console.log(user);
+        this.channelsOwnedIds = user.owned_channels;
+        this.channelsEditorIds = user.editor_channels;
 
-          const channelsRequests = [
-            ...this.channelsOwnedIds.map((channelId) => this.channelsService.getChannel(channelId)),
-            ...this.channelsEditorIds.map((channelId) => this.channelsService.getChannel(channelId)),
-          ];
+        const channelsRequests = [
+          ...this.channelsOwnedIds.map((channelId) => this.channelsService.getChannel(channelId)),
+          ...this.channelsEditorIds.map((channelId) => this.channelsService.getChannel(channelId)),
+        ];
 
-          forkJoin(channelsRequests).subscribe({
-            next: (channels) => {
-              this.channelsOwned = channels.filter((channel) => this.channelsOwnedIds.includes(channel._id));
-              this.channelsEditor = channels.filter((channel) => this.channelsEditorIds.includes(channel._id));
-            },
-            error: (err) => {
-              console.error('Error fetching channels:', err);
-            },
-          });
-        })
-        .catch((err) => {
-          console.error('Error fetching user data:', err);
+        forkJoin(channelsRequests).subscribe({
+          next: (channels) => {
+            this.channelsOwned = channels.filter((channel) => this.channelsOwnedIds.includes(channel._id));
+            this.channelsEditor = channels.filter((channel) => this.channelsEditorIds.includes(channel._id));
+          },
+          error: (err) => {
+            console.error('Error fetching channels:', err);
+          },
         });
-    });
+      })
+      .catch((err) => {
+        console.error('Error fetching user data:', err);
+      });
   }
 
   createChannel() {
     this.channelsService
-      .createChannel(this.newChannel.name, this.newChannel.description)
+      .createChannel(this.newChannel.name, this.newChannel.description, this.is_official)
       .then((channel: any) => {
         this.channelsOwnedIds.push(channel._id);
         this.channelsOwned.push(channel);

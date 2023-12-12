@@ -1,40 +1,37 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-
+import { User } from '../models/user.interface';
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  private userDataSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  private userData: any;
 
   setUserData(userData: any) {
-    this.userDataSubject.next(userData);
-    // Salva anche nei dati di sessione o locali, se necessario
+    this.userData = userData;
   }
 
-  getUserData(): Observable<any> {
-    if (!this.userDataSubject.value) {
+  getUserData(): any {
+    if (!this.userData) {
       const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
       if (savedUserData) {
         this.setUserData(JSON.parse(savedUserData));
       } else {
-        //we have a guest user
         this.setUserData({});
       }
     }
-    return this.userDataSubject.asObservable();
+    return this.userData;
   }
 
   isMyself(username: string): boolean {
-    // Ottieni i dati utente correnti
-    if (!this.userDataSubject.value) {
+    if (!this.userData) {
       const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
       if (savedUserData) {
         this.setUserData(JSON.parse(savedUserData));
       }
     }
 
-    const currentUserData = this.userDataSubject.value;
-    return currentUserData && (currentUserData.username === username || currentUserData.user_id === username);
+    const currentUserData = this.userData;
+    return currentUserData && (currentUserData.username === username || currentUserData._id === username);
   }
 }

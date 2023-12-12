@@ -7,12 +7,12 @@
   <div class="row">
     <div class="col-1 col-md-4 ">
     </div>
-    <div class="input-group col">
+    <form class="input-group col" (ngSubmit)="sendSearch()">
       <input type="text" class="form-control" [placeholder]="placeholder" aria-label="Recipient's username"
         aria-describedby="searchButton" [(ngModel)]="searchInput">
-      <button class="btn btn-primary" type="button" id="searchButton" (click)="sendSearch()"
-        [disabled]="selectedOption === 'user-search' && isGuest"><i class="bi bi-search"></i></button>
-    </div>
+      <button class="btn btn-primary" type="button" id="searchButton"
+        [disabled]="selectedOption === 'user-search' && isGuest" type="submit"><i class="bi bi-search"></i></button>
+    </form>
     <div class="col-1 col-md-4"></div>
   </div>
   <div class="col-auto d-flex justify-content-center align-items-center py-3">

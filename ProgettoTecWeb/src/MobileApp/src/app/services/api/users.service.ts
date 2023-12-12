@@ -59,6 +59,20 @@ export class UsersService {
     return firstValueFrom(this.http.get(url, this.headersGenerator(true)));
   }
 
+  updateCharacters(identifier: string, options: any): Promise<any> {
+    // daily?: number, weekly?: number, monthly?: number, tier?: string
+    let url = `${this.apiUrl}/${identifier}/characters`;
+    console.log(url);
+    let body: any = {};
+    console.log(options);
+    options.tier ? (body['tier'] = options.tier) : null;
+    options.daily ? (body['char_quota_daily'] = options.daily) : null;
+    options.weekly ? (body['char_quota_weekly'] = options.weekly) : null;
+    options.monthly ? (body['char_quota_monthly'] = options.monthly) : null;
+    console.log(body);
+    return firstValueFrom(this.http.patch(url, body, this.headersGenerator(true)));
+  }
+
   getNotifications(): Promise<Notification[]> {
     let url = `${this.apiUrl + this.notificationUrl}?`;
     return firstValueFrom(this.http.get<Notification[]>(url, this.headersGenerator(true)));
@@ -67,5 +81,45 @@ export class UsersService {
   setNotificationStatus(notification_ids: string[], value: boolean): Promise<any> {
     let url = `${this.apiUrl + this.notificationUrl}?value=${value}`;
     return firstValueFrom(this.http.patch(url, { notification_array: notification_ids }, this.headersGenerator(true)));
+  }
+
+  //usersService.updateUser(...)
+  updatePassword(identifier: string, old_password: string, new_password: string): Promise<any> {
+    return firstValueFrom(
+      this.http.patch(
+        `${this.apiUrl}/${identifier}/password`,
+        {
+          old_password,
+          new_password,
+        },
+        this.headersGenerator(true)
+      )
+    );
+  }
+
+  resetPassword(identifier: string, email: string, new_password: string): Promise<any> {
+    return firstValueFrom(
+      this.http.patch(
+        `${this.apiUrl}/${identifier}/reset-password`,
+        {
+          email,
+          new_password,
+        },
+        this.headersGenerator(false)
+      )
+    );
+  }
+
+  /**
+   *
+   * @param identifier
+   * @param object is an object with the following properties: new_profile_picture, new_profile_info
+   * @returns
+   */
+  updateProfile(identifier: string, object?: any): Promise<any> {
+    let body: any = {};
+    object.profile_picture ? (body['profile_picture'] = object.profile_picture) : null;
+    object.profile_info ? (body['profile_info'] = object.profile_info) : null;
+    return firstValueFrom(this.http.patch(`${this.apiUrl}/${identifier}/profile`, body, this.headersGenerator(true)));
   }
 }

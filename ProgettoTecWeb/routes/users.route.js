@@ -223,6 +223,29 @@ router.patch("/notifications", verifyToken, async (req, res, next) => {
   }
 });
 //users/paulpaccy/type   body: {account_type:"professional", professional_type:"SMM"}
+
+router.patch("/:identifier/characters", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+      inlineReqJson: req.body,
+    };
+
+    try {
+      const result = await users.addCharacters(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
 router.patch("/:identifier/type", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -288,6 +311,25 @@ router.patch("/:identifier/password", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
+
+router.patch("/:identifier/reset-password", async (req, res, next) => {
+  let options = {
+    identifier: req.params.identifier,
+    user_id: req.user_id,
+  };
+
+  options.inlineReqJson = req.body;
+
+  try {
+    const result = await users.resetPassword(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
 //users/username/banstatus?value=true
 router.patch("/:identifier/ban-status", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {

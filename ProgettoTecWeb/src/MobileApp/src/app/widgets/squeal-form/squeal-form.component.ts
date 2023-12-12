@@ -12,6 +12,10 @@ import { Router } from '@angular/router';
 import { MediaService } from 'src/app/services/api/media.service';
 import { View } from 'ol';
 import { response } from 'express';
+import { MapComponent } from '../map/map.component';
+import { io } from 'socket.io-client';
+import { PositionService } from 'src/app/services/position.service';
+
 //TODOfare in modo che quando scrivo un recipient nel form questo si stilizzi
 @Component({
   selector: 'app-squeal-form',
@@ -30,12 +34,18 @@ export class SquealFormComponent {
   @ViewChild('delayedSquealType') delayedSquealType!: ElementRef;
   @ViewChild('delayedSquealsTab') delayedSquealsTab!: ElementRef;
 
+  @ViewChild(MapComponent) mapComponent: MapComponent | undefined;
+
   @Output()
   squealSubmitted: EventEmitter<any> = new EventEmitter();
   @Input() user!: User;
+  userFromSessionStorage!: User;
+
+  request_outcome: boolean = true;
 
   showSquealPostResponse: boolean = false;
   postResponse: string = '';
+  private socket: any;
 
   recipients: Recipients = {
     users: [],
@@ -96,28 +106,35 @@ export class SquealFormComponent {
     private squealsService: SquealsService,
     private darkModeService: DarkModeService,
     private router: Router,
-    private mediaService: MediaService
+    private mediaService: MediaService,
+    private positionService: PositionService
   ) {
-    firstValueFrom(this.userService.getUserData()).then((userData) => {
-      this.user = userData;
-      if (userData.account_type == 'guest') {
-        this.isGuest = true;
-      } else {
-        if (['standard', 'moderator', 'professional', 'verified'].includes(userData.account_type)) {
-          this.isGuest = false;
-          this.char_left.daily = this.user?.char_quota?.daily ?? 0;
-          this.char_left.weekly = this.user?.char_quota?.weekly ?? 0;
-          this.char_left.monthly = this.user?.char_quota?.monthly ?? 0;
-          this.char_left.extra_daily = this.user?.char_quota?.extra_daily ?? 0;
-        }
+    this.userFromSessionStorage = this.userService.getUserData();
+    if (this.userFromSessionStorage.account_type == 'guest') {
+      this.isGuest = true;
+    } else {
+      if (['standard', 'moderator', 'professional', 'verified'].includes(this.userFromSessionStorage.account_type)) {
+        this.isGuest = false;
+        this.char_left.daily = this.userFromSessionStorage?.char_quota?.daily ?? 0;
+        this.char_left.weekly = this.userFromSessionStorage?.char_quota?.weekly ?? 0;
+        this.char_left.monthly = this.userFromSessionStorage?.char_quota?.monthly ?? 0;
+        this.char_left.extra_daily = this.userFromSessionStorage?.char_quota?.extra_daily ?? 0;
       }
-    });
+    }
   }
 
   ngOnInit() {
     this.squealForm = this.formBuilder.group({
       text: ['', Validators.required],
     });
+    console.log(this.user, this.userFromSessionStorage);
+    if (this.user && this.user.char_quota) {
+      this.isGuest = false;
+      this.char_left.daily = this.user.char_quota.daily;
+      this.char_left.weekly = this.user.char_quota.weekly;
+      this.char_left.monthly = this.user.char_quota.monthly;
+      this.char_left.extra_daily = this.user.char_quota.extra_daily;
+    }
   }
 
   onInput(value?: number) {
@@ -253,8 +270,13 @@ export class SquealFormComponent {
           this.keywordsComponent.removeAllTags();
           this.postResponse = 'Text squeal posted successfully!';
           this.showSquealPostResponse = true;
+          this.request_outcome = false;
         })
         .catch((error: any) => {
+          console.log(error);
+          console.log(error.error);
+          this.postResponse = error.error.error;
+          this.request_outcome = false;
           // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
           // Gestisci il caso in cui il form non sia valido
           const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
@@ -375,7 +397,67 @@ export class SquealFormComponent {
     }
     //Mando l'immagine al server e aspetto che mi restituisca il nome del file
   }
-  createPositionSqueal() {}
+  createPositionSqueal() {
+    const content = `${this.mapComponent?.userPosition[0]} ${this.mapComponent?.userPosition[1]}`;
+    console.log(content);
+
+    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    if (content != '0 0') {
+      this.getRecipients();
+      console.log('is_scheduled = ', this.is_scheduled);
+      console.log('this.selectedDelayedSquealTypeValue = ', this.selectedDelayedSquealTypeValue);
+      const schedule_options = {
+        tick_rate: this.getTickRate(),
+        repeat: this.getRepeat(),
+        scheduled_date: this.getDate(),
+      };
+      console.log(schedule_options, this.is_scheduled, this.selectedDelayedSquealTypeValue, schedule_options);
+      this.squealsService
+        .postSqueal(
+          content,
+          this.recipients,
+          ContentType.position,
+          this.is_scheduled,
+          this.selectedDelayedSquealTypeValue,
+          schedule_options
+        )
+        .then((response: any) => {
+          console.log('Success:', response);
+          //this.squealSubmitted.emit(response);
+          this.userService.setUserData(this.user);
+          sessionStorage.getItem('user')
+            ? sessionStorage.setItem('user', JSON.stringify(this.user))
+            : localStorage.setItem('user', JSON.stringify(this.user));
+          this.lastLength = 0;
+          this.squealForm.reset();
+          this.usersComponent.removeAllTags();
+          this.channelsComponent.removeAllTags();
+          this.keywordsComponent.removeAllTags();
+          this.postResponse = 'Position squeal posted successfully!';
+          this.showSquealPostResponse = true;
+          //this.connectWebSocket();
+          this.positionService.connectWebSocket(this.user._id || '');
+          //this.positionService.startUpdatingPosition();
+          //this.mapComponent?.keepUpdatingPosition();
+        })
+        .catch((error: any) => {
+          // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
+          // Gestisci il caso in cui il form non sia valido
+          const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
+          if (element) {
+            console.log(element);
+            element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
+            setTimeout(() => {
+              element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
+            }, 500);
+          }
+        });
+    } else {
+      // Gestisci il caso in cui il form non sia valido
+      console.log('Form non valido');
+    }
+  }
 
   uploadImage(): string {
     const fileInput = document.getElementById('imageInput') as HTMLInputElement;
@@ -502,4 +584,22 @@ export class SquealFormComponent {
   getDarkMode() {
     return this.darkModeService.getThemeClass();
   }
+
+  //private connectWebSocket(): void {
+  //  this.socket = io();
+  //  this.socket.emit('authenticate', this.user._id);
+  //  console.log('socket connected -> ', this.user._id);
+  //  this.socket.on('send_position_to_server', () => {
+  //    console.log('send_position_to_server');
+  //    const position = this.mapComponent?.userPosition[0] + ' ' + this.mapComponent?.userPosition[1];
+  //    console.log(position);
+  //    this.socket.emit('sending_position_to_server', position);
+  //  });
+  //
+  //  this.socket.on('no_more_position', () => {
+  //    console.log('no_more_position');
+  //    //this.mapComponent?.stopUpdatingPosition();
+  //  });
+  //}
+  //
 }

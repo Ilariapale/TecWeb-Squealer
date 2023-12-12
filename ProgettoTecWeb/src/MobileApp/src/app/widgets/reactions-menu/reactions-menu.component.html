@@ -2,9 +2,7 @@
   <input type="checkbox" href="#" class="menu-open" [attr.name]="'menu-open'+squealId"
     [attr.id]="'menu-open'+squealId" />
   <label class="menu-open-button" [for]="'menu-open'+squealId">
-    <span class="lines line-1"></span>
-    <span class="lines line-2"></span>
-    <span class="lines line-3"></span>
+    <span><img class="reaction-image" src="./../../../assets/imgs/reactionsBW.png"></span>
   </label>
 
   <a href="#" (click)="addReaction('like', $event)" class="menu-item lightblue"> 👍 </a>

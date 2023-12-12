@@ -16,6 +16,7 @@ import { ReactionsMenuComponent } from './widgets/reactions-menu/reactions-menu.
 import { SquealComponent } from './widgets/squeal/squeal.component';
 import { ChannelManagerComponent } from './pages/channel-manager/channel-manager.component';
 import { ErrorComponent } from './pages/error/error.component';
+import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
 //import { PageLayoutComponent } from './pages/page-layout/page-layout.component';
 
 const routes: Routes = [
@@ -39,6 +40,8 @@ const routes: Routes = [
   { path: 'squeal/:identifier', component: SquealComponent },
   { path: 'channel-manager', component: ChannelManagerComponent },
   { path: 'error/:code', component: ErrorComponent },
+  { path: 'reactions-menu', component: ReactionsMenuComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
   // { path: 'chat', component: ChatsComponent },
 ];
 
