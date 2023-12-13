@@ -61,4 +61,9 @@ export interface Squeal {
   impressions?: Number;
   comments_count?: Number;
   reaction_tag?: ReactionTag;
+  selected?: {
+    because?: String;
+    ids?: String[];
+  };
+  reacted?: Boolean;
 }

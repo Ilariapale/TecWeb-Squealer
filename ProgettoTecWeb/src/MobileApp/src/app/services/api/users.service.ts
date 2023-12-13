@@ -28,8 +28,9 @@ export class UsersService {
     }
   }
 
-  getUsername(user_id: string): Promise<any> {
-    let url = `${this.apiUrl}/username/${user_id}`;
+  getUsername(identifier?: string): Promise<any> {
+    let url = `${this.apiUrl}/username`;
+    url += identifier ? `?identifier=${identifier}` : '';
     return firstValueFrom(this.http.get(url, this.headersGenerator(true)));
   }
 
@@ -59,17 +60,14 @@ export class UsersService {
     return firstValueFrom(this.http.get(url, this.headersGenerator(true)));
   }
 
-  updateCharacters(identifier: string, options: any): Promise<any> {
-    // daily?: number, weekly?: number, monthly?: number, tier?: string
-    let url = `${this.apiUrl}/${identifier}/characters`;
-    console.log(url);
-    let body: any = {};
-    console.log(options);
-    options.tier ? (body['tier'] = options.tier) : null;
-    options.daily ? (body['char_quota_daily'] = options.daily) : null;
-    options.weekly ? (body['char_quota_weekly'] = options.weekly) : null;
-    options.monthly ? (body['char_quota_monthly'] = options.monthly) : null;
-    console.log(body);
+  updateCharacters(tier: string, identifier?: string, options?: any): Promise<any> {
+    let url = `${this.apiUrl}/characters`;
+    let body: any = { tier };
+
+    identifier ? (body['identifier'] = identifier) : null;
+    options?.daily ? (body['char_quota_daily'] = options.daily) : null;
+    options?.weekly ? (body['char_quota_weekly'] = options.weekly) : null;
+    options?.monthly ? (body['char_quota_monthly'] = options.monthly) : null;
     return firstValueFrom(this.http.patch(url, body, this.headersGenerator(true)));
   }
 

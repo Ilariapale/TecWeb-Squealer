@@ -22,8 +22,6 @@ export class ChatComponent {
   @ViewChild('messageContainer') chatContainer: ElementRef | undefined;
 
   more_to_load = true;
-  private chatSubscription: Subscription = new Subscription();
-  private userSubscription: Subscription = new Subscription();
   isGuest = true;
   chat: Chat = {} as Chat;
   reqSenderPosition = 0;
@@ -45,6 +43,8 @@ export class ChatComponent {
     this.route.paramMap.subscribe((params) => {
       this.recipient = params.get('recipient') || params.get('user') || '0';
       this.chatId = params.get('id') || '0';
+      console.log(this.chatId, 'this.chatId');
+      console.log(this.recipient, 'this.recipient');
     });
 
     const userData = this.userService.getUserData();
@@ -54,9 +54,6 @@ export class ChatComponent {
       this.isGuest = false;
       this.user = userData;
       if (this.chatId !== '0') {
-        console.log(this.chatId, 'this.chatId');
-        console.log(this.recipient, 'this.recipient');
-
         this.chatsService.getChat(this.chatId).then((response: any) => {
           this.chat = response.chat;
           this.chat_loaded = true;
@@ -66,7 +63,19 @@ export class ChatComponent {
             this.scrollToBottom();
           }, 10);
         });
+      } else if (this.recipient !== '0') {
+        this.chatsService.getChatByUser(this.recipient).then((response: any) => {
+          this.chat = response.chat;
+          this.chat_loaded = true;
+          this.chatId = response.chat._id ? response.chat._id : '0';
+          if (this.chat.messages.length < 6) this.more_to_load = false;
+          this.reqSenderPosition = response.reqSenderPosition;
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 10);
+        });
       }
+
       this.connectWebSocket(); // Chiamata alla funzione per connettersi al WebSocket
     }
   }
@@ -76,8 +85,6 @@ export class ChatComponent {
   }
 
   ngOnDestroy() {
-    this.userSubscription.unsubscribe();
-    this.chatSubscription.unsubscribe();
     if (this.socket) this.socket.disconnect(); // Disconnetti il socket quando il componente viene distrutto
   }
 

@@ -32,8 +32,9 @@ export class ChannelManagerComponent {
   is_blocked: boolean;
 }
   */
-  @ViewChild('editorInput') editorComponent!: TagInputComponent;
-
+  @ViewChild('editorInput1') editorComponent1!: TagInputComponent;
+  @ViewChild('editorInput2') editorComponent2!: TagInputComponent;
+  //TODO quando la richiesta fallisce metti l'errore
   isGuest = false;
 
   channelsOwnedIds: string[] = [];
@@ -147,17 +148,10 @@ export class ChannelManagerComponent {
     this.selectedEditors = [];
     //richiesta per ottenere i nomi degli editor
     //ottengo lo username dell'owner
-    console.log(this.selectedChannel);
-    this.usersService
-      .getUsername(this.selectedChannel.owner as string)
-      .then((owner: any) => {
-        this.selectedChannel.owner = owner.username;
-      })
-      .catch((err: any) => {
-        console.error('Error fetching owner:', err);
-      });
+    this.selectedChannel.owner = '';
+    console.log(this.selectedChannel.editors);
     const editorsRequests = this.selectedChannel.editors.map((editorId) =>
-      this.usersService.getUsername(editorId as string)
+      this.usersService.getUsername('' + editorId)
     );
     forkJoin(editorsRequests).subscribe({
       next: (editors) => {
@@ -173,7 +167,7 @@ export class ChannelManagerComponent {
     //prendo il canale dall'array tramite l'id di quello updetato
     const oldChannel = this.channelsOwned.find((channel) => channel._id === this.selectedChannel._id);
     const updatedChannel = this.selectedChannel;
-    const newEditors = this.editorComponent.getTags();
+    const newEditors = this.editorComponent1.getTags();
 
     const body: any = {
       identifier: updatedChannel._id,
@@ -181,7 +175,7 @@ export class ChannelManagerComponent {
 
     if (oldChannel?.name !== updatedChannel.name) body.new_name = updatedChannel.name;
     if (oldChannel?.description !== updatedChannel.description) body.new_description = updatedChannel.description;
-    if (oldChannel?.owner !== updatedChannel.owner) body.new_owner = updatedChannel.owner;
+    if (oldChannel?.owner !== updatedChannel.owner && updatedChannel.owner != '') body.new_owner = updatedChannel.owner;
     if (oldChannel?.editors !== newEditors) body.editors_array = newEditors;
 
     this.channelsService
@@ -199,5 +193,33 @@ export class ChannelManagerComponent {
         console.error('Error updating channel:', err);
       });
   }
-  updateEditorChannel() {}
+
+  updateEditorChannel() {
+    const oldChannel = this.channelsEditor.find((channel) => channel._id === this.selectedChannel._id);
+    const updatedChannel = this.selectedChannel;
+    const newEditors = this.editorComponent2.getTags();
+
+    const body: any = {
+      identifier: updatedChannel._id,
+    };
+
+    if (oldChannel?.name !== updatedChannel.name) body.new_name = updatedChannel.name;
+    if (oldChannel?.description !== updatedChannel.description) body.new_description = updatedChannel.description;
+    if (oldChannel?.editors !== newEditors) body.editors_array = newEditors;
+
+    this.channelsService
+      .updateChannel(body)
+      .then((channel: any) => {
+        console.log(channel);
+        this.channelsEditor = this.channelsEditor.map((channel) => {
+          if (channel._id === updatedChannel._id) {
+            return channel;
+          }
+          return channel;
+        });
+      })
+      .catch((err: any) => {
+        console.error('Error updating channel:', err);
+      });
+  }
 }

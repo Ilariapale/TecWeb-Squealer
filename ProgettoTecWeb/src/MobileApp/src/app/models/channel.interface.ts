@@ -25,4 +25,7 @@ export interface Channel {
   squeals: String[];
   subscribers: String[];
   is_blocked: boolean;
+  subscription_status?: boolean;
+  is_editor?: boolean;
+  is_muted_by_user?: boolean;
 }

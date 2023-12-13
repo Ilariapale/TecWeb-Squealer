@@ -64,6 +64,7 @@ module.exports = {
     const sort_types = ["name", "date", "squeals", "subscribers"];
     const pipeline = [];
 
+    let reqSender;
     if (is_token_valid) {
       let response = await findUser(user_id);
       if (response.status >= 300) {
@@ -73,7 +74,7 @@ module.exports = {
           data: { error: response.error },
         };
       }
-      const reqSender = response.data;
+      reqSender = response.data;
       if (reqSender.account_type !== "moderator") {
         pipeline.push({ $match: { is_blocked: false } });
       }
@@ -91,7 +92,6 @@ module.exports = {
       pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
     }
 
-    console.log(options);
     if (name) {
       const regex = new RegExp(name, "i");
       pipeline.push({ $match: { name: { $regex: regex } } });
@@ -123,6 +123,7 @@ module.exports = {
 
     pipeline.push({
       $project: {
+        owner: 1,
         _id: 1, // Includi l'ID se necessario
         name: 1, // Includi il campo 'name'
         description: 1, // Includi il campo 'description'
@@ -228,9 +229,24 @@ module.exports = {
 
     const data = await Channel.aggregate(pipeline).exec();
 
+    let result = data;
+
+    //aggiungo campo subscription_status e is_editor a tutti i canali se il token è valido
+    if (is_token_valid) {
+      const subscribed_channels = reqSender?.subscribed_channels;
+      const editors_channels = reqSender?.editor_channels;
+      result = data.map((channel) => {
+        return {
+          ...channel,
+          subscription_status: subscribed_channels?.includes(channel._id),
+          is_editor: editors_channels?.includes(channel._id) || channel.owner.toString() == reqSender._id.toString(),
+        };
+      });
+    }
+
     return {
       status: 200,
-      data: data,
+      data: result,
     };
   },
 
@@ -394,7 +410,7 @@ module.exports = {
         data: { error: response.error },
       };
     }
-    const channel = response.data;
+    let channel = response.data;
 
     let user;
     if (isTokenValid) {
@@ -415,10 +431,58 @@ module.exports = {
         data: { error: `Channel not found.` },
       };
     }
+    let subscription_status = user?.subscribed_channels.includes(channel._id);
+    let is_editor = user?.editor_channels.includes(channel._id) || channel.owner.toString() == user._id.toString();
+    let is_muted = user?.preferences.muted_channels.includes(channel._id);
+    const result = {
+      ...channel.toObject(),
+      subscription_status: subscription_status,
+      is_editor: is_editor,
+      is_muted_by_user: is_muted,
+    };
+
     return {
       status: response.status,
-      data: channel,
+      data: result,
     };
+  },
+
+  getChannelSubscriptionStatus: async (options) => {
+    const { identifier, user_id } = options;
+
+    let response = await findChannel(identifier, true, true);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+
+    const channel = response.data;
+
+    response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+
+    const user = response.data;
+
+    if (channel.subscribers.includes(user._id)) {
+      return {
+        status: 200,
+        data: { outcome: "true", message: `You are subscribed to this channel.` },
+      };
+    } else {
+      return {
+        status: 200,
+        data: { outcome: "false", message: `You are not subscribed to this channel.` },
+      };
+    }
   },
 
   /**
@@ -473,216 +537,227 @@ module.exports = {
    */
   //TESTED
   updateChannel: async (options) => {
-    try {
-      const { identifier, user_id } = options;
-      const { editors_array, new_name, new_description, new_owner } = options.inlineReqJson;
+    const { identifier, user_id } = options;
+    const { editors_array, new_name, new_description, new_owner } = options.inlineReqJson;
 
-      let response = await findUser(user_id);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const user = response.data;
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const user = response.data;
 
-      response = await findChannel(identifier);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const channel = response.data;
+    response = await findChannel(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const channel = response.data;
 
-      if (!user._id.equals(channel.owner) && !channel.editors.map((editor) => editor.toString()).includes(user._id.toString()) && user.account_type !== "moderator") {
-        return {
-          status: 403,
-          data: { error: `You don't have the permission to update this channel.` },
-        };
-      }
+    if (!user._id.equals(channel.owner) && !channel.editors.map((editor) => editor.toString()).includes(user._id.toString()) && user.account_type !== "moderator") {
+      return {
+        status: 403,
+        data: { error: `You don't have the permission to update this channel.` },
+      };
+    }
 
-      if (!editors_array && !new_name && !new_description && !new_owner) {
+    if (!editors_array && !new_name && !new_description && !new_owner) {
+      return {
+        status: 400,
+        data: { error: `No update parameters specified.` },
+      };
+    }
+
+    //se la richiesta include un nuovo nome per il canale, controlla i permessi, controlla che sia valido, controlla che non esista già e aggiorna il nome
+    if (new_name) {
+      if (channel.is_official && !officialChannelNameRegex.test(new_name)) {
+        //check if the name is lowercase, alphanumeric and between 5 and 23 characters
         return {
           status: 400,
-          data: { error: `No update parameters specified.` },
+          data: {
+            error: `Official channels must be uppercase, space-free and between ${OFFICIAL_CHANNEL_NAME_MIN_LENGTH} and ${OFFICIAL_CHANNEL_NAME_MAX_LENGTH} characters. It can only contain alphanumeric characters and underscore.`,
+          },
         };
       }
 
-      //se la richiesta include un nuovo nome per il canale, controlla i permessi, controlla che sia valido, controlla che non esista già e aggiorna il nome
-      if (new_name) {
-        if (channel.is_official && !officialChannelNameRegex.test(new_name)) {
-          //check if the name is lowercase, alphanumeric and between 5 and 23 characters
-          return {
-            status: 400,
-            data: {
-              error: `Official channels must be uppercase, space-free and between ${OFFICIAL_CHANNEL_NAME_MIN_LENGTH} and ${OFFICIAL_CHANNEL_NAME_MAX_LENGTH} characters. It can only contain alphanumeric characters and underscore.`,
-            },
-          };
-        }
-
-        if (!channel.is_official && !channelNameRegex.test(new_name)) {
-          return {
-            status: 400,
-            data: {
-              error: `Unofficial channels must be lowercase, space-free and between ${CHANNEL_NAME_MIN_LENGTH} and ${CHANNEL_NAME_MAX_LENGTH} characters. It can only contain alphanumeric characters and underscore.`,
-            },
-          };
-        }
-
-        //controlla che il nome non esista già
-        response = await findChannel(new_name);
-        if (response.status < 300) {
-          //se esiste già
-          return {
-            status: 409,
-            data: {
-              error: `Channel name already exists.`,
-            },
-          };
-        }
-        //se non esiste già
-        channel.name = new_name;
+      if (!channel.is_official && !channelNameRegex.test(new_name)) {
+        return {
+          status: 400,
+          data: {
+            error: `Unofficial channels must be lowercase, space-free and between ${CHANNEL_NAME_MIN_LENGTH} and ${CHANNEL_NAME_MAX_LENGTH} characters. It can only contain alphanumeric characters and underscore.`,
+          },
+        };
       }
 
-      //Modificare editors o owner
-      if (editors_array) {
-        if (!(user._id.equals(channel.owner) || user.account_type == "moderator")) {
-          return {
-            status: 403,
-            data: { error: `You don't have the permission to change editors in this channel.` },
-          };
-        }
-        //Cambio gli editors
-        let response = checkIfArrayIsValid(editors_array);
-        if (!response.isValid) {
-          return {
-            status: 400,
-            data: { error: `Incorrect 'editors_array' format.` },
-          };
-        }
-        const parsedEditors_array = response.value;
-
-        let data = await checkForAllUsers(parsedEditors_array);
-        if (!data.usersOutcome) {
-          //se non esistono, ritorna un errore
-          return {
-            status: 404,
-            data: { error: `Users not valid.` },
-          };
-        }
-
-        const editorsIds = data.usersArray;
-        //se tra gli editors c'è il proprietario, ritorna un errore
-        if (editorsIds.some((editorId) => JSON.stringify(editorId) == JSON.stringify(channel.owner))) {
-          return {
-            status: 400,
-            data: { error: `The owner of the channel can't be an editor.` },
-          };
-        }
-
-        //controlla che gli editors esistano
-        const { added, removed } = addedAndRemoved(channel.editors, editorsIds);
-
-        const addedUserPromises = added.map(async (user) => {
-          let userObject = (await findUser(user._id)).data;
-          userObject.editor_channels.push(channel._id);
-          await userObject.save();
-        });
-
-        const removedUserPromises = removed.map(async (user) => {
-          let userObject = (await findUser(user._id)).data;
-          userObject.editor_channels.pull(channel._id);
-          await userObject.save();
-        });
-
-        // Attendere che tutte le promesse vengano risolte
-        await Promise.all([...addedUserPromises, ...removedUserPromises]);
-
-        //aggiorno gli editors
-        channel.editors = editorsIds;
+      //controlla che il nome non esista già
+      response = await findChannel(new_name);
+      if (response.status < 300) {
+        //se esiste già
+        return {
+          status: 409,
+          data: {
+            error: `Channel name already exists.`,
+          },
+        };
       }
-      //Cambio l'owner
-      if (new_owner) {
-        if (!(user._id.equals(channel.owner) || user.account_type == "moderator")) {
-          return {
-            status: 403,
-            data: { error: `You don't have the permission to change the owner of this channel.` },
-          };
-        }
-        //verifico che il nuovo proprietario esista
-        let response = await findUser(new_owner);
-        if (response.status >= 300) {
-          //se non esiste
-          return {
-            status: response.status,
-            data: { error: response.error },
-          };
-        }
-        const newOwnerUser = response.data;
-
-        //Se il nuovo owner era un editor rimuovilo dagli editors
-        if (channel.editors.includes(newOwnerUser._id)) {
-          //includes funziona
-          channel.editors.pull(newOwnerUser._id);
-          newOwnerUser.editor_channels.pull(channel._id);
-        }
-
-        response = await findUser(channel.owner);
-        if (response.status >= 300) {
-          //se non esiste
-          return {
-            status: response.status,
-            data: { error: response.error },
-          };
-        }
-        const oldOwnerUser = response.data;
-
-        channel.owner = newOwnerUser._id;
-
-        newOwnerUser.owned_channels.push(channel._id);
-        oldOwnerUser.owned_channels.pull(channel._id);
-
-        //send notifications to the new owner and the old owner
-        const notificationNewOwner = new Notification({
-          content: newOwnerNotification(newOwnerUser.username, channel.name),
-          user_ref: newOwnerUser._id,
-          channel_ref: channel._id,
-          created_at: Date.now(),
-          source: "channel",
-          id_code: "newOwner",
-        });
-        await notificationNewOwner.save();
-        newOwnerUser.notifications.push(notificationNewOwner._id);
-
-        const notificationOldOwner = new Notification({
-          content: removedOwnerNotification(oldOwnerUser.username, channel.name),
-          user_ref: oldOwnerUser._id,
-          channel_ref: channel._id,
-          created_at: Date.now(),
-          source: "channel",
-          id_code: "newOwner",
-        });
-        await notificationOldOwner.save();
-        oldOwnerUser.notifications.push(notificationOldOwner._id);
-
-        await newOwnerUser.save();
-        await oldOwnerUser.save();
-      }
-
-      channel.description = new_description || channel.description;
-
-      await channel.save();
-      return {
-        status: 200,
-        data: channel,
-      };
-    } catch (err) {
-      console.error(err);
-      throw new Error(`Failed to update channel.`);
+      //se non esiste già
+      channel.name = new_name;
     }
+
+    //Modificare editors o owner
+    if (editors_array) {
+      if (!(user._id.equals(channel.owner) || user.account_type == "moderator")) {
+        return {
+          status: 403,
+          data: { error: `You don't have the permission to change editors in this channel.` },
+        };
+      }
+      //Cambio gli editors
+      let response = checkIfArrayIsValid(editors_array);
+      if (!response.isValid) {
+        return {
+          status: 400,
+          data: { error: `Incorrect 'editors_array' format.` },
+        };
+      }
+      const parsedEditors_array = response.value;
+
+      let data = await checkForAllUsers(parsedEditors_array);
+      if (!data.usersOutcome) {
+        //se non esistono, ritorna un errore
+        return {
+          status: 404,
+          data: { error: `Users not valid.` },
+        };
+      }
+      const editorsIds = data.usersArray;
+
+      //se tra gli editors c'è il proprietario, ritorna un errore
+      if (editorsIds.some((editorId) => JSON.stringify(editorId) == JSON.stringify(channel.owner))) {
+        return {
+          status: 400,
+          data: { error: `The owner of the channel can't be an editor.` },
+        };
+      }
+      //se tra gli editors c'è un editor già presente, ritorna un errore
+      //if (editorsIds.some((editorId) => channel.editors.map((editor) => editor.toString()).includes(editorId.toString()))) {
+      //  return {
+      //    status: 400,
+      //    data: { error: `One or more editors are already editors of this channel.` },
+      //  };
+      //}
+
+      //controlla che gli editors esistano
+      const { added, removed } = addedAndRemoved(channel.editors, editorsIds);
+      console.log(added, removed);
+
+      const addedUserPromises = added.map(async (user) => {
+        let userObject = (await findUser(user._id)).data;
+        userObject.editor_channels.push(channel._id);
+        await userObject.save();
+      });
+
+      const removedUserPromises = removed.map(async (user) => {
+        let userObject = (await findUser(user._id)).data;
+        userObject.editor_channels.pull(channel._id);
+        await userObject.save();
+      });
+
+      // Attendere che tutte le promesse vengano risolte
+      await Promise.all([...addedUserPromises, ...removedUserPromises]);
+
+      //aggiorno gli editors
+      channel.editors = editorsIds;
+    }
+    //Cambio l'owner
+    if (new_owner) {
+      if (!(user._id.equals(channel.owner) || user.account_type == "moderator")) {
+        return {
+          status: 403,
+          data: { error: `You don't have the permission to change the owner of this channel.` },
+        };
+      }
+      //verifico che il nuovo proprietario esista
+      let response = await findUser(new_owner);
+      if (response.status >= 300) {
+        //se non esiste
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const newOwnerUser = response.data;
+
+      response = await findUser(channel.owner);
+      if (response.status >= 300) {
+        //se non esiste
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const oldOwnerUser = response.data;
+
+      //se il nuovo owner è già owner del canale, ritorna un errore
+      if (newOwnerUser._id.equals(channel.owner)) {
+        return {
+          status: 400,
+          data: { error: `The new owner is already the owner of this channel.` },
+        };
+      }
+
+      //Se il nuovo owner era un editor rimuovilo dagli editors
+      if (channel.editors.includes(newOwnerUser._id)) {
+        //includes funziona
+        channel.editors.pull(newOwnerUser._id);
+        newOwnerUser.editor_channels.pull(channel._id);
+      }
+
+      channel.owner = newOwnerUser._id;
+
+      newOwnerUser.owned_channels.push(channel._id);
+      oldOwnerUser.owned_channels.pull(channel._id);
+
+      //send notifications to the new owner and the old owner
+      const notificationNewOwner = new Notification({
+        content: newOwnerNotification(newOwnerUser.username, channel.name),
+        user_ref: newOwnerUser._id,
+        channel_ref: channel._id,
+        created_at: Date.now(),
+        source: "channel",
+        id_code: "newOwner",
+      });
+      await notificationNewOwner.save();
+      newOwnerUser.notifications.push(notificationNewOwner._id);
+
+      const notificationOldOwner = new Notification({
+        content: removedOwnerNotification(oldOwnerUser.username, channel.name),
+        user_ref: oldOwnerUser._id,
+        channel_ref: channel._id,
+        created_at: Date.now(),
+        source: "channel",
+        id_code: "newOwner",
+      });
+      await notificationOldOwner.save();
+      oldOwnerUser.notifications.push(notificationOldOwner._id);
+
+      await newOwnerUser.save();
+      await oldOwnerUser.save();
+    }
+
+    channel.description = new_description || channel.description;
+
+    await channel.save();
+    return {
+      status: 200,
+      data: channel,
+    };
   },
 
   /**
@@ -863,92 +938,97 @@ module.exports = {
    */
   //TESTED
   channelMuteStatus: async (options) => {
-    const { identifier, user_id, value } = options;
-    //Check if value is correct
-    if (!value) {
-      return {
-        status: 400,
-        data: { error: `'value' is required.` },
-      };
-    }
-
-    if (!["true", "false"].includes(value)) {
-      return {
-        status: 400,
-        data: { error: `'value' must be either 'true' or 'false'.` },
-      };
-    }
-    const value_bool = value == "true" ? true : false;
-
-    //check if the user exists
-    let response = await findUser(user_id);
-    if (response.status >= 300) {
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    const user = response.data;
-
-    //check if channel exists
-    response = await findChannel(identifier);
-    if (response.status >= 300) {
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    const channel = response.data;
-
-    //check if the channel cannot be muted
-    if (!channel.can_mute) {
-      return {
-        status: 403,
-        data: { error: `You are not allowed to mute/unmute this channel.` },
-      };
-    }
-
-    //if they want to mute it, check if they're subscribed to it
-    if (value_bool) {
-      if (!user.subscribed_channels.includes(channel._id)) {
+    try {
+      const { identifier, user_id, value } = options;
+      //Check if value is correct
+      if (!value) {
         return {
-          status: 403,
-          data: { error: `You can't mute a channel you're not subscribed to.` },
+          status: 400,
+          data: { error: `'value' is required.` },
         };
       }
-      if (user.preferences.muted_channels.includes(channel._id)) {
-        return {
-          status: 403,
-          data: { error: `You can't mute a channel you already muted.` },
-        };
-      }
-      user.preferences.muted_channels.push(channel._id);
-    }
 
-    //if they want to unmute it
-    if (!value_bool) {
-      //check if they muted it, if they didn't, return an error
-      if (!user.preferences.muted_channels.includes(channel._id)) {
+      if (!["true", "false"].includes(value)) {
         return {
-          status: 403,
-          data: { error: `You can't unmute a channel you didn't mute.` },
+          status: 400,
+          data: { error: `'value' must be either 'true' or 'false'.` },
         };
       }
-      if (!user.preferences.muted_channels.includes(channel._id)) {
-        return {
-          status: 403,
-          data: { error: `You can't unmute a channel you didn't mute.` },
-        };
-      }
-      //otherwise, remove it from the muted channels array
-      user.preferences.muted_channels.pull(channel._id);
-    }
+      const value_bool = value == "true" ? true : false;
 
-    await user.save();
-    return {
-      status: 200,
-      data: { message: `Channel muted/unmuted.` },
-    };
+      //check if the user exists
+      let response = await findUser(user_id);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const user = response.data;
+
+      //check if channel exists
+      response = await findChannel(identifier);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const channel = response.data;
+
+      //check if the channel cannot be muted
+      if (!channel.can_mute) {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to mute/unmute this channel.` },
+        };
+      }
+
+      //if they want to mute it, check if they're subscribed to it
+      if (value_bool) {
+        if (!user.subscribed_channels.includes(channel._id)) {
+          return {
+            status: 403,
+            data: { error: `You can't mute a channel you're not subscribed to.` },
+          };
+        }
+        if (user.preferences.muted_channels.includes(channel._id)) {
+          return {
+            status: 403,
+            data: { error: `You can't mute a channel you already muted.` },
+          };
+        }
+        user.preferences.muted_channels.push(channel._id);
+      }
+
+      //if they want to unmute it
+      if (!value_bool) {
+        //check if they muted it, if they didn't, return an error
+        if (!user.preferences.muted_channels.includes(channel._id)) {
+          return {
+            status: 403,
+            data: { error: `You can't unmute a channel you didn't mute.` },
+          };
+        }
+        if (!user.preferences.muted_channels.includes(channel._id)) {
+          return {
+            status: 403,
+            data: { error: `You can't unmute a channel you didn't mute.` },
+          };
+        }
+        //otherwise, remove it from the muted channels array
+        user.preferences.muted_channels.pull(channel._id);
+      }
+
+      await user.save();
+      return {
+        status: 200,
+        data: { message: `Channel muted/unmuted.` },
+      };
+    } catch (err) {
+      console.error(err);
+      throw new Error(`Failed to mute/unmute channel.`);
+    }
   },
 
   /**

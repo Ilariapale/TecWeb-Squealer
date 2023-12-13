@@ -55,6 +55,11 @@ export class ChannelsService {
     return firstValueFrom(this.http.get(`${this.apiUrl}/${identifier}`, requestOptions));
   }
 
+  getSubscriptionStatus(identifier: string): Promise<any> {
+    const requestOptions = this.headersGenerator(true);
+    return firstValueFrom(this.http.get(`${this.apiUrl}/${identifier}/subscription-status`, requestOptions));
+  }
+
   createChannel(name: string, description: string, is_official?: boolean, can_mute?: boolean): Promise<any> {
     const requestOptions = this.headersGenerator(true);
     let body: any = {
@@ -65,6 +70,13 @@ export class ChannelsService {
     if (can_mute !== undefined) body.can_mute = can_mute;
 
     return firstValueFrom(this.http.post(`${this.apiUrl}`, body, requestOptions));
+  }
+
+  setMuteStatus(identifier: String, value: boolean): Promise<any> {
+    const requestOptions = this.headersGenerator(true); ///:identifier/muted-status"
+    return firstValueFrom(
+      this.http.patch(`${this.apiUrl}/${identifier}/muted-status?value=${value}`, {}, requestOptions)
+    );
   }
 
   subscribeToChannel(identifier: String, value: boolean): Promise<any> {

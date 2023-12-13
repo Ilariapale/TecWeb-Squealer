@@ -147,6 +147,8 @@ router.get(["/:identifier", "/user_id/:user_identifier/hex/:squeal_hex"], verify
     user_identifier: req.params.user_identifier,
     squeal_hex: req.params.squeal_hex,
     is_in_official_channel: !req.isTokenValid || req.query.is_in_official_channel == "true",
+    user_id: req.user_id,
+    is_token_valid: req.isTokenValid,
   };
   try {
     if (!["true", "false", undefined].includes(req.query.is_in_official_channel)) {

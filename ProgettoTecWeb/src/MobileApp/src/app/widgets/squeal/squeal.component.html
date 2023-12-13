@@ -1,4 +1,4 @@
-<div class="m-2"></div>
+<div class="m-2"><i *ngIf="isSquealPage" class="bi bi-arrow-left-circle-fill" (click)="goBack()"></i></div>
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-12 col-md-6">
@@ -14,13 +14,14 @@
           <div class="row">
             <div class="col">
             </div>
-            <div class="col">
+            <div class="col" (click)="squeal.content_type!='deleted' ? goToSqueal() : null">
               HEX{{squeal.hex_id}}
             </div>
             <div class="col text-end">
-              <i *ngIf="mySqueal && squeal.content_type != 'deleted'" class="bi bi-trash" type="button"
+              <i *ngIf="mySqueal && squeal.content_type != 'deleted' && isProfile" class="bi bi-trash" type="button"
                 data-bs-toggle="modal" data-bs-target="#deleteConfirm" [attr.data-bs-squealId]="squeal._id"></i>
             </div>
+
           </div>
         </div>
 
@@ -67,9 +68,45 @@
               </div>
 
             </div>
+            <div *ngIf="isSquealPage" class="row">
+              <div class="col-6">
+                <div class="row">
+                  <h3 class="col-9 text-end m-0 p-0 b-0"> {{squeal.reactions?.dislike?.toLocaleString()}} </h3>
+                  <h3 class="col text-start m-0 p-0 b-0"> 👎 </h3>
+                </div>
+                <div class="row">
+                  <h3 class="col-9 text-end m-0 p-0 b-0"> {{squeal.reactions?.disagree?.toLocaleString()}} </h3>
+                  <h3 class="col text-start m-0 p-0 b-0"> 🙅 </h3>
+                </div>
+                <div class="row">
+                  <h3 class="col-9 text-end m-0 p-0 b-0"> {{squeal.reactions?.disgust?.toLocaleString()}} </h3>
+                  <h3 class="col text-start m-0 p-0 b-0"> 🤮 </h3>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="row">
+                  <h3 class="col text-end m-0 p-0 b-0"> 👍 </h3>
+                  <h3 class="col-9 text-start m-0 p-0 b-0"> {{squeal.reactions?.like?.toLocaleString()}} </h3>
+                </div>
+                <div class="row">
+                  <h3 class="col text-end m-0 p-0 b-0"> 😂 </h3>
+                  <h3 class="col-9 text-start m-0 p-0 b-0"> {{squeal.reactions?.laugh?.toLocaleString()}} </h3>
+                </div>
+                <div class="row">
+                  <h3 class="col text-end m-0 p-0 b-0"> 😍 </h3>
+                  <h3 class="col-9 text-start m-0 p-0 b-0"> {{squeal.reactions?.love?.toLocaleString()}} </h3>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="isHome">
+              From: {{squeal.selected?.because}} {{squeal.selected?.ids}}
+
+            </div>
+
           </div>
 
-          <div *ngIf="squeal.content_type!='deleted'" class="card-footer"><i class="bi bi-calendar4-week"></i>
+          <div *ngIf="squeal.content_type!='deleted'" class="card-footer" (click)="goToSqueal()"><i
+              class="bi bi-calendar4-week"></i>
             {{timeService.getRelativeTime(squeal.created_at)}}</div>
           <div *ngIf="squeal.content_type=='deleted'" class="card-footer"><i class="bi bi-trash-fill"></i>
             {{timeService.getRelativeTime(squeal.last_modified)}}</div>

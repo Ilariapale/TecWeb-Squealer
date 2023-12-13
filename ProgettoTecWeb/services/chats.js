@@ -158,13 +158,16 @@ module.exports = {
         data: { error: `Chat not found.` },
       };
     }
-
+    const chat_length = chat.messages.length;
     //prendi gli ultimi 20 messaggi
     chat.messages = chat.messages.slice(-MESSAGES_TO_LOAD);
 
+    chat.reqSenderPosition = chat.partecipants.indexOf(sender._id);
+    const reqSenderPosition = chat.partecipants.indexOf(sender._id);
+
     return {
       status: 200,
-      data: chat,
+      data: { chat: chat, reqSenderPosition: reqSenderPosition, chat_length: chat_length },
     };
   },
 

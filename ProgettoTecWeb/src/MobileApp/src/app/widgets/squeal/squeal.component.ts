@@ -9,6 +9,7 @@ import { ActivatedRoute } from '@angular/router';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Router } from '@angular/router';
 import { UserService } from 'src/app/services/user.service';
+import { Location } from '@angular/common';
 @Component({
   selector: 'app-squeal',
   templateUrl: './squeal.component.html',
@@ -23,7 +24,10 @@ export class SquealComponent implements OnInit {
   loadMore = false;
   comment_section: CommentSection = {};
   mySqueal: boolean = false;
-
+  isSquealPage = false;
+  isHome = false;
+  isProfile = false;
+  //TODO mettere l'emojui colorata se hai già reagito ? forse
   constructor(
     private commentService: CommentService,
     private darkModeService: DarkModeService,
@@ -31,12 +35,16 @@ export class SquealComponent implements OnInit {
     private route: ActivatedRoute,
     private squealsService: SquealsService,
     private router: Router,
-    private userService: UserService
+    private userService: UserService,
+    private location: Location
   ) {
     this.squeal = {};
     this.route.paramMap.subscribe((params) => {
       // if ((this.route.snapshot.url[0].path == 'home'))
       this.squeal_id = params.get('identifier') ?? ' ';
+      this.isSquealPage = this.route.snapshot.url[0].path == 'squeal';
+      this.isHome = this.route.snapshot.url[0].path == 'home';
+      this.isProfile = this.route.snapshot.url[0].path == 'profile';
     });
   }
   ngOnInit() {
@@ -44,7 +52,7 @@ export class SquealComponent implements OnInit {
       this.squealsService
         .getSqueal(this.squeal_id)
         .then((response: any) => {
-          console.log(response);
+          console.log('response', response);
           this.squeal = response[0];
           console.log(this.squeal);
           //Check if the squeal is mine
@@ -63,6 +71,7 @@ export class SquealComponent implements OnInit {
         });
     }
     this.mySqueal = this.userService.isMyself((this.squeal.username as string) || '');
+    console.log('Is this the squeal page = ', this.isSquealPage);
   }
 
   getDarkMode() {
@@ -145,5 +154,11 @@ export class SquealComponent implements OnInit {
 
   getLat(coord: String | undefined) {
     return Number(coord?.split(' ')[1]);
+  }
+  goToSqueal() {
+    this.router.navigate([`squeal/${this.squeal._id}`]);
+  }
+  goBack(): void {
+    this.location.back();
   }
 }

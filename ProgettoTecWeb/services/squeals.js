@@ -283,8 +283,20 @@ module.exports = {
    */
   //TESTED
   getSqueal: async (options) => {
-    const { identifier, is_in_official_channel, user_identifier, squeal_hex } = options;
+    const { identifier, is_in_official_channel, user_identifier, squeal_hex, user_id, is_token_valid } = options;
     let squeal;
+    let user;
+    if (is_token_valid) {
+      //check if the user_id in the token is valid
+      const response = await findUser(user_id);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      user = response.data;
+    }
     if (identifier) {
       //ricerca per id dello squeal
       const response = await findSqueal(identifier, is_in_official_channel);
@@ -305,15 +317,15 @@ module.exports = {
           data: { error: response.error },
         };
       }
-      const user = response.data;
+      const userId = response.data;
 
-      if (hex == NaN || hex >= user.squeals.posted.length) {
+      if (hex == NaN || hex >= userId.squeals.posted.length) {
         return {
           status: 404,
           data: { error: `Squeal not found.` },
         };
       }
-      const squeal_response = await findSqueal(user.squeals.posted[hex], is_in_official_channel);
+      const squeal_response = await findSqueal(userId.squeals.posted[hex], is_in_official_channel);
       if (squeal_response.status >= 300) {
         return {
           status: squeal_response.status,
@@ -324,10 +336,20 @@ module.exports = {
     }
 
     //impressions increment with save()
-    if (squeal.user_id != user_identifier) squeal.impressions++;
+    if ((user && squeal.user_id != user._id) || !user) squeal.impressions++;
     await squeal.save();
-
     squeal = await addCommentsCountToSqueals([squeal]);
+
+    //se l'utente ha reagito allo squeal, aggiungo il campo "reacted" allo squeal e lo setto a true
+    //altrimenti false
+    if (user) {
+      if (user.squeals.reacted_to.includes(squeal[0]._id)) {
+        squeal[0].reacted = true;
+      } else {
+        squeal[0].reacted = false;
+      }
+    }
+
     return {
       status: 200,
       data: squeal,
@@ -581,6 +603,7 @@ module.exports = {
     const { user_id, is_logged_in, token_error } = options;
     let { last_loaded, pag_size } = options;
     const query = {};
+    let user;
     //check the parameters
     if (!pag_size) {
       pag_size = DEFAULT_PAGE_SIZE;
@@ -618,7 +641,7 @@ module.exports = {
           data: { error: token_error },
         };
     } else {
-      //Utente loggato, vede gli squeal dei canali a cui è iscritto e quelli dei canali ufficiali, ma non quelli dei canali silenziati
+      //Utente loggato, vede gli squeal dei canali a cui è iscritto, quelli dei canali ufficiali, e quelli in cui è taggato, ma non quelli dei canali silenziati
       const response = await findUser(user_id);
       if (response.status >= 300) {
         return {
@@ -626,21 +649,55 @@ module.exports = {
           data: { error: response.error },
         };
       }
-      const user = response.data;
+      user = response.data;
       const subscribed_channels = user.subscribed_channels;
       const muted_channels = user.preferences.muted_channels;
       query.$or = [
-        { is_in_official_channel: true },
+        { is_in_official_channel: true, content_type: { $ne: "deleted" } },
         {
           "recipients.channels": {
             $in: subscribed_channels,
             $nin: muted_channels,
           },
+          content_type: { $ne: "deleted" },
         },
+        { "recipients.users": { $in: [user._id] }, content_type: { $ne: "deleted" } },
       ];
     }
     let squeals_array = await Squeal.find(query).sort({ created_at: -1 }).limit(pag_size).exec();
     squeals_array = await addCommentsCountToSqueals(squeals_array);
+
+    //aggiungo un campo "is_liked" ad ogni squeal e un campo che dice perchè è stato selezionato
+    if (user) {
+      for (const squeal of squeals_array) {
+        if (user.squeals.reacted_to.includes(squeal._id)) {
+          squeal.reacted = true;
+        } else {
+          squeal.reacted = false;
+        }
+        if (squeal.recipients.users.some((userId) => userId.equals(user._id) || userId.toString() === user._id.toString())) {
+          squeal.selected = {
+            because: "mentioned",
+            ids: [user._id],
+          };
+        } else if (squeal.recipients.channels.some((channel) => user.subscribed_channels.includes(channel))) {
+          squeal.selected = {
+            because: "subscribed",
+            ids: squeal.recipients.channels.filter((channel) => user.subscribed_channels.includes(channel)),
+          };
+        } else if (squeal.is_in_official_channel) {
+          //ottengo i canali in recipients.channels (che sono solo id) e li filtro, prendendo solo quelli ufficiali, e infine prendo solo gli id
+          const channels = await Channel.find({ _id: { $in: squeal.recipients.channels }, is_official: true })
+            .select("_id")
+            .exec();
+          squeal.selected = {
+            because: "official",
+            ids: channels.map((channel) => channel._id),
+          };
+        }
+      }
+    }
+
     return {
       status: 200,
       data: squeals_array,
@@ -816,7 +873,7 @@ module.exports = {
         data: { message: `You already reported this squeal.` },
       };
     }
-    console.log(squeal.reported, squeal.reported.by.length);
+    //console.log(squeal.reported, squeal.reported.by.length);
     if (squeal.reported.by.length == 0) {
       squeal.reported.first_report = Date.now();
     }
@@ -838,8 +895,6 @@ module.exports = {
     const sort_types = ["first_report", "report_number", "ratio", "checked_date"];
     const sort_orders = ["asc", "desc"];
     const pipeline = [];
-    console.log(options);
-
     if (user_id) {
       const response = await findUser(user_id);
       if (response.status >= 300) {
@@ -953,7 +1008,7 @@ module.exports = {
       }
     }
     pipeline.push({ $limit: pag_size });
-    console.log(pipeline);
+    //console.log(pipeline);
     //execute the query
     const data = await Squeal.aggregate(pipeline).exec();
 
@@ -1026,7 +1081,7 @@ module.exports = {
 
   /**
    * @param options.identifier Squeal's id
-   * @param options.inlineReqJson.recipients Array of users and channels
+   * @param options.inlineReqJson.recipients Array of users, channels and keywords
    * @param options.inlineReqJson.reactions Array like {like: 0, love: 0, laugh: 0, dislike: 0, disgust: 0, disagree: 0}
    */
   updateSqueal: async (options) => {

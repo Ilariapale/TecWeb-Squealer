@@ -14,6 +14,7 @@ import { Subscription, firstValueFrom } from 'rxjs';
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.css'],
 })
+//TODO caricare solo alcune notifiche alla volta e aggiungere tasto per aggiorare e tasto per caricare altre
 export class NotificationsComponent implements OnInit {
   private notificationSubscription: Subscription = new Subscription();
   private userSubscription: Subscription = new Subscription();
@@ -93,6 +94,7 @@ export class NotificationsComponent implements OnInit {
         .then(() => {})
         .catch((err) => {});
     }
+    console.log(notif.id_code);
     switch (notif.id_code) {
       case IdCode.welcomeSqueal:
       case IdCode.mentionedInSqueal:
@@ -101,8 +103,7 @@ export class NotificationsComponent implements OnInit {
         this.router.navigate([`squeal/${notif.squeal_ref}`]);
         break;
       case IdCode.newOwner:
-        //this.router.navigate([`channel/${notif.channel_ref}`]);
-        console.log(`channel/${notif.channel_ref}`);
+        this.router.navigate([`channel/${notif.channel_ref}`]);
         break;
       case IdCode.SMMaccepted:
         this.router.navigate([`profile/${notif.sender_ref}`]);

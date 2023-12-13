@@ -20,6 +20,12 @@ export class PositionService {
   constructor() {
     // Avvia l'aggiornamento periodico della posizione ogni 5 secondi
     //this.startUpdatingPosition();
+    const isSocketActive = sessionStorage.getItem('isSocketActive') === 'true';
+    const user = sessionStorage.getItem('user');
+    if (isSocketActive && user) {
+      const userId = JSON.parse(user)._id;
+      this.connectWebSocket(userId);
+    }
   }
 
   // Restituisce un Observable contenente la posizione corrente
@@ -60,6 +66,7 @@ export class PositionService {
   }
 
   public async connectWebSocket(user_id: String): Promise<void> {
+    sessionStorage.setItem('isSocketActive', 'true');
     this.socket = io();
     this.socket.emit('authenticate', user_id);
     console.log('socket connected -> ', user_id);
@@ -79,6 +86,7 @@ export class PositionService {
 
   public disconnectWebSocket(): void {
     this.socket.disconnect();
+    sessionStorage.setItem('isSocketActive', 'false');
     console.log('socket disconnected');
   }
 }

@@ -2,21 +2,15 @@ import { Component } from '@angular/core';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/api/auth.service';
-import { Subscription } from 'rxjs';
 import { UserService } from 'src/app/services/user.service';
-import { firstValueFrom } from 'rxjs';
-import { response } from 'express';
 import { User } from 'src/app/models/user.interface';
 import { UsersService } from 'src/app/services/api/users.service';
-//TODO quando il token è presente ma scaduto, il client continua a mandare richieste e fallire, controllare il fix
-//TODO aggiungere l'onclick agli squeals
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
 })
 export class HomeComponent {
-  private homeSubscription: Subscription = new Subscription();
   title = 'Home - Squealer';
   //TODO remove example squeal
   squeals: any[] = [
@@ -26,24 +20,56 @@ export class HomeComponent {
       _id: '7698696',
       username: 'paulpaccy',
       content_type: 'position',
+      reactions: {
+        like: 312231,
+        love: 123,
+        laugh: 41,
+        dislike: 56,
+        disgust: 31,
+        disagree: 65,
+      },
     },
     {
       content: 'test',
       hex_id: 2,
       _id: 0,
       username: 'ilapale',
+      reactions: {
+        like: 0,
+        love: 0,
+        laugh: 0,
+        dislike: 0,
+        disgust: 0,
+        disagree: 0,
+      },
     },
     {
       content: 'test',
       hex_id: 2,
       _id: 1,
       username: 'ilapale',
+      reactions: {
+        like: 0,
+        love: 0,
+        laugh: 0,
+        dislike: 0,
+        disgust: 0,
+        disagree: 0,
+      },
     },
     {
       content: 'test',
       hex_id: 2,
       _id: 2,
       username: 'ilapale',
+      reactions: {
+        like: 0,
+        love: 0,
+        laugh: 0,
+        dislike: 0,
+        disgust: 0,
+        disagree: 0,
+      },
     },
   ];
   isGuest: boolean = true;
@@ -64,10 +90,15 @@ export class HomeComponent {
     } else {
       if (['standard', 'moderator', 'professional', 'verified'].includes(this.user.account_type)) {
         this.isGuest = false;
-        this.usersService.getUser(this.user.username as string).then((response) => {
-          this.user = response;
-          this.userService.setUserData(this.user);
-        });
+        this.usersService
+          .getUser(this.user.username as string)
+          .then((response) => {
+            this.user = response;
+            this.userService.setUserData(this.user);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       } else {
         this.authService.logout();
       }
@@ -80,6 +111,7 @@ export class HomeComponent {
       .getHome(this.isGuest)
       .then((response) => {
         //.slice().reverse()
+        console.log(response);
         this.squeals = response;
       })
       .catch((error) => {
@@ -89,11 +121,19 @@ export class HomeComponent {
           //redirect to login page "/login"
           console.log('TokenExpiredError');
           this.userService.setUserData(null);
+          localStorage.removeItem('Authorization');
+          sessionStorage.removeItem('Authorization');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('user');
           this.router.navigate(['/login']);
         }
         if (errorText == 'invalidTokenFormat') {
           console.log('invalidTokenFormat');
           this.userService.setUserData(null);
+          localStorage.removeItem('Authorization');
+          sessionStorage.removeItem('Authorization');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('user');
           this.router.navigate(['/login']);
         }
       });
@@ -113,9 +153,5 @@ export class HomeComponent {
 
   deleteProfile() {
     //TODO delete profile
-  }
-
-  ngOnDestroy() {
-    this.homeSubscription.unsubscribe();
   }
 }

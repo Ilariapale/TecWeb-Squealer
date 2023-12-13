@@ -52,6 +52,23 @@ router.get("/:identifier", verifyToken, async (req, res, next) => {
   }
 });
 
+router.get("/:identifier/subscription-status", verifyToken, async (req, res, next) => {
+  let options = {
+    identifier: req.params.identifier,
+    isTokenValid: req.isTokenValid,
+    user_id: req.user_id,
+  };
+
+  try {
+    const result = await channels.getChannelSubscriptionStatus(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
 router.post("/", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {};
@@ -182,6 +199,8 @@ router.patch("/:identifier/subscription-status", verifyToken, async (req, res, n
 });
 
 router.patch("/:identifier/muted-status", verifyToken, async (req, res, next) => {
+  console.log("err");
+
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,
@@ -192,6 +211,7 @@ router.patch("/:identifier/muted-status", verifyToken, async (req, res, next) =>
       const result = await channels.channelMuteStatus(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
+      console.log(err);
       return res.status(500).send({
         error: err || "Something went wrong.",
       });

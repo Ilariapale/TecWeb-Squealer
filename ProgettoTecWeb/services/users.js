@@ -36,8 +36,25 @@ const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TIERS } = require
 //--------------------------------------------------------------------------
 module.exports = {
   getUsername: async (options) => {
-    const { user_id } = options;
-    let response = await findUser(user_id);
+    const { user_id, identifier } = options;
+    let response;
+    let user;
+    if (identifier) {
+      response = await findUser(identifier);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      user = response.data;
+      return {
+        status: 200,
+        data: { username: user.username },
+      };
+    }
+
+    response = await findUser(user_id);
     if (response.status >= 300) {
       //if the response is an error
       return {
@@ -45,7 +62,7 @@ module.exports = {
         data: { error: response.error },
       };
     }
-    const user = response.data;
+    user = response.data;
     return {
       status: 200,
       data: { username: user.username },
@@ -465,7 +482,8 @@ module.exports = {
 
     // If the main user is inactive and the request sender is not a moderator,
     // return "User not found" error
-    if (user._id !== reqSender._id) {
+    //console.log(user, reqSender);
+    if (user._id.toString() !== reqSender._id.toString()) {
       if (!user.is_active && reqSender.account_type !== "moderator") {
         return { status: 404, data: { error: `User not found.` } };
       } else if (reqSender.account_type === "moderator") {
@@ -1292,8 +1310,8 @@ module.exports = {
    * @param identifier User's identifier, can be either username or userId
    */
   addCharacters: async (options) => {
-    const { identifier, user_id, inlineReqJson } = options; //user_id is who sent the request
-    const { tier, char_quota_daily, char_quota_weekly, char_quota_monthly } = inlineReqJson;
+    const { user_id, inlineReqJson } = options; //user_id is who sent the request
+    const { identifier, tier, char_quota_daily, char_quota_weekly, char_quota_monthly } = inlineReqJson;
 
     let response = await findUser(user_id);
     if (response.status >= 300) {
@@ -1305,13 +1323,15 @@ module.exports = {
     }
     const reqSender = response.data; //who sent the request
 
-    response = await findUser(identifier);
-    if (response.status >= 300) {
-      //if the response is an error
-      return {
-        status: response.status,
-        data: response.error,
-      };
+    if (identifier) {
+      response = await findUser(identifier);
+      if (response.status >= 300) {
+        //if the response is an error
+        return {
+          status: response.status,
+          data: response.error,
+        };
+      }
     }
     const user = response.data; //who needs the characters
 

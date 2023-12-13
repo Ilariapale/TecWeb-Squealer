@@ -97,7 +97,7 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
           this.loading = true;
           this.user = user;
           this.lastSquealLoaded =
-            user.squeals && user.squeals.posted && user.squeals.posted.length > 0 ? user.squeals.posted.length - 1 : 0;
+            user.squeals && user.squeals.posted && user.squeals.posted.length > 0 ? user.squeals.posted.length - 1 : -1;
 
           const squealsPromises = [];
 

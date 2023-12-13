@@ -15,7 +15,13 @@ export class TagInputComponent {
   @Input() placeholder: string = 'Add a tag';
   addTag() {
     if (this.tagInput && !this.tags.includes(this.tagInput) && this.tagInput.trim() !== '') {
-      this.tags.push(this.tagInput.replace(/\s/g, ''));
+      const tag = this.tagInput.replace(/\s/g, '');
+      //se il tag è già presente non aggiungerlo e svuota l'input
+      if (this.tags.includes(tag)) {
+        this.tagInput = '';
+        return;
+      }
+      this.tags.push(tag);
       this.tagInput = '';
     }
   }

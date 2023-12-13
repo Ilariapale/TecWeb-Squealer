@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { User } from '../models/user.interface';
+import { Channel } from '../models/channel.interface';
 @Injectable({
   providedIn: 'root',
 })
@@ -33,5 +34,17 @@ export class UserService {
 
     const currentUserData = this.userData;
     return currentUserData && (currentUserData.username === username || currentUserData._id === username);
+  }
+
+  isModerator(channel: Channel): boolean {
+    if (!this.userData) {
+      const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      if (savedUserData) {
+        this.setUserData(JSON.parse(savedUserData));
+      }
+    }
+
+    const currentUserData = this.userData;
+    return currentUserData && channel.editors.includes(currentUserData._id);
   }
 }

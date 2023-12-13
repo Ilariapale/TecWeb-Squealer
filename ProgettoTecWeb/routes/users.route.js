@@ -5,9 +5,13 @@ const router = new express.Router();
 const path = require("path");
 const { stringify } = require("querystring");
 
-router.get("/username/:user_id", verifyToken, async (req, res, next) => {
+//gives your username back if no identifier in query, otherwise gives back the username of the user with the given identifier
+router.get("/username", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
-    const options = { user_id: req.user_id };
+    const options = {
+      user_id: req.user_id,
+      identifier: req.query.identifier,
+    };
     try {
       const result = await users.getUsername(options);
       res.status(result.status || 200).send(result.data);
@@ -224,10 +228,9 @@ router.patch("/notifications", verifyToken, async (req, res, next) => {
 });
 //users/paulpaccy/type   body: {account_type:"professional", professional_type:"SMM"}
 
-router.patch("/:identifier/characters", verifyToken, async (req, res, next) => {
+router.patch("/characters", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
-      identifier: req.params.identifier,
       user_id: req.user_id,
       inlineReqJson: req.body,
     };

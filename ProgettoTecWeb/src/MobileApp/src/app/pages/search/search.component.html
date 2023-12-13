@@ -342,8 +342,13 @@
           <div class="toast-body row">
             <div class="col"> {{channel.description}}</div>
             <div class="col-auto">
-              <a class="btn btn-primary btn-sm" (click)="subscribeToChannel(channel.name)">
-                <i *ngIf="!loading" class="bi" [ngClass]="{'bi-check-lg': subscribed, 'bi-plus-lg': !subscribed}"></i>
+              <a *ngIf="!channel.subscription_status" class="btn btn-primary btn-sm"
+                (click)="subscribeToChannel(channel.name, true)">
+                <i *ngIf="!loading" class="bi bi-plus-lg"></i>
+              </a>
+              <a *ngIf="channel.subscription_status" class="btn btn-success btn-sm"
+                (click)="subscribeToChannel(channel.name, false)">
+                <i *ngIf="!loading" class="bi bi-check-lg"></i>
               </a>
             </div>
           </div>

@@ -117,7 +117,36 @@ export class SquealsService {
     return firstValueFrom(this.http.patch(`${this.apiUrl}/report/${squeal_id}`, {}, requestOptions));
   }
 
-  updateSqueal(): Promise<any> {
-    return firstValueFrom(this.http.patch(`${this.apiUrl}`, {}));
+  updateSqueal(identifier: String, object: any): Promise<any> {
+    // object = {users: [], channels: [], keywords: [], like: 0, love: 0, laugh: 0, dislike: 0, disgust: 0, disagree: 0}
+    let url = `${this.apiUrl}/${identifier}`;
+    let body: any = {};
+    let recipients: any = {};
+    let reactions: any = {};
+    object.users ? (recipients['users'] = object.users) : null;
+    object.channels ? (recipients['channels'] = object.channels) : null;
+    object.keywords ? (recipients['keywords'] = object.keywords) : null;
+    object.like ? (reactions['like'] = object.like) : null;
+    object.love ? (reactions['love'] = object.love) : null;
+    object.laugh ? (reactions['laugh'] = object.laugh) : null;
+    object.dislike ? (reactions['dislike'] = object.dislike) : null;
+    object.disgust ? (reactions['disgust'] = object.disgust) : null;
+    object.disagree ? (reactions['disagree'] = object.disagree) : null;
+
+    if (recipients.users || recipients.channels || recipients.keywords) {
+      body['recipients'] = recipients;
+    }
+    if (
+      reactions.like ||
+      reactions.love ||
+      reactions.laugh ||
+      reactions.dislike ||
+      reactions.disgust ||
+      reactions.disagree
+    ) {
+      body['reactions'] = reactions;
+    }
+    console.log(body);
+    return firstValueFrom(this.http.patch(url, body, this.headersGenerator(true)));
   }
 }

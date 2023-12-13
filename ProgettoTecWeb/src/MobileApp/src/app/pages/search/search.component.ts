@@ -220,19 +220,19 @@ export class SearchComponent {
     }
   }
   sendDM(user: String) {
-    //this.router.navigate([`/${user}`]);
-    console.log(`sendDM(${user})`);
+    this.router.navigate([`/private-chats/user/${user}`]);
   }
-  subscribeToChannel(channel: String) {
-    console.log(`subscribeToChannel(${channel})`);
+  subscribeToChannel(channel: String, bool: boolean) {
     this.channelsService
-      .subscribeToChannel(channel, true)
+      .subscribeToChannel(channel, bool)
       .then((res) => {
         console.log(res);
-        //TODO mettere la spunta invece del +
+        let index = this.channelResults?.findIndex((chan) => chan._id === channel || chan.name === channel);
+        if (index != -1) this.channelResults[index].subscription_status = bool;
       })
       .catch((err) => {
         console.log(err);
       });
   }
 }
+//http://localhost:8000/private-chats/user/paulpaccy
