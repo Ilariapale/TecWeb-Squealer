@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 const schemas = require("./services/schemas");
 const bcrypt = require("bcryptjs");
 const { securityLvl } = require("./config");
+
+const { initializeDB, postWeatherSqueals, postRandomSqueals, postRandomImage, postControversialSqueals, startAutomaticPost } = require("./services/generator.js");
+const { check_init } = require("./services/reaction_check.js");
+const { character_reset_init } = require("./services/character_reset.js");
 module.exports = {
   dbconnect: async () => {
     let dbname = "squealerDB";
@@ -46,5 +50,12 @@ module.exports = {
     }
 
     console.log(`Connected to ${credentials?.site}'s MongoDB instance using Mongoose...`);
+
+    await initializeDB();
+
+    character_reset_init();
+    check_init();
+
+    startAutomaticPost();
   },
 };

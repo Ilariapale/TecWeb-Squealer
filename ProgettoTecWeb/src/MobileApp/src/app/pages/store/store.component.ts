@@ -9,7 +9,7 @@ import { UsersService } from 'src/app/services/api/users.service';
   styleUrls: ['./store.component.css'],
 })
 export class StoreComponent implements OnInit {
-  isGuest = false; //true
+  isGuest = true;
   bannerClass = '';
   tiers = [
     'tier1',
@@ -50,12 +50,12 @@ export class StoreComponent implements OnInit {
   };
 
   constructor(public darkModeService: DarkModeService, private router: Router, private usersService: UsersService) {
-    // if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
-    // else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
-    //   this.isGuest = true;
-    // } else {
-    //   this.router.navigate(['/login']);
-    // }
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
+      this.isGuest = true;
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 
   ngOnInit(): void {}

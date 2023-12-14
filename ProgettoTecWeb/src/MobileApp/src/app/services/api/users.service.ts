@@ -123,4 +123,8 @@ export class UsersService {
     object.profile_info ? (body['profile_info'] = object.profile_info) : null;
     return firstValueFrom(this.http.patch(`${this.apiUrl}/${identifier}/profile`, body, this.headersGenerator(true)));
   }
+
+  deleteUser(identifier: string): Promise<any> {
+    return firstValueFrom(this.http.delete(`${this.apiUrl}/${identifier}`, this.headersGenerator(true)));
+  }
 }

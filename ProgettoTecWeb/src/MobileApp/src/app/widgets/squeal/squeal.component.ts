@@ -27,6 +27,7 @@ export class SquealComponent implements OnInit {
   isSquealPage = false;
   isHome = false;
   isProfile = false;
+  isGuest = false;
   //TODO mettere l'emojui colorata se hai già reagito ? forse
   constructor(
     private commentService: CommentService,
@@ -38,6 +39,10 @@ export class SquealComponent implements OnInit {
     private userService: UserService,
     private location: Location
   ) {
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    else {
+      this.isGuest = true;
+    }
     this.squeal = {};
     this.route.paramMap.subscribe((params) => {
       // if ((this.route.snapshot.url[0].path == 'home'))

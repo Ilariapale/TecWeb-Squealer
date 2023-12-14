@@ -95,12 +95,19 @@
           </li>
           <li class="nav-item row py-3">
             <a class="col"></a>
-            <a class="nav-link col-auto text-danger clickable" (click)="deleteProfile()" data-bs-toggle="offcanvas"
-              data-bs-target="#offcanvasDarkNavbar">
+            <a class="nav-link col-auto text-danger clickable" data-bs-toggle="offcanvas"
+              data-bs-target="#offcanvasDarkNavbar" data-bs-toggle="collapse" data-bs-target="#deleteProfile"
+              aria-expanded="false" aria-controls="deleteProfile">
               Delete account
             </a>
-            <i class="bi bi-trash col-2 d-flex justify-content-center align-items-center text-danger clickable"
-              (click)="deleteProfile()" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
+            <i class=" bi bi-trash col-2 d-flex justify-content-center align-items-center text-danger clickable"
+              data-bs-target="#offcanvasDarkNavbar" data-bs-toggle="collapse" data-bs-target="#deleteProfile"
+              aria-expanded="false" aria-controls="deleteProfile"></i>
+          </li>
+          <li class="collapse" id="deleteProfile">
+            <div class="card card-body" [class.bg-dark]="getThemeClass()=='dark-theme'">
+              <button class="btn btn-danger" (click)="deleteProfile()">DELETE PROFILE</button>
+            </div>
           </li>
         </ul>
 

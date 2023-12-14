@@ -19,6 +19,7 @@ const connectedUsers = {};
 const { check_init } = require("./services/reaction_check.js");
 const { character_reset_init } = require("./services/character_reset.js");
 const { postPositionScheduledSqueal, deleteFromSendingPositionObject } = require("./services/schedule_utils");
+const { initializeDB, postWeatherSqueals } = require("./services/generator.js");
 
 app.set("port", PORT);
 app.set("env", NODE_ENV);
@@ -112,6 +113,8 @@ server.listen(PORT, () => {
 });
 
 db.dbconnect();
-character_reset_init();
-check_init();
+//initializeDB();
+//postWeatherSqueals();
+//character_reset_init();
+//check_init();
 module.exports = app;

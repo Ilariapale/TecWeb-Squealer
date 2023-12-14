@@ -1589,9 +1589,7 @@ module.exports = {
       }
     }
     pipeline.push({ $limit: pag_size });
-    console.log(pipeline);
-    console.log(pipeline[0]["$match"]);
-    console.log(reqSender.notifications.length);
+
     const notifications = await Notification.aggregate(pipeline);
     return {
       status: 200,

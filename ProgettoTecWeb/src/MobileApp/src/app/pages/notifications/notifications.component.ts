@@ -60,6 +60,7 @@ export class NotificationsComponent implements OnInit {
       this.isGuest = false;
       this.usersService.getNotifications(this.pageSize).then((notifications) => {
         this.notifications = notifications;
+        if (notifications.length < this.pageSize) this.loadMoreButton = false;
       });
     }
   }

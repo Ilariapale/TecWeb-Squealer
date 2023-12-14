@@ -5,7 +5,7 @@
       @{{user.username}}
       <span>{{user.account_type}}</span>
 
-      <ng-container *ngIf='!isGuest || true'>
+      <ng-container *ngIf='!isGuest'>
         <div *ngIf="enoughChars" class="squeal-form-text">
           {{user.char_quota?.daily || 0}}<span class="quota_letter">D</span>
           {{user.char_quota?.weekly || 0}}<span class="quota_letter">W</span>

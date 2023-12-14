@@ -31,7 +31,8 @@
           <p *ngIf="squeal.content_type == 'text' || squeal.content_type == 'deleted'" class="card-text">
             {{squeal.content}}</p>
           <div *ngIf="squeal.content_type == 'image'" class="card-img-top ">
-            <img [src]="'media/image/'+squeal.content" class="img-fluid" />
+            <img [src]="squeal.content?.startsWith('https')?squeal.content:('media/image/'+squeal.content)"
+              class="img-fluid" />
           </div>
           <div *ngIf="squeal.content_type == 'video'">
             <video controls [poster]="'media/thumbnail/'+squeal.content" style="max-width: 100%; height: auto;"
@@ -50,7 +51,7 @@
 
               <div class="col-5 px-1">
                 <button id="comment_button" type="button" class="btn btn-secondary btn-rounded px-2"
-                  (click)="toggleComments()">
+                  (click)="isGuest?null:toggleComments()">
                   <i class="bi bi-chat-dots-fill"></i>
                   <p class="badge bg-danger ms-2 my-auto">{{squeal.comments_count || 0}}</p>
                 </button>

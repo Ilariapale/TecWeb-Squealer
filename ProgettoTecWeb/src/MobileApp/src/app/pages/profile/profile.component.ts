@@ -79,9 +79,9 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
     private router: Router,
     private mediaService: MediaService
   ) {
-    //if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
-    //else if (localStorage.getItem('user') || sessionStorage.getItem('user')) this.isGuest = true;
-    //else this.router.navigate(['/login']);
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    else if (localStorage.getItem('user') || sessionStorage.getItem('user')) this.isGuest = true;
+    else this.router.navigate(['/login']);
   }
 
   async ngOnInit() {

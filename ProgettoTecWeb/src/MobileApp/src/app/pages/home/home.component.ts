@@ -30,7 +30,8 @@ export class HomeComponent {
       },
     },
     {
-      content: 'test',
+      content: 'https://picsum.photos/id/237/400/300',
+      content_type: 'image',
       hex_id: 2,
       _id: 0,
       username: 'ilapale',

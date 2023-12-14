@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/api/auth.service';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { UserService } from 'src/app/services/user.service';
+import { UsersService } from 'src/app/services/api/users.service';
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
@@ -16,7 +17,8 @@ export class NavbarComponent {
     public authService: AuthService,
     private darkModeService: DarkModeService,
     public router: Router,
-    public userService: UserService
+    public userService: UserService,
+    private usersService: UsersService
   ) {
     const user = userService.getUserData();
     if (!user) {
@@ -56,6 +58,13 @@ export class NavbarComponent {
   }
 
   deleteProfile() {
-    //TODO delete profile
+    this.usersService
+      .deleteUser(this.userService.getUserData()?.username || '')
+      .then((res) => {
+        this.authService.logout();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 }
