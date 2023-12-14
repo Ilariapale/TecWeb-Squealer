@@ -371,7 +371,7 @@
             <small>{{squeal.is_in_official_channel ? "OFFICIAL":"unofficial"}}</small>
           </div>
           <div class="toast-body row">
-            <div class="col">{{squeal.content}}</div>
+            <div class="col">{{squeal.content_type == "text" ? squeal.content : '['+squeal.content_type+']'}}</div>
             <div class="col-auto">
             </div>
           </div>

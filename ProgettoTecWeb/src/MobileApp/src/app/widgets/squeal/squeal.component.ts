@@ -29,6 +29,7 @@ export class SquealComponent implements OnInit {
   isProfile = false;
   isGuest = false;
   //TODO mettere l'emojui colorata se hai già reagito ? forse
+  //TODO incrementare la reaction quando reagisci
   constructor(
     private commentService: CommentService,
     private darkModeService: DarkModeService,
