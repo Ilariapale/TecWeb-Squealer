@@ -678,21 +678,29 @@ module.exports = {
         if (squeal.recipients.users.some((userId) => userId.equals(user._id) || userId.toString() === user._id.toString())) {
           squeal.selected = {
             because: "mentioned",
-            ids: [user._id],
+            ids: [user.name],
           };
         } else if (squeal.recipients.channels.some((channel) => user.subscribed_channels.includes(channel))) {
+          let ids = squeal.recipients.channels.filter((channel) => user.subscribed_channels.includes(channel));
+          let names = (
+            await Channel.find({ _id: { $in: ids } })
+              .select("name")
+              .exec()
+          ).map((channel) => channel.name);
           squeal.selected = {
             because: "subscribed",
-            ids: squeal.recipients.channels.filter((channel) => user.subscribed_channels.includes(channel)),
+            ids: names,
           };
         } else if (squeal.is_in_official_channel) {
           //ottengo i canali in recipients.channels (che sono solo id) e li filtro, prendendo solo quelli ufficiali, e infine prendo solo gli id
-          const channels = await Channel.find({ _id: { $in: squeal.recipients.channels }, is_official: true })
-            .select("_id")
-            .exec();
+          const channels = (
+            await Channel.find({ _id: { $in: squeal.recipients.channels }, is_official: true })
+              .select("name")
+              .exec()
+          ).map((channel) => channel.name);
           squeal.selected = {
             because: "official",
-            ids: channels.map((channel) => channel._id),
+            ids: channels,
           };
         }
       }

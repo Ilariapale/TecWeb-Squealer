@@ -40,7 +40,7 @@ const character_reset_init = (req, res) => {
 const daily_reset = async () => {
   const users = await User.find({});
   const promises = users.map((user) => {
-    const newDailyQuota = DAILY_CHAR_QUOTA + user.char_quota.earned_daily;
+    const newDailyQuota = DAILY_CHAR_QUOTA + user.char_quota.earned_daily - (EXTRA_DAILY_CHAR_QUOTA - user.char_quota.extra_daily);
     return User.updateOne({ _id: user._id }, { $set: { "char_quota.daily": newDailyQuota, extra_daily: EXTRA_DAILY_CHAR_QUOTA } });
   });
   await Promise.all(promises);

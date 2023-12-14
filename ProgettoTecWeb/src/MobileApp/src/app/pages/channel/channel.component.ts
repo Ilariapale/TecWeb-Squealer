@@ -11,7 +11,6 @@ import { Subscription, forkJoin } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { ChannelsService } from 'src/app/services/api/channels.services';
-//TODO fixa il tasto sub e mute
 @Component({
   selector: 'app-channel',
   templateUrl: './channel.component.html',
@@ -117,8 +116,6 @@ export class ChannelComponent {
         console.log(err);
       });
   }
-
-  //TODO mute channel
 
   loadMoreSqueals() {
     this.loading = true;

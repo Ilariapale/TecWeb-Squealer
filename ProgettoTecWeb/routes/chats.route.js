@@ -75,7 +75,6 @@ router.post("/direct/:identifier", verifyToken, async (req, res, next) => {
       console.log(options.identifier);
       //identifier probably a object id
       const recipientSocketId = req.connectedUsers[options.identifier];
-      //TODO se il destinatario non è online, invia una notifica push
       if (recipientSocketId && result.status === 200) {
         req.io.to(recipientSocketId).emit("new_message", result.data);
       }

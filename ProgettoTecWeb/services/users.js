@@ -1124,7 +1124,6 @@ module.exports = {
    * @param options.inlineReqJson.profile_picture new user's profile picture
    */
   updateProfile: async (options) => {
-    //TODO immagine profilo, in generale caricamento immagini
     const { identifier, user_id } = options;
     const { profile_info, profile_picture } = options.inlineReqJson;
     // Check if the required fields are present
@@ -1554,8 +1553,8 @@ module.exports = {
    * @param options.identifiers
    */
   getNotifications: async (options) => {
-    const { user_id } = options;
-
+    const { user_id, last_loaded } = options;
+    let { pag_size } = options;
     let response = await findUser(user_id);
     if (response.status >= 300) {
       //if the response is an error
@@ -1565,10 +1564,38 @@ module.exports = {
       };
     }
     const reqSender = response.data;
-    const notificatins = await Notification.find({ _id: { $in: reqSender.notifications } });
+    console.log(last_loaded, pag_size);
+    let pipeline = [{ $match: { _id: { $in: reqSender.notifications } } }, { $sort: { created_at: -1 } }];
+
+    if (last_loaded) {
+      if (!mongooseObjectIdRegex.test(last_loaded)) {
+        return {
+          status: 400,
+          data: { error: `'last_loaded' must be a valid ObjectId.` },
+        };
+      }
+      pipeline.push({ $match: { _id: { $lt: new mongoose.Types.ObjectId(last_loaded) } } });
+    }
+
+    if (!pag_size) {
+      pag_size = DEFAULT_PAGE_SIZE;
+    } else {
+      pag_size = parseInt(pag_size);
+      if (isNaN(pag_size || pag_size <= 0 || pag_size > MAX_PAGE_SIZE)) {
+        return {
+          status: 400,
+          data: { error: `'pag_size' must be a number between 1 and 100.` },
+        };
+      }
+    }
+    pipeline.push({ $limit: pag_size });
+    console.log(pipeline);
+    console.log(pipeline[0]["$match"]);
+    console.log(reqSender.notifications.length);
+    const notifications = await Notification.aggregate(pipeline);
     return {
       status: 200,
-      data: notificatins,
+      data: notifications,
     };
   },
 };

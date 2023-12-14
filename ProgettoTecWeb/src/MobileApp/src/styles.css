@@ -29,6 +29,10 @@ body {
   /* Altezza della barra di navigazione */
 }
 
+.clickable {
+  cursor: pointer;
+}
+
 .sticky-footer {
   position: absolute;
   bottom: 0;

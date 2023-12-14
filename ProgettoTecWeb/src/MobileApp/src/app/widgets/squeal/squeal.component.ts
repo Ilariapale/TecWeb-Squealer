@@ -158,6 +158,9 @@ export class SquealComponent implements OnInit {
   goToSqueal() {
     this.router.navigate([`squeal/${this.squeal._id}`]);
   }
+  goToChannel(channelName: String) {
+    this.router.navigate([`channel/${channelName}`]);
+  }
   goBack(): void {
     this.location.back();
   }

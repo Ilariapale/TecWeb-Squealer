@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { newOwnerNotification, deletedManagedAccountNotification, deletedSMMNotification } = require("./messages.js");
+const { newOwnerNotification, deletedManagedAccountNotification, deletedSMMNotification, channelDeletedNotification } = require("./messages.js");
 const { removeMedia } = require("./media.js");
 const { DAILY_CHAR_QUOTA, WEEKLY_CHAR_QUOTA, MONTHLY_CHAR_QUOTA, EXTRA_DAILY_CHAR_QUOTA } = require("./constants");
 
@@ -37,6 +37,8 @@ const NotificationSchema = new mongoose.Schema({
     enum: [
       "newComment",
       "newOwner",
+      "newEditor",
+      "removedEditor",
       "noMoreVipSMM",
       "noMoreSmmVIP",
       "mentionedInSqueal",
@@ -48,6 +50,7 @@ const NotificationSchema = new mongoose.Schema({
       "banStatusUpdate",
       "officialStatusUpdate",
       "charQuotaUpdate",
+      "channelDeleted",
     ],
   },
   source: { type: String, enum: ["squeal", "channel", "user", "system"] },
@@ -361,15 +364,40 @@ const ChannelSchema = new mongoose.Schema({
 ChannelSchema.methods.Delete = async function () {
   //remove the channel from the squeals recipients
   await Squeal.updateMany({ _id: { $in: this.squeals } }, { $pull: { "recipients.channels": this._id } });
+  //if the channel is official and it's the only official in the squeals, remove the official tag from the squeals
+  if (this.is_official) {
+    const squeals = await Squeal.find({ _id: { $in: this.squeals }, is_in_official_channel: true });
+    //per ogni squeal controllo se ha tra i destinatari almeno un canale ufficiale, altrimenti setto is_in_official_channel a false
+    for (const squeal of squeals) {
+      const squealChannels = squeal.recipients.channels;
+      const officialChannels = await Channel.find({ _id: { $in: squealChannels }, is_official: true });
+      if (officialChannels.length == 0) {
+        squeal.is_in_official_channel = false;
+        await squeal.save();
+      }
+    }
+  }
 
   //remove the channel from the users subscribed channels, the channel from the users muted channels,the channel from the users created channels
   await User.updateMany({ _id: { $in: this.subscribers } }, { $pull: { subscribed_channels: this._id, "preferences.muted_channels": this._id } });
 
   //remove the channel from the owner user
   const owner = await User.findByIdAndUpdate(this.owner, { $pull: { owned_channels: this._id } }).exec();
-
   //remove the channel from the editors users
-  await User.updateMany({ _id: { $in: this.editors } }, { $pull: { editor_channels: this._id } });
+
+  const editors = await User.find({ _id: { $in: this.editors } });
+  //TODO mandare notifiche agli editors
+  for (const editor of editors) {
+    const notification = new Notification({
+      content: channelDeletedNotification(editor.username, this.name, "editor"),
+      user_ref: editor._id,
+      created_at: new Date(),
+      source: "system",
+      id_code: "channelDeleted",
+    });
+    await notification.save();
+    await User.findByIdAndUpdate(editor._id, { $pull: { editor_channels: this._id }, $push: { notifications: notification._id } });
+  }
 
   //remove the channel from the db
   await this.deleteOne();

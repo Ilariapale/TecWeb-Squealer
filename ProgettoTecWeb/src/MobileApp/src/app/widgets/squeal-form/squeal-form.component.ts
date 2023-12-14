@@ -571,7 +571,7 @@ export class SquealFormComponent {
         this.onInput(-this.sizeAndCost.cost.position);
       }
     }
-    if (this.selectedType == ContentType.position) {
+    if (this.selectedType == ContentType.position && this.lastSelectedTab != 'position') {
       this.onInput(this.sizeAndCost.cost.position);
     }
     this.lastSelectedTab = type;

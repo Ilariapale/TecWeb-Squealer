@@ -98,8 +98,21 @@
                 </div>
               </div>
             </div>
-            <div *ngIf="isHome">
-              From: {{squeal.selected?.because}} {{squeal.selected?.ids}}
+            <div *ngIf="isHome" class="flex-nowrap justify-content-center d-flex align-items-center py-2">
+              <div *ngIf="squeal.selected?.because=='mentioned'">
+                <ul class="list-group list-group-horizontal">
+                  <li class="list-group-item" [class.bg-secondary]="getDarkMode()=='dark-theme'"
+                    [class.text-light]="getDarkMode()=='dark-theme'">You have been mentioned here</li>
+                </ul>
+              </div>
+              <div *ngIf="squeal.selected?.because=='official' || squeal.selected?.because=='subscribed'">
+                <ul class="list-group list-group-horizontal">
+                  <li (click)="goToChannel(name)" *ngFor="let name of squeal.selected?.ids"
+                    class="list-group-item clickable" [class.bg-secondary]="getDarkMode()=='dark-theme'"
+                    [class.text-light]="getDarkMode()=='dark-theme'">
+                    §{{name}}</li>
+                </ul>
+              </div>
 
             </div>
 

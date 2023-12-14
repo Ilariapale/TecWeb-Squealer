@@ -19,6 +19,7 @@ export enum IdCode {
   banStatusUpdate = 'banStatusUpdate',
   officialStatusUpdate = 'officialStatusUpdate',
   charQuotaUpdate = 'charQuotaUpdate',
+  channelDeleted = 'channelDeleted',
 }
 
 export interface Notification {

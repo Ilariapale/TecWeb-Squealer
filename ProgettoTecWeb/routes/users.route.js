@@ -28,6 +28,8 @@ router.get("/notifications", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
       user_id: req.user_id,
+      last_loaded: req.query.last_loaded,
+      pag_size: req.query.pag_size,
     };
     try {
       const result = await users.getNotifications(options);

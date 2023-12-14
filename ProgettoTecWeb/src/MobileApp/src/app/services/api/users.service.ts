@@ -71,8 +71,11 @@ export class UsersService {
     return firstValueFrom(this.http.patch(url, body, this.headersGenerator(true)));
   }
 
-  getNotifications(): Promise<Notification[]> {
+  getNotifications(pag_size?: number, last_loaded?: string): Promise<Notification[]> {
     let url = `${this.apiUrl + this.notificationUrl}?`;
+    if (pag_size) url += `pag_size=${pag_size}&`;
+    if (last_loaded) url += `last_loaded=${last_loaded}&`;
+    url = url.slice(0, -1);
     return firstValueFrom(this.http.get<Notification[]>(url, this.headersGenerator(true)));
   }
 

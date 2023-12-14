@@ -6,7 +6,6 @@ const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 const { checkChar, verifyToken } = require("../services/utils");
-//TODO quando cancelliamo uno squeal cancelliamo anche i media associati
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     console.log("__dirname: " + __dirname);

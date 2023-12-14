@@ -99,6 +99,11 @@ export class ChannelsService {
     const requestOptions = this.headersGenerator(true);
     return firstValueFrom(this.http.patch(`${this.apiUrl}/${body.identifier}`, body, requestOptions));
   }
+
+  deleteChannel(identifier: String): Promise<any> {
+    const requestOptions = this.headersGenerator(true);
+    return firstValueFrom(this.http.delete(`${this.apiUrl}/${identifier}`, requestOptions));
+  }
   // Altre funzioni per il recupero password, aggiornamento del profilo, ecc. possono essere implementate qui.
 }
 interface UpdateChannelBody {

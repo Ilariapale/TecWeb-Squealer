@@ -1,5 +1,4 @@
 // messages.component.ts
-//TODO implementare la richiesta al server
 import { Component } from '@angular/core';
 import { Message, Chat, ChatPreview } from 'src/app/models/chat.interface';
 import { UsersService } from 'src/app/services/api/users.service';
@@ -64,7 +63,6 @@ export class ChatsComponent {
       });
     }
   }
-  //TODO finire implementazione di messages
 
   markAllAsRead(/*_ids: string[]*/) {}
   markAsRead(_id: string) {}

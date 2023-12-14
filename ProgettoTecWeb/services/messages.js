@@ -24,6 +24,12 @@ const removedOwnerNotification = (username, channel) => `Oh no, @${username}! Yo
 
 const channelDeletedNotification = (username, channel, role) => `Oh no, @${username}! The channel §${channel} you were ${role} of has been deleted!`;
 
+//------------------------------------------------------------
+const newEditorForChannelNotification = (channel) => `Congratulation! You are now an editor of §${channel} channel!`;
+
+const removedEditorForChannelNotification = (channel) => `Oh no! You are no longer an editor of §${channel} channel!`;
+//------------------------------------------------------------
+
 const welcomeNotification = (username) => `Welcome to Squealer @${username}! Check out your first squeal by clicking on the notification.`;
 
 const welcomeMessage = (username) => `Welcome to Squealer @${username}!`;
@@ -92,4 +98,6 @@ module.exports = {
   updatedProfileTypeNotification,
   charQuotaGained,
   charQuotaLost,
+  removedEditorForChannelNotification,
+  newEditorForChannelNotification,
 };

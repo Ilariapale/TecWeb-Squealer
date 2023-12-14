@@ -15,7 +15,7 @@ export class SignupComponent {
     password: '',
   };
   errorMessage: string = '';
-
+  successMessage: string = '';
   constructor(private authService: AuthService, private router: Router, private darkModeService: DarkModeService) {}
   onSubmit(): void {
     // Call the authentication service to sign up
@@ -23,7 +23,10 @@ export class SignupComponent {
       next: (response) => {
         // Handle the response from the service if needed
         //console.log('Login successful', response);
-        this.router.navigate(['/login']);
+        this.successMessage = `Account created successfully! You'll be redirected to the login page in a few seconds.`;
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 5000);
         // Redirect the user to another page if the signup is successful
       },
       error: (error) => {

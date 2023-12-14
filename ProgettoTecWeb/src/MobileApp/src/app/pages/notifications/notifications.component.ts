@@ -8,7 +8,6 @@ import { Source } from 'src/app/models/notification.interface';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { TimeService } from 'src/app/services/time.service';
 import { Router } from '@angular/router';
-import { Subscription, firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
@@ -16,11 +15,27 @@ import { Subscription, firstValueFrom } from 'rxjs';
 })
 //TODO caricare solo alcune notifiche alla volta e aggiungere tasto per aggiorare e tasto per caricare altre
 export class NotificationsComponent implements OnInit {
-  private notificationSubscription: Subscription = new Subscription();
-  private userSubscription: Subscription = new Subscription();
-  notifications: Notification[] = [];
+  notifications: Notification[] = [
+    {
+      _id: '123',
+      user_ref: '123',
+      sender_ref: '123',
+      squeal_ref: '123',
+      channel_ref: '123',
+      id_code: IdCode.welcomeSqueal,
+      is_unseen: true,
+      created_at: new Date(),
+      source: Source.squeal,
+      content: 'content',
+      reply: false,
+    },
+  ];
   isHovered: boolean = false;
+  loading: boolean = false;
   isGuest: boolean = true;
+  pageSize = 8;
+  loadMoreButton: boolean = true;
+  //isGuest: boolean = false;
   constructor(
     private usersService: UsersService,
     private userService: UserService,
@@ -43,8 +58,8 @@ export class NotificationsComponent implements OnInit {
       this.isGuest = true;
     } else {
       this.isGuest = false;
-      this.usersService.getNotifications().then((notifications) => {
-        this.notifications = [...notifications].reverse();
+      this.usersService.getNotifications(this.pageSize).then((notifications) => {
+        this.notifications = notifications;
       });
     }
   }
@@ -85,6 +100,23 @@ export class NotificationsComponent implements OnInit {
     this.router.navigate([`/${page}`]);
   }
 
+  loadMoreSqueals() {
+    this.loading = true;
+    console.log(this.pageSize, this.notifications[this.notifications.length - 1]._id);
+    this.usersService
+      .getNotifications(this.pageSize, this.notifications[this.notifications.length - 1]._id)
+      .then((notifications) => {
+        if (notifications.length < this.pageSize) this.loadMoreButton = false;
+        this.notifications.push(...notifications);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+      .finally(() => {
+        this.loading = false;
+      });
+  }
+
   notificationLink(notif: Notification) {
     //setta la notifica come letta
     console.log(notif);
@@ -120,10 +152,5 @@ export class NotificationsComponent implements OnInit {
         //case IdCode.SMMdeclined, IdCode.noMoreVipSMM, IdCode.noMoreSmmVIP
         break;
     }
-  }
-
-  ngOnDestroy() {
-    this.userSubscription.unsubscribe();
-    this.notificationSubscription.unsubscribe();
   }
 }

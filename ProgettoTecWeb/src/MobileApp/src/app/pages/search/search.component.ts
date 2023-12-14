@@ -54,7 +54,7 @@ export class SearchComponent {
   placeholder: string = 'Type username here...';
 
   testArray: string[] = ['test1', 'test2', 'test3'];
-
+  //TODO se il tipo dello squeal è diverso da testo, gestire diversamente
   constructor(
     private darkModeService: DarkModeService,
     private usersService: UsersService,

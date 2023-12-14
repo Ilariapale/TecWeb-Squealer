@@ -199,8 +199,6 @@ router.patch("/:identifier/subscription-status", verifyToken, async (req, res, n
 });
 
 router.patch("/:identifier/muted-status", verifyToken, async (req, res, next) => {
-  console.log("err");
-
   if (req.isTokenValid) {
     let options = {
       identifier: req.params.identifier,

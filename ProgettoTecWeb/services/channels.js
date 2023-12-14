@@ -24,7 +24,7 @@ const {
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
 } = require("./constants");
-const { newOwnerNotification, removedOwnerNotification } = require("./messages");
+const { newOwnerNotification, removedOwnerNotification, newEditorForChannelNotification, removedEditorForChannelNotification } = require("./messages");
 module.exports = {
   //DONE Controllati i casi in cui l'utente che fa richiesta è bannato
 
@@ -636,10 +636,10 @@ module.exports = {
           data: { error: `Users not valid.` },
         };
       }
-      const editorsIds = data.usersArray;
+      const editorsIds = data.usersArray.map((user) => user._id);
 
       //se tra gli editors c'è il proprietario, ritorna un errore
-      if (editorsIds.some((editorId) => JSON.stringify(editorId) == JSON.stringify(channel.owner))) {
+      if (editorsIds.some((editorId) => editorId.toString() === channel.owner.toString())) {
         return {
           status: 400,
           data: { error: `The owner of the channel can't be an editor.` },
@@ -655,22 +655,46 @@ module.exports = {
 
       //controlla che gli editors esistano
       const { added, removed } = addedAndRemoved(channel.editors, editorsIds);
-      console.log(added, removed);
-
       const addedUserPromises = added.map(async (user) => {
-        let userObject = (await findUser(user._id)).data;
-        userObject.editor_channels.push(channel._id);
-        await userObject.save();
+        await User.updateOne({ _id: user }, { $push: { editor_channels: channel._id } });
       });
 
       const removedUserPromises = removed.map(async (user) => {
-        let userObject = (await findUser(user._id)).data;
-        userObject.editor_channels.pull(channel._id);
-        await userObject.save();
+        await User.updateOne({ _id: user }, { $pull: { editor_channels: channel._id } });
       });
 
       // Attendere che tutte le promesse vengano risolte
       await Promise.all([...addedUserPromises, ...removedUserPromises]);
+
+      //TODO mando notifiche agli utenti aggiunti e rimossi
+      if (added.length > 0) {
+        added.forEach(async (user) => {
+          const notification = new Notification({
+            content: newEditorForChannelNotification(channel.name),
+            user_ref: user,
+            channel_ref: channel._id,
+            created_at: Date.now(),
+            source: "channel",
+            id_code: "newEditor",
+          });
+          await notification.save();
+          User.findByIdAndUpdate(user._id, { $push: { notifications: notification._id } }).exec();
+        });
+      }
+      if (removed.length > 0) {
+        removed.forEach(async (user) => {
+          const notification = new Notification({
+            content: removedEditorForChannelNotification(channel.name),
+            user_ref: user,
+            channel_ref: channel._id,
+            created_at: Date.now(),
+            source: "channel",
+            id_code: "removedEditor",
+          });
+          await notification.save();
+          User.findByIdAndUpdate(user._id, { $push: { notifications: notification._id } }).exec();
+        });
+      }
 
       //aggiorno gli editors
       channel.editors = editorsIds;

@@ -37,6 +37,12 @@ export class ChannelManagerComponent {
   //TODO quando la richiesta fallisce metti l'errore
   isGuest = false;
 
+  successCreation: string = '';
+  errorCreation: string = '';
+
+  errorMessage: string = '';
+  successMessage: string = '';
+
   channelsOwnedIds: string[] = [];
   channelsEditorIds: string[] = [];
 
@@ -63,7 +69,7 @@ export class ChannelManagerComponent {
     name: '',
     description: '',
   };
-  //TODO quando l'utente non ha canali viene un errore Cannot read properties of undefined (reading 'map')
+  channelToDelete: String = '';
   constructor(
     private route: ActivatedRoute,
     public timeService: TimeService,
@@ -75,21 +81,21 @@ export class ChannelManagerComponent {
     private router: Router,
     private channelsService: ChannelsService
   ) {
-    // if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
-    // else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
-    //   this.isGuest = true;
-    // } else {
-    //   this.router.navigate(['/login']);
-    // }
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
+      this.isGuest = true;
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 
   ngOnInit() {
     const userData = this.userService.getUserData();
     if (userData.account_type === 'guest') {
-      //this.isGuest = true;
+      this.isGuest = true;
       return;
     }
-    //this.isGuest = false;
+    this.isGuest = false;
     this.username = userData.username;
     this.usersService
       .getUser(this.username)
@@ -119,6 +125,7 @@ export class ChannelManagerComponent {
   }
 
   createChannel() {
+    this.resetMessages();
     this.channelsService
       .createChannel(this.newChannel.name, this.newChannel.description, this.is_official)
       .then((channel: any) => {
@@ -126,8 +133,12 @@ export class ChannelManagerComponent {
         this.channelsOwned.push(channel);
         this.newChannel.name = '';
         this.newChannel.description = '';
+        this.errorCreation = '';
+        this.successCreation = 'Channel created successfully';
       })
       .catch((err: any) => {
+        this.successCreation = '';
+        this.errorCreation = 'Error creating channel: ' + err.error?.error;
         console.error('Error creating channel:', err);
       });
   }
@@ -144,6 +155,8 @@ export class ChannelManagerComponent {
   }
 
   selectChannel(channel: Channel) {
+    this.resetMessages();
+
     this.selectedChannel = JSON.parse(JSON.stringify(channel));
     this.selectedEditors = [];
     //richiesta per ottenere i nomi degli editor
@@ -164,6 +177,7 @@ export class ChannelManagerComponent {
   }
 
   updateOwnedChannel() {
+    this.resetMessages();
     //prendo il canale dall'array tramite l'id di quello updetato
     const oldChannel = this.channelsOwned.find((channel) => channel._id === this.selectedChannel._id);
     const updatedChannel = this.selectedChannel;
@@ -184,21 +198,32 @@ export class ChannelManagerComponent {
         console.log(channel);
         this.channelsOwned = this.channelsOwned.map((channel) => {
           if (channel._id === updatedChannel._id) {
-            return channel;
+            return updatedChannel;
           }
           return channel;
         });
+        this.errorMessage = '';
+        this.successMessage = 'Channel updated successfully';
       })
       .catch((err: any) => {
-        console.error('Error updating channel:', err);
+        this.successMessage = '';
+        this.errorMessage = 'Error updating channel: ' + err.error?.error;
       });
   }
 
+  resetMessages() {
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.errorCreation = '';
+    this.successCreation = '';
+  }
+
   updateEditorChannel() {
+    this.resetMessages();
     const oldChannel = this.channelsEditor.find((channel) => channel._id === this.selectedChannel._id);
     const updatedChannel = this.selectedChannel;
     const newEditors = this.editorComponent2.getTags();
-
+    console.log(newEditors);
     const body: any = {
       identifier: updatedChannel._id,
     };
@@ -213,13 +238,38 @@ export class ChannelManagerComponent {
         console.log(channel);
         this.channelsEditor = this.channelsEditor.map((channel) => {
           if (channel._id === updatedChannel._id) {
-            return channel;
+            return updatedChannel;
           }
           return channel;
         });
+        this.errorMessage = '';
+        this.successMessage = 'Channel updated successfully';
       })
       .catch((err: any) => {
-        console.error('Error updating channel:', err);
+        this.successMessage = '';
+        this.errorMessage = 'Error updating channel: ' + err.error?.error;
+      });
+  }
+
+  selectChannelToDelete(channel: String) {
+    this.resetMessages();
+    this.channelToDelete = channel;
+  }
+
+  deleteChannel() {
+    this.channelsService
+      .deleteChannel(this.channelToDelete)
+      .then((channel: any) => {
+        console.log(channel);
+        console.log(this.channelsOwned);
+        console.log(this.channelToDelete);
+        this.channelsOwned = this.channelsOwned.filter((channel) => channel._id !== this.channelToDelete);
+      })
+      .catch((err: any) => {
+        if (err.status == 404) {
+          this.channelsOwned = this.channelsOwned.filter((channel) => channel._id !== this.channelToDelete);
+        }
+        console.error('Error deleting channel:', err);
       });
   }
 }

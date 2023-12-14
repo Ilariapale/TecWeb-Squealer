@@ -3,7 +3,6 @@ import { AuthService } from '../../services/api/auth.service';
 import { Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { DarkModeService } from '../../services/dark-mode.service';
-//TODO css in dark mode
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
@@ -24,9 +23,9 @@ export class LoginComponent {
   ) {}
   ngOnInit() {
     if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) {
+      //TODO possibile implementazione di una richiesta al server per verificare la validità del token
       this.router.navigate(['/home']);
     }
-    //TODO check if the token is valid
   }
   onSubmit(): void {
     // Chiamare il servizio di autenticazione per fare il login
@@ -48,7 +47,7 @@ export class LoginComponent {
         })
         .catch((error: any) => {
           // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
-          if (error.error?.error) this.errorMessage = error.error.error;
+          this.errorMessage = error;
         });
     }
   }

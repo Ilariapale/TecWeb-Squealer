@@ -39,8 +39,7 @@ export class AuthService {
           }
         },
         (error) => {
-          console.error('Error during login:', error);
-          reject(false); // L'operazione non è avvenuta con successo
+          reject(error.error.error); // L'operazione non è avvenuta con successo
         }
       );
     });

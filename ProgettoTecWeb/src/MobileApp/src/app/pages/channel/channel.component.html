@@ -8,17 +8,27 @@
       </div>
       <span class="col d-flex flex-row-reverse">
 
-        <span *ngIf="!channel.is_official && channel.subscription_status" (click)="toggleMute()" class="bi"
-          [ngClass]="{'bi-bell-fill': !channel.is_muted_by_user, 'bi-bell-slash': channel.is_muted_by_user}"></span>
 
-        <a *ngIf="!channel.subscription_status" class="btn btn-primary btn-sm"
-          (click)="subscribeToChannel(channel.name, true)">
-          <i *ngIf="!loading" class="bi bi-plus-lg"></i>
-        </a>
-        <a *ngIf="channel.subscription_status" class="btn btn-success btn-sm"
-          (click)="subscribeToChannel(channel.name, false)">
-          <i *ngIf="!loading" class="bi bi-check-lg"></i>
-        </a></span>
+        <div class="row">
+          <div class="col-6">
+            <span *ngIf="!channel.is_official && channel.subscription_status" (click)="toggleMute()" class="bi"
+              [ngClass]="{'bi-bell-fill': !channel.is_muted_by_user, 'bi-bell-slash': channel.is_muted_by_user}"></span>
+          </div>
+          <div class="col-6 ps-0">
+            <div *ngIf="!channel.subscription_status" class="btn btn-primary btn-sm pe-2 mb-2"
+              (click)="subscribeToChannel(channel.name, true)">
+              <i *ngIf="!loading" class="bi bi-plus-lg"></i>
+            </div>
+            <a *ngIf="channel.subscription_status" class="btn btn-success btn-sm mb-2"
+              (click)="subscribeToChannel(channel.name, false)">
+              <i *ngIf="!loading" class="bi bi-check-lg"></i>
+            </a>
+          </div>
+        </div>
+
+
+
+      </span>
     </div>
     <div class="pt-3 ps-2">
       <i class="bi bi-hourglass"></i> Online since {{timeService.getRelativeTime(channel.created_at)}}
