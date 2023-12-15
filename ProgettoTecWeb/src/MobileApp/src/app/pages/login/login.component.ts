@@ -55,4 +55,6 @@ export class LoginComponent {
   getThemeClass() {
     return this.darkModeService.getThemeClass();
   }
+
+  //TODO aggiungere il login del profilo
 }

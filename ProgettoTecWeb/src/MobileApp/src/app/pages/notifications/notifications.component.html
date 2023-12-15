@@ -5,7 +5,8 @@
 
   <div class="row">
     <h1 class="m-1 p-2 pt-3 col">Notifications</h1>
-    <button *ngIf="!isGuest" class="col-auto btn btn-secondary my-3 me-3" (click)="markAllAsRead()">Mark all as
+    <button *ngIf="!isGuest && notifications.length>0" class="col-auto btn btn-secondary my-3 me-3"
+      (click)="markAllAsRead()">Mark all as
       read</button>
   </div>
 

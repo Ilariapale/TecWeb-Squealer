@@ -7,8 +7,8 @@
     <div class="mt-4">
       <div class="row p-3" [ngClass]="bannerClass">
 
-        <img class="col-3 p-0" alt="Profile Picture" style="height: 100%;" [src]="'media/image/'+user.profile_picture"
-          onerror="this.src='assets/imgs/logo.png'" />
+        <img class="col-3 col-md-1 p-0" alt="Profile Picture" style="height: 100%;"
+          [src]="'media/image/'+user.profile_picture" onerror="this.src='assets/imgs/logo.png'" />
         <div class="col-auto">
           <h2 class="row ms-2 pt-4">@{{user.username}}</h2>
           <span class="row ms-2 text-secondary">{{user.account_type}}</span>

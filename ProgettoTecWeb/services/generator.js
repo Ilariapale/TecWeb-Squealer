@@ -192,7 +192,6 @@ async function postWeatherSqueals() {
 }
 
 async function postRandomSqueals() {
-  const admin = await User.findOne({ username: "ADMIN" });
   const channel = await Channel.findOne({ name: "RANDOM" });
   //post a random squeal from a unofficial channel
   const squeals = await Squeal.find({ is_in_official_channel: false });
@@ -204,10 +203,18 @@ async function postRandomSqueals() {
   squeal.recipients.channels.push(channel);
   squeal.is_in_official_channel = true;
   await squeal.save();
-  admin.squeals.posted.push(squeal._id);
-  await admin.save();
   channel.squeals.push(squeal._id);
   await channel.save();
+  const notification = new Notification({
+    user_id: squeal.user_id,
+    squeal_ref: squeal._id,
+    channel_ref: channel._id,
+    content: squealInOfficialChannel(squeal.content, [channel.name]),
+    created_at: new Date(),
+    id_code: "officialStatusUpdate",
+  });
+  await notification.save();
+  await User.updateOne({ _id: squeal.user_id }, { $push: { notifications: notification._id } }).exec();
 }
 
 async function postControversialSqueals() {
