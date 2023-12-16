@@ -17,6 +17,7 @@ import { io } from 'socket.io-client';
 import { PositionService } from 'src/app/services/position.service';
 //TODO fixare il bug che quando switcho alla tab della posizione e torno indietro non mi da i caratteri extra indietro
 //TODOfare in modo che quando scrivo un recipient nel form questo si stilizzi
+//TODO mettere l'immagine del profilo
 @Component({
   selector: 'app-squeal-form',
   templateUrl: './squeal-form.component.html',

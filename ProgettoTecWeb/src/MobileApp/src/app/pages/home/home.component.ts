@@ -13,6 +13,7 @@ import { UsersService } from 'src/app/services/api/users.service';
 export class HomeComponent {
   title = 'Home - Squealer';
   //TODO remove example squeal
+  //TODO carica piu squeals
   squeals: any[] = [
     {
       content: '12.51133 41.89193 , 9.1881263 45.4636707 , 12.22133 41.99193 , 12.13133 41.89993',

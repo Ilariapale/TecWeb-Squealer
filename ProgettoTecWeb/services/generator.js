@@ -163,11 +163,12 @@ async function postWeatherSqueals() {
   const data = await response.json();
 
   const cityname = data.name.charAt(0).toUpperCase() + data.name.slice(1); // Capitalize the first letter of the city
+  if (!cityname || !data.weather[0].description || !data.main.temp || !data.main.temp_min || !data.main.temp_max) return console.log("Error while fetching weather data");
   const newSqueal = new Squeal({
     hex_id: admin.squeals.posted.length,
     user_id: admin._id,
     username: admin.username,
-    content: `The weather in ${city} is ${cityname}, the temperature is ${data.main.temp}°C, with a minimum of ${data.main.temp_min}°C and a maximum of ${data.main.temp_max}°C.`,
+    content: `The weather in ${cityname} is ${data.weather[0].description}, the temperature is ${data.main.temp}°C, with a minimum of ${data.main.temp_min}°C and a maximum of ${data.main.temp_max}°C.`,
     recipients: {
       channels: [weatherChannel._id],
       keywords: ["weather", "random_weather", "random", "autoposting"],
