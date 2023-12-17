@@ -32,6 +32,8 @@ const {
   declinedSMMrequestNotification,
   updatedProfileTypeNotification,
 } = require("./messages");
+
+const QuickChart = require("quickchart-js");
 const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TIERS } = require("./constants");
 //--------------------------------------------------------------------------
 module.exports = {
@@ -486,7 +488,7 @@ module.exports = {
     if (user._id.toString() !== reqSender._id.toString()) {
       if (!user.is_active && reqSender.account_type !== "moderator") {
         return { status: 404, data: { error: `User not found.` } };
-      } else if (reqSender.account_type === "moderator") {
+      } else if (reqSender.account_type === "moderator" || (reqSender.professional_type === "SMM" && reqSender.managed_accounts.includes(user._id))) {
         return { status: 200, data: self };
       } else {
         return { status: 200, data: loggedUser };
@@ -498,6 +500,344 @@ module.exports = {
     // Otherwise, return the full user if the main user is active or the request sender is a moderator,
     // otherwise return "User not found" error
     //return { status: 200, data: user.is_active || reqSender.account_type === "moderator" ? user : publicUser };
+  },
+
+  getStatistics: async (options) => {
+    console.log("--------------------------------------------------");
+    try {
+      const { user_id, identifier } = options;
+      let response = await findUser(user_id);
+      if (response.status >= 300) {
+        // If the response is an error, return the error message
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const SMMuser = response.data;
+
+      response = await findUser(identifier);
+      if (response.status >= 300) {
+        // If the response is an error, return the error message
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const VIPuser = response.data;
+
+      if (SMMuser.account_type !== "professional" || SMMuser.professional_type !== "SMM") {
+        return {
+          status: 400,
+          data: { error: `You are not a SMM.` },
+        };
+      }
+      const isVip = VIPuser.account_type === "professional" && VIPuser.professional_type === "VIP";
+      const isManagedAccount = SMMuser.managed_accounts.includes(VIPuser._id);
+
+      if (!isVip || !isManagedAccount) {
+        return {
+          status: 400,
+          data: { error: `You are not a SMM of this user.` },
+        };
+      }
+
+      const squeals = VIPuser.squeals.posted;
+
+      // Distribuzione dei tipi di contenuto: dataDistribution
+      // Puoi generare un grafico a torta o un diagramma a barre
+      // per mostrare la distribuzione dei tipi di contenuto
+      // (text, image, video, position, deleted) nei post di una persona.
+
+      // DATA DISTRIBUTION
+
+      //ottengo dati per diagramma a barre
+      const contentTypes = ["text", "image", "video", "position"];
+      const colors = ["rgba(224, 110, 123, 88)", "rgba(111, 128, 224, 88)", "rgba(224, 197, 110, 88)", "rgba(110, 224, 135, 88)"];
+      const contentTypesPromises = contentTypes.map(async (type) => {
+        const count = await Squeal.countDocuments({ _id: { $in: squeals }, content_type: type });
+        return { type: type, count: count };
+      });
+      const dataDistribution = await Promise.all(contentTypesPromises);
+      console.log(dataDistribution);
+      //creo il grafico
+      const dataDistributionChart = new QuickChart();
+      dataDistributionChart.setWidth(500).setHeight(300).setVersion("2");
+      dataDistributionChart.setConfig({
+        type: "bar",
+        data: {
+          labels: dataDistribution.map((item) => item.type),
+          datasets: [
+            {
+              label: "",
+              data: dataDistribution.map((item) => item.count),
+              backgroundColor: colors,
+              borderColor: "rgba(70, 70, 70, 0.7)",
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          plugins: {
+            datalabels: {
+              anchor: "end",
+              align: "top",
+              color: "#fff",
+              backgroundColor: "rgba(48, 60, 90, 0.8)",
+              borderColor: "rgba(48, 60, 90, 1)",
+              borderWidth: 1,
+              borderRadius: 5,
+            },
+          },
+        },
+      });
+
+      // Storia temporale delle pubblicazioni: squealsHistory
+      // Mostra quanti post sono stati pubblicati in ogni settimana.
+      // ottengo i dati per il grafico a linee, segnando la data nel formato yyyy-mm-dd
+
+      const date = new Date();
+      const dateArray = [];
+      for (let i = 0; i < 52; i++) {
+        date.setDate(date.getDate() - 7);
+        dateArray.push(new Date(date));
+      }
+      const dateArrayPromises = dateArray.map(async (date) => {
+        const count = await Squeal.countDocuments({ _id: { $in: squeals }, created_at: { $gte: date } });
+        return { x: date, y: count };
+      });
+      const squealsHistory = await Promise.all(dateArrayPromises);
+      console.log(squealsHistory);
+
+      const squealsHistoryChart = new QuickChart();
+      squealsHistoryChart.setWidth(500).setHeight(300).setVersion("2");
+      squealsHistoryChart.setConfig({
+        type: "line",
+        data: {
+          labels: dateArray,
+          datasets: [
+            {
+              label: "Dataset with string point data",
+              backgroundColor: "rgba(178, 71, 41, 0.7)",
+              borderColor: "rgb(248, 189, 87)",
+              fill: false,
+              data: squealsHistory,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          title: {
+            display: true,
+            text: "Squeals history",
+          },
+          scales: {
+            xAxes: [
+              {
+                type: "time",
+                display: true,
+                scaleLabel: {
+                  display: true,
+                  labelString: "Date",
+                },
+                ticks: {
+                  major: {
+                    enabled: true,
+                  },
+                },
+              },
+            ],
+            yAxes: [
+              {
+                display: true,
+                scaleLabel: {
+                  display: true,
+                  labelString: "Squeal number",
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      // Interazioni e impressioni: interactionsImpressions
+      // Calcola il numero di impressioni e mostra
+      // come variano in relazione alle interazioni
+      // (reazioni, commenti) su base temporale.
+      // ottengo i dati per il grafico
+
+      //sommo tutte le impressions di tutti i post in un campo "impressions_tot"
+      // e tutte le reactions divise tra positive e negative in campi "positive_reactions_tot" e "negative_reactions_tot"
+      const interactionsImpressions = await Squeal.aggregate([
+        { $match: { _id: { $in: squeals } } },
+        {
+          $group: {
+            _id: null,
+            impressions_tot: { $sum: "$impressions" },
+            positive_reactions_tot: { $sum: "$reactions.positive_reactions" },
+            negative_reactions_tot: { $sum: "$reactions.negative_reactions" },
+          },
+        },
+      ]).exec();
+      console.log(interactionsImpressions);
+
+      // Distribuzione delle reazioni in base alla categoria di tag: tagsDistribution
+      // Mostra come le reazioni si distribuiscono tra post con tag
+      // "none", "popular", "unpopular", "controversial".
+      // ottengo i dati per il grafico
+      const tags = ["none", "popular", "unpopular", "controversial"];
+      const tagsPromises = tags.map(async (tag) => {
+        const count = await Squeal.countDocuments({ _id: { $in: squeals }, tag: tag });
+        return { tag: tag, count: count };
+      });
+      const tagsDistribution = await Promise.all(tagsPromises);
+      console.log(tagsDistribution);
+
+      // Coinvolgimento in canali ufficiali vs. non ufficiali:   officialChannelInvolvement
+      // Rappresenta visivamente la differenza nell'coinvolgimento
+      //  e nelle impressioni tra post con "in_official_channel" = true e "in_official_channel" = false.
+      // ottengo i dati per il grafico: sommo tutte le impressions dei post in canali ufficiali e non ufficiali
+      //e ottengo il numero di post nei canali ufficiali e non ufficiali
+      const officialChannelInvolvement = await Squeal.aggregate([
+        { $match: { _id: { $in: squeals } } },
+        {
+          $group: {
+            _id: "$is_in_official_channel",
+            impressions_tot: { $sum: "$impressions" },
+            count: { $sum: 1 },
+          },
+        },
+      ]).exec();
+      console.log(officialChannelInvolvement);
+      const data0 = officialChannelInvolvement[0];
+      const data1 = officialChannelInvolvement[1];
+
+      const officialChannelInvolvementChart = new QuickChart();
+      officialChannelInvolvementChart.setWidth(500).setHeight(300).setVersion("2");
+      officialChannelInvolvementChart.setConfig({
+        type: "bar",
+        data: {
+          labels: [data0._id ? "Official" : "Unofficial", data1._id ? "Official" : "Unofficial"],
+          datasets: [
+            {
+              label: "Impressions",
+              data: [data0.impressions_tot, data1.impressions_tot],
+              backgroundColor: "#B24729",
+            },
+            {
+              label: "Squeals",
+              data: [data0.count, data1.count],
+              backgroundColor: "#F8BD57",
+            },
+          ],
+        },
+      });
+
+      //totale di ogni tipo di reaction
+      const reactions = ["like", "laugh", "love", "dislike", "disagree", "disgust"];
+      const emojis = ["👍", "😂", "😍", "👎", "🙅", "🤮"];
+      const rgbs = ["rgb(255, 205, 86)", "rgb(255, 159, 64)", "rgb(255, 99, 132)", "rgb(54, 162, 235)", "rgb(166,136, 220)", "rgb(75, 192, 192)"];
+      const reactionsPromises = reactions.map(async (reaction) => {
+        const count = await Squeal.aggregate([
+          { $match: { _id: { $in: squeals } } },
+          {
+            $group: {
+              _id: null,
+              count: { $sum: `$reactions.${reaction}` },
+            },
+          },
+        ]).exec();
+        return { reaction: reaction, count: count[0].count };
+      });
+      const reactionsTot = await Promise.all(reactionsPromises);
+
+      const reactionsChart = new QuickChart();
+      reactionsChart.setWidth(500).setHeight(300).setVersion("2");
+      reactionsChart.setConfig({
+        type: "pie",
+        data: {
+          datasets: [
+            {
+              data: reactionsTot.map((item) => item.count),
+              backgroundColor: rgbs,
+              label: "Dataset 1",
+            },
+          ],
+          labels: reactions,
+        },
+      });
+
+      //combino i dati per il grafico
+      reactionsTot.forEach((reaction, index) => {
+        reaction.emoji = emojis[index];
+        reaction.rgb = rgbs[index];
+      });
+      console.log(reactionsTot);
+
+      const data = {
+        dataDistribution: dataDistributionChart.getUrl(),
+        squealsHistory: squealsHistoryChart.getUrl(),
+        //interactionsImpressions,
+        //tagsDistribution,
+        officialChannelInvolvement: officialChannelInvolvementChart.getUrl(),
+        reactionsTot: reactionsChart.getUrl(),
+      };
+      return {
+        status: 200,
+        data: data,
+      };
+    } catch (err) {
+      console.log(err);
+    }
+  },
+
+  getSMMRequestList: async (options) => {
+    const { user_id } = options;
+    console.log(user_id);
+    console.log(options);
+    //check if the request sender exists
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: `'user_id' in token is not valid.` },
+      };
+    }
+    const reqSender = response.data;
+
+    //check if the reqSender is a VIP
+    if (reqSender.account_type !== "professional" || reqSender.professional_type !== "SMM") {
+      return {
+        status: 403,
+        data: { error: `You are not a SMM.` },
+      };
+    }
+    const VIPRequests = reqSender.pending_requests.SMM_requests;
+
+    const VIPRequestsPromises = VIPRequests.map(async (request) => {
+      const response = await findUser(request);
+      if (response.status >= 300) {
+        //if the response is an error
+        return {
+          status: response.status,
+          data: { error: `User not found.` },
+        };
+      }
+      const SMM = response.data;
+      return {
+        _id: SMM._id,
+        username: SMM.username,
+        profile_picture: SMM.profile_picture,
+        profile_info: SMM.profile_info,
+      };
+    });
+    const VIPRequestsList = await Promise.all(VIPRequestsPromises);
+
+    return {
+      status: 200,
+      data: VIPRequestsList,
+    };
   },
 
   /**

@@ -1,8 +1,58 @@
-<script setup lang="ts">
+<script lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import HeaderSMM from './components/HeaderSMM.vue';
 import Sidemenu from './components/Sidemenu.vue';
 import Overviewmenu from './components/Overviewmenu.vue';
+import { getUser } from "./services/user.service";
+import type e from 'cors';
+
+
+export default {
+  components: {
+    HeaderSMM,
+    Sidemenu,
+    Overviewmenu,
+    RouterLink,
+    RouterView
+  },
+  data() {
+    return {
+      user: {},
+      vip: {}
+    }
+  },
+  methods: {
+    async getUser() {
+      await getUser().then((response) => {
+        this.user = response;
+        return response;
+      }).catch((error) => {
+        console.log(error);
+        return error;
+      });
+    },
+    async getVip(vip: any) {
+      if (vip == "none") {
+        this.vip = {};
+        return;
+      }
+      await getUser(vip).then((response) => {
+        console.log(response);
+        this.vip = response;
+        return response;
+      }).catch((error) => {
+        console.log(error);
+        return error;
+      });
+    }
+  },
+  mounted() {
+    this.getUser();
+  },
+}
+
+
+
 </script>
 
 
@@ -12,17 +62,18 @@ import Overviewmenu from './components/Overviewmenu.vue';
     <div class="row">
       <!-- Menu a sinistra -->
       <div class="col col-auto col-md-3 col-lg-2 p-0">
-        <Sidemenu />
+        <Sidemenu :user="user" />
       </div>
 
       <!-- Contenuto centrale scrollabile -->
       <div class="col col-md-5 col-lg-6 dashboard elements-height p-0">
-        <RouterView />
+        <RouterView :user="user" :vip="vip" />
       </div>
 
       <!-- Menu a destra -->
-      <div class="col col-md-4 col-lg-4 p-0 overview-menu elements-height ">
-        <Overviewmenu />
+      <div class="col col-md-4 col-lg-4 p-0 overview-menu elements-height bg-primary">
+        <Overviewmenu :user="user" @update-vip="getVip($event)" :vip="vip" />
+
       </div>
     </div>
   </main>
@@ -40,6 +91,10 @@ import Overviewmenu from './components/Overviewmenu.vue';
   overflow-inline: clip;
   overflow-x: hidden;
 
+}
+
+.overview-menu {
+  overflow-y: auto
 }
 
 .mobile-menu {

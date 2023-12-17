@@ -29,9 +29,41 @@ a,
 }
 
 
+.btn-primary {
+  background-color: #303c5a !important;
+  border-color: #303C5A !important;
+  color: white !important;
+}
+
+.bg-primary,
+.btn.btn-primary,
+li.active,
+button.active {
+  background-color: #303C5A !important;
+  border-color: #303C5A;
+  color: white !important;
+}
+
+.text-primary,
+.btn.btn-primary.bg-primary,
+button:not(.active) {
+  color: #303C5A !important;
+
+
+}
+
+.btn.text-white {
+  color: white !important;
+}
+
+
+.user-select-none {
+  user-select: none;
+}
+
 @media (hover: hover) {
-  a:hover {
-    background-color: hsla(39, 100%, 20%, 0.192);
+  a:hover.title {
+    background-color: #fed4723a;
     border-radius: 15px;
   }
 }

@@ -1,4 +1,34 @@
-<script setup lang="ts">
+<script lang="ts">
+import { getSqueal } from '@/services/squeal.service';
+
+export default {
+    data() {
+        return {
+            isClicked: false,
+            squeal: {} as any
+        };
+    },
+    props: {
+        squeal_id: {
+            type: String,
+            required: true
+        }
+    },
+    methods: {
+        async getSqueal() {
+            await getSqueal(this.squeal_id).then((response) => {
+                this.squeal = response[0];
+            }).catch((error) => {
+                console.log(error);
+                return error;
+            });
+
+        }
+    },
+    mounted() {
+        this.getSqueal();
+    }
+};
 </script>
 
 <template>
@@ -12,7 +42,7 @@
                             <div class="col">
                             </div>
                             <div class="col">
-                                HEX
+                                HEX {{ squeal.hex_id }}
                             </div>
                             <div class="col text-end">
                                 <i class="bi bi-trash" type="button"></i>
@@ -23,9 +53,9 @@
 
 
                     <div class="card-body p-2">
-                        <h5 class="card-title">@username</h5>
+                        <h5 class="card-title">@{{ squeal.username }}</h5>
                         <p class="card-text">
-                            content</p>
+                            {{ squeal.content }}</p>
                         <div class="card-img-top ">
 
                         </div>
@@ -41,9 +71,10 @@
                             <div class="row flex-nowrap justify-content-between d-flex align-items-center my-2">
 
                                 <div class="col-5 px-1">
-                                    <button id="comment_button" type="button" class="btn btn-secondary btn-rounded px-2">
+                                    <button id="comment_button" type="button" class="btn btn-secondary btn-rounded px-2"
+                                        v-bind:class="{ 'clicked': isClicked }" @click="isClicked = !isClicked">
                                         <i class="bi bi-chat-dots-fill"></i>
-                                        <p class="badge bg-danger ms-2 my-auto">0 comm</p>
+                                        <p class="badge bg-danger ms-2 my-auto">comment_section.comment_array.lenght</p>
                                     </button>
                                 </div>
 
@@ -68,22 +99,15 @@
                         <div class="card-footer"><i class="bi bi-calendar4-week"></i>
                             timeService.getRelativeTime(squeal.created_at)</div>
                         <div class="mt-3">
-                            <h4>Comments</h4>
-                            <button>Load more</button>
                             <!-- Lista dei commenti -->
-                            <ul class="list-unstyled">
-                                <li>*ngFor="let comment of comment_section.comments_array"
-                                    <p><strong>comment.author_username</strong>: comment.text</p>
+                            <ul class="list-unstyled" v-if="isClicked">
+                                <li>
+                                    <p><strong>v-for="comment in
+                                            comment_section.comment_array"comment.author_username</strong>: comment.text</p>
                                 </li>
                             </ul>
 
                             <!-- Modulo per aggiungere un nuovo commento -->
-
-                            <div class="input-group mb-3">
-                                <input type="text" class="form-control" placeholder="Insert your comment..."
-                                    aria-label="Recipient's username" aria-describedby="button-addon2">
-                                <button class="btn btn-outline-secondary" type="button" id=" button-addon2">Post</button>
-                            </div>
                         </div>
 
                     </div>

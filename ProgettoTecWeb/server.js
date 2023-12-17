@@ -89,7 +89,7 @@ require("./routes")(app);
 console.log("dirname: " + __dirname);
 app.use(express.static(__dirname + "/public/dist/mobile-app"));
 app.use(express.static(__dirname + "/public/dist/smm-dashboard"));
-app.get("/smm-dashboard", (req, res) => {
+app.get(["/smm-dashboard", "/smm-dashboard/*"], (req, res) => {
   res.sendFile(path.join(__dirname, "/public/dist/smm-dashboard/index.html"));
 });
 app.get("*", (req, res) => {

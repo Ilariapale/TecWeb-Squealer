@@ -9,7 +9,7 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root',
 })
 export class UsersService {
-  private apiUrl = '/users'; // Sostituisci con l'URL del tuo backend API
+  private apiUrl = '/users';
   private notificationUrl = '/notifications';
 
   constructor(private http: HttpClient) {}

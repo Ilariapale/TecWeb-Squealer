@@ -45,6 +45,24 @@ router.get("/notifications", verifyToken, async (req, res, next) => {
   }
 });
 
+router.get("/statistics/:identifier", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
+    try {
+      const result = await users.getStatistics(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({ error: err || "Something went wrong." });
+    }
+  } else {
+    // Utente non loggato, invia una risposta di errore o reindirizza alla pagina di login
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
+  }
+});
+
 //Token not required for creating an account
 router.post("/", async (req, res, next) => {
   const options = { userInput: req.body };
@@ -80,6 +98,25 @@ router.get("/", verifyToken, async (req, res, next) => {
       return res.status(500).send({
         error: err || "Something went wrong.",
       });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
+router.get("/smm-request-list", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+      last_loaded: req.query.last_loaded,
+      pag_size: req.query.pag_size,
+    };
+
+    try {
+      const result = await users.getSMMRequestList(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({ error: err || "Something went wrong." });
     }
   } else {
     res.status(401).send("Token is either missing invalid or expired");

@@ -1,42 +1,62 @@
-<script setup lang="ts">
+<script  lang="ts">
+import { RouterLink, RouterView } from 'vue-router'
+export default {
+    data() {
+        return {
+            isClicked: false,
+        };
+    },
+    props: {
+        user: {
+            type: Object,
+            required: true
+        },
+    },
+};
+
 </script>
 
 <template>
     <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark elements-height desktop-menu">
         <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
             <svg class="bi me-2" width="40" height="32">
-                <use xlink:href="#bootstrap"></use>
             </svg>
             <span class="fs-4">Menu</span>
         </a>
         <hr>
-        <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item">
-                <a href="#" class="nav-link active" aria-current="page">
+        <ul class="nav nav-pills flex-column mb-auto" role="tablist" aria-orientation="vertical">
+            <li class="nav-item nav-link active" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button"
+                role="tab" aria-controls="v-pills-home" aria-selected="true">
+                <RouterLink :to="{ name: 'dashboard' }" class="nav-link text-white" aria-current="page">
                     <i class="bi bi-house-door"></i>
                     Home
-                </a>
+                </RouterLink>
             </li>
-            <li>
-                <a href="#" class="nav-link text-white">
+            <li class="nav-item nav-link " data-bs-toggle="pill" data-bs-target="#v-pills-VIPrequests" type="button"
+                role="tab" aria-controls="v-pills-VIPrequests" aria-selected="false">
+
+                <RouterLink :to="{ name: 'vip-requests' }" class="nav-link text-white">
                     <i class="bi bi-people-fill"></i>
                     VIP requests
-                </a>
+                </RouterLink>
             </li>
-            <li>
-                <a href="#" class="nav-link text-white">
-                    <i class="bi bi-shop"></i>
+            <li class="nav-item nav-link " data-bs-toggle="pill" data-bs-target="#v-pills-shop" type="button" role="tab"
+                aria-controls="v-pills-shop" aria-selected="false">
+                <RouterLink :to="{ name: 'shop' }" class="nav-link text-white">
+                    <i class="bi bi-shop text-white"></i>
                     Shop
-                </a>
+                </RouterLink>
             </li>
-            <li>
-                <a href="#" class="nav-link text-white">
+            <li class="nav-item nav-link " data-bs-toggle="pill" data-bs-target="#v-pills-messages" type="button" role="tab"
+                aria-controls="v-pills-messages" aria-selected="false">
+                <RouterLink :to="{ name: 'messages' }" class="nav-link text-white">
                     <i class="bi bi-chat-dots-fill"></i>
                     Messages
-                </a>
+                </RouterLink>
             </li>
-            <li>
-                <a href="#" class="nav-link text-white">
+            <li class="nav-item nav-link " data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab"
+                aria-controls="v-pills-profile" aria-selected="false">
+                <a href="/profile/ilapale" class="nav-link text-white">
                     <i class="bi bi-arrow-90deg-left"></i>
                     User website
                 </a>
@@ -69,38 +89,41 @@
             </svg>
             <span class="visually-hidden">Icon-only</span>
         </a>
-        <ul class="nav nav-pills nav-flush flex-column text-center mb-auto">
-            <li class="nav-item">
-                <a href="#" class="nav-link active py-3 border-bottom text-white" aria-current="page" title=""
-                    data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Home">
+        <ul class="nav nav-pills nav-flush flex-column text-center mb-auto" role="tablist" aria-orientation="vertical">
+            <li class="nav-item nav-link active border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-home"
+                type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
+                <RouterLink :to="{ name: 'dashboard' }" class="nav-link  py-3  text-white">
                     <i class="bi bi-house-door  m-0"></i>
-                </a>
+                </RouterLink>
             </li>
-            <li>
-                <a href="#" class="nav-link py-3 border-bottom text-white" title="" data-bs-toggle="tooltip"
-                    data-bs-placement="right" data-bs-original-title="VIPrequest">
+            <li class="nav-item nav-link  border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-VIPrequests"
+                type="button" role="tab" aria-controls="v-pills-VIPrequests" aria-selected="false">
+                <RouterLink :to="{ name: 'vip-requests' }" class="nav-link py-3 text-white">
                     <i class="bi bi-people-fill m-0"></i>
-                </a>
+                </RouterLink>
             </li>
-            <li>
-                <a href="#" class="nav-link py-3 border-bottom text-white" title="" data-bs-toggle="tooltip"
-                    data-bs-placement="right" data-bs-original-title="Shop">
+            <li class="nav-item nav-link  border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-shop" type="button"
+                role="tab" aria-controls="v-pills-shop" aria-selected="false">
+                <RouterLink :to="{ name: 'shop' }" class="nav-link py-3 text-white">
                     <i class="bi bi-shop  m-0"></i>
-                </a>
+                </RouterLink>
             </li>
-            <li>
-                <a href="#" class="nav-link py-3 border-bottom text-white" title="" data-bs-toggle="tooltip"
-                    data-bs-placement="right" data-bs-original-title="Messages">
+            <li class="nav-item nav-link  border-bottom " data-bs-toggle="pill" data-bs-target="#v-pills-messages"
+                type="button" role="tab" aria-controls="v-pills-messages" aria-selected="false">
+                <RouterLink :to="{ name: 'messages' }" class="nav-link py-3 text-white">
                     <i class="bi bi-chat-dots-fill  m-0"></i>
-                </a>
+                </RouterLink>
             </li>
-            <li>
-                <a href="#" class="nav-link py-3 border-bottom text-white" title="" data-bs-toggle="tooltip"
-                    data-bs-placement="right" data-bs-original-title="UserWebsite">
+            <li class="nav-item nav-link  border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button"
+                role="tab" aria-controls="v-pills-home" aria-selected="false">
+                <RouterLink :to="{ name: 'home' }" class="nav-link py-3 text-white">
                     <i class="bi bi-arrow-90deg-left  m-0"></i>
-                </a>
+                </RouterLink>
             </li>
         </ul>
+
+
+
         <div class="dropdown mt-auto">
             <a href="#"
                 class="d-flex align-items-center justify-content-center  mt-auto p-3 link-dark text-decoration-none dropdown-toggle"
