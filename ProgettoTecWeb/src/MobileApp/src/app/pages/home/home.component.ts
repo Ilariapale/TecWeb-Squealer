@@ -12,6 +12,11 @@ import { UsersService } from 'src/app/services/api/users.service';
 })
 export class HomeComponent {
   title = 'Home - Squealer';
+
+  showLoadMore: boolean = true;
+  loading: boolean = false;
+  MAX_SQUEALS = 5;
+
   //TODO remove example squeal
   //TODO carica piu squeals
   squeals: any[] = [
@@ -144,16 +149,20 @@ export class HomeComponent {
     //this.userService.getUser().subscribe();
   }
 
-  loadSqueals(e: Event) {
-    e.preventDefault();
-  }
-
-  onSquealSubmitted(event: any) {
-    // Aggiungi un nuovo squeal all'array
-    //this.squeals.unshift(event);
-  }
-
-  deleteProfile() {
-    //TODO delete profile
+  loadMoreSqueals() {
+    this.loading = true;
+    this.squealsService
+      .getHome(this.isGuest, this.squeals[this.squeals.length - 1]._id)
+      .then((response) => {
+        this.loading = false;
+        this.squeals.push(...response);
+        if (response.length <= 0) {
+          this.showLoadMore = false;
+        }
+      })
+      .catch((error) => {
+        this.showLoadMore = false;
+        this.loading = false;
+      });
   }
 }

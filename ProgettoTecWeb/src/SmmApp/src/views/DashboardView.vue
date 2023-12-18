@@ -1,5 +1,6 @@
 
 <script lang="ts">
+import NewSquealVue from '@/components/gadgets/NewSqueal.vue';
 import Squeal from '@/components/gadgets/Squeal.vue';
 import { isProxy, toRaw } from 'vue';
 
@@ -10,7 +11,8 @@ export default {
         };
     },
     components: {
-        Squeal
+        Squeal,
+        NewSquealVue,
     },
     props: {
         user: {
@@ -40,9 +42,15 @@ export default {
 <template>
     <div class="container text-center col">
         <h1 class="row justify-content-center">Dashboard</h1>
-        <h3 class="row justify-content-center">{{ vip?.username }}</h3>
+        <div v-if="vip" class="row justify-content-center">
+            <h3>{{ vip?.username }}</h3>
+            <i class="bi bi-plus-circle-fill clickable h4" data-bs-toggle="collapse" href="#newSqueal" role="button"
+                aria-expanded="false" aria-controls="newSqueal"></i>
+            <NewSquealVue :vip=vip class="collapse" id="newSqueal"></NewSquealVue>
+        </div>
     </div>
-    <div lass="justify-content-center">
+
+    <div class="justify-content-center">
         <div v-for="squeal of vip?.squeals?.posted" :key="squeal">
             <Squeal :squeal_id="squeal"></Squeal>
         </div>

@@ -70,6 +70,16 @@
             <i class="bi bi-search col-2 d-flex justify-content-center align-items-center clickable"
               (click)="goToPage('search')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
+
+          <li *ngIf="userService.isSMM()" class="nav-item row py-3">
+            <a class="col"></a>
+            <a class="nav-link col-auto clickable" [class.text-dark]="getThemeClass()=='light-theme'"
+              (click)="goToPage('dashboard')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar">
+              SMM Dashboard
+            </a>
+            <i class="bi bi-clipboard2-data col-2 d-flex justify-content-center align-items-center clickable"
+              (click)="goToPage('dashboard')" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
+          </li>
           <hr class="my-3">
           <li class="nav-item row py-3">
             <a class="col"></a>

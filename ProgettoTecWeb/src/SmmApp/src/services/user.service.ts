@@ -57,3 +57,22 @@ export const getUserStatistics = async (identifier: string) => {
     throw new Error(err.message);
   }
 };
+
+export const manageSMMrequest = async (identifier: string, action: 'accept' | 'decline') => {
+  //users/VIP/:identifier?action=accept
+  try {
+    const headers = generateHeaders(true);
+    return await rest.patch(`/VIP/${identifier}?action=${action}`, {}, { headers });
+  } catch (err: any) {
+    throw new Error(err.message);
+  }
+};
+
+export const removeVIP = async (identifier: string) => {
+  try {
+    const headers = generateHeaders(true);
+    return await rest.delete(`/VIP/${identifier}`, { headers });
+  } catch (err: any) {
+    throw new Error(err.message);
+  }
+};

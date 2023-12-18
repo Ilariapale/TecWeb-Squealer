@@ -1,96 +1,77 @@
 const mongoose = require("mongoose");
 const { Notification, User, Squeal, Channel, Keyword, CommentSection } = require("./schemas");
-const {
-  usernameRegex,
-  channelNameRegex,
-  officialChannelNameRegex,
-  keywordRegex,
-  mongooseObjectIdRegex,
-  reactionTypes,
-  contentTypes,
-  findUser,
-  findSqueal,
-  findChannel,
-  findKeyword,
-  findCommentSection,
-  findNotification,
-  checkForAllUsers,
-  checkForAllChannels,
-  hasEnoughCharQuota,
-  removeQuota,
-  addedAndRemoved,
-  updateRecipientsUsers,
-  updateRecipientsChannels,
-  updateRecipientsKeywords,
-  containsOfficialChannels,
-} = require("./utils");
+const { mongooseObjectIdRegex, findUser, findSqueal, findCommentSection } = require("./utils");
 const { COMMENTS_TO_LOAD } = require("./constants");
 
 const { mentionNotification, squealInOfficialChannel, someoneCommentedYourSqueal } = require("./messages");
 
 module.exports = {
   getCommentSection: async (options) => {
-    const { identifier, user_id, last_comment_loaded, is_token_valid } = options;
+    try {
+      const { identifier, user_id, last_comment_loaded, is_token_valid } = options;
 
-    let response = await findCommentSection(identifier);
-    if (response.status >= 300) {
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    const commentSection = response.data;
-
-    if (!is_token_valid) {
-      let response = await findSqueal(commentSection.squeal_ref);
-      if (response.status >= 300) {
+      if (!mongooseObjectIdRegex.test(identifier)) {
         return {
-          status: response.status,
-          data: { error: response.error },
+          status: 400,
+          data: { error: `Invalid identifier.` },
         };
       }
-      const squeal = response.data;
 
-      if (!squeal.is_in_official_channel) {
-        return {
-          status: 403,
-          data: { error: `You are not allowed to see this comment section.` },
+      let query = { $slice: -COMMENTS_TO_LOAD };
+      if (last_comment_loaded && mongooseObjectIdRegex.test(last_comment_loaded)) {
+        query = {
+          $filter: {
+            input: "$comments_array",
+            as: "comment",
+            cond: {
+              $lt: ["$$comment._id", new mongoose.Types.ObjectId(last_comment_loaded)],
+            },
+          },
         };
       }
-    }
 
-    if (!last_comment_loaded) {
-      commentSection.comments_array = commentSection.comments_array.slice(-COMMENTS_TO_LOAD);
+      let comment_section = await CommentSection.findOne({ _id: identifier })
+        .select({
+          _id: 1,
+          squeal_ref: 1,
+          comments_array: query,
+        })
+        .exec();
+
+      if (!is_token_valid) {
+        let response = await findSqueal(comment_section.squeal_ref);
+        if (response.status >= 300) {
+          return {
+            status: response.status,
+            data: { error: response.error },
+          };
+        }
+        const squeal = response.data;
+
+        if (!squeal.is_in_official_channel) {
+          return {
+            status: 403,
+            data: { error: `You are not allowed to see this comment section.` },
+          };
+        }
+      }
+
+      if (comment_section.comments_array.length > COMMENTS_TO_LOAD) {
+        //prendo gli ultimi COMMENTS_TO_LOAD commenti
+        comment_section.comments_array = comment_section.comments_array.slice(comment_section.comments_array.length - COMMENTS_TO_LOAD);
+      }
+
       return {
         status: 200,
-        data: commentSection,
+        data: comment_section,
       };
-    }
-    if (!mongooseObjectIdRegex.test(last_comment_loaded)) {
+    } catch (err) {
+      console.log(err);
       return {
-        status: 400,
-        data: { error: `Invalid last_loaded_message.` },
+        status: 500,
+        data: { error: `Something went wrong.` },
       };
     }
-
-    let targetCommentIndex = commentSection.comments_array.findIndex((comment) => comment._id == last_comment_loaded);
-
-    let from = targetCommentIndex - COMMENTS_TO_LOAD >= 0 ? targetCommentIndex - COMMENTS_TO_LOAD : 0;
-    let to = targetCommentIndex >= 0 ? targetCommentIndex : 0;
-
-    commentSection.comments_array = commentSection.comments_array.slice(from, to);
-
-    if (commentSection.comments_array.length == 0) {
-      return {
-        status: 200,
-        data: { error: `No more comments.` },
-      };
-    }
-
-    return {
-      status: 200,
-      data: commentSection,
-    };
   },
 
   addComment: async (options) => {

@@ -16,19 +16,24 @@ module.exports = {
       console.log("credentials undefined");
       dbname = "test";
     }
-    const mongouri = credentials
-      ? `mongodb://${credentials.user}:${credentials.pwd}@${credentials.site}/${dbname}?authSource=admin&writeConcern=majority`
-      : `mongodb://localhost:27017/${dbname}?writeConcern=majority`;
-    await mongoose.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true });
-    mongoose.set("strictQuery", false);
 
-    console.log(`Connected to ${credentials?.site}'s MongoDB instance using Mongoose...`);
+    try {
+      const mongouri = credentials
+        ? `mongodb://${credentials.user}:${credentials.pwd}@${credentials.site}/${dbname}?authSource=admin&writeConcern=majority`
+        : `mongodb://localhost:27017/${dbname}?writeConcern=majority`;
+      await mongoose.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true });
+      mongoose.set("strictQuery", false);
 
-    await initializeDB();
+      console.log(`Connected to ${credentials?.site}'s MongoDB instance using Mongoose...`);
 
-    character_reset_init();
-    check_init();
+      await initializeDB();
 
-    startAutomaticPost();
+      character_reset_init();
+      check_init();
+
+      startAutomaticPost();
+    } catch (error) {
+      console.error(error);
+    }
   },
 };

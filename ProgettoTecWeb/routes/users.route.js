@@ -201,11 +201,12 @@ router.delete("/SMM", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
-//users/VIP?action=accept&VIP_id=paulpaccy
-router.patch("/VIP", verifyToken, async (req, res, next) => {
+
+//users/VIP/:identifier?action=accept
+router.patch("/VIP/:identifier", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
-      identifier: req.query.VIP_id,
+      identifier: req.params.identifier,
       request_action: req.query.action,
       user_id: req.user_id,
     };
@@ -224,10 +225,10 @@ router.patch("/VIP", verifyToken, async (req, res, next) => {
   }
 });
 //users/VIP
-router.delete("/VIP", verifyToken, async (req, res, next) => {
+router.delete("/VIP/:identifier", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
-      identifier: req.query.VIP_id,
+      identifier: req.params.identifier,
       user_id: req.user_id,
     };
 

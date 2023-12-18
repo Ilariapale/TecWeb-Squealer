@@ -1,11 +1,15 @@
-import './assets/main.css'
+import './assets/main.css';
 
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
+import OpenLayersMap from 'vue3-openlayers';
 
-const app = createApp(App)
+//import 'vue3-openlayers/dist/vue3-openlayers.css';
+import './../node_modules/vue3-openlayers/dist/main.css';
+const app = createApp(App);
 
-app.use(router)
+app.use(OpenLayersMap);
+app.use(router);
 
-app.mount('#app')
+app.mount('#app');

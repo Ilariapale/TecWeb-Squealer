@@ -93,8 +93,8 @@ export class SquealsService {
     const requestOptions = this.headersGenerator(!isGuest);
     let url = `${this.apiUrl}/home?`;
 
-    if (lastLoaded !== undefined) url += `lastLoaded=${lastLoaded}&`;
-    if (pagSize !== undefined) url += `pageSize=${pagSize}&`;
+    if (lastLoaded !== undefined) url += `last_loaded=${lastLoaded}&`;
+    if (pagSize !== undefined) url += `page_size=${pagSize}&`;
     url = url.slice(0, -1);
 
     return firstValueFrom(this.http.get(url, requestOptions));

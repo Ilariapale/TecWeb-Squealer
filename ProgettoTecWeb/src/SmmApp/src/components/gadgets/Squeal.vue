@@ -1,11 +1,16 @@
 <script lang="ts">
 import { getSqueal } from '@/services/squeal.service';
+import { getCommentSection } from '@/services/comment.service';
+import { getRelativeTime } from '@/services/time.service';
 
 export default {
     data() {
         return {
-            isClicked: false,
-            squeal: {} as any
+            isCommentOpen: false,
+            isDataOpen: false,
+            squeal: {} as any,
+            comment_section: {} as any,
+            getRelativeTime: getRelativeTime
         };
     },
     props: {
@@ -16,17 +21,42 @@ export default {
     },
     methods: {
         async getSqueal() {
-            await getSqueal(this.squeal_id).then((response) => {
+            await getSqueal(this.squeal_id).then(async (response) => {
                 this.squeal = response[0];
+                await this.getCommentSection();
             }).catch((error) => {
                 console.log(error);
                 return error;
             });
 
+        },
+        async getCommentSection() {
+            await getCommentSection(this.squeal.comment_section).then(async (response) => {
+                this.comment_section = response;
+            }).catch((error) => {
+                console.log(error);
+                return error;
+            });
+
+        },
+        async loadMoreComments() {
+            await getCommentSection(this.squeal.comment_section, this.comment_section.comments_array[0]._id).then(async (response) => {
+                response.comments_array.reverse().forEach((element: any) => {
+                    this.comment_section.comments_array.unshift(element);
+                });
+                if (response.comments_array.length <= 0) {
+                    this.isCommentOpen = false;
+                }
+            }).catch((error) => {
+                console.log(error);
+                return error;
+            });
         }
+
+
     },
     mounted() {
-        this.getSqueal();
+        this.getSqueal()
     }
 };
 </script>
@@ -72,9 +102,10 @@ export default {
 
                                 <div class="col-5 px-1">
                                     <button id="comment_button" type="button" class="btn btn-secondary btn-rounded px-2"
-                                        v-bind:class="{ 'clicked': isClicked }" @click="isClicked = !isClicked">
-                                        <i class="bi bi-chat-dots-fill"></i>
-                                        <p class="badge bg-danger ms-2 my-auto">comment_section.comment_array.lenght</p>
+                                        v-bind:class="{ 'clicked': isCommentOpen }" @click="isCommentOpen = !isCommentOpen">
+                                        <i class="bi bi-chat-dots-fill text-white"></i>
+                                        <p class="badge bg-primary ms-2 my-auto">
+                                            {{ squeal.comments_count }} </p>
                                     </button>
                                 </div>
 
@@ -83,8 +114,11 @@ export default {
                                 </div>
 
                                 <div class="col-5 px-1">
-                                    <button type="button" class="btn btn-secondary btn-rounded px-4 py-2">
-                                        <i class="bi bi-flag-fill"></i>
+                                    <button type="button" class="btn btn-secondary btn-rounded px-2 py-2"
+                                        v-bind:class="{ 'clicked': isDataOpen }" @click="isDataOpen = !isDataOpen">
+                                        <i class="bi bi-eye text-white"></i>
+                                        <p class="badge bg-primary ms-2 my-auto">
+                                            {{ squeal.impressions }} </p>
                                     </button>
                                 </div>
 
@@ -97,19 +131,45 @@ export default {
                         </div>
 
                         <div class="card-footer"><i class="bi bi-calendar4-week"></i>
-                            timeService.getRelativeTime(squeal.created_at)</div>
-                        <div class="mt-3">
+                            {{ getRelativeTime(squeal.created_at) }}
+                        </div>
+                        <div class="mt-3" v-if="isDataOpen">
+                            <div class="row">
+                                <div class="col-3"></div>
+                                <div class="col-6">
+                                    👍{{ squeal.reactions.like || 0 }}-
+                                    😂{{ squeal.reactions.laugh || 0 }}-
+                                    😍{{ squeal.reactions.love || 0 }}-
+                                    🤮{{ squeal.reactions.disgust || 0 }}-
+                                    👎{{ squeal.reactions.dislike || 0 }}-
+                                    🙅{{ squeal.reactions.disagree || 0 }}-
+                                </div>
+                                <div class="col-3 text-end text-muted">Total reactions: {{ squeal.positive_reactions +
+                                    squeal.negative_reactions }}</div>
+                            </div>
+                        </div>
+                        <div class="mt-3" v-if="isCommentOpen">
                             <!-- Lista dei commenti -->
-                            <ul class="list-unstyled" v-if="isClicked">
-                                <li>
-                                    <p><strong>v-for="comment in
-                                            comment_section.comment_array"comment.author_username</strong>: comment.text</p>
+                            <ul class="list-unstyled">
+                                <li v-for="comment in comment_section.comments_array">
+                                    <p> <strong> {{ comment.author_username }}: </strong>{{ comment.text }}
+                                    </p>
+                                    <div>
+                                        <small class="text-muted">
+                                            {{ comment.timestamp }}
+                                        </small>
+                                    </div>
+
                                 </li>
                             </ul>
-
+                            <div>
+                                <button type="button" @click="loadMoreComments()"
+                                    class="btn btn-secondary btn-rounded px-4 py-2">
+                                    <i class="bi bi-arrow-down-circle-fill text-white"></i>
+                                </button>
+                            </div>
                             <!-- Modulo per aggiungere un nuovo commento -->
                         </div>
-
                     </div>
                 </div>
             </div>

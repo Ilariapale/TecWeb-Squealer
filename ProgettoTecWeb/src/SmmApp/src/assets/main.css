@@ -52,8 +52,10 @@ button.active {
 .btn.btn-primary.bg-primary,
 button:not(.active) {
   color: #303C5A !important;
+}
 
-
+button:not(.active).text-white {
+  color: white !important;
 }
 
 .btn.text-white {

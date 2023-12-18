@@ -503,7 +503,6 @@ module.exports = {
   },
 
   getStatistics: async (options) => {
-    console.log("--------------------------------------------------");
     try {
       const { user_id, identifier } = options;
       let response = await findUser(user_id);
@@ -559,7 +558,6 @@ module.exports = {
         return { type: type, count: count };
       });
       const dataDistribution = await Promise.all(contentTypesPromises);
-      console.log(dataDistribution);
       //creo il grafico
       const dataDistributionChart = new QuickChart();
       dataDistributionChart.setWidth(500).setHeight(300).setVersion("2");
@@ -784,7 +782,7 @@ module.exports = {
       const tags = ["none", "popular", "unpopular", "controversial"];
       const tagsColors = ["rgba(111, 128, 224, 88)", "rgba(110, 224, 135, 88)", "rgba(224, 110, 123, 88)", "rgba(224, 197, 110, 88)"];
       const tagsPromises = tags.map(async (tag) => {
-        const count = await Squeal.countDocuments({ _id: { $in: squeals }, tag: tag });
+        const count = await Squeal.countDocuments({ _id: { $in: squeals }, reaction_tag: tag });
         return { tag: tag, count: count };
       });
       const tagsDistribution = await Promise.all(tagsPromises);
@@ -1360,10 +1358,10 @@ module.exports = {
   handleVIPRequest: async (options) => {
     const { identifier, user_id, request_action } = options;
 
-    if (!request_action || !identifier || request_action === "" || identifier === "") {
+    if (!request_action || request_action === "") {
       return {
         status: 400,
-        data: { error: `Both 'VIP_id' and 'action' must be specified.` },
+        data: { error: `'action' must be specified.` },
       };
     }
 

@@ -11,7 +11,8 @@ export default defineConfig({
   },
   build: {
     outDir: '../../public/dist/smm-dashboard',
-    emptyOutDir: true
+    emptyOutDir: true,
+    chunkSizeWarningLimit: 2500
   },
   resolve: {
     alias: {

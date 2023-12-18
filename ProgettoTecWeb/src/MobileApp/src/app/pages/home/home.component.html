@@ -1,12 +1,9 @@
 <div class="content" role="main">
   <div class="row">
     <div class="col"></div>
-    <app-squeal-form (squealSubmitted)="onSquealSubmitted($event)" [user]="user"
-      class="col-12 col-md-6"></app-squeal-form>
+    <app-squeal-form [user]="user" class="col-12 col-md-6"></app-squeal-form>
     <div class="col"></div>
   </div>
-
-
 
 
   <div *ngIf="squeals.length == 0">
@@ -17,6 +14,12 @@
   <app-squeal *ngFor="let squeal of squeals" [squeal]="squeal"></app-squeal>
 
   <div class="card-container">
-
+    <div class=" d-flex justify-content-center align-items-center py-2">
+      <button (click)="loadMoreSqueals()" *ngIf="showLoadMore && !loading" type=" button"
+        class="btn btn-outline-secondary rounded-pill"><i class="bi bi-arrow-clockwise"></i></button>
+      <i class="spinner-border text-light" *ngIf="loading" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </i>
+    </div>
   </div>
 </div>

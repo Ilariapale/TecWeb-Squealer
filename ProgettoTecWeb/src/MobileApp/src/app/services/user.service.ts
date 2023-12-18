@@ -47,4 +47,18 @@ export class UserService {
     const currentUserData = this.userData;
     return currentUserData && channel.editors.includes(currentUserData._id);
   }
+
+  isSMM(): boolean {
+    if (!this.userData) {
+      const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      if (savedUserData) {
+        this.setUserData(JSON.parse(savedUserData));
+      }
+    }
+
+    const currentUserData = this.userData;
+    return (
+      currentUserData && currentUserData.account_type === 'professional' && currentUserData.professional_type === 'SMM'
+    );
+  }
 }

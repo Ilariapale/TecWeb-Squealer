@@ -626,7 +626,6 @@ module.exports = {
       }
       query._id = { $lt: last_loaded };
     }
-    //console.log("is_logged_in", is_logged_in);
     if (!is_logged_in) {
       //Utente non loggato, vede solo gli squeal nei canali ufficiali
       if (token_error == "noToken") query.is_in_official_channel = true;

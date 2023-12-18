@@ -52,6 +52,8 @@ export class NavbarComponent {
       this.user = this.userService.getUserData()?.username || '';
       const destination = this.user ? `/${page}/${this.user}` : '/login';
       this.router.navigate([destination]);
+    } else if (page === 'dashboard') {
+      window.location.href = '/smm-dashboard';
     } else {
       this.router.navigate([`/${page}`]);
     }
