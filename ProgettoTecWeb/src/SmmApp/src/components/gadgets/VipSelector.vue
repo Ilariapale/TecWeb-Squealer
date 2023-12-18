@@ -1,6 +1,6 @@
 <template>
     <div class="p-1">You're now managing:</div>
-    <select class="form-select form-select-lg mb-3" aria-label=".form-select-lg example" v-on:change="updateVip">
+    <select class="form-select form-select-lg mb-3 clickable" aria-label=".form-select-lg example" v-on:change="updateVip">
         <option value="none" selected>Select a VIP</option>
         <option v-for="user in usernames" :value="user">{{ user }}</option>
     </select>

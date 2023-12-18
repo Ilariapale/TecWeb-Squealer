@@ -28,6 +28,10 @@ a,
   padding: 3px;
 }
 
+.clickable {
+  cursor: pointer !important;
+}
+
 
 .btn-primary {
   background-color: #303c5a !important;

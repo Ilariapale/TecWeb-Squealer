@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex flex-wrap p-0 ">
-        <div class=" col-12 col-lg-12 pe-1 col-xl-6 pb-3 ">
+        <div class=" col-12 col-lg-12 pe-1 col-xl-7 pb-2 ">
             <div class="card ">
                 <div class="card-body">
                     <h5 class="card-title text-dark"><b>Chars available</b></h5>
@@ -36,7 +36,7 @@
             </div>
 
         </div>
-        <div class="col-12 col-lg-12 col-xl-6 ps-1 pb-3">
+        <div class="col-12 col-lg-12 col-xl-5 ps-1 pb-2">
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title text-dark"><b>Buy more!</b></h5>

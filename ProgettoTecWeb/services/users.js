@@ -593,7 +593,7 @@ module.exports = {
       });
 
       // Storia temporale delle pubblicazioni: squealsHistory
-      // Mostra quanti post sono stati pubblicati in ogni settimana.
+      // Mostra quanti post sono stati pubblicati in ogni settimana e le impressions.
       // ottengo i dati per il grafico a linee, segnando la data nel formato yyyy-mm-dd
 
       const date = new Date();
@@ -602,12 +602,31 @@ module.exports = {
         date.setDate(date.getDate() - 7);
         dateArray.push(new Date(date));
       }
-      const dateArrayPromises = dateArray.map(async (date) => {
+
+      const squealsHistoryPromises = dateArray.map(async (date) => {
         const count = await Squeal.countDocuments({ _id: { $in: squeals }, created_at: { $gte: date } });
         return { x: date, y: count };
       });
-      const squealsHistory = await Promise.all(dateArrayPromises);
-      console.log(squealsHistory);
+
+      const impressionsHistoryPromises = dateArray.map(async (date) => {
+        const impressions = await Squeal.aggregate([
+          {
+            $match: {
+              _id: { $in: squeals },
+              created_at: { $gte: date },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalImpressions: { $sum: "$impressions" },
+            },
+          },
+        ]).exec();
+        return { x: date, y: impressions.length > 0 ? impressions[0].totalImpressions : 0 };
+      });
+
+      const [squealsHistory, impressionsHistory] = await Promise.all([Promise.all(squealsHistoryPromises), Promise.all(impressionsHistoryPromises)]);
 
       const squealsHistoryChart = new QuickChart();
       squealsHistoryChart.setWidth(500).setHeight(300).setVersion("2");
@@ -617,11 +636,20 @@ module.exports = {
           labels: dateArray,
           datasets: [
             {
-              label: "Dataset with string point data",
+              label: "Squeals",
               backgroundColor: "rgba(178, 71, 41, 0.7)",
               borderColor: "rgb(248, 189, 87)",
               fill: false,
-              data: squealsHistory,
+              yAxisID: "squeals-y-axis",
+              data: squealsHistory.reverse().map((item, index) => ({ x: item.x, y: item.y - (squealsHistory[index + 1]?.y || 0) })),
+            },
+            {
+              label: "Impressions",
+              backgroundColor: "rgba(41, 71, 178, 0.7)",
+              borderColor: "rgb(87, 189, 248)",
+              fill: false,
+              yAxisID: "impressions-y-axis",
+              data: impressionsHistory.reverse().map((item, index) => ({ x: item.x, y: item.y - (impressionsHistory[index + 1]?.y || 0) })),
             },
           ],
         },
@@ -629,7 +657,7 @@ module.exports = {
           responsive: true,
           title: {
             display: true,
-            text: "Squeals history",
+            text: "Squeals and Impressions History",
           },
           scales: {
             xAxes: [
@@ -649,16 +677,29 @@ module.exports = {
             ],
             yAxes: [
               {
+                id: "squeals-y-axis",
                 display: true,
+                position: "left",
                 scaleLabel: {
                   display: true,
                   labelString: "Squeal number",
+                },
+              },
+              {
+                id: "impressions-y-axis",
+                display: true,
+                position: "right",
+                scaleLabel: {
+                  display: true,
+                  labelString: "Impressions",
                 },
               },
             ],
           },
         },
       });
+
+      // Ora puoi utilizzare squealsHistoryChart.toURL() o altri metodi per visualizzare il grafico
 
       // Interazioni e impressioni: interactionsImpressions
       // Calcola il numero di impressioni e mostra
@@ -679,19 +720,90 @@ module.exports = {
           },
         },
       ]).exec();
-      console.log(interactionsImpressions);
+      //voglio anche sapere il numero totale di commenti
+      const commentsTot = await Squeal.aggregate([
+        { $match: { _id: { $in: squeals } } },
+        {
+          $group: {
+            _id: null,
+            comments_tot: { $sum: "$comments_count" },
+          },
+        },
+      ]).exec();
+
+      interactionsImpressions[0].comments_tot = commentsTot[0].comments_tot;
+      // Supponendo che tu abbia ottenuto i risultati da MongoDB e li abbia memorizzati in interactionsImpressions e commentsTot
+
+      // Calcola la percentuale di interazioni rispetto alle impressioni
+      const interactionPercentage =
+        ((interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot + commentsTot[0].comments_tot) /
+          interactionsImpressions[0].impressions_tot) *
+        100;
+
+      // Calcola la percentuale di mancate interazioni rispetto alle impressioni
+      const nonInteractionPercentage = 100 - interactionPercentage;
+
+      // Calcola la percentuale di reazioni rispetto alle impressioni
+      const reactionsPercentage =
+        ((interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot) / interactionsImpressions[0].impressions_tot) * 100;
+
+      // Calcola la percentuale di commenti rispetto alle impressioni
+      const commentsPercentage = (commentsTot[0].comments_tot / interactionsImpressions[0].impressions_tot) * 100;
+
+      // Configura i dati per il grafico a barre
+
+      // Crea il grafico a barre
+      const interactionsImpressionsChart = new QuickChart();
+      interactionsImpressionsChart.setWidth(500).setHeight(300).setVersion("2");
+      interactionsImpressionsChart.setConfig({
+        type: "pie",
+        data: {
+          labels: ["Reactions", "Comments", "No Interactions"],
+          datasets: [
+            {
+              data: [reactionsPercentage.toFixed(1), commentsPercentage.toFixed(1), nonInteractionPercentage.toFixed(1)],
+              backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
+              hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          title: {
+            display: true,
+            text: "Interactions over impressions",
+          },
+        },
+      });
 
       // Distribuzione delle reazioni in base alla categoria di tag: tagsDistribution
       // Mostra come le reazioni si distribuiscono tra post con tag
       // "none", "popular", "unpopular", "controversial".
       // ottengo i dati per il grafico
       const tags = ["none", "popular", "unpopular", "controversial"];
+      const tagsColors = ["rgba(111, 128, 224, 88)", "rgba(110, 224, 135, 88)", "rgba(224, 110, 123, 88)", "rgba(224, 197, 110, 88)"];
       const tagsPromises = tags.map(async (tag) => {
         const count = await Squeal.countDocuments({ _id: { $in: squeals }, tag: tag });
         return { tag: tag, count: count };
       });
       const tagsDistribution = await Promise.all(tagsPromises);
-      console.log(tagsDistribution);
+
+      const tagsDistributionChart = new QuickChart();
+      tagsDistributionChart.setWidth(500).setHeight(300).setVersion("2");
+      tagsDistributionChart.setConfig({
+        type: "pie",
+        data: {
+          datasets: [
+            {
+              data: tagsDistribution.map((item) => item.count),
+              backgroundColor: tagsColors,
+              label: "Squeals Tags",
+            },
+          ],
+          labels: tags,
+        },
+      });
 
       // Coinvolgimento in canali ufficiali vs. non ufficiali:   officialChannelInvolvement
       // Rappresenta visivamente la differenza nell'coinvolgimento
@@ -708,25 +820,25 @@ module.exports = {
           },
         },
       ]).exec();
-      console.log(officialChannelInvolvement);
-      const data0 = officialChannelInvolvement[0];
-      const data1 = officialChannelInvolvement[1];
+
+      const offChanData = officialChannelInvolvement.find((item) => item._id === true);
+      const notOffChanData = officialChannelInvolvement.find((item) => item._id === false);
 
       const officialChannelInvolvementChart = new QuickChart();
       officialChannelInvolvementChart.setWidth(500).setHeight(300).setVersion("2");
       officialChannelInvolvementChart.setConfig({
         type: "bar",
         data: {
-          labels: [data0._id ? "Official" : "Unofficial", data1._id ? "Official" : "Unofficial"],
+          labels: ["Official Channel", "Not Official Channel"],
           datasets: [
             {
               label: "Impressions",
-              data: [data0.impressions_tot, data1.impressions_tot],
+              data: [offChanData?.impressions_tot || 0, notOffChanData?.impressions_tot || 0],
               backgroundColor: "#B24729",
             },
             {
               label: "Squeals",
-              data: [data0.count, data1.count],
+              data: [offChanData?.count || 0, notOffChanData?.count || 0],
               backgroundColor: "#F8BD57",
             },
           ],
@@ -752,18 +864,30 @@ module.exports = {
       const reactionsTot = await Promise.all(reactionsPromises);
 
       const reactionsChart = new QuickChart();
-      reactionsChart.setWidth(500).setHeight(300).setVersion("2");
+      reactionsChart.setWidth(300).setHeight(350).setVersion("2");
       reactionsChart.setConfig({
-        type: "pie",
+        type: "radar",
         data: {
+          labels: reactions.map((item, index) => [item, emojis[index]]),
           datasets: [
             {
+              backgroundColor: "rgba(3, 99, 132, 0.2)",
+              borderColor: "#303C5A",
+              pointBackgroundColor: rgbs,
+              pointBorderColor: rgbs,
               data: reactionsTot.map((item) => item.count),
-              backgroundColor: rgbs,
-              label: "Dataset 1",
+              borderWidth: 6,
             },
           ],
-          labels: reactions,
+        },
+        options: {
+          title: {
+            display: true,
+            text: "Reactions distribution",
+          },
+          legend: {
+            display: false,
+          },
         },
       });
 
@@ -772,15 +896,32 @@ module.exports = {
         reaction.emoji = emojis[index];
         reaction.rgb = rgbs[index];
       });
-      console.log(reactionsTot);
+
+      //TOP 3 squeals per reactions e per impressions
+      const top3ByTotalReactions = await Squeal.aggregate([
+        { $match: { _id: { $in: squeals } } },
+        {
+          $addFields: {
+            totalReactions: {
+              $sum: ["$reactions.positive_reactions", "$reactions.negative_reactions"],
+            },
+          },
+        },
+        { $sort: { totalReactions: -1 } },
+        { $limit: 3 },
+      ]).exec();
+      const top3ByImpressions = await Squeal.aggregate([{ $match: { _id: { $in: squeals } } }, { $sort: { impressions: -1 } }, { $limit: 3 }]).exec();
 
       const data = {
         dataDistribution: dataDistributionChart.getUrl(),
         squealsHistory: squealsHistoryChart.getUrl(),
-        //interactionsImpressions,
-        //tagsDistribution,
+        interactionsImpressions: interactionsImpressionsChart.getUrl(),
+        tagsDistribution: tagsDistributionChart.getUrl(),
         officialChannelInvolvement: officialChannelInvolvementChart.getUrl(),
         reactionsTot: reactionsChart.getUrl(),
+        reactionsTotData: reactionsTot,
+        top3ByTotalReactions: top3ByTotalReactions,
+        top3ByImpressions: top3ByImpressions,
       };
       return {
         status: 200,

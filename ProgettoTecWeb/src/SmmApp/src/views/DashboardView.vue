@@ -38,8 +38,11 @@ export default {
 
 </script>
 <template>
-    <div class="justify-content-center">
-        <h1>Dashboard</h1>
+    <div class="container text-center col">
+        <h1 class="row justify-content-center">Dashboard</h1>
+        <h3 class="row justify-content-center">{{ vip?.username }}</h3>
+    </div>
+    <div lass="justify-content-center">
         <div v-for="squeal of vip?.squeals?.posted" :key="squeal">
             <Squeal :squeal_id="squeal"></Squeal>
         </div>
