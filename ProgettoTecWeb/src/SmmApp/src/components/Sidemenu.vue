@@ -74,8 +74,9 @@ export default {
         </ul>
         <hr>
         <div class=" mt-auto">
-            <ul>
-                <li @click="logout()" type="button">
+            <ul class="ps-1" role="tablist">
+                <li class="nav-item nav-link " data-bs-toggle="pill" type="button" role="tab" aria-selected="false"
+                    @click="logout()">
                     <a>
                         <i class="bi bi-box-arrow-left"> </i>
                     </a>
@@ -125,10 +126,14 @@ export default {
                 </RouterLink>
             </li>
         </ul>
-        <div class=" mt-auto">
-            <div @click="logout()">
-                <i class="bi bi-box-arrow-right"> </i>
-            </div>
+        <div class="pt-5 mt-auto">
+            <ul role="tablist">
+
+                <li class="nav-item nav-link" data-bs-toggle="pill" type="button" role="tab" aria-selected="false"
+                    @click="logout()">
+                    <i class="bi bi-box-arrow-right "> </i>
+                </li>
+            </ul>
         </div>
     </div>
 </template>

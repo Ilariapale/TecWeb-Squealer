@@ -63,6 +63,24 @@ router.get("/statistics/:identifier", verifyToken, async (req, res, next) => {
   }
 });
 
+router.post("/request/:type", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+      account_type: req.params.type,
+    };
+    try {
+      const result = await users.accountChangeRequest(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({ error: err || "Something went wrong." });
+    }
+  } else {
+    // Utente non loggato, invia una risposta di errore o reindirizza alla pagina di login
+    res.status(401).send({ error: "Token is either missing invalid or expired" });
+  }
+});
+
 //Token not required for creating an account
 router.post("/", async (req, res, next) => {
   const options = { userInput: req.body };
@@ -193,6 +211,28 @@ router.delete("/SMM", verifyToken, async (req, res, next) => {
       const result = await users.removeSMM(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
+router.patch("/request/:request_id/:action", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      request_id: req.params.request_id,
+      action: req.params.action,
+      user_id: req.user_id,
+    };
+
+    try {
+      const result = await users.handleAccountChangeRequest(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      console.error(err);
       return res.status(500).send({
         error: err || "Something went wrong.",
       });

@@ -127,4 +127,8 @@ export class UsersService {
   deleteUser(identifier: string): Promise<any> {
     return firstValueFrom(this.http.delete(`${this.apiUrl}/${identifier}`, this.headersGenerator(true)));
   }
+
+  accountChangeRequest(type: 'SMM' | 'VIP' | 'standard' | 'verified'): Promise<any> {
+    return firstValueFrom(this.http.post(`${this.apiUrl}/request/${type}`, {}, this.headersGenerator(true)));
+  }
 }

@@ -84,12 +84,17 @@ export default {
 
                     <div class="card-body p-2">
                         <h5 class="card-title">@{{ squeal.username }}</h5>
-                        <p class="card-text">
+                        <p v-if="squeal.content_type == 'text'" class="card-text">
                             {{ squeal.content }}</p>
                         <div class="card-img-top ">
+                            <img v-if="squeal.content_type == 'image'" :src="squeal.content" class="img-fluid" alt="...">
+                            <div v-if="squeal.content_type == 'video'" class="ratio ratio-16x9">
+                                <iframe :src="squeal.content" allowfullscreen></iframe>
+                            </div>
+                            <p v-if="squeal.content_type == 'position'" class="card-text">
+                                [position]
+                            </p>
 
-                        </div>
-                        <div>
 
                         </div>
                         <!--position-->
@@ -125,7 +130,6 @@ export default {
                             </div>
 
                             <div class="flex-nowrap justify-content-center d-flex align-items-center py-2">
-
                             </div>
 
                         </div>

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { Notification, User, Squeal, Channel, Keyword, CommentSection } = require("./schemas");
+const { Notification, User, Squeal, Channel, Keyword, CommentSection, Request } = require("./schemas");
 const {
   jwt,
   bcrypt,
@@ -31,6 +31,8 @@ const {
   unbannedUserNotification,
   declinedSMMrequestNotification,
   updatedProfileTypeNotification,
+  requestAcceptedNotification,
+  requestRejectedNotification,
 } = require("./messages");
 
 const QuickChart = require("quickchart-js");
@@ -928,6 +930,171 @@ module.exports = {
     } catch (err) {
       console.log(err);
     }
+  },
+
+  accountChangeRequest: async (options) => {
+    try {
+      const { user_id, account_type } = options;
+
+      let response = await findUser(user_id);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: `'user_id' in token is not valid.` },
+        };
+      }
+      const reqSender = response.data;
+
+      if (reqSender.professional_type == account_type || reqSender.account_type == account_type) {
+        return {
+          status: 403,
+          data: { error: `You can't ask to be changed to the same account type you already have.` },
+        };
+      }
+
+      if (reqSender.is_active === false) {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to send requests.` },
+        };
+      }
+
+      if (!["SMM", "VIP", "verified", "standard"].includes(account_type)) {
+        return {
+          status: 400,
+          data: { error: "`account_type` must be either SMM, VIP, verified or standard" },
+        };
+      }
+
+      const isAlreadyRequested = await Request.exists({ user_id: reqSender._id, account_type: account_type });
+      if (isAlreadyRequested) {
+        return {
+          status: 400,
+          data: { error: `You have already sent a request for this account type.` },
+        };
+      }
+
+      const newRequest = new Request({
+        user_id: reqSender._id,
+        account_type: account_type,
+        created_at: Date.now(),
+        username: reqSender.username,
+        type: account_type,
+      });
+      await newRequest.save();
+      return {
+        status: 200,
+        data: { message: "Request sent successfully." },
+      };
+    } catch (err) {
+      console.log(err);
+    }
+  },
+
+  handleAccountChangeRequest: async (options) => {
+    const { user_id, request_id, action } = options;
+
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: `'user_id' in token is not valid.` },
+      };
+    }
+    const reqSender = response.data;
+
+    if (reqSender.account_type !== "moderator") {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to handle requests.` },
+      };
+    }
+
+    if (!["accept", "decline"].includes(action)) {
+      return {
+        status: 400,
+        data: { error: `'action' must be either 'accept' or 'decline'.` },
+      };
+    }
+
+    response = await Request.findById(request_id);
+    if (!response) {
+      return {
+        status: 404,
+        data: { error: `Request not found.` },
+      };
+    }
+    const request = response;
+
+    response = await findUser(request.user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: `User not found.` },
+      };
+    }
+    const user = response.data;
+
+    if (action === "decline") {
+      //TODO da controllare
+      await request.remove();
+      //mandiamo notifica allo user
+      const newNotification = new Notification({
+        user_ref: request.user_id,
+        created_at: Date.now(),
+        content: requestRejectedNotification(request.username, request.account_type),
+        source: "system",
+        id_code: "accountUpdate",
+      });
+      const notification = await newNotification.save();
+      user.notifications.push(notification._id);
+      await user.save();
+
+      return {
+        status: 200,
+        data: { message: "Request handled successfully." },
+      };
+    }
+    //----------------------------------------------------------------------------------------------------------------------
+    if (user.account_type === "VIP") {
+      await removeSMM(user._id);
+    }
+    if (user.account_type === "SMM") {
+      const managedAccounts = user.managed_accounts.length - 1;
+      const promises = [];
+      for (let i = managedAccounts; i >= 0; i--) {
+        let options = { identifier: user.managed_accounts[i], user_id: user._id };
+        promises.push(removeVIP(options));
+      }
+      await Promise.all(promises);
+    }
+    //----------------------------------------------------------------------------------------------------------------------
+
+    if (request.type == "SMM" || request.type == "VIP") {
+      user.account_type = "professional";
+      user.professional_type = request.type;
+    } else {
+      user.account_type = request.type;
+    }
+
+    //mandiamo notifica allo user
+    const newNotification = new Notification({
+      user_ref: request.user_id,
+      created_at: Date.now(),
+      content: requestAcceptedNotification(request.username, request.account_type),
+      source: "system",
+      id_code: "accountUpdate",
+    });
+    const notification = await newNotification.save();
+    user.notifications.push(notification._id);
+
+    await user.save();
+    await request.remove();
+
+    return {
+      status: 200,
+      data: { message: "Request handled successfully." },
+    };
   },
 
   getSMMRequestList: async (options) => {

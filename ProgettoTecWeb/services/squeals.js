@@ -32,7 +32,7 @@ const {
   addCommentsCountToSqueals,
 } = require("./utils");
 
-const { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } = require("./constants");
+const { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MEDIA_QUOTA } = require("./constants");
 const { mentionNotification, squealInOfficialChannel } = require("./messages");
 
 //TODO tradurre tutti i commenti in inglese
@@ -366,6 +366,7 @@ module.exports = {
     try {
       //vietare di postare in un canale ufficiales
       const { user_id, vip_id, content, recipients, is_scheduled } = options;
+      console.log(options);
       //set the default value for content_type
       const content_type = options.content_type || "text";
 
@@ -397,11 +398,12 @@ module.exports = {
 
       //author is the reqSender by default
       var author = reqSender;
+
       if (vip_user && !reqSender._id.equals(vip_user._id)) {
         //equals funziona anche con ids
         //Sto cercando di postare a nome di qualcun altro
         //quindi controllo se l'utente che manda la richiesta ha i permessi per farlo, ovvero è un SMM di un utente VIP
-        if (reqSender.account_type != "professional" || reqSender.professional_type != "smm") {
+        if (reqSender.account_type != "professional" || reqSender.professional_type != "SMM") {
           return {
             status: 403,
             data: { error: `You are not allowed to post as another user.` },
@@ -708,6 +710,18 @@ module.exports = {
     return {
       status: 200,
       data: squeals_array,
+    };
+  },
+
+  getPrices: () => {
+    const prices = {
+      image_squeal: MEDIA_QUOTA.image,
+      video_squeal: MEDIA_QUOTA.video,
+      position_squeal: MEDIA_QUOTA.position,
+    };
+    return {
+      status: 200,
+      data: prices,
     };
   },
 

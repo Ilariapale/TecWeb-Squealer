@@ -5,6 +5,28 @@
   height: calc(100vh - 76px);
 }
 
+::-webkit-scrollbar {
+  width: 5px;
+  background-color: #303c5a;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: #ac833d;
+}
+
+.unselectable {
+  -webkit-user-select: none;
+  /* Safari */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* IE10+/Edge */
+  user-select: none;
+  /* Standard */
+
+}
 
 #app {
   /* max-width: 1280px; */
@@ -60,6 +82,10 @@ button:not(.active).text-white {
 
 .btn.text-white {
   color: white !important;
+}
+
+.border-primary {
+  border-color: #303C5A !important;
 }
 
 

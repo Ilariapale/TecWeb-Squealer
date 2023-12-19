@@ -346,6 +346,16 @@ SquealSchema.pre("save", function (next) {
 });
 const Squeal = mongoose.model("Squeal", SquealSchema);
 
+// ========== REQUEST ==========
+
+const RequestSchema = new mongoose.Schema({
+  type: { type: String, enum: ["SMM", "VIP", "verified", "standard"], required: true },
+  username: { type: String, required: true },
+  user_id: { type: mongoose.Types.ObjectId, ref: "User", required: true },
+  created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+});
+const Request = mongoose.model("Request", RequestSchema);
+
 // ========== CHANNEL ==========
 const ChannelSchema = new mongoose.Schema({
   // _id: { type: mongoose.Types.ObjectId },
@@ -433,6 +443,7 @@ module.exports = {
   Channel,
   Keyword,
   //Media,
+  Request,
   Chat,
   CommentSection,
 };

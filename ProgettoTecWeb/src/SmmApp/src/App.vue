@@ -4,6 +4,7 @@ import HeaderSMM from './components/HeaderSMM.vue';
 import Sidemenu from './components/Sidemenu.vue';
 import Overviewmenu from './components/Overviewmenu.vue';
 import { getUser } from "./services/user.service";
+import { getPrices } from "./services/squeal.service";
 import type e from 'cors';
 
 
@@ -18,7 +19,8 @@ export default {
   data() {
     return {
       user: {},
-      vip: {}
+      vip: {},
+      prices: {}
     }
   },
   methods: {
@@ -44,10 +46,21 @@ export default {
         console.log(error);
         return error;
       });
+    },
+    async getPrices() {
+      await getPrices().then((response) => {
+        this.prices = response;
+        return response;
+      }).catch((error) => {
+        console.log(error);
+        return error;
+      });
+
     }
   },
   mounted() {
     this.getUser();
+    this.getPrices();
   },
 }
 
@@ -67,7 +80,7 @@ export default {
 
       <!-- Contenuto centrale scrollabile -->
       <div class="col col-md-5 col-lg-6 dashboard elements-height p-0">
-        <RouterView :user="user" :vip="vip" />
+        <RouterView :prices="prices" :user="user" :vip="vip" />
       </div>
 
       <!-- Menu a destra -->

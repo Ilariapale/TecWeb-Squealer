@@ -69,6 +69,8 @@ const updatedProfileTypeNotification = (username, old_account_type, new_account_
       : `@${username}, your account type has been changed from ${old_account_type} to ${new_account_type}!`
     : `@${username}, your professional type has been changed from ${old_professional_type} to ${new_professional_type}!`;
 
+const requestRejectedNotification = (username, role) => `@${username}, your request to be ${role} has been rejected!`;
+const requestAcceptedNotification = (username, role) => `@${username}, your request to be ${role} has been accepted!`;
 const charQuotaGained = () => `Your squeals were a success! You have gained some characters quota! :)`;
 const charQuotaLost = () => `Your squeals were a disaster! You have lost some characters quota! :(`;
 
@@ -100,4 +102,6 @@ module.exports = {
   charQuotaLost,
   removedEditorForChannelNotification,
   newEditorForChannelNotification,
+  requestRejectedNotification,
+  requestAcceptedNotification,
 };

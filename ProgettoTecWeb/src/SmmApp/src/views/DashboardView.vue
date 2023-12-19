@@ -22,6 +22,10 @@ export default {
         vip: {
             type: Object,
             required: true
+        },
+        prices: {
+            type: Object,
+            required: true
         }
     },
     methods: {
@@ -46,7 +50,7 @@ export default {
             <h3>{{ vip?.username }}</h3>
             <i class="bi bi-plus-circle-fill clickable h4" data-bs-toggle="collapse" href="#newSqueal" role="button"
                 aria-expanded="false" aria-controls="newSqueal"></i>
-            <NewSquealVue :vip=vip class="collapse" id="newSqueal"></NewSquealVue>
+            <NewSquealVue :prices="prices" :vip=vip class="collapse" id="newSqueal"></NewSquealVue>
         </div>
     </div>
 

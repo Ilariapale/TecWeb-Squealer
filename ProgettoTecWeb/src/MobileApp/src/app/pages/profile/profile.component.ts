@@ -7,6 +7,8 @@ import {
   OnDestroy,
   ViewChild,
   ElementRef,
+  OnChanges,
+  SimpleChanges,
 } from '@angular/core';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { TimeService } from 'src/app/services/time.service';
@@ -18,13 +20,13 @@ import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Squeal, ContentType } from 'src/app/models/squeal.interface';
 import { MediaService } from 'src/app/services/api/media.service';
-
+//TODO fixare quando si è in un altro profilo e si seleziona il proprio profilo
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
-export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
+export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy, OnChanges {
   @ViewChild('imageInput') imageInput!: ElementRef;
 
   MAX_SQUEALS = 5;
@@ -120,6 +122,21 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
         this.router.navigate(['/login']);
       }
     }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    console.log(changes);
+  }
+
+  requestAccountChange(type: 'SMM' | 'VIP' | 'standard' | 'verified') {
+    this.usersService
+      .accountChangeRequest(type)
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
 
   ngAfterViewInit() {

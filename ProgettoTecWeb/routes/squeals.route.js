@@ -34,6 +34,18 @@ router.get("/", verifyToken, async (req, res, next) => {
   }
 });
 
+router.get("/prices", async (req, res, next) => {
+  try {
+    const result = squeals.getPrices();
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
 router.post("/", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     // Utente loggato, gestisci la richiesta come vuoi
@@ -43,6 +55,7 @@ router.post("/", verifyToken, async (req, res, next) => {
       content_type: req.body.content_type,
       is_scheduled: false,
       recipients: req.body.recipients,
+      vip_id: req.body.vip_id,
     };
 
     try {
