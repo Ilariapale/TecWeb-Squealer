@@ -7,7 +7,8 @@
             <ol-source-osm @error="handleEvent" />
         </ol-tile-layer>
         <ol-overlay :position="[coordinates[0], coordinates[1]]">
-            <img src="./ArrowRed.png" class="text-danger" style="height: 20px; width: 20px;" alt="marker" />
+            <img v-if="showCursor" src="./ArrowRed.png" class="text-danger" style="height: 20px; width: 20px;"
+                alt="marker" />
         </ol-overlay>
         <!-- <ol-vector-layer> -->
         <ol-vector-layer @error="handleEvent">
@@ -27,21 +28,26 @@ import { MapBrowserEvent } from 'ol';
 import { useGeographic } from 'ol/proj'; // Import useGeographic from ol/proj
 export default {
     setup() {
+        let showCursor = ref(false);
         const offset = ref(0);
         useGeographic(); // Use useGeographic
         const center = ref([40, 40]);
         const zoom = ref(3);
         const rotation = ref(0);
         const coordinates = ref([0, 0]);
+
         const handleEvent = (event: any) => {
             console.log(event);
         };
 
         const handleMapClick = (event: MapBrowserEvent<MouseEvent>) => {
+            showCursor.value = true;
             coordinates.value = event.coordinate;
         };
 
+
         return {
+            showCursor,
             center,
             zoom,
             rotation,
@@ -51,5 +57,18 @@ export default {
             handleEvent,
         };
     },
+    expose: ['getCoordinates', 'deletePoint'],
+    methods: {
+        getCoordinates() {
+            if (this.coordinates[0] != 0 && this.coordinates[1] != 0)
+                return this.coordinates;
+            else return null;
+        },
+        deletePoint() {
+            this.showCursor = false;
+            this.coordinates = [0, 0];
+        }
+    },
+
 };
 </script>

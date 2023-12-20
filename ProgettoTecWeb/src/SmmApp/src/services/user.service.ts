@@ -42,7 +42,9 @@ export const getUser = async (identifier?: string) => {
   try {
     const headers = generateHeaders(true);
     const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || '');
-    if (!user && !identifier) return;
+    if (!user && !identifier) {
+      throw new Error('No user found');
+    }
     return (await rest.get(`/${identifier ? identifier : user?.username}`, { headers })).data;
   } catch (err: any) {
     throw new Error(err.message);

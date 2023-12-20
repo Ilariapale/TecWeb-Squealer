@@ -21,6 +21,7 @@ router.get("/", verifyToken, async (req, res, next) => {
     last_loaded: req.query.last_loaded,
     keywords: req.query.keywords,
     is_in_official_channel: !req.isTokenValid || req.query.is_in_official_channel,
+    user_id: req.user_id,
   };
 
   try {

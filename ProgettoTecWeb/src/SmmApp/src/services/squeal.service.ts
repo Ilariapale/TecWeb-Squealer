@@ -20,9 +20,9 @@ export const getSqueal = async (identifier: string) => {
     const headers = generateHeaders(true);
     return (await rest.get(`${identifier}`, { headers })).data;
   } catch (err: any) {
-    console.error();
-
-    throw new Error(err.message);
+    console.log(err);
+    const error = err.response.data.error;
+    throw new Error(error);
   }
 };
 
@@ -42,9 +42,8 @@ export const postSqueal = async (
     if (vip_id) body['vip_id'] = vip_id;
     return (await rest.post('', body, { headers })).data;
   } catch (err: any) {
-    console.error();
-
-    throw new Error(err.message);
+    const error = err.response.data.error;
+    throw new Error(error);
   }
 };
 
@@ -53,9 +52,21 @@ export const getPrices = async () => {
     const headers = generateHeaders(false);
     return (await rest.get('prices', { headers })).data;
   } catch (err: any) {
-    console.error();
+    const error = err.response.data.error;
+    console.log(err);
+    throw new Error(error);
+  }
+};
 
-    throw new Error(err.message);
+export const deleteSqueal = async (identifier: string) => {
+  try {
+    const headers = generateHeaders(true);
+    return (await rest.delete(`${identifier}`, { headers })).data;
+  } catch (err: any) {
+    console.log(err);
+    const error = err.response.data.error;
+
+    throw new Error(error);
   }
 };
 

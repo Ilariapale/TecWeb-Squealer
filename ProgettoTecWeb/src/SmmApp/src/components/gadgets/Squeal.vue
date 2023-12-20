@@ -1,5 +1,5 @@
 <script lang="ts">
-import { getSqueal } from '@/services/squeal.service';
+import { getSqueal, deleteSqueal } from '@/services/squeal.service';
 import { getCommentSection } from '@/services/comment.service';
 import { getRelativeTime } from '@/services/time.service';
 
@@ -10,6 +10,7 @@ export default {
             isDataOpen: false,
             squeal: {} as any,
             comment_section: {} as any,
+            loadMoreCommentsButton: true,
             getRelativeTime: getRelativeTime
         };
     },
@@ -23,7 +24,6 @@ export default {
         async getSqueal() {
             await getSqueal(this.squeal_id).then(async (response) => {
                 this.squeal = response[0];
-                await this.getCommentSection();
             }).catch((error) => {
                 console.log(error);
                 return error;
@@ -39,19 +39,31 @@ export default {
             });
 
         },
+        openSquealInNewTab() {
+            window.open('/../squeal/' + this.squeal._id, '_blank');
+        },
         async loadMoreComments() {
             await getCommentSection(this.squeal.comment_section, this.comment_section.comments_array[0]._id).then(async (response) => {
                 response.comments_array.reverse().forEach((element: any) => {
                     this.comment_section.comments_array.unshift(element);
                 });
                 if (response.comments_array.length <= 0) {
-                    this.isCommentOpen = false;
+                    this.loadMoreCommentsButton = false;
                 }
             }).catch((error) => {
                 console.log(error);
                 return error;
             });
-        }
+        },
+        async deleteSqueal() {
+            await deleteSqueal(this.squeal_id).then(async (response) => {
+                this.getSqueal();
+            }).catch((error) => {
+                console.log(error);
+                return error;
+            });
+
+        },
 
 
     },
@@ -71,11 +83,11 @@ export default {
                         <div class="row">
                             <div class="col">
                             </div>
-                            <div class="col">
+                            <div class="col clickable" @click="openSquealInNewTab">
                                 HEX {{ squeal.hex_id }}
                             </div>
-                            <div class="col text-end">
-                                <i class="bi bi-trash" type="button"></i>
+                            <div class="col text-end" @click="deleteSqueal">
+                                <i v-if="squeal.content_type != 'deleted'" class="bi bi-trash" type="button"></i>
                             </div>
 
                         </div>
@@ -92,8 +104,9 @@ export default {
                             <div v-if="squeal.content_type == 'video'" class="ratio ratio-16x9">
                                 <iframe :src="'/../media/video/' + squeal.content" allowfullscreen></iframe>
                             </div>
-                            <p v-if="squeal.content_type == 'position'" class="card-text">
-                                [position]
+                            <p v-if="squeal.content_type == 'position' || squeal.content_type == 'deleted'"
+                                class="card-text">
+                                [{{ squeal.content_type }}]
                             </p>
 
 
@@ -108,7 +121,8 @@ export default {
 
                                 <div class="col-5 px-1">
                                     <button id="comment_button" type="button" class="btn btn-secondary btn-rounded px-2"
-                                        v-bind:class="{ 'clicked': isCommentOpen }" @click="isCommentOpen = !isCommentOpen">
+                                        v-bind:class="{ 'clicked': isCommentOpen }"
+                                        @click="getCommentSection(); isCommentOpen = !isCommentOpen">
                                         <i class="bi bi-chat-dots-fill text-white"></i>
                                         <p class="badge bg-primary ms-2 my-auto">
                                             {{ squeal.comments_count }} </p>
@@ -135,29 +149,41 @@ export default {
 
                         </div>
 
-                        <div class="card-footer"><i class="bi bi-calendar4-week"></i>
+                        <div @click="openSquealInNewTab" class="card-footer clickable"><i class="bi bi-calendar4-week"></i>
                             {{ getRelativeTime(squeal.created_at) }}
                         </div>
                         <div class="mt-3" v-if="isDataOpen">
                             <div class="row">
                                 <div class="col-3"></div>
                                 <div class="col-6">
-                                    👍{{ squeal.reactions.like || 0 }}-
-                                    😂{{ squeal.reactions.laugh || 0 }}-
-                                    😍{{ squeal.reactions.love || 0 }}-
-                                    🤮{{ squeal.reactions.disgust || 0 }}-
-                                    👎{{ squeal.reactions.dislike || 0 }}-
-                                    🙅{{ squeal.reactions.disagree || 0 }}-
+                                    <div class="row">
+                                        👍{{ squeal.reactions.like || 0 }} ||
+                                        😂{{ squeal.reactions.laugh || 0 }} ||
+                                        😍{{ squeal.reactions.love || 0 }}
+                                    </div>
+                                    <div class="row">
+                                        🤮{{ squeal.reactions.disgust || 0 }}
+                                        👎{{ squeal.reactions.dislike || 0 }}
+                                        🙅{{ squeal.reactions.disagree || 0 }}
+                                    </div>
                                 </div>
-                                <div class="col-3 text-end text-muted">Total reactions: {{ squeal.positive_reactions +
-                                    squeal.negative_reactions }}</div>
+                                <div class="col-3 text-end text-muted">Total reactions: {{
+                                    squeal.reactions.positive_reactions +
+                                    squeal.reactions.negative_reactions }}</div>
                             </div>
                         </div>
                         <div class="mt-3" v-if="isCommentOpen">
+                            <div v-if="loadMoreCommentsButton && squeal.comments_count > 0">
+                                <button type="button" @click="loadMoreComments()"
+                                    class="btn btn-secondary btn-rounded px-4 py-2">
+                                    <i class="bi bi-arrow-down-circle-fill text-white"></i>
+                                </button>
+                            </div>
+                            <div v-if="squeal.comments_count == 0"> No comments yet.</div>
                             <!-- Lista dei commenti -->
                             <ul class="list-unstyled">
                                 <li v-for="comment in comment_section.comments_array">
-                                    <p> <strong> {{ comment.author_username }}: </strong>{{ comment.text }}
+                                    <p class="m-0 mt-2"> <strong> {{ comment.author_username }}: </strong>{{ comment.text }}
                                     </p>
                                     <div>
                                         <small class="text-muted">
@@ -167,12 +193,7 @@ export default {
 
                                 </li>
                             </ul>
-                            <div>
-                                <button type="button" @click="loadMoreComments()"
-                                    class="btn btn-secondary btn-rounded px-4 py-2">
-                                    <i class="bi bi-arrow-down-circle-fill text-white"></i>
-                                </button>
-                            </div>
+
                             <!-- Modulo per aggiungere un nuovo commento -->
                         </div>
                     </div>

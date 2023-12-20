@@ -59,6 +59,7 @@ module.exports = {
   //TODO controllare squeal in canale ufficiale, canale cancellato
   getSqueals: async (options) => {
     const {
+      user_id,
       keywords,
       last_loaded,
       content_type,
@@ -259,11 +260,23 @@ module.exports = {
       };
     }
 
+    let reqSender;
+    if (user_id) {
+      const response = await findUser(user_id);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      reqSender = response.data;
+    }
+
     //if the query returned some results, increment the impressions counter for each squeal
     const squealImpressionsPromises = [];
-
     for (let squeal of data) {
-      squealImpressionsPromises.push(Squeal.findByIdAndUpdate(squeal._id, { $inc: { impressions: 1 } }));
+      if (squeal.content_type != "deleted" && !reqSender._id.equals(squeal.user_id) && !squeal.user_id.equals(reqSender.smm))
+        squealImpressionsPromises.push(Squeal.findByIdAndUpdate(squeal._id, { $inc: { impressions: 1 } }));
     }
     await Promise.all(squealImpressionsPromises);
 
@@ -335,8 +348,19 @@ module.exports = {
       squeal = squeal_response.data;
     }
 
+    let response = await findUser(squeal.user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const squealAuthor = response.data;
+
     //impressions increment with save()
-    if ((user && squeal.user_id != user._id) || !user) squeal.impressions++;
+    if ((user && !squeal.user_id.equals(squealAuthor._id) && !squeal.user_id.equals(squealAuthor.smm) && user.account_type != "moderator") || !user) {
+      squeal.impressions++;
+    }
     await squeal.save();
     squeal = await addCommentsCountToSqueals([squeal]);
 
@@ -731,51 +755,64 @@ module.exports = {
   deleteSqueal: async (options) => {
     // const replaceString = "[deleted squeal]";
     // const deleted_content_type = "deleted";
-    const { identifier, user_id } = options;
+    try {
+      const { identifier, user_id } = options;
 
-    let response = await findSqueal(identifier);
-    if (response.status >= 300) {
+      let response = await findSqueal(identifier);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const squeal = response.data;
+
+      if (squeal.content_type == "deleted") {
+        return {
+          status: 400,
+          data: { error: `Squeal already deleted` },
+        };
+      }
+
+      response = await findUser(squeal.user_id);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const squealAuthor = response.data;
+
+      //check if the user_id in the token is valid
+      response = await findUser(user_id);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      let reqSender = response.data;
+
+      const isSenderAuthor = reqSender._id.equals(squeal.user_id);
+      const isModerator = reqSender.account_type == "moderator";
+      const isSMM = reqSender.account_type == "professional" && reqSender.professional_type == "SMM" && reqSender._id.equals(squealAuthor.smm);
+
+      if (!isSenderAuthor && !isModerator && !isSMM) {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to delete this squeal.` },
+        };
+      }
+
+      await squeal.DeleteAndPreserveInDB();
+
       return {
-        status: response.status,
-        data: { error: response.error },
+        status: 200,
+        data: squeal,
       };
+    } catch (error) {
+      console.log(error);
     }
-    const squeal = response.data;
-
-    if (squeal.content_type == "deleted") {
-      return {
-        status: 400,
-        data: { error: `Squeal already deleted` },
-      };
-    }
-
-    //check if the user_id in the token is valid
-    response = await findUser(user_id);
-    if (response.status >= 300) {
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    let reqSender = response.data;
-
-    const isSenderAuthor = reqSender._id.equals(squeal.user_id);
-    const isModerator = reqSender.account_type == "moderator";
-    const isSMM = reqSender.account_type == "professional" && reqSender.professional_type == "SMM" && reqSender._id.equals(squealAuthor.smm);
-
-    if (!isSenderAuthor && !isModerator && !isSMM) {
-      return {
-        status: 403,
-        data: { error: `You are not allowed to delete this squeal.` },
-      };
-    }
-
-    await squeal.DeleteAndPreserveInDB();
-
-    return {
-      status: 200,
-      data: squeal,
-    };
   },
 
   /**

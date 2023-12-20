@@ -1,7 +1,12 @@
 
 <template>
-    <h1>VIP requests</h1>
+    <div class="container unselectable text-center col">
+        <h1><i class="bi bi-people-fill"></i> VIP requests</h1>
+        <div class="text-muted" v-if="requests.length <= 0"><i class="bi bi-info-circle-fill"></i> No requests available
+        </div>
+    </div>
     <div class="ps-4 pt-4 user-select-none">
+
         <div type="button" :id="'request-' + request._id" data-bs-toggle="button" v-for="request in requests"
             class="d-flex flex-md-row p-2 px-4 gap-4 align-items-center justify-content-center">
             <div class="card border-secondary col-9 row" @click="toggleButtons(request._id)">
@@ -32,29 +37,7 @@ import { getUsername, getSMMrequests, manageSMMrequest } from "../services/user.
 export default {
     data() {
         return {
-            requests: [{
-                _id: "id-paulpaccy",
-                username: "paulpaccy",
-                profile_info: "jghvvk,gvlyhyulgliygbilkugbilu.gbliugb.likjughblu"
-            },
-            {
-                _id: "id-ilapale",
-                username: "ilapale",
-                profile_picture: "./../components/icons/logo.png",
-                profile_info: ""
-            },
-            {
-                _id: "id-giovannina",
-                username: "giovannina",
-                profile_picture: "./../components/icons/logo.png",
-                profile_info: ""
-            }, {
-                _id: "id-pasqualino",
-                username: "pasqualino",
-                profile_picture: "./../components/icons/logo.png",
-                profile_info: ""
-            },
-            ],
+            requests: [] as any[],
         };
     },
     methods: {

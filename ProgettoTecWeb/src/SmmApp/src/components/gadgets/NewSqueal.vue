@@ -1,5 +1,4 @@
 <template>
-    <button class="btn btn-danger" @click="resetInputs">Press here</button>
     <form @submit.prevent="postSqueal" id="newSquealForm">
         <ul class="nav justify-content-center nav-pills mb-3 " role="tablist" id="squeal-types-ul">
             <li class="nav-item" role="presentation">
@@ -59,15 +58,15 @@
             <div class="tab-pane fade justify-content-center col-8" id="pills-position-squeal" role="tabpanel"
                 aria-labelledby="pills-position-squeal-tab" tabindex="0">
                 <!-- position squeal -->
-                <MapVue></MapVue>
+                <MapVue ref="mapChild"></MapVue>
                 <!-- fine position squeal -->
             </div>
             <label for="newSquealFormText" class="form-label">New Squeal</label>
             <div class="pb-1">
                 <button :disabled='!isEnough' type="submit" class="btn btn-primary ">Submit</button>
             </div>
-            <div v-if="postSuccess" class="text-success pb-2">Post send correctly!</div>
-            <div v-if="postError" class="text-danger pb-2">Something went wrong</div>
+            <div v-if="postSuccess" mode="out-in" class="text-success pb-2">Post send correctly!</div>
+            <div v-if="postError" mode="out-in" class="text-danger pb-2">{{ errorText }}</div>
         </div>
 
         <div id="recipientsDiv" class="row justify-content-center tab-content pb-3">
@@ -181,6 +180,9 @@ export default {
         let videoInput = ref<HTMLInputElement>(null as unknown as HTMLInputElement);
         let price = 0;
 
+        const mapChild = ref<typeof MapVue>(null as unknown as typeof MapVue);
+
+        let errorText = ref<string>('Something went wrong');
         let postSuccess = ref<boolean>(false);
         let postError = ref<boolean>(false);
 
@@ -209,20 +211,7 @@ export default {
                 video.value = videoInput.value.files[0];
             }
         }
-        async function saveImage() {
-            if (image.value) {
-                try {
-                    // save file.value
-                } catch (error) {
-                    console.error(error);
-                    form.value?.reset();
-                    image.value = null;
-                } finally {
-                }
-            }
-        };
         return {
-            saveImage,
             handleImageChange,
             handleVideoChange,
             currentTab,
@@ -235,6 +224,8 @@ export default {
             videoInput,
             postSuccess,
             postError,
+            errorText,
+            mapChild
         }
     },
     data() {
@@ -249,11 +240,10 @@ export default {
         //lò,òl
         resetInputs() {
             const myForm = document.getElementById("newSquealForm") as HTMLFormElement;
-            myForm.reset();
+            if (myForm) myForm.reset();
             this.squeal_input = "";
             this.charCount = 0;
             this.updateCharacterCount()
-            //TODO aggiungere reset della posizione
         },
 
         async postSqueal() {
@@ -275,8 +265,16 @@ export default {
                 this.$emit("squeal-posted", this.vip.username);
                 console.log(squeal)
                 this.resetInputs();
+                this.postSuccess = true;
+                setTimeout(() => {
+                    this.postSuccess = false;
+                }, 3000);
             }).catch((error) => {
-                console.error(error)
+                this.errorText = error
+                this.postError = true;
+                setTimeout(() => {
+                    this.postError = false;
+                }, 3000);
             })
 
         },
@@ -285,8 +283,16 @@ export default {
                 this.$emit("squeal-posted", this.vip.username);
                 this.resetInputs();
                 console.log(squeal)
+                this.postSuccess = true;
+                setTimeout(() => {
+                    this.postSuccess = false;
+                }, 3000);
             }).catch((error) => {
-                console.error(error)
+                this.errorText = error
+                this.postError = true;
+                setTimeout(() => {
+                    this.postError = false;
+                }, 3000);
             })
 
         },
@@ -297,7 +303,11 @@ export default {
                 console.log(response)
                 await this.postImageOrVideoSqueal("image", response.name);
             }).catch((error) => {
-                console.error(error)
+                this.errorText = error
+                this.postError = true;
+                setTimeout(() => {
+                    this.postError = false;
+                }, 3000);
             })
         },
         async postVideoSqueal() {
@@ -307,15 +317,42 @@ export default {
                 console.log(response)
                 await this.postImageOrVideoSqueal("video", response.name);
             }).catch((error) => {
-                console.error(error)
+                this.errorText = error
+                this.postError = true;
+                setTimeout(() => {
+                    this.postError = false;
+                }, 3000);
             })
         },
 
 
         async postPositionSqueal() {
-            this.$emit("squeal-posted", this.vip.username);
-            this.resetInputs();
-            //TODO
+            const mapChild = this.$refs.mapChild as any;
+            const coordinates = mapChild.getCoordinates();
+            if (coordinates == null) {
+                this.errorText = "Position not selected";
+                this.postError = true;
+                setTimeout(() => {
+                    this.postError = false;
+                }, 3000);
+                return;
+            }
+            const content = `${coordinates[0]} ${coordinates[1]}`
+            postSqueal(this.vip._id, content, this.getRecipients(), "position").then((squeal) => {
+                this.$emit("squeal-posted", this.vip.username);
+                this.resetInputs();
+                mapChild.deletePoint();
+                this.postSuccess = true;
+                setTimeout(() => {
+                    this.postSuccess = false;
+                }, 3000);
+            }).catch((error) => {
+                this.errorText = error
+                this.postError = true;
+                setTimeout(() => {
+                    this.postError = false;
+                }, 3000);
+            })
         },
 
         addTag(type: string) {
@@ -374,7 +411,14 @@ export default {
             required: true
         }
     },
-    watch: {},
+    watch: {
+        vip: {
+            handler: function () {
+                this.isEnough = this.enoughChar();
+            },
+            deep: true
+        },
+    },
     mounted() {
         const tabEl = document.querySelectorAll('#squeal-types-ul button[data-bs-toggle="pill"]');
         tabEl?.forEach(tab => tab.addEventListener('shown.bs.tab', event => {

@@ -2,7 +2,6 @@
 import VipSelector from './gadgets/VipSelector.vue';
 import Characters from './gadgets/Characters.vue';
 import Stats from './gadgets/Stats.vue';
-import { toRaw } from 'vue';
 
 export default {
     components: {
@@ -35,9 +34,9 @@ export default {
         <div class="row m-0">
             <VipSelector :vip_users="user.managed_accounts" @update-vip="updateVip($event)"></VipSelector>
         </div>
-        <hr>
+        <hr class="mt-1">
         <div class="row m-0">
-            <Characters :chars="vip?.char_quota"></Characters>
+            <Characters :chars="vip?.char_quota" :vip="vip"></Characters>
         </div>
         <div class="row m-0  ">
             <Stats :vip="vip" />

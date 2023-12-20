@@ -5,7 +5,6 @@ import Sidemenu from './components/Sidemenu.vue';
 import Overviewmenu from './components/Overviewmenu.vue';
 import { getUser } from "./services/user.service";
 import { getPrices } from "./services/squeal.service";
-import type e from 'cors';
 
 
 export default {
@@ -14,7 +13,7 @@ export default {
     Sidemenu,
     Overviewmenu,
     RouterLink,
-    RouterView
+    RouterView,
   },
   data() {
     return {
@@ -27,10 +26,13 @@ export default {
   methods: {
     async getUser() {
       await getUser().then((response) => {
+        if (response == undefined) {
+        }
         this.user = response;
         return response;
       }).catch((error) => {
         console.log(error);
+        // window.location.href = "/login"; //TODO togli commento
         return error;
       });
     },
@@ -59,7 +61,7 @@ export default {
     },
     async updateChar(username: string) {
       await this.getVip(username);
-    }
+    },
   },
   mounted() {
     this.getUser();
@@ -88,8 +90,9 @@ export default {
       <!-- Menu a destra -->
       <div class="col col-md-4 col-lg-4 p-0 overview-menu elements-height bg-primary">
         <Overviewmenu :user="user" @update-vip="getVip($event)" :vip="vip" />
-
       </div>
+
+
     </div>
   </main>
 </template>
@@ -121,6 +124,10 @@ export default {
   /* Quando lo schermo è più piccolo di 768px, nascondi il menu laterale e mostra il menu alternativo */
   .overview-menu {
     display: none !important;
+  }
+
+  .mobile-overview-menu {
+    display: block !important;
   }
 
   .desktop-menu {
