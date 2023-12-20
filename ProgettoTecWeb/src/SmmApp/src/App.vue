@@ -35,7 +35,7 @@ export default {
         return response;
       }).catch((error) => {
         console.log(error);
-        // window.location.href = "/login"; //TODO togli commento
+        window.location.href = "/login";
         return error;
       });
     },
