@@ -1,7 +1,7 @@
 "use strict";
 //const user = await getModerator();
 //const squeals = await getReports();
-const usernameInput = Document.getElementById('userInput');
+const usernameInput = document.getElementById('userInput');
 const channelInput = document.getElementById('channelInput');
 const squealInput = document.getElementById('squealInput');
 
