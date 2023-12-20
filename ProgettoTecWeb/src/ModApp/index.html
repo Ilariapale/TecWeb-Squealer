@@ -39,6 +39,8 @@
                         type="button" role="tab" aria-controls="nav-users" aria-selected="false">Users</button>
                     <button class="nav-link" id="nav-channels-tab" data-bs-toggle="tab" data-bs-target="#nav-channels"
                         type="button" role="tab" aria-controls="nav-channels" aria-selected="false">Channels</button>
+                        <button class="nav-link" id="nav-requests-tab" data-bs-toggle="tab" data-bs-target="#nav-requests"
+                        type="button" role="tab" aria-controls="nav-requests" aria-selected="false">Requests</button>
                 </div>
             </div>
         </div>
@@ -51,11 +53,12 @@
                 tabindex="0">
                 <div class="row">
                     <div class="col-3"></div>
-                    <div class="input-group col">
-                        <span class="input-group-text" id="basic-addon1">💩Squeals</span>
-                        <input type="text" class="form-control" placeholder="Squeals" aria-label="Squeals"
+                    <form class="input-group col" id="squealInput">
+                        <span class="input-group-text" id="basic-addon1">Squeals</span>
+                        <input type="text" class="form-control" for="squealInput"  placeholder="Squeals" aria-label="Squeals"
                             aria-describedby="basic-addon1">
-                    </div>
+                            <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Submit</button>
+                    </form>
                     <div class="col-3"></div>
                 </div>
                 <div class="row mt-4">
@@ -141,104 +144,217 @@
 
             </div>
             <!-- Users Tab -->
-            <div class="tab-pane" id="nav-users" role="tabpanel" aria-labelledby="nav-users-tab" tabindex="0">
+            <div class="tab-pane" id="nav-users" role="tabpanel" aria-labelledby="nav-users-tab" tabindex="1">
                 <div class="row">
                     <div class="col-3"></div>
-                    <div class="input-group col">
-                        <span class="input-group-text" id="basic-addon1">@Users</span>
-                        <input type="text" class="form-control" placeholder="@Users" aria-label="@Users"
+                    <form class="input-group col" id="userInput">
+                        <span class="input-group-text" id="basic-addon1">@User</span>
+                        <input type="text" class="form-control"  placeholder="@Users" aria-label="@Users"
                             aria-describedby="basic-addon1">
-                    </div>
+                            <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Submit</button>
+                    </form>
                     <div class="col-3"></div>
                 </div>
 
                 <div class="row">
-                    <div class="col-2"></div>
-                    <div class="card mb-3 mt-4 usercard col">
+                    <div class="col"></div>
+                    <div class="card mb-3 mt-4 datacard col-8">
                         <div class="row g-0">
                             <div class="col-md-4">
-                                <img src="./Assets/logo.png" class="img-fluid rounded-start" alt="...">
+                                <img src="./Assets/logo.png" class="img-fluid rounded-start rounded" alt="./Assets/logo.png">
                             </div>
                             <div class="col-md-8">
                                 <div class="card-body">
-                                    <h5 class="card-title">Username</h5>
-                                    <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
-                                    <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+                                    <h3 class="card-title">Username</h3>
+                                    <h5 class="card-body">User Bio</h5>
+                                    <table class="table" aria-label="userData">
+                                        <tbody>
+                                            <tr>
+                                              <th scope="row"><b>Banned</b></th>
+                                              <td>Banned Status <span class="text-end"></span></td>
+                                              <td ><button class="btn btn-danger">BAN USER</button></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row"><b>Account Type</b></th>
+                                                <td>Professional Type</td>
+                                                <td><select class="form-select" aria-label="Default select example">
+                                                    <option selected>CHANGE</option>
+                                                    <option value="standard">Standard</option>
+                                                    <option value="professional">Professional</option>
+                                                    <option value="verified">Verified</option>
+                                                    <option value="moderator" class="text-danger">Moderator</option>
+                                                  </select></td>
+                                            </tr>
+                                            <tr>
+                                              <th scope="row"><b>Professional Type</b></th>
+                                              <td>Professional Type</td>
+                                              <td><select class="form-select" aria-label="Default select example">
+                                                  <option selected>CHANGE</option>
+                                                  <option value="VIP">VIP</option>
+                                                  <option value="SMM">SMM</option>
+                                                  <option value="none">None</option>
+                                                </select></td>
+                                            </tr>
+                                          <tr>
+                                            <th scope="row"><b>Email</b></th>
+                                            <td colspan="2">Email</td>
+                                          </tr>
+                                          <tr>
+                                            <th scope="row"><b>Reaction Metrics</b></th>
+                                            <td colspan="2">Reaction Metrics</td>
+                                          </tr>
+                                          <tr>
+                                            <th scope="row"><b>Char Quota</b></th>
+                                            <td colspan="2">Char Quota</td>
+                                          </tr>
+                                          <tr>
+                                            <th scope="row"><b>Social Media Manager</b></th>
+                                            <td colspan="2">Social Media Manager </td>
+                                          </tr>
+                                          <tr>
+                                            <td colspan="3">
+                                                <div class="accordion accordion-flush" id="accordionFlushExample">
+                                                <div class="accordion-item">
+                                                  <h2 class="accordion-header" id="flush-VIP">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseVIP" aria-expanded="false" aria-controls="flush-collapseVIP">
+                                                      <b>VIPs</b>
+                                                    </button>
+                                                  </h2>
+                                                  <div id="flush-collapseVIP" class="accordion-collapse collapse" aria-labelledby="flush-headingVIP" data-bs-parent="#accordionFlushVIP">
+                                                    <div class="accordion-body">Channel List</div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </td>
+                                          </tr>
+                                          <tr>
+                                            <td colspan="3">
+                                                <div class="accordion accordion-flush" id="accordionFlushExample">
+                                                <div class="accordion-item">
+                                                  <h2 class="accordion-header" id="flush-Owned">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOwned" aria-expanded="false" aria-controls="flush-collapseOwned">
+                                                      <b>Owned Channels</b>
+                                                    </button>
+                                                  </h2>
+                                                  <div id="flush-collapseOwned" class="accordion-collapse collapse" aria-labelledby="flush-headingOwned" data-bs-parent="#accordionFlushOwned">
+                                                    <div class="accordion-body">Channel List</div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3">
+                                                    <div class="accordion accordion-flush" id="accordionFlushExample">
+                                                    <div class="accordion-item">
+                                                      <h2 class="accordion-header" id="flush-Editor">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseEditor" aria-expanded="false" aria-controls="flush-collapseEditor">
+                                                          <b>Editor Channels</b>
+                                                        </button>
+                                                      </h2>
+                                                      <div id="flush-collapseEditor" class="accordion-collapse collapse" aria-labelledby="flush-headingEditor" data-bs-parent="#accordionFlushEditor">
+                                                        <div class="accordion-body">Channel List</div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                      </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-2"></div>
-                </div>
-
-
-                <div class="row mt-4">
-                    <div class="col-8">
-                        <div class="mt-4">
-                            <div class="row p-3">
-
-                                <img class="col-1 p-0 pt-4" alt="Profile Picture" height="100% " src="logo.png" />
-                                <div class="col-auto">
-                                    <h2 class="row ms-2 pt-4">@USERNAME</h2>
-                                    <span class="row ms-2 pb-4 text-secondary">account type</span>
-                                    <i class="bi bi-hourglass ms-2"></i> User since who knows
-                                </div>
-                                <p class="ms-2">profile info</p>
-                                <p class="ms-2">professional type?</p>
-                                <p class="ms-2">email</p>
-                                <p class="ms-2">char quota</p>
-                                <p class="ms-2">reaction metrics</p>
-                                <p class="ms-2">subscribed channels</p>
-                                <p class="ms-2">owned channels</p>
-                                <p class="ms-2">editor channels</p>
-                                <p class="ms-2">managed accounts</p>
-                                <p class="ms-2">muted channels</p>
-                                <p class="ms-2">is active</p>
-                            </div>
-                            <div class="pt-3 ps-2">
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    <div class="col"></div>
+                </div>            
             </div>
             <!-- Channels Tab -->
-            <div class="tab-pane" id="nav-channels" role="tabpanel" aria-labelledby="nav-channels-tab" tabindex="0">
+            <div class="tab-pane" id="nav-channels" role="tabpanel" aria-labelledby="nav-channels-tab" tabindex="2">
                 <div class="row">
                     <div class="col-3"></div>
-                    <div class="input-group col">
-                        <span class="input-group-text" id="basic-addon1">§Channels</span>
-                        <input type="text" class="form-control" placeholder="§Channels" aria-label="§Channels"
+                    <form class="input-group col" id="channelInput">
+                        <span class="input-group-text" id="basic-addon1">§Channel</span>
+                        <input type="text" class="form-control"  placeholder="§Channels" aria-label="§Channels"
                             aria-describedby="basic-addon1">
-                    </div>
+                            <button class="btn btn-outline-secondary"  type="submit" id="button-addon2">Submit</button>
+                    </form>
                     <div class="col-3"></div>
                 </div>
-                <div class="row mt-4">
-                    <div class="col-8">
+                
 
-
-                        <div class="mt-4 sticky-top">
-                            <div class="row p-3 ">
-                                <div class="col-auto">
-                                    <h1 class="row">Channel name</h1>
+                        <div class="row">
+                            <div class="col"></div>
+                                <div class="card datacard mb-3 mt-4 col-8">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-6">
+                                            <h4 class="card-title">Channel name </h4>
+                                            </div>
+                                            <div class="col">
+                                                <h4>Owner: Username <button  class="btn btn-danger">Remove</button></h4>
+                                            </div>
+                                        </div>
+                                        <div class="card-subtitle mb-3">Online Since</div>
+                                        <div class="row card-text mb-4">
+                                            <div class="col">
+                                            <h6 class="card-title">Channel Description </h6>
+                                            </div>
+                                            <div class="col-6">
+                                                <h6><button class="btn btn-danger">Delete Channel</button></h6>
+                                            </div>
+                                        </div>
+                                     <div class="row mt-2">
+                                        <div class="col-6 justify-content-center">
+                                            Channel Editors
+                                        </div>
+                                        <div class="col-6 justify-content-center">
+                                            Channel Subscribers
+                                        </div>
+                                     </div>
+                                    </div>
                                 </div>
-                                <span class="col d-flex flex-row-reverse">
+                        
+                            <div class="col"></div>
+                        </div>
+                
+            </div>
 
-                            </div>
-                            <div class="pt-3 ps-2">
-                                <i class="bi bi-hourglass"></i> Online since a lot of time
-                                <p class="">Channel description</p>
-                                <p class="">Channel owner</p>
-                                <p class="">Channel editors</p>
-                                <p class="">Channel subscribers</p>
-                                <p class="">Channel muted status</p>
-                                <p class="">Channel blocked status</p>
+            <!-- Request Tab -->
+            <div class="tab-pane" id="nav-requests" role="tabpanel" aria-labelledby="nav-requests-tab" tabindex="3">
+                
+                <div class="tab-pane" id="nav-users" role="tabpanel" aria-labelledby="nav-users-tab" tabindex="1">
+                    
+                    <div class="row"><div class="col-4"></div><div class="col"><h3 class="text-center">Request List</h3></div><div class="col-4"></div></div>
+                    <div class="row mt-5">
+                        <div class="col-3"></div>
+                        <div class="card mb-3 mt-4 datacard col">
+                            <div class="row g-0">
+                                <div class="col-md-4 align-items-center d-flex">
+                                    <img src="./Assets/logo.png" class="img-fluid rounded-start propic " alt="./Assets/logo.png">
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Username</h6>
+                                        <h5 class="card-body">Old Type <i class="bi bi-arrow-right"></i> New Type</h5>                                        
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <button class="btn btn-success">ACCEPT</button>
+                                        </div>
+                                        <div class="col-6">
+                                            <button class="btn btn-danger">DECLINE</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        <div class="col-3"></div>
 
-
-                    </div>
+                    </div>            
                 </div>
+                
             </div>
         </div>
 

@@ -25,7 +25,12 @@ main {
     height: 500px;
 }
 
-.usercard{
+.propic {
+    width: 100px;
+    height: 100px;
+}
+
+.datacard{
     width: 80vw;
 }
 
