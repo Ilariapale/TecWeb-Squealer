@@ -125,7 +125,7 @@ export default {
                     <i class="bi bi-person-fill  m-0"></i>
                 </p>
             </li>
-            <li v-if="vip.username" class="nav-item nav-link  border-bottom" data-bs-toggle="pill"
+            <li v-if="vip.username" class="nav-item nav-link border-bottom" data-bs-toggle="pill"
                 data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home" aria-selected="false">
                 <p :href="'profile/' + vip.username" class="nav-link py-3 text-white">
                     <i class="bi bi-arrow-90deg-left  m-0"></i>

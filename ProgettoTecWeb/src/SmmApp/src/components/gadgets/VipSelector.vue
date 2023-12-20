@@ -12,7 +12,6 @@
 
 <script lang=ts>
 import { getUsername } from '@/services/user.service';
-import { toRaw } from 'vue';
 
 
 export default {
@@ -27,10 +26,10 @@ export default {
             this.selected_vip = event.target.value;
             this.$emit('update-vip', event.target.value);
         },
-        async getUsernames(val: any) {
+        async getUsernames(vips_ids: any) {
             this.usernames = [];
-            for (let i = 0; i < val.length; i++) {
-                await getUsername(val[i]).then((response) => {
+            for (let i = 0; i < vips_ids.length; i++) {
+                await getUsername(vips_ids[i]).then((response) => {
                     this.usernames.push(response.username);
                 }).catch((error) => {
                     console.log(error);
@@ -48,8 +47,9 @@ export default {
     },
     watch: {
         vip_users: {
-            handler: async function (val: any) {
-                this.getUsernames(val);
+            handler: async function (vips_ids: any) {
+                await this.getUsernames(vips_ids);
+                this.$emit('update-vips-array', this.usernames);
             },
             deep: true
         }

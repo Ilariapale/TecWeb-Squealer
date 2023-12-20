@@ -5,6 +5,7 @@ import Sidemenu from './components/Sidemenu.vue';
 import Overviewmenu from './components/Overviewmenu.vue';
 import { getUser } from "./services/user.service";
 import { getPrices } from "./services/squeal.service";
+import MobileVipSelector from './components/gadgets/MobileVipSelector.vue';
 
 
 export default {
@@ -14,13 +15,15 @@ export default {
     Overviewmenu,
     RouterLink,
     RouterView,
+    MobileVipSelector
   },
   data() {
     return {
       user: {},
       vip: {},
       prices: {},
-      char_spent: 0
+      char_spent: 0,
+      vips_usermames: []
     }
   },
   methods: {
@@ -62,6 +65,10 @@ export default {
     async updateChar(username: string) {
       await this.getVip(username);
     },
+    updateVipsArray(vips: any) {
+      this.vips_usermames = vips;
+    },
+
   },
   mounted() {
     this.getUser();
@@ -84,12 +91,17 @@ export default {
 
       <!-- Contenuto centrale scrollabile -->
       <div class="col col-md-5 col-lg-6 dashboard elements-height p-0">
-        <RouterView :prices="prices" :user="user" :vip="vip" @squeal-posted="updateChar($event)" />
+        <RouterView :prices="prices" :user="user" :vip="vip" @squeal-posted="updateChar($event)"
+          @update-vips-array="updateVipsArray($event)" />
       </div>
 
       <!-- Menu a destra -->
       <div class="col col-md-4 col-lg-4 p-0 overview-menu elements-height bg-primary">
         <Overviewmenu :user="user" @update-vip="getVip($event)" :vip="vip" />
+      </div>
+
+      <div class="mobile-overview-menu">
+        <MobileVipSelector :vips_usernames="vips_usermames"></MobileVipSelector>
       </div>
 
 
@@ -116,6 +128,10 @@ export default {
 }
 
 .mobile-menu {
+  display: none !important;
+}
+
+.mobile-overview-menu {
   display: none !important;
 }
 

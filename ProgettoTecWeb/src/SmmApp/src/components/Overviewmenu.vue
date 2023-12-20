@@ -13,6 +13,9 @@ export default {
         updateVip(vip: any) {
             this.$emit('update-vip', vip);
         },
+        updateVipsArray(vips: any) {
+            this.$emit('update-vips-array', vips);
+        },
     },
     props: {
         user: {
@@ -30,9 +33,10 @@ export default {
 </script>
 
 <template>
-    <div class=" unselectable col px-3 pt-3 ">
+    <div class="unselectable col px-3 pt-3">
         <div class="row m-0">
-            <VipSelector :vip_users="user.managed_accounts" @update-vip="updateVip($event)"></VipSelector>
+            <VipSelector :vip_users="user.managed_accounts" @update-vip="updateVip($event)"
+                @update-vips-array="updateVipsArray($event)"></VipSelector>
         </div>
         <hr class="mt-1">
         <div class="row m-0">
