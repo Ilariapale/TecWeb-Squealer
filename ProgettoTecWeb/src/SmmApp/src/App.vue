@@ -20,7 +20,8 @@ export default {
     return {
       user: {},
       vip: {},
-      prices: {}
+      prices: {},
+      char_spent: 0
     }
   },
   methods: {
@@ -55,7 +56,9 @@ export default {
         console.log(error);
         return error;
       });
-
+    },
+    async updateChar(username: string) {
+      await this.getVip(username);
     }
   },
   mounted() {
@@ -68,19 +71,18 @@ export default {
 
 </script>
 
-
 <template>
   <HeaderSMM />
   <main class="container-fluid">
     <div class="row">
       <!-- Menu a sinistra -->
       <div class="col col-auto col-md-3 col-lg-2 p-0">
-        <Sidemenu :user="user" />
+        <Sidemenu :user="user" :vip="vip" />
       </div>
 
       <!-- Contenuto centrale scrollabile -->
       <div class="col col-md-5 col-lg-6 dashboard elements-height p-0">
-        <RouterView :prices="prices" :user="user" :vip="vip" />
+        <RouterView :prices="prices" :user="user" :vip="vip" @squeal-posted="updateChar($event)" />
       </div>
 
       <!-- Menu a destra -->

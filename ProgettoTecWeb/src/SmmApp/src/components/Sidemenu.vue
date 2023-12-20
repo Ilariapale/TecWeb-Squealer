@@ -11,6 +11,10 @@ export default {
             type: Object,
             required: true
         },
+        vip: {
+            type: Object,
+            required: true
+        },
     },
     methods: {
         logout() {
@@ -27,7 +31,7 @@ export default {
 </script>
 
 <template>
-    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark elements-height desktop-menu">
+    <div class="d-flex flex-column flex-shrink-0 p-3 unselectable text-white bg-dark elements-height desktop-menu">
         <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
             <svg class="bi me-2" width="40" height="32">
             </svg>
@@ -64,11 +68,12 @@ export default {
                     Messages
                 </RouterLink>
             </li>
-            <li class="nav-item nav-link " data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab"
-                aria-controls="v-pills-profile" aria-selected="false">
-                <a href="/profile/ilapale" class="nav-link text-white">
+            <li v-if="vip.username != undefined" class="nav-item nav-link " data-bs-toggle="pill"
+                data-bs-target="#v-pills-profile" type="button" role="tab" aria-controls="v-pills-profile"
+                aria-selected="false">
+                <a :href="'/profile/' + vip.username" class="nav-link text-white">
                     <i class="bi bi-arrow-90deg-left"></i>
-                    User website
+                    User website {{ vip.username }}
                 </a>
             </li>
         </ul>

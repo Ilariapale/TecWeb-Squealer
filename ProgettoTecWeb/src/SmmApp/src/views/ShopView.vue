@@ -72,7 +72,7 @@ export default {
 </script>
 
 <template>
-    <div class="content mx-4" role="main">
+    <div class="content unselectable mx-4" role="main">
         <div class="mt-4">
             <div class="row p-3 ">
 

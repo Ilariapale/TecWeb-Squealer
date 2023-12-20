@@ -85,17 +85,24 @@ app.use(express.static("public"));
 
 require("./routes")(app);
 
-//Angular app -------------------
 console.log("dirname: " + __dirname);
+
 app.use(express.static(__dirname + "/public/dist/mobile-app"));
 app.use(express.static(__dirname + "/public/dist/smm-dashboard"));
+app.use(express.static(__dirname + "/public/dist/mod-dashboard"));
+
+//Vue app -----------------------
 app.get(["/smm-dashboard", "/smm-dashboard/*"], (req, res) => {
   res.sendFile(path.join(__dirname, "/public/dist/smm-dashboard/index.html"));
 });
+//Js app ------------------------
+app.get("/mod-dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "/public/dist/mod-dashboard/index.html"));
+});
+//Angular app -------------------
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "/public/dist/mobile-app/index.html"));
 });
-//End angular app ---------------
 
 // catch 404
 app.use((req, res, next) => {

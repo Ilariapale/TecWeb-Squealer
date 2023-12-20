@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <nav class="navbar navbar-dark bg-dark sticky-top">
+  <nav class="navbar unselectable navbar-dark bg-dark sticky-top">
     <div class="container-fluid display d-flex justify-content-center">
       <span>Dashboard</span>
       <a class="navbar-brand title" href="#">

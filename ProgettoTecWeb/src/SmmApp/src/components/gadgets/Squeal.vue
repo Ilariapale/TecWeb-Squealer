@@ -64,7 +64,7 @@ export default {
 <template>
     <div class="container text-dark py-3">
         <div class="row justify-content-center">
-            <div class="col-10">
+            <div class="col-10 col-md-8">
                 <div class="squeal card text-center shadow-0">
 
                     <div class="card-header">
@@ -87,9 +87,10 @@ export default {
                         <p v-if="squeal.content_type == 'text'" class="card-text">
                             {{ squeal.content }}</p>
                         <div class="card-img-top ">
-                            <img v-if="squeal.content_type == 'image'" :src="squeal.content" class="img-fluid" alt="...">
+                            <img v-if="squeal.content_type == 'image'" :src="'/../media/image/' + squeal.content"
+                                class="img-fluid" alt="...">
                             <div v-if="squeal.content_type == 'video'" class="ratio ratio-16x9">
-                                <iframe :src="squeal.content" allowfullscreen></iframe>
+                                <iframe :src="'/../media/video/' + squeal.content" allowfullscreen></iframe>
                             </div>
                             <p v-if="squeal.content_type == 'position'" class="card-text">
                                 [position]

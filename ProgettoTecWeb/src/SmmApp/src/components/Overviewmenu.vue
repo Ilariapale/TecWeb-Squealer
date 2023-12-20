@@ -23,7 +23,7 @@ export default {
         vip: {
             type: Object,
             required: true
-        }
+        },
     },
 }
 
@@ -31,7 +31,7 @@ export default {
 </script>
 
 <template>
-    <div class=" col px-3 pt-3 ">
+    <div class=" unselectable col px-3 pt-3 ">
         <div class="row m-0">
             <VipSelector :vip_users="user.managed_accounts" @update-vip="updateVip($event)"></VipSelector>
         </div>

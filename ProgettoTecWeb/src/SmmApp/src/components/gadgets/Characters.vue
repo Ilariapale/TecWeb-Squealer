@@ -80,7 +80,8 @@ export default {
         chars: {
             type: Object,
             required: true
-        }
+        },
+
     },
 }
 </script>

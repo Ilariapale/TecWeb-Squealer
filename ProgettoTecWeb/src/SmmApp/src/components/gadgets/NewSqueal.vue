@@ -1,5 +1,6 @@
 <template>
-    <form @submit.prevent="postSqueal">
+    <button class="btn btn-danger" @click="resetInputs">Press here</button>
+    <form @submit.prevent="postSqueal" id="newSquealForm">
         <ul class="nav justify-content-center nav-pills mb-3 " role="tablist" id="squeal-types-ul">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active text-white" id="pills-text-squeal-tab" data-bs-toggle="pill"
@@ -28,7 +29,7 @@
             <div class="tab-pane fade show justify-content-center active mb-2 col-8 conta" id="pills-text-squeal"
                 role="tabpanel" aria-labelledby="pills-text-squeal-tab" tabindex="0">
                 <!-- text squeal -->
-                <textarea v-model="squeal_input" class="form-control p-4 py-3" id="newSquealForm" rows="3"
+                <textarea v-model="squeal_input" class="form-control p-4 py-3" id="newSquealFormText" rows="3"
                     @input="updateCharacterCount"></textarea>
                 <small class="position-absolute end-2 p-1 topright"
                     :class="{ 'text-danger': !isEnough, 'text-primary': isEnough }"><b>{{
@@ -61,10 +62,12 @@
                 <MapVue></MapVue>
                 <!-- fine position squeal -->
             </div>
-            <label for="newSquealForm" class="form-label">New Squeal</label>
-            <div class="pb-3">
+            <label for="newSquealFormText" class="form-label">New Squeal</label>
+            <div class="pb-1">
                 <button :disabled='!isEnough' type="submit" class="btn btn-primary ">Submit</button>
             </div>
+            <div v-if="postSuccess" class="text-success pb-2">Post send correctly!</div>
+            <div v-if="postError" class="text-danger pb-2">Something went wrong</div>
         </div>
 
         <div id="recipientsDiv" class="row justify-content-center tab-content pb-3">
@@ -168,13 +171,18 @@ import { postSqueal } from '@/services/squeal.service';
 import { postImage, postVideo } from '@/services/media.service';
 
 //TODO dare feedback quando si posta un squeal
-//TODO togliere l'immagine dall'input dopo averla postata
-//TODO ridurre il numero di caratteri disponibili quando si posta un squeal
 export default {
     setup() {
         const image = ref<File | null>();
         const video = ref<File | null>();
         const form = ref<HTMLFormElement>();
+
+        let imageInput = ref<HTMLInputElement>(null as unknown as HTMLInputElement);
+        let videoInput = ref<HTMLInputElement>(null as unknown as HTMLInputElement);
+        let price = 0;
+
+        let postSuccess = ref<boolean>(false);
+        let postError = ref<boolean>(false);
 
         const tags = ref<{ [key: string]: string[] }>({
             "user": [],
@@ -190,15 +198,15 @@ export default {
         let currentTab = ref<string>('text');
 
         function handleImageChange($event: Event) {
-            const target = $event.target as HTMLInputElement;
-            if (target && target.files) {
-                image.value = target.files[0];
+            imageInput = ref($event.target as HTMLInputElement);
+            if (imageInput && imageInput.value.files) {
+                image.value = imageInput.value.files[0];
             }
         }
         function handleVideoChange($event: Event) {
-            const target = $event.target as HTMLInputElement;
-            if (target && target.files) {
-                video.value = target.files[0];
+            videoInput = ref($event.target as HTMLInputElement);
+            if (videoInput && videoInput.value.files) {
+                video.value = videoInput.value.files[0];
             }
         }
         async function saveImage() {
@@ -222,6 +230,11 @@ export default {
             tagInput,
             image,
             video,
+            price,
+            imageInput,
+            videoInput,
+            postSuccess,
+            postError,
         }
     },
     data() {
@@ -230,10 +243,18 @@ export default {
             charCount: 0,
             isEnough: true,
             positionData: null,
-
         };
     },
     methods: {
+        //lò,òl
+        resetInputs() {
+            const myForm = document.getElementById("newSquealForm") as HTMLFormElement;
+            myForm.reset();
+            this.squeal_input = "";
+            this.charCount = 0;
+            this.updateCharacterCount()
+            //TODO aggiungere reset della posizione
+        },
 
         async postSqueal() {
             this.getRecipients();
@@ -251,7 +272,9 @@ export default {
         async postTextSqueal() {
             const recipients = this.getRecipients();
             postSqueal(this.vip._id, this.squeal_input, recipients, "text").then((squeal) => {
+                this.$emit("squeal-posted", this.vip.username);
                 console.log(squeal)
+                this.resetInputs();
             }).catch((error) => {
                 console.error(error)
             })
@@ -259,6 +282,8 @@ export default {
         },
         async postImageOrVideoSqueal(type: "image" | "video", content: string = "") {
             postSqueal(this.vip._id, content, this.getRecipients(), type).then((squeal) => {
+                this.$emit("squeal-posted", this.vip.username);
+                this.resetInputs();
                 console.log(squeal)
             }).catch((error) => {
                 console.error(error)
@@ -288,7 +313,9 @@ export default {
 
 
         async postPositionSqueal() {
-
+            this.$emit("squeal-posted", this.vip.username);
+            this.resetInputs();
+            //TODO
         },
 
         addTag(type: string) {
@@ -325,15 +352,14 @@ export default {
         enoughChar() {
             console.log(this.vip.char_quota)
             console.log("prices", this.prices)
-            let price;
             if (this.prices == null || !this.vip.char_quota) return false;
-            if (this.currentTab == "text") price = this.charCount;
-            else if (this.currentTab == "image") price = this.prices?.image_squeal;
-            else if (this.currentTab == "video") price = this.prices?.video_squeal;
-            else if (this.currentTab == "position") price = this.prices?.position_squeal;
-            const enoughDaily = price <= this.vip.char_quota.daily + this.vip.char_quota.extra_daily;
-            const enoughWeekly = price <= this.vip.char_quota.weekly + this.vip.char_quota.extra_daily;
-            const enoughMonthly = price <= this.vip.char_quota.monthly + this.vip.char_quota.extra_daily;
+            if (this.currentTab == "text") this.price = this.charCount;
+            else if (this.currentTab == "image") this.price = this.prices?.image_squeal;
+            else if (this.currentTab == "video") this.price = this.prices?.video_squeal;
+            else if (this.currentTab == "position") this.price = this.prices?.position_squeal;
+            const enoughDaily = this.price <= this.vip.char_quota.daily + this.vip.char_quota.extra_daily;
+            const enoughWeekly = this.price <= this.vip.char_quota.weekly + this.vip.char_quota.extra_daily;
+            const enoughMonthly = this.price <= this.vip.char_quota.monthly + this.vip.char_quota.extra_daily;
             const atLeastOne = this.vip.char_quota.daily > 0 || this.vip.char_quota.weekly > 0 || this.vip.char_quota.monthly > 0;
             return enoughDaily && enoughWeekly && enoughMonthly && atLeastOne;
         },
