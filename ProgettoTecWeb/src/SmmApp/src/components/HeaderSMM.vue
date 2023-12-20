@@ -14,4 +14,8 @@
   </nav>
 </template>
 
-<style scoped></style>
+<style scoped>
+a:not(:hover).title {
+  border-radius: 10px;
+}
+</style>

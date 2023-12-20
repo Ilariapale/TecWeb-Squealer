@@ -42,11 +42,10 @@ body {
 }
 
 
-a,
-.green {
+a {
   text-decoration: none;
   color: rgba(235, 235, 235, 0.64);
-  transition: 0.4s;
+  transition: 0.5s;
   padding: 3px;
 }
 
@@ -93,9 +92,22 @@ button:not(.active).text-white {
   user-select: none;
 }
 
+#menu-desktop li:hover {
+  background-color: #fed47217;
+
+}
+
+#menu-desktop li {
+  margin-bottom: 4px !important
+}
+
+#stats-card button:hover {
+  background-color: #bea97cd0;
+}
+
 @media (hover: hover) {
   a:hover.title {
     background-color: #fed4723a;
-    border-radius: 15px;
+    border-radius: 20px;
   }
 }

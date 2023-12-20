@@ -1,5 +1,5 @@
 <template>
-    <div class="card mb-2 stats h-auto">
+    <div class="card mb-2 stats h-auto" id="stats-card">
         <div class="card-body p-2">
             <ul class="nav nav-pills mb-2" id="pills-tab" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -231,6 +231,8 @@ export default {
 .stats {
     height: 40vh;
 }
+
+
 
 .nav-item {
     padding-right: 8px !important;

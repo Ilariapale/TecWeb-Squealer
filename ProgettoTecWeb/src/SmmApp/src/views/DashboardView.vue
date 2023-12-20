@@ -42,9 +42,13 @@ export default {
         },
         squealPosted(event: Event) {
             this.$emit("squeal-posted", event);
-        }
+        },
     },
     mounted() {
+        let squealsArray = this.vip?.squeals?.posted || [];
+        this.squeals = squealsArray.slice().reverse();
+        this.showedSqueals = this.squeals.slice(0, 10);
+        this.showLoadMore = this.squeals.length > 10;
     },
     watch: {
         vip: {
@@ -63,14 +67,17 @@ export default {
 </script>
 <template>
     <div class="container unselectable text-center col">
-        <h1 class="row justify-content-center">Dashboard</h1>
-        <div v-if="vip" class="row justify-content-center">
+        <h1><i class="bi bi-house-door"></i> Dashboard</h1>
+        <div v-if="vip.username" class="row justify-content-center">
             <h3>{{ vip?.username }}</h3>
             <i class="bi bi-plus-circle-fill clickable h4" data-bs-toggle="collapse" href="#newSqueal" role="button"
                 aria-expanded="false" aria-controls="newSqueal"></i>
             <NewSquealVue :prices="prices" :vip=vip class="collapse" id="newSqueal" @squeal-posted="squealPosted($event)">
             </NewSquealVue>
             <!--loadmore button-->
+        </div>
+        <div v-else class="row justify-content-center">
+            <div class="text-muted"><i class="bi bi-info-circle-fill"></i> Select a user to view squeals</div>
         </div>
     </div>
 
