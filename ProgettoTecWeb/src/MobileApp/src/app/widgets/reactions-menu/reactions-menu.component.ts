@@ -7,21 +7,33 @@ import { SquealsService } from 'src/app/services/api/squeals.service';
   styleUrls: ['./reactions-menu.component.css'],
 })
 export class ReactionsMenuComponent {
+  @Input() alreadyReacted: Boolean = false;
   @Input() squealId: string = '0';
   isMouseOver = false;
   isMenuClosing = false;
+  menu_opened: Boolean = false;
+  imageUrl = './../../../assets/imgs/reactionsBW.png';
 
   constructor(private squealService: SquealsService) {}
-  //TODO mostrare il numero di reaction di ogni tipo quando si apre lo squeal in una pagina dedicata
+  ngOnInit() {
+    if (this.alreadyReacted) {
+      this.imageUrl = './../../../assets/imgs/reactionsCOLORS.png';
+    }
+  }
+  ngOnChanges() {
+    if (this.alreadyReacted) {
+      this.imageUrl = './../../../assets/imgs/reactionsCOLORS.png';
+    }
+  }
   addReaction(reaction: string, event: Event) {
     event.preventDefault();
     this.squealService.addReaction(reaction, this.squealId).then(
       (response: any) => {
-        console.log('OK REACTION AGGIUNTA');
-        console.log(response);
+        this.menu_opened = false;
+        this.alreadyReacted = true;
+        this.imageUrl = './../../../assets/imgs/reactionsCOLORS.png';
       },
       (error: any) => {
-        console.log('REACTION NON AGGIUNTA');
         console.log(error);
       }
     );

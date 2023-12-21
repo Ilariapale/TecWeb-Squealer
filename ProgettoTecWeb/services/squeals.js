@@ -1066,7 +1066,7 @@ module.exports = {
       }
     }
     pipeline.push({ $limit: pag_size });
-    //console.log(pipeline);
+    console.log(pipeline);
     //execute the query
     const data = await Squeal.aggregate(pipeline).exec();
 

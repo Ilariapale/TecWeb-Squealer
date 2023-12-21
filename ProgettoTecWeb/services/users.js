@@ -977,6 +977,7 @@ module.exports = {
       const newRequest = new Request({
         user_id: reqSender._id,
         account_type: account_type,
+        profile_picture: reqSender.profile_picture,
         created_at: Date.now(),
         username: reqSender.username,
         type: account_type,
@@ -1099,8 +1100,6 @@ module.exports = {
 
   getSMMRequestList: async (options) => {
     const { user_id } = options;
-    console.log(user_id);
-    console.log(options);
     //check if the request sender exists
     let response = await findUser(user_id);
     if (response.status >= 300) {
@@ -1143,6 +1142,36 @@ module.exports = {
     return {
       status: 200,
       data: VIPRequestsList,
+    };
+  },
+  //TODO quando uno user viene cancellato le sue richieste devono essere cancellate
+  getModRequestList: async (options) => {
+    const { user_id } = options;
+    console.log(user_id);
+    console.log(options);
+    //check if the request sender exists
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: `'user_id' in token is not valid.` },
+      };
+    }
+    const reqSender = response.data;
+
+    //check if the reqSender is a VIP
+    if (reqSender.account_type !== "moderator") {
+      return {
+        status: 403,
+        data: { error: `You are not a Moderator.` },
+      };
+    }
+    const requests = await Request.find();
+
+    return {
+      status: 200,
+      data: requests,
     };
   },
 
@@ -1982,7 +2011,8 @@ module.exports = {
 
     const isThemselves = user.username == reqSender.username;
     const isModerator = reqSender.account_type === "moderator";
-    const isSMM = reqSender.account_type === "professional" && reqSender.professional_type === "SMM" && reqSender.managed_accounts.includes(identifier);
+    console.log(reqSender.account_type, reqSender.professional_type, reqSender.managed_accounts, identifier);
+    const isSMM = reqSender.account_type === "professional" && reqSender.professional_type === "SMM" && reqSender.managed_accounts.includes(user._id);
 
     if (!isThemselves && !isModerator && !isSMM) {
       //caso qualcuno che vuole updateare il profilo di un altro utente

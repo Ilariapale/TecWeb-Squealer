@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, Input } from '@angular/core';
+import { Component, AfterViewInit, Input } from '@angular/core';
 import * as ol from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
@@ -12,16 +12,14 @@ import { PositionService } from 'src/app/services/position.service';
 import LineString from 'ol/geom/LineString';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
-import { last } from 'rxjs';
 //TODO quando c'è l'itinerario, inquadrare l'ultima posizione
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css'],
 })
-export class MapComponent implements OnInit, AfterViewInit {
+export class MapComponent implements AfterViewInit {
   private updateIntervalId: any;
-  private updateIntervalTime = 5000; // 5 secondi
   map: ol.Map | undefined;
   userPosition: [number, number] = [0, 0]; // [lon, lat]
   RomePosition: [number, number] = [12.51133, 41.89193]; // [lon, lat]
@@ -35,7 +33,6 @@ export class MapComponent implements OnInit, AfterViewInit {
   popup_my_position: Overlay | undefined;
 
   constructor(private positionService: PositionService) {}
-  ngOnInit() {}
 
   ngAfterViewInit(): void {
     this.convertCoordinates();
@@ -43,8 +40,6 @@ export class MapComponent implements OnInit, AfterViewInit {
       this.startPostion = [this.lng, this.lat];
     } else if (this.itinerary.length > 0) {
       this.startPostion = this.itinerary[this.itinerary.length - 1];
-      console.log(this.itinerary);
-      //this.userPosition = this.itinerary[this.itinerary.length - 1];
     } else {
       this.startPostion = this.RomePosition;
     }
@@ -59,7 +54,6 @@ export class MapComponent implements OnInit, AfterViewInit {
         center: fromLonLat(this.startPostion),
         zoom: 8,
       }),
-      // ...
 
       controls: defaultControls().extend([
         new Control({
@@ -77,11 +71,6 @@ export class MapComponent implements OnInit, AfterViewInit {
       popup.setPosition(fromLonLat(this.userPosition));
       this.map?.addOverlay(popup);
     }
-
-    // this.updateIntervalId = setInterval(() => {
-    //   this.updateUserPosition();
-    // }, this.updateIntervalTime);
-
     const itineraryLayer = new VectorLayer({
       source: new VectorSource({
         features: [new ol.Feature(new LineString(this.itinerary.map((coord) => fromLonLat(coord))))],
@@ -136,7 +125,6 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   handleLocate() {
     if (this.popup_my_position != undefined) {
-      console.log(this.popup_my_position);
       this.map?.removeOverlay(this.popup_my_position);
       this.popup_my_position.getElement()?.remove();
     }
@@ -152,7 +140,7 @@ export class MapComponent implements OnInit, AfterViewInit {
         this.map?.addOverlay(this.popup_my_position);
       },
       (error) => {
-        alert("Impossibile ottenere la posizione dell'utente.");
+        alert('Error while getting the user position.');
       }
     );
   }

@@ -1,23 +1,15 @@
 import { Component, Output, Input, EventEmitter, ViewChild, ElementRef } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from 'src/app/services/user.service';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { User } from 'src/app/models/user.interface';
 import { ContentType, Recipients } from 'src/app/models/squeal.interface';
 import { TagInputComponent } from '../tag-input/tag-input.component';
-import { firstValueFrom } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { Router } from '@angular/router';
 import { MediaService } from 'src/app/services/api/media.service';
-import { View } from 'ol';
-import { response } from 'express';
 import { MapComponent } from '../map/map.component';
-import { io } from 'socket.io-client';
 import { PositionService } from 'src/app/services/position.service';
-//TODO fixare il bug che quando switcho alla tab della posizione e torno indietro non mi da i caratteri extra indietro
-//TODOfare in modo che quando scrivo un recipient nel form questo si stilizzi
-//TODO mettere l'immagine del profilo
 @Component({
   selector: 'app-squeal-form',
   templateUrl: './squeal-form.component.html',
@@ -41,6 +33,8 @@ export class SquealFormComponent {
   squealSubmitted: EventEmitter<any> = new EventEmitter();
   @Input() user!: User;
   userFromSessionStorage!: User;
+
+  extra_chars: number = 0;
 
   request_outcome: boolean = true;
 
@@ -102,7 +96,6 @@ export class SquealFormComponent {
 
   constructor(
     private formBuilder: FormBuilder,
-    private http: HttpClient,
     public userService: UserService,
     private squealsService: SquealsService,
     private darkModeService: DarkModeService,
@@ -120,6 +113,7 @@ export class SquealFormComponent {
         this.char_left.weekly = this.userFromSessionStorage?.char_quota?.weekly ?? 0;
         this.char_left.monthly = this.userFromSessionStorage?.char_quota?.monthly ?? 0;
         this.char_left.extra_daily = this.userFromSessionStorage?.char_quota?.extra_daily ?? 0;
+        this.extra_chars = this.char_left.extra_daily;
       }
     }
   }
@@ -128,7 +122,6 @@ export class SquealFormComponent {
     this.squealForm = this.formBuilder.group({
       text: ['', Validators.required],
     });
-    console.log(this.user, this.userFromSessionStorage);
     if (this.user && this.user.char_quota) {
       this.isGuest = false;
       this.char_left.daily = this.user.char_quota.daily;
@@ -140,8 +133,6 @@ export class SquealFormComponent {
 
   onInput(value?: number) {
     this.adjustTextareaHeight();
-    //TODO quando hai 0 caratteri in uno dei campi, non puoi più scrivere
-
     const currentLength = this.squealForm.value.text?.length ?? 0;
     const previousLength = this.lastLength;
 
@@ -169,11 +160,16 @@ export class SquealFormComponent {
       this.enoughChars = true;
     }
 
+    if (value) {
+      this.char_left.extra_daily =
+        -difference > this.extra_chars ? this.extra_chars : this.char_left.extra_daily + difference;
+    }
+    this.char_left.extra_daily = Math.min(this.char_left.extra_daily, this.extra_chars);
     if (this.user.char_quota) {
       this.user.char_quota.daily = Math.max(this.char_left.daily, 0);
       this.user.char_quota.weekly = Math.max(this.char_left.weekly, 0);
       this.user.char_quota.monthly = Math.max(this.char_left.monthly, 0);
-      this.user.char_quota.extra_daily = Math.max(this.char_left.extra_daily, 0);
+      this.user.char_quota.extra_daily = Math.max(Math.min(this.char_left.extra_daily, this.extra_chars), 0);
     }
   }
 
@@ -236,18 +232,12 @@ export class SquealFormComponent {
   createTextSqueal() {
     if (this.squealForm.valid) {
       this.getRecipients();
-      //console.log(this.recipients);
-      // Invia il nuovo squeal al tuo backend o a un servizio API
       const squeal_content = this.squealForm.value.text;
-      //console.log('Nuovo squeal:', squealText);
-      console.log('is_scheduled = ', this.is_scheduled);
-      console.log('this.selectedDelayedSquealTypeValue = ', this.selectedDelayedSquealTypeValue);
       const schedule_options = {
         tick_rate: this.getTickRate(),
         repeat: this.getRepeat(),
         scheduled_date: this.getDate(),
       };
-      console.log(schedule_options, this.is_scheduled, this.selectedDelayedSquealTypeValue, schedule_options);
       this.squealsService
         .postSqueal(
           squeal_content,
@@ -258,7 +248,6 @@ export class SquealFormComponent {
           schedule_options
         )
         .then((response: any) => {
-          console.log('Success:', response);
           //this.squealSubmitted.emit(response);
           this.userService.setUserData(this.user);
           sessionStorage.getItem('user')
@@ -271,32 +260,29 @@ export class SquealFormComponent {
           this.keywordsComponent.removeAllTags();
           this.postResponse = 'Text squeal posted successfully!';
           this.showSquealPostResponse = true;
-          this.request_outcome = false;
+          this.request_outcome = true;
+          this.extra_chars = this.char_left.extra_daily;
         })
         .catch((error: any) => {
           console.log(error);
-          console.log(error.error);
           this.postResponse = error.error.error;
           this.request_outcome = false;
+          this.showSquealPostResponse = true;
           // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
-          // Gestisci il caso in cui il form non sia valido
-          const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
+          const element = document.querySelector('.squeal-form-text');
           if (element) {
-            console.log(element);
-            element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
+            element.classList.add('vibrating-error');
             setTimeout(() => {
-              element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
+              element.classList.remove('vibrating-error');
             }, 500);
           }
         });
     } else {
-      // Gestisci il caso in cui il form non sia valido
       console.log('Form non valido');
     }
   }
   createImageSqueal() {
     this.getRecipients();
-    //console.log(this.recipients);
 
     const imageInputElement = this.imageInput.nativeElement;
 
@@ -306,13 +292,9 @@ export class SquealFormComponent {
           imageInputElement.value = null;
 
           const imageName = response.name;
-          //TODO
-          console.log('Nuovo squeal:', imageName);
           this.squealsService
             .postSqueal(imageName, this.recipients, this.selectedType)
             .then((response: any) => {
-              console.log('Success:', response);
-              //this.squealSubmitted.emit(response);
               this.userService.setUserData(this.user);
               sessionStorage.getItem('user')
                 ? sessionStorage.setItem('user', JSON.stringify(this.user))
@@ -324,16 +306,15 @@ export class SquealFormComponent {
               this.keywordsComponent.removeAllTags();
               this.postResponse = 'Image squeal posted successfully!';
               this.showSquealPostResponse = true;
+              this.extra_chars = this.char_left.extra_daily;
             })
             .catch((error: any) => {
               // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
-              // Gestisci il caso in cui il form non sia valido
-              const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
+              const element = document.querySelector('.squeal-form-text');
               if (element) {
-                console.log(element);
-                element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
+                element.classList.add('vibrating-error');
                 setTimeout(() => {
-                  element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
+                  element.classList.remove('vibrating-error');
                 }, 500);
               }
             });
@@ -349,21 +330,15 @@ export class SquealFormComponent {
   }
   createVideoSqueal() {
     this.getRecipients();
-    //console.log(this.recipients);
-
     const videoInputElement = this.videoInput.nativeElement;
     if (videoInputElement.files && videoInputElement.files[0]) {
       this.mediaService.postVideo(videoInputElement.files[0]).subscribe({
         next: (response: any) => {
-          console.log(response);
           videoInputElement.value = null;
           const imageName = response.name;
-          console.log('Nuovo squeal:', imageName);
           this.squealsService
             .postSqueal(imageName, this.recipients, this.selectedType)
             .then((response: any) => {
-              console.log('Success:', response);
-              //this.squealSubmitted.emit(response);
               this.userService.setUserData(this.user);
               sessionStorage.getItem('user')
                 ? sessionStorage.setItem('user', JSON.stringify(this.user))
@@ -375,16 +350,15 @@ export class SquealFormComponent {
               this.keywordsComponent.removeAllTags();
               this.postResponse = 'Video squeal posted successfully!';
               this.showSquealPostResponse = true;
+              this.extra_chars = this.char_left.extra_daily;
             })
             .catch((error: any) => {
               // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
-              // Gestisci il caso in cui il form non sia valido
-              const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
+              const element = document.querySelector('.squeal-form-text');
               if (element) {
-                console.log(element);
-                element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
+                element.classList.add('vibrating-error');
                 setTimeout(() => {
-                  element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
+                  element.classList.remove('vibrating-error');
                 }, 500);
               }
             });
@@ -400,20 +374,14 @@ export class SquealFormComponent {
   }
   createPositionSqueal() {
     const content = `${this.mapComponent?.userPosition[0]} ${this.mapComponent?.userPosition[1]}`;
-    console.log(content);
-
-    //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     if (content != '0 0') {
       this.getRecipients();
-      console.log('is_scheduled = ', this.is_scheduled);
-      console.log('this.selectedDelayedSquealTypeValue = ', this.selectedDelayedSquealTypeValue);
       const schedule_options = {
         tick_rate: this.getTickRate(),
         repeat: this.getRepeat(),
         scheduled_date: this.getDate(),
       };
-      console.log(schedule_options, this.is_scheduled, this.selectedDelayedSquealTypeValue, schedule_options);
       this.squealsService
         .postSqueal(
           content,
@@ -424,8 +392,6 @@ export class SquealFormComponent {
           schedule_options
         )
         .then((response: any) => {
-          console.log('Success:', response);
-          //this.squealSubmitted.emit(response);
           this.userService.setUserData(this.user);
           sessionStorage.getItem('user')
             ? sessionStorage.setItem('user', JSON.stringify(this.user))
@@ -437,20 +403,16 @@ export class SquealFormComponent {
           this.keywordsComponent.removeAllTags();
           this.postResponse = 'Position squeal posted successfully!';
           this.showSquealPostResponse = true;
-          //this.connectWebSocket();
           this.positionService.connectWebSocket(this.user._id || '');
-          //this.positionService.startUpdatingPosition();
-          //this.mapComponent?.keepUpdatingPosition();
+          this.extra_chars = this.char_left.extra_daily;
         })
         .catch((error: any) => {
           // TODO quando l'errore è nei recipients o nel testo, mandare un altro tipo di errore
-          // Gestisci il caso in cui il form non sia valido
-          const element = document.querySelector('.squeal-form-text'); // Selettore dell'elemento di testo, assicurati di aggiungere una classe appropriata all'elemento di testo nel tuo template
+          const element = document.querySelector('.squeal-form-text');
           if (element) {
-            console.log(element);
-            element.classList.add('vibrating-error'); // Aggiungi la classe di vibrante errore
+            element.classList.add('vibrating-error');
             setTimeout(() => {
-              element.classList.remove('vibrating-error'); // Rimuovi la classe dopo 0.5 secondi
+              element.classList.remove('vibrating-error');
             }, 500);
           }
         });
@@ -466,9 +428,7 @@ export class SquealFormComponent {
     if (fileInput.files && fileInput.files[0]) {
       this.mediaService.postImage(fileInput.files[0]).subscribe({
         next: (response: any) => {
-          console.log(response);
           //rimuovo il file dall'input per evitare che venga caricato più volte
-
           this.imageInput.nativeElement.value = '';
           this.imageInput.nativeElement.files = null;
           this.imageInput.nativeElement.files = undefined;
@@ -476,7 +436,6 @@ export class SquealFormComponent {
           fileInput.files = fl;
 
           return response;
-          //TODO
         },
         error: (error) => {
           console.log(error);
@@ -508,25 +467,11 @@ export class SquealFormComponent {
         return;
     }
     if (file) {
-      //ha appena selezionato un file
       this.onInput(charNeeded);
 
       if (file.size > maxSize * 1024) {
-        // TODO: Handle file size error
-        console.log(
-          'File is ',
-          file.size / 1024,
-          ' * 1024 = ',
-          file.size,
-          ' bytes, but max size is ',
-          maxSize,
-          ' * 1024 = ',
-          maxSize * 1024,
-          ' bytes'
-        );
       }
     } else {
-      //ha appena deselezionato il file
       this.onInput(-charNeeded);
     }
   }
@@ -538,30 +483,17 @@ export class SquealFormComponent {
   selectedTab(type: string) {
     this.showSquealPostResponse = false;
     this.selectedType = type as ContentType;
+    //this.squealForm.value.text = '';
     if (this.selectedType != ContentType.text) {
-      this.squealForm.value.text = '';
       this.onInput();
     }
     if (this.selectedType != ContentType.image) {
-      //remove the image from the input
-      //const fileInput = document.getElementById('imageInput') as HTMLInputElement;
-      //if (fileInput.value != '') {
-      //  fileInput.value = '';
-      //  this.onInput(-this.sizeAndCost.cost.image);
-      //}
-
       if (this.imageInput.nativeElement.value != '') {
         this.imageInput.nativeElement.value = '';
         this.onInput(-this.sizeAndCost.cost.image);
       }
     }
     if (this.selectedType != ContentType.video) {
-      //remove the video from the input
-      //const fileInput = document.getElementById('videoInput') as HTMLInputElement;
-      //if (fileInput.value != '') {
-      //  fileInput.value = '';
-      //  this.onInput(-this.sizeAndCost.cost.video);
-      //}
       if (this.videoInput.nativeElement.value != '') {
         this.videoInput.nativeElement.value = '';
         this.onInput(-this.sizeAndCost.cost.video);
@@ -585,22 +517,4 @@ export class SquealFormComponent {
   getDarkMode() {
     return this.darkModeService.getThemeClass();
   }
-
-  //private connectWebSocket(): void {
-  //  this.socket = io();
-  //  this.socket.emit('authenticate', this.user._id);
-  //  console.log('socket connected -> ', this.user._id);
-  //  this.socket.on('send_position_to_server', () => {
-  //    console.log('send_position_to_server');
-  //    const position = this.mapComponent?.userPosition[0] + ' ' + this.mapComponent?.userPosition[1];
-  //    console.log(position);
-  //    this.socket.emit('sending_position_to_server', position);
-  //  });
-  //
-  //  this.socket.on('no_more_position', () => {
-  //    console.log('no_more_position');
-  //    //this.mapComponent?.stopUpdatingPosition();
-  //  });
-  //}
-  //
 }

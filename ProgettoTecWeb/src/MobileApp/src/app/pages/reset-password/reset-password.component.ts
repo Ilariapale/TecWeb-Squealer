@@ -1,7 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AuthService } from '../../services/api/auth.service';
 import { Router } from '@angular/router';
-import { UserService } from '../../services/user.service';
 import { DarkModeService } from '../../services/dark-mode.service';
 import { UsersService } from 'src/app/services/api/users.service';
 
@@ -18,13 +16,7 @@ export class ResetPasswordComponent implements OnInit {
   rememberMe: boolean = false;
   guestMode: boolean = false;
 
-  constructor(
-    private authService: AuthService,
-    private router: Router,
-    private userService: UserService,
-    private darkModeService: DarkModeService,
-    private usersService: UsersService
-  ) {}
+  constructor(private router: Router, private darkModeService: DarkModeService, private usersService: UsersService) {}
 
   ngOnInit(): void {
     const forms = document.querySelectorAll('form'); // Declare the 'forms' variable

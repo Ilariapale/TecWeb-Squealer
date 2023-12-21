@@ -4,7 +4,6 @@ import {
   AfterViewInit,
   AfterViewChecked,
   ChangeDetectorRef,
-  OnDestroy,
   ViewChild,
   ElementRef,
   OnChanges,
@@ -26,7 +25,7 @@ import { MediaService } from 'src/app/services/api/media.service';
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
-export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy, OnChanges {
+export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked, OnChanges {
   @ViewChild('imageInput') imageInput!: ElementRef;
 
   MAX_SQUEALS = 5;
@@ -94,7 +93,6 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
       if (this.identifier && !this.isGuest) {
         try {
           const user = await this.usersService.getUser(this.identifier);
-          console.log(user);
           this.mySelf = this.userService.isMyself(user._id);
           this.loading = true;
           this.user = user;
@@ -115,7 +113,7 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
           this.loading = false;
         } catch (error) {
           // Handle error
-          console.error(error);
+          console.log(error);
           this.loading = false;
         }
       } else {
@@ -125,6 +123,7 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    console.log('changes');
     console.log(changes);
   }
 
@@ -132,7 +131,7 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
     this.usersService
       .accountChangeRequest(type)
       .then((response) => {
-        console.log(response);
+        //TODO feedback visivo
       })
       .catch((error) => {
         console.log(error);
@@ -150,15 +149,11 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
       exampleModal?.addEventListener('show.bs.modal', (event: any) => {
         const button = event.relatedTarget;
         const squealId = button.getAttribute('data-bs-squealId');
-        const modalTitle = exampleModal.querySelector('.modal-title') as HTMLElement | null;
-        const modalBodyInput = exampleModal.querySelector('.modal-body input') as HTMLInputElement | null;
         this.squealToDelete = squealId;
       });
       this.listenerSet = true;
     }
   }
-
-  ngOnDestroy() {}
 
   loadMoreSqueals() {
     this.loading = true;
@@ -183,14 +178,12 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
       this.squealsService
         .deleteSqueal(this.squealToDelete)
         .then((response: any) => {
-          console.log(response);
-          //this.router.navigate(['/home']);
           const squeal = this.squeals.find((squeal) => squeal._id == this.squealToDelete);
           squeal ? (squeal.content_type = ContentType.deleted) : null;
           squeal ? (squeal.content = '[deleted squeal]') : null;
         })
         .catch((error) => {
-          //console.error(error);
+          console.log(error);
         });
     }
   }
@@ -226,7 +219,6 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
     }
     if (this.new_bio != '' || image) {
       let body: any = {};
-      console.log(this.new_bio);
       if (this.new_bio != '') body['profile_info'] = this.new_bio;
       if (image != '') body['profile_picture'] = image;
       this.usersService
@@ -241,14 +233,9 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
   updateImageFirst(image: any) {
     this.mediaService.postImage(image).subscribe({
       next: (response) => {
-        console.log('immagine caricata');
-        console.log(response.name); //url dell'immagine caricata
-        //----------------------------------------
         this.updateProfileData(response.name);
-        //----------------------------------------
       },
       error: (err) => {
-        console.log('immagine non caricata');
         console.error(err);
       },
     });

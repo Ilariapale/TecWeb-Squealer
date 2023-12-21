@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 
 @Component({
@@ -8,11 +8,10 @@ import { DarkModeService } from 'src/app/services/dark-mode.service';
 })
 export class TagInputComponent {
   constructor(private darkModeService: DarkModeService) {}
-  //TODO controllare se Input in tags crea problemi
   @Input() tags: string[] = [];
   @Input() specialChar: string = '@';
-  tagInput: string = '';
   @Input() placeholder: string = 'Add a tag';
+  tagInput: string = '';
   addTag() {
     if (this.tagInput && !this.tags.includes(this.tagInput) && this.tagInput.trim() !== '') {
       const tag = this.tagInput.replace(/\s/g, '');
@@ -34,7 +33,6 @@ export class TagInputComponent {
   }
 
   getTags() {
-    console.log(this.specialChar, this.tags);
     return this.tags;
   }
 

@@ -44,26 +44,26 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th scope="col">Never run out!</th>
+                                    <th class="p-2 px-0" scope="col">Never run out!</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td style="white-space: pre;"><b>Daily</b>{{ '\t' }}<i class="bi bi-arrow-right"></i> {{
-                                        '\t' }}<button :disabled="vip.username == undefined"
-                                            class="btn btn-primary p-1 px-3" @click="buyChars('daily')">Buy 20</button>
+                                    <td class="p-2 px-0" style="white-space: pre;"><b>Daily</b>{{ '\t' }}<i
+                                            class="bi bi-arrow-right"></i> <button :disabled="vip.username == undefined"
+                                            class="btn btn-primary p-1 px-2" @click="buyChars('daily')">Buy 50</button>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="white-space: pre;"><b>Weekly</b>{{ '\t' }}<i class="bi bi-arrow-right"></i>
-                                        {{ '\t' }}<button :disabled="vip.username == undefined"
-                                            class="btn btn-primary p-1 px-3" @click="buyChars('weekly')">Buy 50</button>
+                                    <td class="p-2 px-0" style="white-space: pre;"><b>Weekly</b>{{ '\t' }}<i
+                                            class="bi bi-arrow-right"></i> <button :disabled="vip.username == undefined"
+                                            class="btn btn-primary p-1 px-2" @click="buyChars('weekly')">Buy 150</button>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="white-space: pre;"><b>Monthly</b>{{ '\t' }}<i class="bi bi-arrow-right"></i>
-                                        {{ '\t' }}<button :disabled="vip.username == undefined"
-                                            class="btn btn-primary p-1 px-3" @click="buyChars('monthly')">Buy 100</button>
+                                    <td class="p-2 px-0" style="white-space: pre;"><b>Monthly</b>{{ '\t' }}<i
+                                            class="bi bi-arrow-right"></i> <button :disabled="vip.username == undefined"
+                                            class="btn btn-primary p-1 px-2" @click="buyChars('monthly')">Buy 500</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -76,24 +76,31 @@
 </template>
 
 <script lang="ts">
+import { addCharacters } from '@/services/user.service';
+
 export default {
     data() {
 
     },
     methods: {
-        buyChars(type: string) {
+        async buyChars(type: string) {
             let link = "";
             switch (type) {
                 case "daily":
-                    link = "https://www.sandbox.paypal.com/instantcommerce/checkout/WFDRQYCPP8Q46"
+                    link = "https://www.sandbox.paypal.com/instantcommerce/checkout/VLK8VFRDYQ4MG"
                     break;
                 case "weekly":
-                    link = "https://www.sandbox.paypal.com/instantcommerce/checkout/UYSX35BE56H6A"
+                    link = "https://www.sandbox.paypal.com/instantcommerce/checkout/8C7G9FA4KQ49J"
                     break;
                 case "monthly":
-                    link = "https://www.sandbox.paypal.com/instantcommerce/checkout/6YJ9ZQZ6ZQZ2S"
+                    link = "https://www.sandbox.paypal.com/instantcommerce/checkout/NLYTA9FV3MM3N"
                     break;
-            }window.open(link, "_blank", 'width=500,height=600')
+            }window.open(link, "_blank", 'width=500,height=600');
+            await addCharacters(type + "tier1", this.vip.username).then((res) => {
+                this.$emit('updateChars', type + "tier1");
+            })
+
+
         }
     },
     props: {

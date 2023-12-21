@@ -32,8 +32,8 @@
         <div *ngFor="let channel of channelsOwned">
           <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center row">
             <div class="col-1"></div>
-            <div class="toast show m-1 col col-md-2" [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert"
-              aria-live="assertive" aria-atomic="true">
+            <div class="toast show m-1 col col-md-2 clickable" [class.dark-toast]="getDarkMode()=='dark-theme'"
+              role="alert" aria-live="assertive" aria-atomic="true">
               <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'" data-bs-toggle="modal"
                 data-bs-target="#owndedChannelModif" (click)="selectChannel(channel)">
                 <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
@@ -79,9 +79,9 @@
         <div *ngFor="let channel of channelsEditor">
           <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center row">
             <div class="col-1"></div>
-            <div class="toast show m-1 col col-md-2" [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert"
-              aria-live="assertive" aria-atomic="true" data-bs-toggle="modal" data-bs-target="#editorChannelModif"
-              (click)="selectChannel(channel)">
+            <div class="toast show m-1 col col-md-2 clickable" [class.dark-toast]="getDarkMode()=='dark-theme'"
+              role="alert" aria-live="assertive" aria-atomic="true" data-bs-toggle="modal"
+              data-bs-target="#editorChannelModif" (click)="selectChannel(channel)">
               <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
                 <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
                   aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
@@ -296,8 +296,6 @@
     </div>
 
     <!--------------------------------------------------------------------------------------->
-
-
 
   </div>
 </div>

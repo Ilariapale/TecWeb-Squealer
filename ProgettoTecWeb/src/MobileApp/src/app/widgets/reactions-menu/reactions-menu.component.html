@@ -1,8 +1,8 @@
 <nav class="menu">
-  <input type="checkbox" href="#" class="menu-open" [attr.name]="'menu-open'+squealId"
-    [attr.id]="'menu-open'+squealId" />
+  <input [(ngModel)]="menu_opened" type="checkbox" href="#" class="menu-open" title="Button for menu opening"
+    [attr.name]="'menu-open'+squealId" [attr.id]="'menu-open'+squealId" [disabled]="alreadyReacted==true" />
   <label class="menu-open-button" [for]="'menu-open'+squealId">
-    <span><img class="reaction-image" src="./../../../assets/imgs/reactionsBW.png"></span>
+    <span><img class="reaction-image" [src]="imageUrl" alt="three emoji in a circle"></span>
   </label>
 
   <a href="#" (click)="addReaction('like', $event)" class="menu-item lightblue"> 👍 </a>

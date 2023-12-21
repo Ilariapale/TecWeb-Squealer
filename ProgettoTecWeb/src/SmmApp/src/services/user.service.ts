@@ -19,7 +19,7 @@ export const getUsername = async (identifier?: string) => {
   try {
     const headers = generateHeaders(true);
     const url = identifier ? `/username?identifier=${identifier}` : `/username`;
-    console.log(url);
+    //console.log(url);
     return (await rest.get(url, { headers })).data;
   } catch (err: any) {
     console.error(err);
@@ -74,6 +74,21 @@ export const removeVIP = async (identifier: string) => {
   try {
     const headers = generateHeaders(true);
     return await rest.delete(`/VIP/${identifier}`, { headers });
+  } catch (err: any) {
+    throw new Error(err.message);
+  }
+};
+
+export const addCharacters = async (tier: string, identifier?: string, options?: any) => {
+  try {
+    let body: any = { tier };
+
+    identifier ? (body['identifier'] = identifier) : null;
+    options?.daily ? (body['char_quota_daily'] = options.daily) : null;
+    options?.weekly ? (body['char_quota_weekly'] = options.weekly) : null;
+    options?.monthly ? (body['char_quota_monthly'] = options.monthly) : null;
+    const headers = generateHeaders(true);
+    return await rest.patch('/characters', body, { headers });
   } catch (err: any) {
     throw new Error(err.message);
   }

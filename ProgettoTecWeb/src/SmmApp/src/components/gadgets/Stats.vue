@@ -177,7 +177,7 @@ export default {
     },
     methods: {
         async getStatistics() {
-            console.log(this.vip._id);
+            //console.log(this.vip._id);
             if (this.vip?._id == undefined) {
                 this.reactionsTotData = [
                     { reaction: "like", emoji: "👍", count: "no data" },
@@ -203,7 +203,7 @@ export default {
                 this.interactionsImpressionsUrl = response.interactionsImpressions;
                 this.top3ByTotalReactions = response.top3ByTotalReactions;
                 this.top3ByImpressions = response.top3ByImpressions;
-                console.log(response);
+                //console.log(response);
             }).catch((error) => {
                 console.log(error);
             });

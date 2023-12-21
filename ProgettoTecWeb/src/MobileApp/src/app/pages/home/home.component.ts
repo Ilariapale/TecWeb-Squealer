@@ -17,68 +17,7 @@ export class HomeComponent {
   loading: boolean = false;
   MAX_SQUEALS = 5;
 
-  //TODO remove example squeal
-  //TODO carica piu squeals
-  squeals: any[] = [
-    {
-      content: '12.51133 41.89193 , 9.1881263 45.4636707 , 12.22133 41.99193 , 12.13133 41.89993',
-      hex_id: 2,
-      _id: '7698696',
-      username: 'paulpaccy',
-      content_type: 'position',
-      reactions: {
-        like: 312231,
-        love: 123,
-        laugh: 41,
-        dislike: 56,
-        disgust: 31,
-        disagree: 65,
-      },
-    },
-    {
-      content: 'https://picsum.photos/id/237/400/300',
-      content_type: 'image',
-      hex_id: 2,
-      _id: 0,
-      username: 'ilapale',
-      reactions: {
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-    },
-    {
-      content: 'test',
-      hex_id: 2,
-      _id: 1,
-      username: 'ilapale',
-      reactions: {
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-    },
-    {
-      content: 'test',
-      hex_id: 2,
-      _id: 2,
-      username: 'ilapale',
-      reactions: {
-        like: 0,
-        love: 0,
-        laugh: 0,
-        dislike: 0,
-        disgust: 0,
-        disagree: 0,
-      },
-    },
-  ];
+  squeals: any[] = [];
   isGuest: boolean = true;
   user: User;
 
@@ -117,25 +56,13 @@ export class HomeComponent {
     this.squealsService
       .getHome(this.isGuest)
       .then((response) => {
-        //.slice().reverse()
-        console.log(response);
         this.squeals = response;
       })
       .catch((error) => {
         const errorText = error.error.error;
         //TokenExpiredError, noToken, invalidTokenFormat
-        if (errorText == 'TokenExpiredError') {
+        if (errorText == 'TokenExpiredError' || errorText == 'invalidTokenFormat') {
           //redirect to login page "/login"
-          console.log('TokenExpiredError');
-          this.userService.setUserData(null);
-          localStorage.removeItem('Authorization');
-          sessionStorage.removeItem('Authorization');
-          localStorage.removeItem('user');
-          sessionStorage.removeItem('user');
-          this.router.navigate(['/login']);
-        }
-        if (errorText == 'invalidTokenFormat') {
-          console.log('invalidTokenFormat');
           this.userService.setUserData(null);
           localStorage.removeItem('Authorization');
           sessionStorage.removeItem('Authorization');
@@ -144,9 +71,6 @@ export class HomeComponent {
           this.router.navigate(['/login']);
         }
       });
-
-    //window.location.reload();
-    //this.userService.getUser().subscribe();
   }
 
   loadMoreSqueals() {
@@ -161,6 +85,7 @@ export class HomeComponent {
         }
       })
       .catch((error) => {
+        console.log(error);
         this.showLoadMore = false;
         this.loading = false;
       });

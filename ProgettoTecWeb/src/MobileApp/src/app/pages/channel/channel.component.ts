@@ -1,13 +1,10 @@
 import { Channel } from 'src/app/models/channel.interface';
 import { TimeService } from 'src/app/services/time.service';
-import { Squeal, ContentType, Recipients } from 'src/app/models/squeal.interface';
-import { Component, OnInit, AfterViewInit, ChangeDetectorRef, ViewChild } from '@angular/core';
-import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { Squeal } from 'src/app/models/squeal.interface';
+import { Component } from '@angular/core';
+import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Location } from '@angular/common';
-import { UsersService } from 'src/app/services/api/users.service';
-import { UserService } from 'src/app/services/user.service';
-import { User, AccountType, ProfessionalType } from 'src/app/models/user.interface';
-import { Subscription, forkJoin } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { ChannelsService } from 'src/app/services/api/channels.services';
@@ -23,17 +20,18 @@ export class ChannelComponent {
   MAX_SQUEALS = 5;
 
   channel: Channel = {
-    _id: '123456789012345678901234',
-    owner: '123456789012345678901234',
-    editors: ['123456789012345678901234', '123456789012345678901234'],
-    name: 'channel name',
-    description: 'channel description',
+    _id: '',
+    owner: '',
+    editors: [],
+    name: '',
+    description: '',
     is_official: false,
     can_mute: true,
     created_at: new Date(),
-    squeals: ['123456789012345678901234', '123456789012345678901234'],
-    subscribers: ['123456789012345678901234', '123456789012345678901234'],
+    squeals: [],
+    subscribers: [],
     is_blocked: false,
+    is_muted_by_user: false,
   };
 
   squeals: Squeal[] = [];
@@ -44,12 +42,8 @@ export class ChannelComponent {
   constructor(
     private route: ActivatedRoute,
     public timeService: TimeService,
-    private usersService: UsersService,
-    private userService: UserService,
     private squealsService: SquealsService,
     public darkModeService: DarkModeService,
-    private cdr: ChangeDetectorRef,
-    private router: Router,
     private channelsService: ChannelsService,
     private location: Location
   ) {}
@@ -65,18 +59,12 @@ export class ChannelComponent {
             this.channel = channel;
 
             this.loading = true;
-            console.log(channel);
             this.lastSquealLoaded = channel.squeals && channel.squeals.length > 0 ? channel.squeals.length - 1 : -1;
-            console.log(this.lastSquealLoaded);
             const squealsRequests = [];
 
             for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS && i >= 0; i--) {
-              console.log('i = ', i);
-              console.log(i, ' > ', this.lastSquealLoaded - this.MAX_SQUEALS, ' && ', i, ' >= 0');
-              console.log('i, this.lastSquealLoaded, this.MAX_SQUEALS = ', i, this.lastSquealLoaded, this.MAX_SQUEALS);
               squealsRequests.push(this.squealsService.getSqueal(channel.squeals[i]));
             }
-            console.log(squealsRequests);
             if (squealsRequests.length > 0) {
               const squeals = await Promise.all(squealsRequests);
               squeals.forEach((squeal) => {
@@ -84,11 +72,10 @@ export class ChannelComponent {
               });
               this.lastSquealLoaded -= this.MAX_SQUEALS;
             }
-
             this.loading = false;
           })
           .catch((error: any) => {
-            // Handle error
+            console.log(error);
           });
       }
     });
@@ -98,7 +85,6 @@ export class ChannelComponent {
     this.channelsService
       .setMuteStatus(this.channel._id || '', !this.channel.is_muted_by_user)
       .then((response) => {
-        console.log(response);
         this.channel.is_muted_by_user = !this.channel.is_muted_by_user;
       })
       .catch((error) => {
@@ -109,7 +95,6 @@ export class ChannelComponent {
     this.channelsService
       .subscribeToChannel(channel, bool)
       .then((res) => {
-        console.log(res);
         this.channel.subscription_status = bool;
       })
       .catch((err) => {
@@ -144,11 +129,9 @@ export class ChannelComponent {
     let body = {
       channels: newChannelsArray,
     };
-    console.log('body', body);
     this.squealsService
       .updateSqueal(squeal?._id || '', body)
       .then((response) => {
-        console.log(response);
         const index = this.squeals.indexOf(squeal);
         if (index > -1) this.squeals.splice(index, 1);
       })

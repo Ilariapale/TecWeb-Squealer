@@ -5,11 +5,8 @@ import { UsersService } from 'src/app/services/api/users.service';
 import { ChannelsService } from 'src/app/services/api/channels.services';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Channel, ChannelQuery } from 'src/app/models/channel.interface';
-import { Squeal, SquealQuery, ContentType } from 'src/app/models/squeal.interface';
+import { Squeal, SquealQuery } from 'src/app/models/squeal.interface';
 import { Router } from '@angular/router';
-//TODO fixare la ricerca delle keyword che fa comparire tutti i risultati invece di filtrarli
-
-//TODO implementare il messaggio privato quando clicchi su uno user tra i risultati della ricerca
 @Component({
   selector: 'app-search',
   templateUrl: './search.component.html',
@@ -54,7 +51,6 @@ export class SearchComponent {
   placeholder: string = 'Type username here...';
 
   testArray: string[] = ['test1', 'test2', 'test3'];
-  //TODO se il tipo dello squeal è diverso da testo, gestire diversamente
   constructor(
     private darkModeService: DarkModeService,
     private usersService: UsersService,
@@ -90,7 +86,6 @@ export class SearchComponent {
       this.usersService
         .getUsers(this.userQuery)
         .then((users) => {
-          console.log(users);
           this.userResults = users as User[];
           this.loading = false;
 
@@ -107,7 +102,6 @@ export class SearchComponent {
       this.channelsService
         .getChannels(this.channelQuery)
         .then((channels: Channel[]) => {
-          console.log(channels);
           this.channelResults = channels;
           this.loading = false;
 
@@ -124,7 +118,6 @@ export class SearchComponent {
       this.squealService
         .getSqueals(this.keywordQuery)
         .then((squeals: Squeal[]) => {
-          console.log(squeals);
           this.keywordResults = squeals;
           this.loading = false;
 
@@ -190,7 +183,6 @@ export class SearchComponent {
     this.is_official ? (this.keywordQuery.is_in_official_channel = this.is_official) : null;
     pag_size ? (this.keywordQuery.pag_size = pag_size) : null;
     last_loaded ? (this.keywordQuery.last_loaded = last_loaded) : null;
-    console.log(this.keywordQuery);
   }
 
   extractKeywords(input: string): string[] {
@@ -226,7 +218,6 @@ export class SearchComponent {
     this.channelsService
       .subscribeToChannel(channel, bool)
       .then((res) => {
-        console.log(res);
         let index = this.channelResults?.findIndex((chan) => chan._id === channel || chan.name === channel);
         if (index != -1) this.channelResults[index].subscription_status = bool;
       })
@@ -235,4 +226,3 @@ export class SearchComponent {
       });
   }
 }
-//http://localhost:8000/private-chats/user/paulpaccy

@@ -23,12 +23,10 @@ export class LoginComponent {
   ) {}
   ngOnInit() {
     if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) {
-      //TODO possibile implementazione di una richiesta al server per verificare la validità del token
       this.router.navigate(['/home']);
     }
   }
   onSubmit(): void {
-    // Chiamare il servizio di autenticazione per fare il login
     if (this.guestMode) {
       localStorage.removeItem('Authorization');
       sessionStorage.removeItem('Authorization');
@@ -41,9 +39,7 @@ export class LoginComponent {
       this.authService
         .login(this.username, this.password, this.rememberMe)
         .then((response: boolean) => {
-          // Gestisci la risposta dal servizio se necessario
           this.router.navigate(['/home']);
-          // Reindirizza l'utente a un'altra pagina se il login è riuscito
         })
         .catch((error: any) => {
           // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
@@ -55,6 +51,4 @@ export class LoginComponent {
   getThemeClass() {
     return this.darkModeService.getThemeClass();
   }
-
-  //TODO aggiungere il login del profilo
 }

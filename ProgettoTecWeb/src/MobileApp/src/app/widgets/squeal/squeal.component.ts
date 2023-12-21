@@ -1,10 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ContentType, Squeal } from 'src/app/models/squeal.interface';
+import { Squeal } from 'src/app/models/squeal.interface';
 import { CommentService } from 'src/app/services/api/comments.service';
 import { CommentSection } from 'src/app/models/comment.interface';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { TimeService } from 'src/app/services/time.service';
-import * as e from 'express';
 import { ActivatedRoute } from '@angular/router';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 import { Router } from '@angular/router';
@@ -28,7 +27,6 @@ export class SquealComponent implements OnInit {
   isHome = false;
   isProfile = false;
   isGuest = false;
-  //TODO mettere l'emojui colorata se hai già reagito ? forse
   //TODO incrementare la reaction quando reagisci
   constructor(
     private commentService: CommentService,
@@ -58,14 +56,11 @@ export class SquealComponent implements OnInit {
       this.squealsService
         .getSqueal(this.squeal_id)
         .then((response: any) => {
-          console.log('response', response);
           this.squeal = response[0];
-          console.log(this.squeal);
           //Check if the squeal is mine
           this.commentService
             .getComments(this.squeal.comment_section || '')
             .then((data: any) => {
-              console.log(data);
               this.comment_section = data;
             })
             .catch((error: any) => {
@@ -77,7 +72,6 @@ export class SquealComponent implements OnInit {
         });
     }
     this.mySqueal = this.userService.isMyself((this.squeal.username as string) || '');
-    console.log('Is this the squeal page = ', this.isSquealPage);
   }
 
   getDarkMode() {
@@ -103,29 +97,25 @@ export class SquealComponent implements OnInit {
       this.commentService
         .getComments(this.squeal.comment_section || '')
         .then((response: any) => {
-          console.log(response);
           this.comment_section = response;
         })
         .catch((error) => {
-          //console.error(error);
+          console.log(error);
         });
     }
   }
 
   loadMoreComments() {
     this.showLoadMore();
-
-    console.log('loadMoreComments');
     if (this.comment_section.comments_array && this.comment_section.comments_array.length > 0) {
       this.commentService
         .getComments(this.squeal.comment_section || '', this.comment_section.comments_array[0]._id)
         .then((response: any) => {
-          console.log(response);
           if (response.comments_array != undefined && response.comments_array.length > 0)
             this.comment_section.comments_array?.unshift(...response.comments_array);
         })
         .catch((error) => {
-          //console.error(error);
+          console.log(error);
         });
     }
   }
@@ -133,16 +123,13 @@ export class SquealComponent implements OnInit {
   reportSqueal() {
     this.squealsService
       .reportSqueal(this.squeal._id || '')
-      .then((response) => {
-        console.log(response);
-      })
+      .then((response) => {})
       .catch((error) => {
         console.error(error);
       });
   }
 
   addComment() {
-    console.log(this.newCommentText);
     this.commentService
       .addComment(this.squeal.comment_section || '', this.newCommentText)
       .then((response: any) => {
@@ -150,7 +137,7 @@ export class SquealComponent implements OnInit {
         this.newCommentText = '';
       })
       .catch((error) => {
-        //console.error(error);
+        console.log(error);
       });
   }
 

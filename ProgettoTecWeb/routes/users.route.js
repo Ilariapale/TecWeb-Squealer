@@ -141,6 +141,26 @@ router.get("/smm-request-list", verifyToken, async (req, res, next) => {
   }
 });
 
+router.get("/mod-request-list", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+      last_loaded: req.query.last_loaded,
+      pag_size: req.query.pag_size,
+    };
+    console.log("qui");
+
+    try {
+      const result = await users.getModRequestList(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({ error: err || "Something went wrong." });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
 router.get("/:identifier", verifyToken, async (req, res, next) => {
   let options = {
     identifier: req.params.identifier,

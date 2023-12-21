@@ -75,7 +75,12 @@ export class StoreComponent implements OnInit {
       '_blank',
       'width=500,height=600'
     );
-    this.usersService.updateCharacters(tier).then((res) => {});
+    this.usersService
+      .updateCharacters(tier)
+      .then((res) => {})
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   getThemeClass() {

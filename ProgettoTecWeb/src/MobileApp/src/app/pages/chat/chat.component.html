@@ -1,10 +1,10 @@
 <div id="chat-main" role="main" class="m-3">
-  <div class="mesage-container" id="messageContainer">
+  <div class="message-container" id="messageContainer">
     <div *ngIf="more_to_load" class=" d-flex justify-content-center align-items-center py-2">
       <button (click)="loadMoreMessages()" type=" button" class="btn btn-outline-secondary rounded-pill"><i
           class="bi bi-arrow-clockwise"></i></button>
-    </div><ng-container *ngIf="chat_loaded">
-
+    </div>
+    <ng-container *ngIf="chat_loaded">
       <div *ngFor="let message of chat.messages" class="chat-body mb-1">
 
         <div *ngIf="message.sender === reqSenderPosition" [class.user-message-dark]="getThemeClass()=='dark-theme'"

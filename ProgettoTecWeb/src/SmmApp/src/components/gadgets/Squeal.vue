@@ -101,9 +101,9 @@ export default {
                         <div class="card-img-top ">
                             <img v-if="squeal.content_type == 'image'" :src="'/../media/image/' + squeal.content"
                                 class="img-fluid" alt="...">
-                            <div v-if="squeal.content_type == 'video'" class="ratio ratio-16x9">
-                                <iframe :src="'/../media/video/' + squeal.content" allowfullscreen></iframe>
-                            </div>
+                            <video v-if="squeal.content_type == 'video'" class="ratio ratio-16x9" controls>
+                                <source :src="'/../media/video/' + squeal.content">
+                            </video>
                             <p v-if="squeal.content_type == 'position' || squeal.content_type == 'deleted'"
                                 class="card-text">
                                 [{{ squeal.content_type }}]
@@ -157,19 +157,19 @@ export default {
                                 <div class="col-3"></div>
                                 <div class="col-6">
                                     <div class="row">
-                                        👍{{ squeal.reactions.like || 0 }} ||
-                                        😂{{ squeal.reactions.laugh || 0 }} ||
-                                        😍{{ squeal.reactions.love || 0 }}
+                                        <p class="col h5"><b class="h4">👍</b>{{ squeal.reactions?.like || 0 }}</p>
+                                        <p class="col h5"><b class="h4">😂</b>{{ squeal.reactions?.laugh || 0 }}</p>
+                                        <p class="col h5"><b class="h4">😍</b>{{ squeal.reactions?.love || 0 }}</p>
                                     </div>
                                     <div class="row">
-                                        🤮{{ squeal.reactions.disgust || 0 }}
-                                        👎{{ squeal.reactions.dislike || 0 }}
-                                        🙅{{ squeal.reactions.disagree || 0 }}
+                                        <p class="col h5"><b class="h4">🤮</b>{{ squeal.reactions?.disgust || 0 }}</p>
+                                        <p class="col h5"><b class="h4">👎</b>{{ squeal.reactions?.dislike || 0 }}</p>
+                                        <p class="col h5"><b class="h4">🙅</b>{{ squeal.reactions?.disagree || 0 }}</p>
                                     </div>
                                 </div>
-                                <div class="col-3 text-end text-muted">Total reactions: {{
-                                    squeal.reactions.positive_reactions +
-                                    squeal.reactions.negative_reactions }}</div>
+                                <div class="col-3 text-end text-muted ">Total reactions: {{
+                                    (squeal.reactions?.positive_reactions +
+                                        squeal.reactions?.negative_reactions) || 0 }}</div>
                             </div>
                         </div>
                         <div class="mt-3" v-if="isCommentOpen">

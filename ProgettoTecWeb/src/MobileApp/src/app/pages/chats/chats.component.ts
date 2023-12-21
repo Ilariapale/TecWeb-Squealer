@@ -1,14 +1,12 @@
 // messages.component.ts
 import { Component } from '@angular/core';
-import { Message, Chat, ChatPreview } from 'src/app/models/chat.interface';
+import { ChatPreview } from 'src/app/models/chat.interface';
 import { UsersService } from 'src/app/services/api/users.service';
 import { UserService } from 'src/app/services/user.service';
-import { Source } from 'src/app/models/notification.interface';
 import { ChatsService } from 'src/app/services/api/chats.service';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { TimeService } from 'src/app/services/time.service';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-chats',
@@ -16,18 +14,8 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./chats.component.css'],
 })
 export class ChatsComponent {
-  private chatSubscription: Subscription = new Subscription();
-  private userSubscription: Subscription = new Subscription();
   newChatUsername: string = '';
-  chatsPreview: ChatPreview[] = [
-    /* {
-      last_message: '3-Loading...',
-      recipient: '2-Loading...',
-      sent_by_me: false,
-      _id: '123',
-      last_modified: new Date(),
-    },*/
-  ];
+  chatsPreview: ChatPreview[] = [];
 
   isGuest: boolean = true;
 
@@ -64,9 +52,6 @@ export class ChatsComponent {
     }
   }
 
-  markAllAsRead(/*_ids: string[]*/) {}
-  markAsRead(_id: string) {}
-
   newChat() {
     if (this.newChatUsername.trim() !== '') {
       //if the chat with this user already exists, open it
@@ -79,12 +64,10 @@ export class ChatsComponent {
         this.usersService
           .getUsername(this.newChatUsername)
           .then((response: any) => {
-            //user does not exist
             this.router.navigate(['/private-chats/user', this.newChatUsername]);
-            console.log('user exists');
           })
           .catch((error: any) => {
-            console.log('user does not exist');
+            console.log(error);
             this.newChatUsername = '';
           });
       }
@@ -98,13 +81,4 @@ export class ChatsComponent {
   goToPage(page: string) {
     this.router.navigate([`/${page}`]);
   }
-
-  ngOnDestroy() {
-    this.userSubscription.unsubscribe();
-    this.chatSubscription.unsubscribe();
-  }
 }
-
-/*
-[routerLink]="['/private-chat']" [queryParams]="{id: chat._id}"
-*/

@@ -12,3 +12,25 @@ img {
   border-radius: 50%;
   margin-right: 15px;
 }
+
+.on-top {
+  z-index: 1;
+  position: relative;
+  overflow: visible;
+  top: 10px;
+}
+
+.reaction-container {
+  overflow: visible;
+  height: initial
+}
+
+.buttons-container {
+  position: relative;
+  height: min-content;
+  overflow: visible;
+}
+
+.card-icons.container {
+  overflow: visible
+}

@@ -13,7 +13,6 @@ import { Router } from '@angular/router';
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.css'],
 })
-//TODO caricare solo alcune notifiche alla volta e aggiungere tasto per aggiorare e tasto per caricare altre
 export class NotificationsComponent implements OnInit {
   notifications: Notification[] = [
     {
@@ -35,7 +34,6 @@ export class NotificationsComponent implements OnInit {
   isGuest: boolean = true;
   pageSize = 8;
   loadMoreButton: boolean = true;
-  //isGuest: boolean = false;
   constructor(
     private usersService: UsersService,
     private userService: UserService,
@@ -49,7 +47,7 @@ export class NotificationsComponent implements OnInit {
       this.isGuest = true;
     } else {
       this.router.navigate(['/login']);
-    } //richiedi al server le notifiche con gli id specificati
+    }
   }
 
   ngOnInit() {
@@ -77,7 +75,9 @@ export class NotificationsComponent implements OnInit {
     this.usersService
       .setNotificationStatus(notificationIds, false)
       .then(() => {})
-      .catch((err) => {});
+      .catch((err) => {
+        console.log(err);
+      });
     this.notifications.forEach((notif) => (notif.is_unseen = false));
   }
 
@@ -103,7 +103,6 @@ export class NotificationsComponent implements OnInit {
 
   loadMoreSqueals() {
     this.loading = true;
-    console.log(this.pageSize, this.notifications[this.notifications.length - 1]._id);
     this.usersService
       .getNotifications(this.pageSize, this.notifications[this.notifications.length - 1]._id)
       .then((notifications) => {
@@ -120,14 +119,12 @@ export class NotificationsComponent implements OnInit {
 
   notificationLink(notif: Notification) {
     //setta la notifica come letta
-    console.log(notif);
     if (notif._id && notif.is_unseen) {
       this.usersService
         .setNotificationStatus([notif._id], false)
         .then(() => {})
         .catch((err) => {});
     }
-    console.log(notif.id_code);
     switch (notif.id_code) {
       case IdCode.welcomeSqueal:
       case IdCode.mentionedInSqueal:
@@ -147,10 +144,11 @@ export class NotificationsComponent implements OnInit {
         break;
       case IdCode.SMMrequest:
         //this.router.navigate([`SMM/${notif.sender_ref}`]);
-        console.log(`SMM/${notif.sender_ref}`);
+        //console.log(`SMM/${notif.sender_ref}`);
         break;
       default:
         //case IdCode.SMMdeclined, IdCode.noMoreVipSMM, IdCode.noMoreSmmVIP
+        //TODO finire i casi
         break;
     }
   }

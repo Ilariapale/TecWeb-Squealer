@@ -47,23 +47,25 @@
           </div>
           <!--end position-->
           <div *ngIf="squeal.content_type!='deleted'" class="card-icons container">
-            <div class="row flex-nowrap justify-content-between d-flex align-items-center my-2">
+            <div class="row flex-nowrap justify-content-between d-flex align-items-center my-2 buttons-container">
 
               <div class="col-5 px-1">
-                <button id="comment_button" type="button" class="btn btn-secondary btn-rounded px-2"
-                  (click)="isGuest?null:toggleComments()">
+                <button id="comment_button" type="button" title="toggle comments section"
+                  class="btn btn-secondary btn-rounded px-2" (click)="isGuest?null:toggleComments()">
                   <i class="bi bi-chat-dots-fill"></i>
                   <p class="badge bg-danger ms-2 my-auto">{{squeal.comments_count || 0}}</p>
                 </button>
               </div>
 
 
-              <div class="col-2 p-0 d-flex justify-content-center">
-                <app-reactions-menu [squealId]="squeal._id ?? '0'"></app-reactions-menu>
+              <div class="col-2 p-0 d-flex justify-content-center reaction-container">
+                <app-reactions-menu [alreadyReacted]="squeal.reacted || false" [squealId]="squeal._id ?? '0'"
+                  class="on-top"></app-reactions-menu>
               </div>
 
               <div class="col-5 px-1">
-                <button (click)="reportSqueal()" type="button" class="btn btn-secondary btn-rounded px-4 py-2">
+                <button title="report a squeal" (click)="reportSqueal()" type="button"
+                  class="btn btn-secondary btn-rounded px-4 py-2">
                   <i class="bi bi-flag-fill"></i>
                 </button>
               </div>
@@ -99,7 +101,7 @@
                 </div>
               </div>
             </div>
-            <div *ngIf="isHome" class="flex-nowrap justify-content-center d-flex align-items-center py-2">
+            <div *ngIf="isHome" class="flex-nowrap justify-content-center d-flex align-items-center py-2 below">
               <div *ngIf="squeal.selected?.because=='mentioned'">
                 <ul class="list-group list-group-horizontal">
                   <li class="list-group-item" [class.bg-secondary]="getDarkMode()=='dark-theme'"
@@ -136,12 +138,12 @@
 
             <!-- Modulo per aggiungere un nuovo commento -->
 
-            <div class="input-group mb-3">
+            <form class="input-group mb-3">
               <input type="text" [(ngModel)]="newCommentText" class="form-control" placeholder="Insert your comment..."
                 aria-label="Recipient's username" aria-describedby="button-addon2">
-              <button class="btn btn-outline-secondary" type="button" (click)="addComment()"
+              <button class="btn btn-outline-secondary" type="submit" (click)="addComment()"
                 id="button-addon2">Post</button>
-            </div>
+            </form>
           </div>
 
         </div>

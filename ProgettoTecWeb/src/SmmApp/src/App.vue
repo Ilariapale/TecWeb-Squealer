@@ -19,8 +19,8 @@ export default {
   },
   data() {
     return {
-      user: {},
-      vip: {},
+      user: {} as any,
+      vip: {} as any,
       prices: {},
       char_spent: 0,
       vips_usermames: []
@@ -35,7 +35,7 @@ export default {
         return response;
       }).catch((error) => {
         console.log(error);
-        window.location.href = "/login";
+        //window.location.href = "/login";
         return error;
       });
     },
@@ -45,7 +45,7 @@ export default {
         return;
       }
       await getUser(vip).then((response) => {
-        console.log(response);
+        //console.log(response);
         this.vip = response;
         return response;
       }).catch((error) => {
@@ -63,10 +63,14 @@ export default {
       });
     },
     async updateChar(username: string) {
+
       await this.getVip(username);
     },
     updateVipsArray(vips: any) {
       this.vips_usermames = vips;
+    },
+    async updateCharacters(tier: string) {
+      await this.getVip(this.vip.username);
     },
 
   },
@@ -92,16 +96,19 @@ export default {
       <!-- Contenuto centrale scrollabile -->
       <div class="col col-md-5 col-lg-6 dashboard elements-height p-0">
         <RouterView :prices="prices" :user="user" :vip="vip" @squeal-posted="updateChar($event)"
-          @update-vips-array="updateVipsArray($event)" />
+          @updateChars="updateCharacters($event)" />
       </div>
 
       <!-- Menu a destra -->
       <div class="col col-md-4 col-lg-4 p-0 overview-menu elements-height bg-primary">
-        <Overviewmenu :user="user" @update-vip="getVip($event)" :vip="vip" />
+        <Overviewmenu :user="user" @update-vip="getVip($event)" @update-vips-array="updateVipsArray($event)"
+          @updateChars="updateCharacters($event)" :vip="vip" />
       </div>
 
       <div class="mobile-overview-menu">
-        <MobileVipSelector :vips_usernames="vips_usermames"></MobileVipSelector>
+        <MobileVipSelector :vips_usernames="vips_usermames" @update-vip="getVip($event)"
+          :selected_vip_out="vip.username || 'none'">
+        </MobileVipSelector>
       </div>
 
 
@@ -120,7 +127,6 @@ export default {
   overflow-wrap: break-word;
   overflow-inline: clip;
   overflow-x: hidden;
-
 }
 
 .overview-menu {

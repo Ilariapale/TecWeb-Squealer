@@ -1,14 +1,10 @@
 import { Component, ElementRef, Input, ViewChild } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
-import { Message, Chat, ChatPreview } from 'src/app/models/chat.interface';
-import { UsersService } from 'src/app/services/api/users.service';
+import { Message, Chat } from 'src/app/models/chat.interface';
 import { UserService } from 'src/app/services/user.service';
-import { Source } from 'src/app/models/notification.interface';
 import { ChatsService } from 'src/app/services/api/chats.service';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { TimeService } from 'src/app/services/time.service';
-import { Subscription } from 'rxjs';
 import { io } from 'socket.io-client';
 import { Router } from '@angular/router';
 
@@ -35,7 +31,6 @@ export class ChatComponent {
     private route: ActivatedRoute,
     private chatsService: ChatsService,
     private userService: UserService,
-    private usersService: UsersService,
     public timeService: TimeService,
     public darkModeService: DarkModeService,
     private router: Router
@@ -43,8 +38,6 @@ export class ChatComponent {
     this.route.paramMap.subscribe((params) => {
       this.recipient = params.get('recipient') || params.get('user') || '0';
       this.chatId = params.get('id') || '0';
-      console.log(this.chatId, 'this.chatId');
-      console.log(this.recipient, 'this.recipient');
     });
 
     const userData = this.userService.getUserData();
@@ -76,12 +69,8 @@ export class ChatComponent {
         });
       }
 
-      this.connectWebSocket(); // Chiamata alla funzione per connettersi al WebSocket
+      this.connectWebSocket();
     }
-  }
-
-  ngOnInit() {
-    // Scroll to the bottom of the page
   }
 
   ngOnDestroy() {
@@ -92,7 +81,6 @@ export class ChatComponent {
     this.socket = io();
     this.socket.emit('authenticate', this.user._id);
     this.socket.on('new_message', (message: Message) => {
-      console.log('message from ', message.from, ', recipient ', this.recipient);
       if (message.from != this.recipient) return;
       // Gestisci il messaggio ricevuto dal server
       this.chat.messages.push({
@@ -118,7 +106,7 @@ export class ChatComponent {
           else this.more_to_load = true;
         })
         .catch((error) => {
-          //console.error(error);
+          console.error(error);
           this.more_to_load = false;
         });
     }
@@ -129,7 +117,6 @@ export class ChatComponent {
   }
   sendMessage() {
     // use the chatservice to send a message
-
     if (this.message_text.length <= 0) return;
     this.chatsService
       .sendMessage(
@@ -137,7 +124,6 @@ export class ChatComponent {
         this.message_text
       )
       .then((response) => {
-        // console.log(response);
         this.message_text = '';
         if (response.chat_id) this.router.navigate(['/private-chats/user', response.chat_id, this.recipient]);
 
@@ -155,7 +141,7 @@ export class ChatComponent {
         }, 50);
       })
       .catch((error) => {
-        // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
+        console.error(error);
       });
   }
 
@@ -163,11 +149,10 @@ export class ChatComponent {
     try {
       const chatContainer = document.getElementById('chat-main'); //messageContainer
       if (chatContainer) {
-        console.log(chatContainer);
         chatContainer.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'end' });
       }
     } catch (err) {
-      console.error('Errore durante lo scroll:', err);
+      console.error('Error during scroll:', err);
     }
   }
 }

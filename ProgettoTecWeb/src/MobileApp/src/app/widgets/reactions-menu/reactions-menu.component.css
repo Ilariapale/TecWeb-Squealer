@@ -1,25 +1,7 @@
-body {
-  padding: 0;
-  margin: 0;
-  background: #596778;
-  color: #eeeeee;
-  text-align: center;
-  font-family: "Lato", sans-serif;
-}
-
-@media screen and (max-width: 700px) {
-  body {
-    padding: 170px 0 0 0;
-    width: 100%;
-  }
-}
-
 a {
   color: inherit;
   text-decoration: none;
 }
-
-
 
 .menu-item,
 .menu-open-button {
@@ -60,52 +42,6 @@ a {
 
 .menu-open {
   display: none;
-}
-
-.lines {
-  width: 25px;
-  height: 3px;
-  background: #596778;
-  display: block;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-left: -12.5px;
-  margin-top: -1.5px;
-  -webkit-transition: -webkit-transform 200ms;
-  transition: -webkit-transform 200ms;
-  transition: transform 200ms;
-  transition: transform 200ms, -webkit-transform 200ms;
-}
-
-.line-1 {
-  -webkit-transform: translate3d(0, -8px, 0);
-  transform: translate3d(0, -8px, 0);
-}
-
-.line-2 {
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-}
-
-.line-3 {
-  -webkit-transform: translate3d(0, 8px, 0);
-  transform: translate3d(0, 8px, 0);
-}
-
-.menu-open:checked+.menu-open-button .line-1 {
-  -webkit-transform: translate3d(0, 0, 0) rotate(45deg);
-  transform: translate3d(0, 0, 0) rotate(45deg);
-}
-
-.menu-open:checked+.menu-open-button .line-2 {
-  -webkit-transform: translate3d(0, 0, 0) scale(0.1, 1);
-  transform: translate3d(0, 0, 0) scale(0.1, 1);
-}
-
-.menu-open:checked+.menu-open-button .line-3 {
-  -webkit-transform: translate3d(0, 0, 0) rotate(-45deg);
-  transform: translate3d(0, 0, 0) rotate(-45deg);
 }
 
 .menu {

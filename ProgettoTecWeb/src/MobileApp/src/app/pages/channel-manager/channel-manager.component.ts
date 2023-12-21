@@ -1,13 +1,10 @@
-import { Component, OnInit, AfterViewInit, ChangeDetectorRef, ViewChild } from '@angular/core';
-import { Router, ActivatedRoute, ParamMap } from '@angular/router';
+import { Component, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { TimeService } from 'src/app/services/time.service';
 import { UsersService } from 'src/app/services/api/users.service';
 import { UserService } from 'src/app/services/user.service';
-import { User, AccountType, ProfessionalType } from 'src/app/models/user.interface';
-import { Subscription, forkJoin, firstValueFrom, ObservableInput } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
-import { SquealsService } from 'src/app/services/api/squeals.service';
-import { Squeal } from 'src/app/models/squeal.interface';
 import { Channel } from 'src/app/models/channel.interface';
 import { ChannelsService } from 'src/app/services/api/channels.services';
 import { TagInputComponent } from 'src/app/widgets/tag-input/tag-input.component';
@@ -17,21 +14,6 @@ import { TagInputComponent } from 'src/app/widgets/tag-input/tag-input.component
   styleUrls: ['./channel-manager.component.css'],
 })
 export class ChannelManagerComponent {
-  /*
-  export interface Channel {
-  _id?: String;
-  owner: String;
-  editors: String[];
-  name: String;
-  description: String;
-  is_official: boolean;
-  can_mute: boolean;
-  created_at: Date;
-  squeals: String[];
-  subscribers: String[];
-  is_blocked: boolean;
-}
-  */
   @ViewChild('editorInput1') editorComponent1!: TagInputComponent;
   @ViewChild('editorInput2') editorComponent2!: TagInputComponent;
   //TODO quando la richiesta fallisce metti l'errore
@@ -71,13 +53,10 @@ export class ChannelManagerComponent {
   };
   channelToDelete: String = '';
   constructor(
-    private route: ActivatedRoute,
     public timeService: TimeService,
     private usersService: UsersService,
     private userService: UserService,
-    private squealsService: SquealsService,
     public darkModeService: DarkModeService,
-    private cdr: ChangeDetectorRef,
     private router: Router,
     private channelsService: ChannelsService
   ) {
@@ -100,7 +79,6 @@ export class ChannelManagerComponent {
     this.usersService
       .getUser(this.username)
       .then((user) => {
-        console.log(user);
         this.channelsOwnedIds = user.owned_channels;
         this.channelsEditorIds = user.editor_channels;
 
@@ -115,12 +93,12 @@ export class ChannelManagerComponent {
             this.channelsEditor = channels.filter((channel) => this.channelsEditorIds.includes(channel._id));
           },
           error: (err) => {
-            console.error('Error fetching channels:', err);
+            console.log('Error fetching channels:', err);
           },
         });
       })
       .catch((err) => {
-        console.error('Error fetching user data:', err);
+        console.log('Error fetching user data:', err);
       });
   }
 
@@ -139,7 +117,7 @@ export class ChannelManagerComponent {
       .catch((err: any) => {
         this.successCreation = '';
         this.errorCreation = 'Error creating channel: ' + err.error?.error;
-        console.error('Error creating channel:', err);
+        console.log('Error creating channel:', err);
       });
   }
 
@@ -162,7 +140,6 @@ export class ChannelManagerComponent {
     //richiesta per ottenere i nomi degli editor
     //ottengo lo username dell'owner
     this.selectedChannel.owner = '';
-    console.log(this.selectedChannel.editors);
     const editorsRequests = this.selectedChannel.editors.map((editorId) =>
       this.usersService.getUsername('' + editorId)
     );
@@ -195,7 +172,6 @@ export class ChannelManagerComponent {
     this.channelsService
       .updateChannel(body)
       .then((channel: any) => {
-        console.log(channel);
         this.channelsOwned = this.channelsOwned.map((channel) => {
           if (channel._id === updatedChannel._id) {
             return updatedChannel;
@@ -208,6 +184,7 @@ export class ChannelManagerComponent {
       .catch((err: any) => {
         this.successMessage = '';
         this.errorMessage = 'Error updating channel: ' + err.error?.error;
+        console.log(err);
       });
   }
 
@@ -223,7 +200,6 @@ export class ChannelManagerComponent {
     const oldChannel = this.channelsEditor.find((channel) => channel._id === this.selectedChannel._id);
     const updatedChannel = this.selectedChannel;
     const newEditors = this.editorComponent2.getTags();
-    console.log(newEditors);
     const body: any = {
       identifier: updatedChannel._id,
     };
@@ -235,7 +211,6 @@ export class ChannelManagerComponent {
     this.channelsService
       .updateChannel(body)
       .then((channel: any) => {
-        console.log(channel);
         this.channelsEditor = this.channelsEditor.map((channel) => {
           if (channel._id === updatedChannel._id) {
             return updatedChannel;
@@ -260,9 +235,6 @@ export class ChannelManagerComponent {
     this.channelsService
       .deleteChannel(this.channelToDelete)
       .then((channel: any) => {
-        console.log(channel);
-        console.log(this.channelsOwned);
-        console.log(this.channelToDelete);
         this.channelsOwned = this.channelsOwned.filter((channel) => channel._id !== this.channelToDelete);
       })
       .catch((err: any) => {

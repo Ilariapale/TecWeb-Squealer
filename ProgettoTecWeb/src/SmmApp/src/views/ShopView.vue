@@ -1,4 +1,6 @@
 <script lang=ts>
+import { addCharacters } from '@/services/user.service';
+
 export default {
 
     data() {
@@ -49,13 +51,17 @@ export default {
         }
     },
     methods: {
-        openShop(tier: string) {
+        async openShop(tier: string) {
             //this.router.navigate([page]);
             window.open(
                 this.tiersUrl[tier], //
                 '_blank',
                 'width=500,height=600'
             )
+
+            await addCharacters(tier, this.vip.username).then((res) => {
+                this.$emit('updateChars', tier);
+            })
         },
     },
     props: {
@@ -157,8 +163,8 @@ export default {
                     <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionQuota">
                         <div class="accordion-body bg-primary">
                             <div class="row row-cols-1 row-cols-2 g-4">
-                                <div @click="openShop(item.id)" v-for="item in itemsDaily" class="col ">
-                                    <div class="card  border-light  bg-primary clickable">
+                                <div v-for="item in itemsMonthly" class="col ">
+                                    <div @click="openShop(item.id)" class="card  border-light  bg-primary clickable">
                                         <img class="card-img-top">
                                         <div class="card-body">
                                             <h2 class="card-title ">{{ item.name }}</h2>

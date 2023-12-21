@@ -34,7 +34,6 @@ export class NavbarComponent {
     } else {
       this.authService.logout();
     }
-    // Chiama il metodo di logout dal tuo servizio di autenticazione
   }
 
   toggleDarkMode() {
@@ -47,7 +46,6 @@ export class NavbarComponent {
   }
 
   goToPage(page: string) {
-    //TODO controllare
     if (page === 'profile') {
       this.user = this.userService.getUserData()?.username || '';
       const destination = this.user ? `/${page}/${this.user}` : '/login';
