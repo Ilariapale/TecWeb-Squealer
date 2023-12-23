@@ -57,16 +57,19 @@ export class ChatComponent {
           }, 10);
         });
       } else if (this.recipient !== '0') {
-        this.chatsService.getChatByUser(this.recipient).then((response: any) => {
-          this.chat = response.chat;
-          this.chat_loaded = true;
-          this.chatId = response.chat._id ? response.chat._id : '0';
-          if (this.chat.messages.length < 6) this.more_to_load = false;
-          this.reqSenderPosition = response.reqSenderPosition;
-          setTimeout(() => {
-            this.scrollToBottom();
-          }, 10);
-        });
+        this.chatsService
+          .getChatByUser(this.recipient)
+          .then((response: any) => {
+            this.chat = response.chat;
+            this.chat_loaded = true;
+            this.chatId = response.chat._id ? response.chat._id : '0';
+            if (this.chat.messages.length < 6) this.more_to_load = false;
+            this.reqSenderPosition = response.reqSenderPosition;
+            setTimeout(() => {
+              this.scrollToBottom();
+            }, 10);
+          })
+          .catch((error) => {});
       }
 
       this.connectWebSocket();
@@ -126,15 +129,12 @@ export class ChatComponent {
       .then((response) => {
         this.message_text = '';
         if (response.chat_id) this.router.navigate(['/private-chats/user', response.chat_id, this.recipient]);
-
+        if (!this.chat.messages) this.chat.messages = [];
         this.chat.messages.push({
           sender: this.reqSenderPosition,
           text: response.text,
           timestamp: response.timestamp,
         });
-
-        if (this.chatId === '0') {
-        }
 
         setTimeout(() => {
           this.scrollToBottom();

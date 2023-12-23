@@ -86,7 +86,7 @@ export default {
 
 <template>
   <HeaderSMM />
-  <main class="container-fluid">
+  <main v-if="user && user.account_type == 'professional' && user.professional_type == 'SMM'" class="container-fluid">
     <div class="row">
       <!-- Menu a sinistra -->
       <div class="col col-auto col-md-3 col-lg-2 p-0">
@@ -112,6 +112,24 @@ export default {
       </div>
 
 
+    </div>
+  </main>
+  <main v-else-if="user.username">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col col-12">
+          <h1 class="text-center">You do not have access to this page</h1>
+        </div>
+      </div>
+    </div>
+  </main>
+  <main v-else>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col col-12">
+          <h1 class="text-center"><a href="/login">Log in</a> as a Social Media Manager to access this page</h1>
+        </div>
+      </div>
     </div>
   </main>
 </template>
