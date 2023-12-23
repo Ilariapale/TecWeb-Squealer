@@ -43,9 +43,19 @@ export class UserService {
         this.setUserData(JSON.parse(savedUserData));
       }
     }
-
     const currentUserData = this.userData;
     return currentUserData && channel.editors.includes(currentUserData._id);
+  }
+
+  isSquealerMod(): boolean {
+    if (!this.userData) {
+      const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      if (savedUserData) {
+        this.setUserData(JSON.parse(savedUserData));
+      }
+    }
+    const currentUserData = this.userData;
+    return currentUserData && currentUserData.account_type === 'moderator';
   }
 
   isSMM(): boolean {

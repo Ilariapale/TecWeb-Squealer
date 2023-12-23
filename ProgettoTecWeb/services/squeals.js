@@ -450,6 +450,12 @@ module.exports = {
           };
         }
       }
+      if (!reqSender.is_active) {
+        return {
+          status: 403,
+          data: { error: `You are banned and you are not allowed to post a squeal.` },
+        };
+      }
 
       //check if the content_type is valid
       if (!contentTypes.includes(content_type) || content_type == "deleted") {
@@ -951,7 +957,7 @@ module.exports = {
   getReportedSqueals: async (options) => {
     let { user_id, last_loaded, pag_size, sort_by, sort_order, checked } = options;
     const sort_types = ["first_report", "report_number", "ratio", "checked_date"];
-    const sort_orders = ["asc", "desc"];
+    const sort_orders = ["asc", "desc"]; //default
     const pipeline = [];
     if (user_id) {
       const response = await findUser(user_id);
@@ -977,7 +983,14 @@ module.exports = {
           data: { error: `'last_loaded' must be a valid ObjectId.` },
         };
       }
-      pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
+
+      if (sort_order && sort_by && sort_orders.includes(sort_order) && sort_types.includes(sort_by) && sort_order == "asc") {
+        pipeline.push({ $match: { _id: { $lt: new mongoose.Types.ObjectId(last_loaded) } } });
+        console.log("LT");
+      } else {
+        pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
+        console.log("GT");
+      }
     }
 
     if (checked) {
@@ -1025,6 +1038,7 @@ module.exports = {
     }
 
     if (sort_order && sort_by) {
+      console.log(sort_by, sort_order);
       if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
         return {
           status: 400,
@@ -1073,13 +1087,17 @@ module.exports = {
     //check if the query returned any result
     if (data.length <= 0) {
       return {
-        status: 404,
-        data: { error: `No squeal found.` },
+        status: 200,
+        data: [],
       };
     }
+
+    //aggiungo il campo "comments_total" ad ogni squeal:
+    const newData = await addCommentsCountToSqueals(data);
+
     return {
       status: 200,
-      data: data,
+      data: newData,
     };
   },
 
@@ -1111,12 +1129,12 @@ module.exports = {
     }
     const squeal = response.data;
 
-    if (squeal.content_type == "deleted") {
-      return {
-        status: 404,
-        data: { error: `You can't check a deleted squeal` },
-      };
-    }
+    //if (squeal.content_type == "deleted") {
+    //  return {
+    //    status: 404,
+    //    data: { error: `You can't check a deleted squeal` },
+    //  };
+    //}
 
     if (squeal.reported.checked) {
       return {

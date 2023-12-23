@@ -351,7 +351,7 @@ const Squeal = mongoose.model("Squeal", SquealSchema);
 const RequestSchema = new mongoose.Schema({
   type: { type: String, enum: ["SMM", "VIP", "verified", "standard"], required: true },
   username: { type: String, required: true },
-  profile_picture: { type: String, required: true },
+  profile_picture: { type: String },
   user_id: { type: mongoose.Types.ObjectId, ref: "User", required: true },
   created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
 });

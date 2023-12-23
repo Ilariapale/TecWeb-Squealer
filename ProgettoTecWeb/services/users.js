@@ -1038,7 +1038,7 @@ module.exports = {
 
     if (action === "decline") {
       //TODO da controllare
-      await request.remove();
+      await Request.findByIdAndDelete(request_id);
       //mandiamo notifica allo user
       const newNotification = new Notification({
         user_ref: request.user_id,
@@ -1090,7 +1090,7 @@ module.exports = {
     user.notifications.push(notification._id);
 
     await user.save();
-    await request.remove();
+    await Request.findByIdAndDelete(request_id);
 
     return {
       status: 200,
@@ -1146,7 +1146,7 @@ module.exports = {
   },
   //TODO quando uno user viene cancellato le sue richieste devono essere cancellate
   getModRequestList: async (options) => {
-    const { user_id } = options;
+    const { user_id, last_loaded, pag_size } = options;
     console.log(user_id);
     console.log(options);
     //check if the request sender exists
@@ -1167,7 +1167,27 @@ module.exports = {
         data: { error: `You are not a Moderator.` },
       };
     }
-    const requests = await Request.find();
+
+    if (last_loaded && !mongooseObjectIdRegex.test(last_loaded)) {
+      return {
+        status: 400,
+        data: { error: `'last_loaded' must be a valid ObjectId.` },
+      };
+    }
+    if (pag_size && !Number.isInteger(pag_size)) {
+      return {
+        status: 400,
+        data: { error: `'pag_size' must be an integer.` },
+      };
+    }
+    const pagSize = pag_size || DEFAULT_PAGE_SIZE;
+
+    //find pagSize requests starting from the last_loaded id
+    let requests;
+    if (last_loaded) requests = await Request.find({ _id: { $gt: last_loaded } }).limit(pagSize);
+    else requests = await Request.find().limit(pagSize);
+
+    //const requests = await Request.find();
 
     return {
       status: 200,

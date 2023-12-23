@@ -148,7 +148,6 @@ router.get("/mod-request-list", verifyToken, async (req, res, next) => {
       last_loaded: req.query.last_loaded,
       pag_size: req.query.pag_size,
     };
-    console.log("qui");
 
     try {
       const result = await users.getModRequestList(options);
@@ -240,6 +239,7 @@ router.delete("/SMM", verifyToken, async (req, res, next) => {
   }
 });
 
+//users/request/43412131231321/accept   /decline
 router.patch("/request/:request_id/:action", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {

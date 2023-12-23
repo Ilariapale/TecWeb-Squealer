@@ -2,12 +2,18 @@ body {
     margin: 0;
     padding: 0;
     font-family: Arial, sans-serif;
+    background-color: #333940 !important;
+    user-select: none;
 }
 
 header {
-    background-color: #333;
     color: #fff;
     padding: 20px;
+    user-select: none;
+}
+
+.clickable {
+    cursor: pointer;
 }
 
 nav {
@@ -19,6 +25,60 @@ main {
     padding: 20px;
 }
 
+.vh-25 {
+    height: 25vh;
+}
+
+.vw-25 {
+    width: 25vw;
+}
+
+.vh-50 {
+    height: 50vh;
+}
+
+.vw-50 {
+    width: 50vw;
+}
+
+.vh-75 {
+    height: 75vh;
+}
+
+.vw-75 {
+    width: 75vw;
+}
+
+.center-screen {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    background-color: #303c5a;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #ac833d;
+}
+
+.btn.btn-outline-primary,
+.btn.btn-outline-danger,
+.btn.btn-outline-secondary,
+.btn.btn-outline-success {
+    background-color: #f2f2f2;
+}
+
+.nav-link:not(.active) {
+    color: #f2f2f2 !important;
+}
 
 .vl {
     border-left: 6px solid green;
@@ -30,14 +90,19 @@ main {
     height: 100px;
 }
 
-.datacard{
+.datacard {
     width: 80vw;
 }
 
 
-footer {
-    background-color: #333;
+.footer-text {
     color: #fff;
+    padding: 20px;
+    text-align: center;
+    user-select: none;
+}
+
+.text-align-center {
     padding: 20px;
     text-align: center;
 }

@@ -155,7 +155,40 @@ async function postWeatherSqueals() {
   const weatherChannel = await Channel.findOne({ name: "RANDOM_WEATHER" });
   const admin = await User.findOne({ username: "ADMIN" });
   const apiKey = "c60cc89ba06f0b9de4f847a9d30486fa";
-  const cities = ["milan", "bologna", "rome", "florence", "naples", "iglesias", "teramo"];
+  const cities = [
+    "milan",
+    "bologna",
+    "florence",
+    "naples",
+    "iglesias",
+    "teramo",
+    "palermo",
+    "turin",
+    "genoa",
+    "brescia",
+    "cagliari",
+    "venice",
+    "verona",
+    "bari",
+    "catania",
+    "messina",
+    "padua",
+    "trieste",
+    "taranto",
+    "benevento",
+    "bergamo",
+    "salerno",
+    "vicenza",
+    "modena",
+    "reggio calabria",
+    "parma",
+    "reggio emilia",
+    "ravenna",
+    "ferrara",
+    "rimini",
+    "syracuse",
+    "pescara",
+  ];
   const random = Math.floor(Math.random() * cities.length);
   const city = cities[random].charAt(0).toUpperCase() + cities[random].slice(1); // Capitalize the first letter of the city
   const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;

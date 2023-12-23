@@ -13,6 +13,17 @@ body {
   padding: 0;
 }
 
+::-webkit-scrollbar {
+  width: 5px;
+  background-color: #303c5a;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: #ac833d;
+}
+
 body {
   user-select: none;
   margin: 0;
