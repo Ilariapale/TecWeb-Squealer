@@ -8,7 +8,7 @@
       <div class="row p-3" [ngClass]="bannerClass">
 
         <img class="col-3 col-md-1 p-0" alt="Profile Picture" style="height: 100%;"
-          [src]="'media/image/'+user.profile_picture" onerror="this.src='assets/imgs/logo.png'" />
+          [src]="'media/propic/'+(user.profile_picture||'squealer.png')" onerror="this.src='assets/imgs/logo.png'" />
         <div class="col-auto">
           <h2 class="row ms-2 pt-4">@{{user.username}}</h2>
           <span class="row ms-2 text-secondary">{{user.account_type}}</span>
@@ -17,6 +17,16 @@
         <span *ngIf="mySelf" class="col d-flex flex-row-reverse">
           <button type="button" class="btn bi bi-gear h-50 no-overflow" [class.text-light]="getDarkMode()=='dark-theme'"
             data-bs-toggle="modal" data-bs-target="#settingsModal"></button>
+        </span>
+        <span *ngIf="user.professional_type=='SMM' && !mySelf && !alreadyGotSMM" class="col d-flex flex-row-reverse">
+          <button type="button" (click)="alreadyRequestedSMM ? sendRequestSMM('withdraw'):sendRequestSMM('send')"
+            class="btn btn-warning no-overflow text-dark"
+            [class.text-light]="getDarkMode()=='dark-theme'">{{alreadyRequestedSMM ?
+            "Withdraw":"Send"}} SMM request</button>
+        </span>
+        <span *ngIf="user.professional_type=='SMM' && !mySelf && isMySMM" class="col d-flex flex-row-reverse">
+          <button type="button" (click)="fireSMM()" class="btn btn-danger no-overflow text-dark"
+            [class.text-light]="getDarkMode()=='dark-theme'">Fire SMM</button>
         </span>
 
       </div>

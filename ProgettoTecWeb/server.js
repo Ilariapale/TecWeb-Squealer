@@ -30,21 +30,15 @@ io.on("connect", (socket) => {
   // Ricevi l'identificativo dell'utente quando si connette
   socket.on("authenticate", (userId) => {
     // Associa l'identificativo dell'utente al suo socket.id
-    console.log("authenticate: " + userId + " socket.id: " + socket.id);
+    // console.log("authenticate: " + userId + " socket.id: " + socket.id);
     connectedUsers[userId] = socket.id;
   });
 
   socket.on("sending_position_to_server", async (userId, data) => {
-    console.log("sending_position_to_server: " + data);
-    console.log("socket.id: " + socket.id);
-    console.log("data = ", data);
     await postPositionScheduledSqueal(userId, socket.id, data);
   });
 
   socket.on("sending_last_position_to_server", async (userId, data) => {
-    console.log("sending_last_position_to_server: " + data);
-    console.log("socket.id: " + socket.id);
-    console.log("data = ", data);
     await postPositionScheduledSqueal(userId, socket.id, data);
     await deleteFromSendingPositionObject(userId);
   });
@@ -124,8 +118,4 @@ server.listen(PORT, () => {
 });
 
 db.dbconnect();
-//initializeDB();
-//postWeatherSqueals();
-//character_reset_init();
-//check_init();
 module.exports = app;

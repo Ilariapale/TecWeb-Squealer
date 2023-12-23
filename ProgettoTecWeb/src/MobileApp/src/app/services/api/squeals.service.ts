@@ -28,12 +28,10 @@ export class SquealsService {
   }
 
   getSqueals(query: SquealQuery): Promise<any> {
-    console.log(query);
     let url = `${this.apiUrl}`;
     if (query) {
       url += '?';
       if (query.keywords) {
-        console.log(query.keywords);
         query.keywords.forEach((keyword) => {
           url += `keywords=${keyword}&`;
         });
@@ -50,7 +48,6 @@ export class SquealsService {
       if (query.pag_size) url += `pag_size=${query.pag_size}&`;
       if (query.last_loaded) url += `last_loaded=${query.last_loaded}&`;
       url = url.slice(0, -1);
-      console.log(url);
     }
 
     const requestOptions = this.headersGenerator(true);
@@ -146,7 +143,6 @@ export class SquealsService {
     ) {
       body['reactions'] = reactions;
     }
-    console.log(body);
     return firstValueFrom(this.http.patch(url, body, this.headersGenerator(true)));
   }
 }

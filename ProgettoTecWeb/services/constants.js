@@ -1,4 +1,5 @@
-const MAX_DESCRIPTION_LENGTH = 140,
+const QUOTA_MULTIPLIER = 1000,
+  MAX_DESCRIPTION_LENGTH = 140,
   USERNAME_MIN_LENGTH = 2,
   USERNAME_MAX_LENGTH = 20,
   CHANNEL_NAME_MIN_LENGTH = 5,
@@ -8,11 +9,13 @@ const MAX_DESCRIPTION_LENGTH = 140,
   KEYWORD_MIN_LENGTH = 4,
   KEYWORD_MAX_LENGTH = 20,
   PASSWORD_MIN_LENGTH = 8,
-  MEDIA_QUOTA = { image: 1, video: 1, position: 1 }, //{ image: 125, video: 300, position: 150 }, //char_quota per image
-  DAILY_CHAR_QUOTA = 100,
-  WEEKLY_CHAR_QUOTA = 500,
-  MONTHLY_CHAR_QUOTA = 1500,
-  EXTRA_DAILY_CHAR_QUOTA = 20,
+  MEDIA_QUOTA = { image: 125, video: 300, position: 150 }, //char_quota per image
+  //CHAR QUOTA
+  DAILY_CHAR_QUOTA = 1 * QUOTA_MULTIPLIER,
+  WEEKLY_CHAR_QUOTA = 5 * QUOTA_MULTIPLIER,
+  MONTHLY_CHAR_QUOTA = 15 * QUOTA_MULTIPLIER,
+  EXTRA_DAILY_CHAR_QUOTA = 0.2 * QUOTA_MULTIPLIER,
+  //---------------------
   DIRECT_MESSAGE_MAX_LENGTH = 1000,
   MAX_PAGE_SIZE = 100,
   DEFAULT_PAGE_SIZE = 10,
@@ -29,43 +32,48 @@ const MAX_DESCRIPTION_LENGTH = 140,
   RESET_THRESHOLD = 50,
   TIERS = {
     tier1: {
-      daily: 10,
-      weekly: 30,
-      monthly: 100,
+      daily: 100,
+      weekly: 300,
+      monthly: 1000,
     },
     tier2: {
-      daily: 30,
-      weekly: 90,
-      monthly: 300,
+      daily: 300,
+      weekly: 900,
+      monthly: 3000,
     },
     tier3: {
-      daily: 70,
-      weekly: 210,
-      monthly: 700,
+      daily: 700,
+      weekly: 2100,
+      monthly: 7000,
     },
     tier4: {
-      daily: 150,
-      weekly: 450,
-      monthly: 1500,
+      daily: 1500,
+      weekly: 4500,
+      monthly: 15000,
     },
     daily: {
-      tier1: 50,
-      tier2: 150,
-      tier3: 350,
-      tier4: 750,
-    },
-    weekly: {
-      tier1: 150,
-      tier2: 450,
-      tier3: 1050,
-      tier4: 2250,
-    },
-    monthly: {
       tier1: 500,
       tier2: 1500,
       tier3: 3500,
       tier4: 7500,
     },
+    weekly: {
+      tier1: 1500,
+      tier2: 4500,
+      tier3: 10500,
+      tier4: 22500,
+    },
+    monthly: {
+      tier1: 5000,
+      tier2: 15000,
+      tier3: 35000,
+      tier4: 75000,
+    },
+    //prices
+    tier1Price: 2.99,
+    tier2Price: 4.99,
+    tier3Price: 9.99,
+    tier4Price: 24.99,
   };
 
 module.exports = {

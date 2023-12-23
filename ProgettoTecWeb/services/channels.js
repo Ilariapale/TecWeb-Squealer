@@ -24,7 +24,14 @@ const {
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
 } = require("./constants");
-const { newOwnerNotification, removedOwnerNotification, newEditorForChannelNotification, removedEditorForChannelNotification } = require("./messages");
+const {
+  newOwnerNotification,
+  removedOwnerNotification,
+  newEditorForChannelNotification,
+  removedEditorForChannelNotification,
+  bannedChannelNotification,
+  unbannedChannelNotification,
+} = require("./messages");
 module.exports = {
   //DONE Controllati i casi in cui l'utente che fa richiesta è bannato
 
@@ -946,6 +953,20 @@ module.exports = {
 
     // Toggle the is_blocked field
     channel.is_blocked = value === "true" ? true : false;
+
+    //send notification to the channel owner
+    const notification = new Notification({
+      content: channel.is_blocked ? bannedChannelNotification(channel.name) : unbannedChannelNotification(channel.name),
+      user_ref: channel.owner,
+      channel_ref: channel._id,
+      created_at: Date.now(),
+      source: "system",
+      id_code: "banStatusUpdate",
+    });
+
+    await notification.save();
+    await User.findByIdAndUpdate(channel.owner, { $push: { notifications: notification._id } }).exec();
+
     // Return the result
     await channel.save();
     return {

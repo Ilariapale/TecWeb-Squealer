@@ -17,7 +17,6 @@ export class CommentService {
     // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
     const headers = new HttpHeaders().set('Authorization', `${token}`);
     const requestOptions = { headers: headers };
-    console.log(requestOptions);
     return requestOptions;
   }
 
@@ -26,8 +25,6 @@ export class CommentService {
     let url = `${this.apiUrl}/${comment_section_id}`;
     if (last_comment_loaded) {
       url += `?last_comment_loaded=${last_comment_loaded}`;
-      console.log(url);
-      ///comments/658015c83623461db9a4c99d?last_loaded=658017e53623461db9a4cb24
     }
     return firstValueFrom(this.http.get(url, requestOptions));
   }

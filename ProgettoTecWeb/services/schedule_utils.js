@@ -1,9 +1,4 @@
-const bcrypt = require("bcryptjs");
-const config = require("../config");
-
-const { Notification, User } = require("./schemas");
-const { mentionNotification } = require("./messages.js");
-const { MAX_DESCRIPTION_LENGTH } = require("./constants");
+const { User } = require("./schemas");
 const squeals = require("../services/squeals");
 const nextTick = require("next-tick");
 
@@ -20,7 +15,7 @@ function getNextDate(nowDate, unit, quantity) {
   } else if (unit == "mins") {
     date_to_run = new Date(nowDate.getTime() + 1000 * 60 * quantity);
   } else {
-    console.log("Invalid unit");
+    //console.log("Invalid unit");
   }
   if (date_to_run == null || date_to_run == undefined) {
     return null;

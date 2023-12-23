@@ -56,8 +56,6 @@ const NotificationSchema = new mongoose.Schema({
   source: { type: String, enum: ["squeal", "channel", "user", "system"] },
 });
 const Notification = mongoose.model("Notification", NotificationSchema);
-//squeal -> se ti taggano
-//
 
 // ========== USER ==========
 const UserSchema = new mongoose.Schema({
@@ -145,6 +143,8 @@ UserSchema.methods.Delete = async function () {
 
   // trova tutte le notifiche associate all'utente
   await Notification.deleteMany({ _id: { $in: notifications } });
+
+  await Request.deleteMany({ user_id: this._id });
 
   //if the channels they owned have editors, pass the ownership to the first editor, otherwise delete the channel
 
@@ -424,17 +424,6 @@ const KeywordSchema = new mongoose.Schema({
 });
 const Keyword = mongoose.model("Keyword", KeywordSchema);
 
-// ========== MEDIA ==========
-//const mediaSchema = new mongoose.Schema({
-//  // _id: { type: mongoose.Types.ObjectId },
-//  original_name: { type: String, required: true },
-//  name: { type: String, required: true, unique: true },
-//  date: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
-//  content_type: { type: String, required: true },
-//});
-
-//const Media = mongoose.model("Media", mediaSchema);
-
 //EXPORTS
 module.exports = {
   Notification,
@@ -442,7 +431,6 @@ module.exports = {
   Squeal,
   Channel,
   Keyword,
-  //Media,
   Request,
   Chat,
   CommentSection,

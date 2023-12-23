@@ -1,6 +1,9 @@
 <script  lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 export default {
+    setup() {
+
+    },
     data() {
         return {
             isClicked: false,
@@ -25,6 +28,9 @@ export default {
             //reindirizzo al sito /login
             window.location.href = "/login";
         },
+        link() {
+            console.log(this.$route);
+        }
     },
 };
 
@@ -33,30 +39,31 @@ export default {
 <template>
     <div id="menu-desktop"
         class="d-flex flex-column flex-shrink-0 p-3 unselectable text-white bg-dark elements-height desktop-menu">
-        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <a @click="link" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
             <svg class="bi me-2" width="40" height="32">
             </svg>
             <span class="fs-4">Menu</span>
         </a>
         <hr>
         <ul class="nav nav-pills flex-column mb-auto" role="tablist" aria-orientation="vertical">
-            <li class="nav-item nav-link active" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button"
-                role="tab" aria-controls="v-pills-home" aria-selected="true">
+            <li class="nav-item nav-link" :class="{ active: $route.name == 'dashboard' }" data-bs-toggle="pill"
+                data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
                 <RouterLink :to="{ name: 'dashboard' }" class="nav-link text-white" aria-current="page">
                     <i class="bi bi-house-door"></i>
                     Home
                 </RouterLink>
             </li>
-            <li class="nav-item nav-link " data-bs-toggle="pill" data-bs-target="#v-pills-VIPrequests" type="button"
-                role="tab" aria-controls="v-pills-VIPrequests" aria-selected="false">
+            <li class="nav-item nav-link " :class="{ active: $route.name == 'vip-requests' }" data-bs-toggle="pill"
+                data-bs-target="#v-pills-VIPrequests" type="button" role="tab" aria-controls="v-pills-VIPrequests"
+                aria-selected="false">
 
                 <RouterLink :to="{ name: 'vip-requests' }" class="nav-link text-white">
                     <i class="bi bi-people-fill"></i>
                     VIP requests
                 </RouterLink>
             </li>
-            <li class="nav-item nav-link " data-bs-toggle="pill" data-bs-target="#v-pills-shop" type="button" role="tab"
-                aria-controls="v-pills-shop" aria-selected="false">
+            <li class="nav-item nav-link " :class="{ active: $route.name == 'shop' }" data-bs-toggle="pill"
+                data-bs-target="#v-pills-shop" type="button" role="tab" aria-controls="v-pills-shop" aria-selected="false">
                 <RouterLink :to="{ name: 'shop' }" class="nav-link text-white">
                     <i class="bi bi-shop text-white"></i>
                     Shop

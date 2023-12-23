@@ -7,7 +7,6 @@ import { getUser } from "./services/user.service";
 import { getPrices } from "./services/squeal.service";
 import MobileVipSelector from './components/gadgets/MobileVipSelector.vue';
 
-
 export default {
   components: {
     HeaderSMM,
@@ -35,7 +34,6 @@ export default {
         return response;
       }).catch((error) => {
         console.log(error);
-        //window.location.href = "/login";
         return error;
       });
     },
@@ -45,7 +43,6 @@ export default {
         return;
       }
       await getUser(vip).then((response) => {
-        //console.log(response);
         this.vip = response;
         return response;
       }).catch((error) => {
@@ -78,10 +75,8 @@ export default {
     this.getUser();
     this.getPrices();
   },
+  emits: ['update-vip', 'update-vips-array', 'updateChars', 'removed-vip']
 }
-
-
-
 </script>
 
 <template>
@@ -95,14 +90,14 @@ export default {
 
       <!-- Contenuto centrale scrollabile -->
       <div class="col col-md-5 col-lg-6 dashboard elements-height p-0">
-        <RouterView :prices="prices" :user="user" :vip="vip" @squeal-posted="updateChar($event)"
-          @updateChars="updateCharacters($event)" />
+        <RouterView :prices="prices" :user="user" :vip="vip" @vip-request-accepted="getUser()"
+          @squeal-posted="updateChar($event)" @updateChars="updateCharacters($event)" />
       </div>
 
       <!-- Menu a destra -->
       <div class="col col-md-4 col-lg-4 p-0 overview-menu elements-height bg-primary">
         <Overviewmenu :user="user" @update-vip="getVip($event)" @update-vips-array="updateVipsArray($event)"
-          @updateChars="updateCharacters($event)" :vip="vip" />
+          @updateChars="updateCharacters($event)" @remove-vip="getUser()" :vip="vip" />
       </div>
 
       <div class="mobile-overview-menu">

@@ -19,7 +19,6 @@ export const getUsername = async (identifier?: string) => {
   try {
     const headers = generateHeaders(true);
     const url = identifier ? `/username?identifier=${identifier}` : `/username`;
-    //console.log(url);
     return (await rest.get(url, { headers })).data;
   } catch (err: any) {
     console.error(err);
@@ -66,7 +65,7 @@ export const manageSMMrequest = async (identifier: string, action: 'accept' | 'd
     const headers = generateHeaders(true);
     return await rest.patch(`/VIP/${identifier}?action=${action}`, {}, { headers });
   } catch (err: any) {
-    throw new Error(err.message);
+    throw new Error(err.response?.data?.error || err.message);
   }
 };
 
@@ -75,7 +74,7 @@ export const removeVIP = async (identifier: string) => {
     const headers = generateHeaders(true);
     return await rest.delete(`/VIP/${identifier}`, { headers });
   } catch (err: any) {
-    throw new Error(err.message);
+    throw new Error(err);
   }
 };
 

@@ -6,8 +6,6 @@ import {
   ChangeDetectorRef,
   ViewChild,
   ElementRef,
-  OnChanges,
-  SimpleChanges,
 } from '@angular/core';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { TimeService } from 'src/app/services/time.service';
@@ -25,7 +23,7 @@ import { MediaService } from 'src/app/services/api/media.service';
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
-export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked, OnChanges {
+export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked {
   @ViewChild('imageInput') imageInput!: ElementRef;
 
   MAX_SQUEALS = 5;
@@ -36,6 +34,12 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
   identifier: string = '';
 
   mySelf: boolean = false;
+
+  alreadyGotSMM: boolean = false;
+
+  isMySMM: boolean = false;
+
+  alreadyRequestedSMM: boolean = false;
 
   listenerSet: boolean = false;
 
@@ -73,7 +77,7 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
     private route: ActivatedRoute,
     public timeService: TimeService,
     private usersService: UsersService,
-    private userService: UserService,
+    public userService: UserService,
     private squealsService: SquealsService,
     public darkModeService: DarkModeService,
     private cdr: ChangeDetectorRef,
@@ -96,6 +100,9 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
           this.mySelf = this.userService.isMyself(user._id);
           this.loading = true;
           this.user = user;
+          this.alreadyRequestedSMM = this.userService.alreadySentSMMRequest(user._id);
+          this.alreadyGotSMM = this.userService.alreadyGotSMM();
+          this.isMySMM = this.userService.isMySMM(user._id);
           this.lastSquealLoaded =
             user.squeals && user.squeals.posted && user.squeals.posted.length > 0 ? user.squeals.posted.length - 1 : -1;
 
@@ -120,11 +127,6 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
         this.router.navigate(['/login']);
       }
     }
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    console.log('changes');
-    console.log(changes);
   }
 
   requestAccountChange(type: 'SMM' | 'VIP' | 'standard' | 'verified') {
@@ -230,8 +232,31 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
     }
   }
 
+  sendRequestSMM(action: 'withdraw' | 'send') {
+    this.usersService
+      .sendSMMRequest(this.user._id as string, action)
+      .then((response) => {
+        this.alreadyRequestedSMM = action === 'send';
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  fireSMM() {
+    this.usersService
+      .fireSMMRequest()
+      .then((response) => {
+        this.alreadyGotSMM = false;
+        this.isMySMM = false;
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
   updateImageFirst(image: any) {
-    this.mediaService.postImage(image).subscribe({
+    this.mediaService.loadPropic(image).subscribe({
       next: (response) => {
         this.updateProfileData(response.name);
       },

@@ -1,6 +1,5 @@
 const express = require("express");
 const auth = require("../services/auth");
-const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
 router.post("/", async (req, res, next) => {

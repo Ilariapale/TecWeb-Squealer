@@ -33,6 +33,13 @@ export class MediaService {
     return this.http.post(`${this.apiUrl}/upload/image`, formData, requestOptions);
   }
 
+  loadPropic(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('image', file);
+    const requestOptions = this.headersGenerator(true);
+    return this.http.post(`${this.apiUrl}/upload/profile-picture`, formData, requestOptions);
+  }
+
   postVideo(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('video', file);

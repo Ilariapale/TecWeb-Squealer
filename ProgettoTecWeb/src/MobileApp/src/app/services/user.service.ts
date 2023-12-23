@@ -1,6 +1,4 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { User } from '../models/user.interface';
 import { Channel } from '../models/channel.interface';
 @Injectable({
   providedIn: 'root',
@@ -70,5 +68,43 @@ export class UserService {
     return (
       currentUserData && currentUserData.account_type === 'professional' && currentUserData.professional_type === 'SMM'
     );
+  }
+
+  alreadySentSMMRequest(SMM_id: String | undefined): boolean {
+    if (!SMM_id) return false;
+    if (!this.userData) {
+      const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      if (savedUserData) {
+        this.setUserData(JSON.parse(savedUserData));
+      }
+    }
+
+    const currentUserData = this.userData;
+    return currentUserData && currentUserData.pending_requests.VIP_requests.includes(SMM_id);
+  }
+
+  alreadyGotSMM(): boolean {
+    if (!this.userData) {
+      const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      if (savedUserData) {
+        this.setUserData(JSON.parse(savedUserData));
+      }
+    }
+
+    const currentUserData = this.userData;
+    return currentUserData && currentUserData.smm;
+  }
+
+  isMySMM(SMM_id: String | undefined): boolean {
+    if (!SMM_id) return false;
+    if (!this.userData) {
+      const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      if (savedUserData) {
+        this.setUserData(JSON.parse(savedUserData));
+      }
+    }
+
+    const currentUserData = this.userData;
+    return currentUserData && currentUserData.smm === SMM_id;
   }
 }

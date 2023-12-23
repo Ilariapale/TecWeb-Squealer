@@ -30,7 +30,6 @@ export class ResetPasswordComponent implements OnInit {
         if (!form.checkValidity()) {
           event.preventDefault();
           event.stopPropagation();
-          console.log('invalid');
         }
         form.classList.add('was-validated');
       },

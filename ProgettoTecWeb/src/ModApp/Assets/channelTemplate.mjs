@@ -21,7 +21,7 @@ export const channel_card = (channel, channel_owner, editor_list_html) => `
                     <h4>Owner: ${channel_owner} </h4>
                 </div>
             </div>
-            <div class="card-subtitle mb-3">Online Since ${channel.created_at}</div>
+            <div class="card-subtitle mb-3">Online Since ${new Date(channel.created_at).toLocaleString()}</div>
             <div class="row card-text mb-4">
                 <div class="col">
                     <h6 class="card-title">${channel.description} </h6>

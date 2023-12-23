@@ -11,7 +11,6 @@ export default {
     },
     methods: {
         updateVip(vip: any) {
-            console.log("Overviewmenu ", vip);
             this.$emit('update-vip', vip);
         },
         updateVipsArray(vips: any) {
@@ -19,6 +18,9 @@ export default {
         },
         updateCharacters(tier: string) {
             this.$emit('updateChars', tier);
+        },
+        removeVIP() {
+            this.$emit('remove-vip');
         }
     },
     props: {
@@ -31,6 +33,7 @@ export default {
             required: true
         },
     },
+    emits: ['update-vip', 'update-vips-array', 'updateChars', 'remove-vip']// 
 }
 
 
@@ -39,7 +42,7 @@ export default {
 <template>
     <div class="unselectable col px-3 pt-3">
         <div class="row m-0">
-            <VipSelector :vip_users="user.managed_accounts" @update-vip="updateVip($event)"
+            <VipSelector :vip_users="user.managed_accounts" @update-vip="updateVip($event)" @remove-vip="removeVIP()"
                 @update-vips-array="updateVipsArray($event)" :selected_vip_out="vip.username || 'none'"></VipSelector>
         </div>
         <hr class="mt-1">

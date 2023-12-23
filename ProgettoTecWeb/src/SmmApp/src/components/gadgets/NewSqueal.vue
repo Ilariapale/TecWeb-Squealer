@@ -239,7 +239,6 @@ export default {
         resetInputs() {
             const myForm = document.getElementById("newSquealForm") as HTMLFormElement;
             if (myForm) myForm.reset();
-            console.log(myForm)
             this.squeal_input = "";
             this.charCount = 0;
             this.updateCharacterCount()
@@ -262,7 +261,6 @@ export default {
             const recipients = this.getRecipients();
             postSqueal(this.vip._id, this.squeal_input, recipients, "text").then((squeal) => {
                 this.$emit("squeal-posted", this.vip.username);
-                //console.log(squeal)
                 this.resetInputs();
                 this.postSuccess = true;
                 setTimeout(() => {
@@ -281,7 +279,6 @@ export default {
             postSqueal(this.vip._id, content, this.getRecipients(), type).then((squeal) => {
                 this.$emit("squeal-posted", this.vip.username);
                 this.resetInputs();
-                //console.log(squeal)
                 this.postSuccess = true;
                 setTimeout(() => {
                     this.postSuccess = false;
@@ -296,10 +293,7 @@ export default {
 
         },
         async postImageSqueal() {
-            //console.log(this.image)
-            //console.log(this.image as File)
             postImage(this.image as File).then(async (response) => {
-                //console.log(response)
                 await this.postImageOrVideoSqueal("image", response.name);
             }).catch((error) => {
                 this.errorText = error
@@ -310,10 +304,7 @@ export default {
             })
         },
         async postVideoSqueal() {
-            //console.log(this.video)
-            //console.log(this.video as File)
             postVideo(this.video as File).then(async (response) => {
-                //console.log(response)
                 await this.postImageOrVideoSqueal("video", response.name);
             }).catch((error) => {
                 this.errorText = error
@@ -386,8 +377,6 @@ export default {
             this.isEnough = this.enoughChar();
         },
         enoughChar() {
-            //console.log(this.vip.char_quota)
-            //console.log("prices", this.prices)
             if (this.prices == null || !this.vip.char_quota) return false;
             if (this.currentTab == "text") this.price = this.charCount;
             else if (this.currentTab == "image") this.price = this.prices?.image_squeal;

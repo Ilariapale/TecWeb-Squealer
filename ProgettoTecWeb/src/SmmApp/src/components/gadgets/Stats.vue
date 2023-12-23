@@ -3,7 +3,7 @@
         <div class="card-body p-2">
             <ul class="nav nav-pills mb-2" id="pills-tab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active fs-3 " id="pills-overview-tab" data-bs-toggle="pill"
+                    <button class="nav-link fs-3 " id="pills-overview-tab" data-bs-toggle="pill"
                         data-bs-target="#pills-overview" type="button" role="tab" aria-controls="pills-overview"
                         aria-selected="true">
                         <i class="bi bi-bar-chart-line"></i><!--Squeal stats-->
@@ -31,7 +31,7 @@
                 </li>
             </ul>
             <div class="tab-content" id="pills-tabContent" v-if="vip?._id != undefined">
-                <div class="tab-pane fade show active text-dark" id="pills-overview" role="tabpanel"
+                <div class="tab-pane fade text-dark" id="pills-overview" role="tabpanel"
                     aria-labelledby="pills-overview-tab" tabindex="0">
                     <div class="h4 mb-0">Squeal stats</div>
                     <div class="row">
@@ -177,7 +177,6 @@ export default {
     },
     methods: {
         async getStatistics() {
-            //console.log(this.vip._id);
             if (this.vip?._id == undefined) {
                 this.reactionsTotData = [
                     { reaction: "like", emoji: "👍", count: "no data" },
@@ -203,7 +202,6 @@ export default {
                 this.interactionsImpressionsUrl = response.interactionsImpressions;
                 this.top3ByTotalReactions = response.top3ByTotalReactions;
                 this.top3ByImpressions = response.top3ByImpressions;
-                //console.log(response);
             }).catch((error) => {
                 console.log(error);
             });

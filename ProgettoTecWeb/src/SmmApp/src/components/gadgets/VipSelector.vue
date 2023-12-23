@@ -1,10 +1,13 @@
 <template>
     <div class="p-1">You're now managing:</div>
-    <select class="form-select form-select-lg mb-1 clickable" v-model="select_form" aria-label=".form-select-lg example"
-        v-on:change="updateVip">
-        <option :value="'none'" selected>Select a VIP</option>
-        <option v-for="user in usernames" :value="user">{{ user }}</option>
-    </select>
+    <div class="d-flex input-group">
+        <select class="form-select form-select-lg  clickable" v-model="select_form" aria-label=".form-select-lg example"
+            v-on:change="updateVip">
+            <option :value="'none'" selected>Select a VIP</option>
+            <option v-for="user in usernames" :value="user">{{ user }}</option>
+        </select>
+        <button class="btn btn-danger text-white input-group-text" @click="removeVIPfromSMM"> Remove VIP</button>
+    </div>
     <div v-if="select_form == 'none'" class="text-muted"><i class="bi bi-info-circle-fill"></i> Select a user to view
         squeals
     </div>
@@ -12,7 +15,7 @@
 </template>
 
 <script lang=ts>
-import { getUsername } from '@/services/user.service';
+import { getUsername, removeVIP } from '@/services/user.service';
 
 
 export default {
@@ -20,14 +23,11 @@ export default {
         return {
             select_form: "none",
             usernames: [] as any,
-            //selected_vip: "none"
         }
     },
     methods: {
         updateVip() {
-            console.log("vip_selector", this.select_form);
-            //this.selected_vip = event.target.value;
-            this.$emit('update-vip', this.select_form)//event.target.value);
+            this.$emit('update-vip', this.select_form)
         },
         async getUsernames(vips_ids: any) {
             this.usernames = [];
@@ -35,11 +35,21 @@ export default {
                 await getUsername(vips_ids[i]).then((response) => {
                     this.usernames.push(response.username);
                 }).catch((error) => {
-                    console.log(error);
                     return error;
                 });
             }
         },
+        async removeVIPfromSMM() {
+            if (this.select_form == "none") return;
+            await removeVIP(this.select_form).then((response) => {
+                this.select_form = "none";
+                this.$emit('update-vip', "none");
+                this.$emit('remove-vip')
+            }).catch((error) => {
+                return error;
+            })
+            this.select_form = "none";
+        }
 
     },
     props: {
@@ -61,13 +71,12 @@ export default {
         },
         selected_vip_out: {
             handler: function (vip: any) {
-                console.log("Mobile_vip_selector - watcher", vip);
-                //this.selected_vip = vip;
                 this.select_form = vip;
             },
             deep: true
         }
     },
+    emits: ['update-vip', 'update-vips-array', 'remove-vip'],
 
     mounted() {
     },

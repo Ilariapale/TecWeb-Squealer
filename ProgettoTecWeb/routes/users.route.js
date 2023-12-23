@@ -166,8 +166,6 @@ router.get("/:identifier", verifyToken, async (req, res, next) => {
     user_id: req.user_id,
     isTokenValid: req.isTokenValid,
   };
-  // res.cookie("username", "john_doe");
-  // console.log(req);
   try {
     const result = await users.getUser(options);
     res.status(result.status || 200).send(result.data);
@@ -178,25 +176,6 @@ router.get("/:identifier", verifyToken, async (req, res, next) => {
   }
 });
 
-router.delete("/:identifier", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      identifier: req.params.identifier,
-      user_id: req.user_id,
-    };
-
-    try {
-      const result = await users.deleteUser(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send("Token is either missing invalid or expired");
-  }
-});
 //users/SMM?action=send&SMM_id=paulpaccy     action=[withdraw, send] SMM_id=[username, id]
 router.patch("/SMM", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
@@ -284,6 +263,7 @@ router.patch("/VIP/:identifier", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
+
 //users/VIP
 router.delete("/VIP/:identifier", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
@@ -304,6 +284,7 @@ router.delete("/VIP/:identifier", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
+
 //users/notifications?value=true   body:{notification_array: ["427618673", "427618674"]]}
 router.patch("/notifications", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
@@ -326,8 +307,8 @@ router.patch("/notifications", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
-//users/paulpaccy/type   body: {account_type:"professional", professional_type:"SMM"}
 
+//users/paulpaccy/type   body: {account_type:"professional", professional_type:"SMM"}
 router.patch("/characters", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
@@ -370,6 +351,7 @@ router.patch("/:identifier/type", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
+
 //users/paulpaccy/profile   body: {profile_info: "Hey there, I'm Paul!", profile_picture: "TODO"}
 router.patch("/:identifier/profile", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
@@ -392,6 +374,7 @@ router.patch("/:identifier/profile", verifyToken, async (req, res, next) => {
     res.status(401).send("Token is either missing invalid or expired");
   }
 });
+
 //users/paulpaccy/password   body: {old_password: "123456", new_password: "1234567"}
 router.patch("/:identifier/password", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
@@ -444,6 +427,26 @@ router.patch("/:identifier/ban-status", verifyToken, async (req, res, next) => {
 
     try {
       const result = await users.userBanStatus(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
+router.delete("/:identifier", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+    };
+
+    try {
+      const result = await users.deleteUser(options);
       res.status(result.status || 200).send(result.data);
     } catch (err) {
       return res.status(500).send({

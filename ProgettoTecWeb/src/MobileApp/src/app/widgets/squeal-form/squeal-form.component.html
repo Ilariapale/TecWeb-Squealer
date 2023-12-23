@@ -1,7 +1,8 @@
 <div id="squeal-form" [class]="getDarkMode()" class="squeal-wrap pt-4">
   <div class="squeal-header">
     <div class="squeal-header-info">
-      <img src="../../assets/imgs/logo.png" alt="" class="avatar" />
+      <img [src]="'media/propic/'+(user.profile_picture||'squealer.png')" onerror="this.src='assets/imgs/logo.png'"
+        alt="" class="avatar" />
       @{{user.username}}
       <span>{{user.account_type}}</span>
 

@@ -203,14 +203,14 @@ export const editor_channels_accordion = (editor_channels) => {
 export const user_card = (user) => `<div class="col"></div>
   <div class="card mb-3 mt-4 datacard col-8">
       <div class="row g-0">
-        <div class="col-md-4">
+        <div class="col-md-4 py-3">
           <div class="row-6">
-              <img src="./../media/image/${
+              <img src="./../media/propic/${
                 user?.profile_picture || "squealer.png"
               }" class="img-fluid rounded-start rounded" onerror="if (this.src != 'Assets/logo.png') this.src = 'assets/logo.png'"
                   alt="${user?.profile_picture || "squealer"}">
           </div>
-        <div class="row">
+        <div class="row p-3">
           <button id="confirmChangesButton-${user._id}" class="btn btn-primary">CONFIRM CHANGES</button>
         </div>
         <div class="row-1">
@@ -219,7 +219,8 @@ export const user_card = (user) => `<div class="col"></div>
       </div>
           <div class="col-md-8">
               <div class="card-body">
-                  <h3 class="card-title">${user?.username || "username"}</h3>
+                  <h3 class="card-title">@${user?.username || "username"}</h3>
+                  <h6 class="card-subtitle mb-2 text-muted">User since: ${new Date(user?.created_at).toLocaleString()}</h6>
                   <h5 class="card-body">${user?.profile_info || "profile info"}</h5>
                   <table class="table" aria-label="userData">
                       <tbody>
@@ -251,16 +252,16 @@ export const request_card = (request) => {
   <div class="card clickable mb-3 mt-2 datacard col">
       <div id="request-body-${request._id}" class="row g-0">
           <div class="col-md-4 align-items-center d-flex">
-              <img src="./../media/image/${
+              <img src="./../media/propic/${
                 request?.profile_picture || "squealer.png"
               }" class="img-fluid rounded-start propic " onerror="if (this.src != 'Assets/logo.png') this.src = 'assets/logo.png'"
-                  alt="./../media/image/${request?.profile_picture || ""}">
+                  alt="${request?.profile_picture || ""}">
           </div>
           <div class="col-md-8">
               <div class="card-body">
                   <div class="h6" >@${request?.username || "username"}</div>
                   <div class="h5">Wants to become a <b>${request?.type || "request_type"}</b> account </div>
-                  <div class="h6 text-muted">Date: ${request?.created_at}</div>
+                  <div class="h6 text-muted">Date: ${new Date(request?.created_at).toLocaleString()}</div>
               </div>
           </div>
           </div>

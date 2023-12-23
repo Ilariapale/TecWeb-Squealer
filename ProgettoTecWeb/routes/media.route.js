@@ -6,29 +6,29 @@ const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
 const { checkChar, verifyToken } = require("../services/utils");
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    console.log("__dirname: " + __dirname);
-    console.log(path.join(__dirname, "../uploads/image"));
-    if (file.mimetype.includes("image")) {
+    if (req.path.includes("profile-picture")) {
+      cb(null, path.join(__dirname, "../uploads/propic"));
+    } else if (file.mimetype.includes("image")) {
       cb(null, path.join(__dirname, "../uploads/image"));
     } else if (file.mimetype.includes("video")) {
       cb(null, path.join(__dirname, "../uploads/video"));
     } else {
       cb(null, path.join(__dirname, "../uploads"));
-    } // server/routes
-    //(ENOENT: no such file or directory, open 'uploads/image/1702061662793-2023SkyDesktopAbyss.jpg')
+    }
   },
   filename: (req, file, cb) => {
-    console.log("filename");
+    //console.log("filename");
     const filename = "" + Date.now() + "-" + file.originalname;
-    console.log(filename);
+    //console.log(filename);
     cb(null, filename);
-    console.log("cb(null, filename);");
+    //console.log("cb(null, filename);");
     req.filename = filename;
-    console.log("req.filename = filename");
+    //console.log("req.filename = filename");
     req.mimetype = file.mimetype;
-    console.log("req.mimetype = file.mimetype");
+    //console.log("req.mimetype = file.mimetype");
   },
 });
 
@@ -36,9 +36,26 @@ const upload = multer({ storage: storage });
 
 router.post("/upload/image", verifyToken, media.setImageInReq, checkChar, upload.single("image"), async (req, res) => {
   try {
-    console.log("upload image");
     if (!req.isTokenValid) return res.status(401).send({ error: "Unauthorized" });
     if (!req.hasEnough) return res.status(400).send({ error: "Not enough characters" });
+    if (!req.mimetype.includes("image")) {
+      return res.status(400).send({
+        error: "File not valid",
+      });
+    }
+
+    res.status(200).send({ name: req.filename });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
+router.post("/upload/profile-picture", verifyToken, media.setImageInReq, upload.single("image"), async (req, res) => {
+  try {
+    if (!req.isTokenValid) return res.status(401).send({ error: "Unauthorized" });
     if (!req.mimetype.includes("image")) {
       return res.status(400).send({
         error: "File not valid",
@@ -88,6 +105,19 @@ router.get("/image/:name", async (req, res) => {
   const name = req.params.name;
   try {
     const filePath = path.join(__dirname, "..", "uploads", "image", name);
+    res.setHeader("Content-Type", "image/jpg");
+    res.sendFile(filePath);
+  } catch (err) {
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
+  }
+});
+
+router.get("/propic/:name", async (req, res) => {
+  const name = req.params.name;
+  try {
+    const filePath = path.join(__dirname, "..", "uploads", "propic", name);
     res.setHeader("Content-Type", "image/jpg");
     res.sendFile(filePath);
   } catch (err) {

@@ -4,7 +4,6 @@ const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
 router.get("/", verifyToken, async (req, res, next) => {
-  //if (req.isTokenValid) {
   let options = {
     name: req.query.name,
     created_after: req.query.created_after,
@@ -30,9 +29,6 @@ router.get("/", verifyToken, async (req, res, next) => {
       error: err || "Something went wrong.",
     });
   }
-  // } else {
-  //   res.status(401).send({ error: "Token is either missing invalid or expired" });
-  // }
 });
 
 router.get("/:identifier", verifyToken, async (req, res, next) => {

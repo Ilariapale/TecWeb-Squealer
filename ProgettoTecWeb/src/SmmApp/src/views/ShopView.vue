@@ -23,38 +23,33 @@ export default {
                 monthlytier3: 'https://www.sandbox.paypal.com/instantcommerce/checkout/NY569L9Z8F468',
                 monthlytier4: 'https://www.sandbox.paypal.com/instantcommerce/checkout/K9ARXPJPGEWYC',
             } as any,
-
-
             itemsBundle: [
-                { id: 'tier1', icon: 'coin', name: 'Tier 1', price: 2.99, description: '10 daily, 30 weekly, 100 monthly' },
-                { id: 'tier2', icon: 'cash', name: 'Tier 2', price: 4.99, description: '30 daily, 90 weekly, 300 monthly' },
-                { id: 'tier3', icon: 'cash-coin', name: 'Tier 3', price: 9.99, description: '70 daily, 2100 weekly, 300 monthly' },
-                { id: 'tier4', icon: 'cash-stack', name: 'Tier 4', price: 24.99, description: '150 daily, 450 weekly, 1500 monthly' },],
+                { id: 'tier1', icon: 'coin', name: 'Tier 1', price: this.prices.shop_tiers["tier1Price"], description: `${this.prices.shop_tiers.tier1.daily} daily, ${this.prices.shop_tiers.tier1.weekly} weekly, ${this.prices.shop_tiers.tier1.monthly} monthly` },
+                { id: 'tier2', icon: 'cash', name: 'Tier 2', price: this.prices.shop_tiers["tier2Price"], description: `${this.prices.shop_tiers.tier2.daily} daily, ${this.prices.shop_tiers.tier2.weekly} weekly, ${this.prices.shop_tiers.tier2.monthly} monthly` },
+                { id: 'tier3', icon: 'cash-coin', name: 'Tier 3', price: this.prices.shop_tiers["tier3Price"], description: `${this.prices.shop_tiers.tier3.daily} daily, ${this.prices.shop_tiers.tier3.weekly} weekly, ${this.prices.shop_tiers.tier3.monthly} monthly` },
+                { id: 'tier4', icon: 'cash-stack', name: 'Tier 4', price: this.prices.shop_tiers["tier4Price"], description: `${this.prices.shop_tiers.tier4.daily} daily, ${this.prices.shop_tiers.tier4.weekly} weekly, ${this.prices.shop_tiers.tier4.monthly} monthly` }],
             itemsDaily: [
-                { id: 'dailytier1', icon: 'coin', name: 'Daily Tier 1', price: 2.99, description: '50 char' },
-                { id: 'dailytier2', icon: 'cash', name: 'Daily Tier 2', price: 4.99, description: '150 char' },
-                { id: 'dailytier3', icon: 'coin-coin', name: 'Daily Tier 3', price: 9.99, description: '350 char' },
-                { id: 'dailytier4', icon: 'cash-stack', name: 'Daily Tier 4', price: 24.99, description: '750 char' },],
+                { id: 'dailytier1', icon: 'coin', name: 'Daily Tier 1', price: this.prices.shop_tiers["tier1Price"], description: `${this.prices.shop_tiers.daily.tier1} char` },
+                { id: 'dailytier2', icon: 'cash', name: 'Daily Tier 2', price: this.prices.shop_tiers["tier2Price"], description: `${this.prices.shop_tiers.daily.tier2} char` },
+                { id: 'dailytier3', icon: 'coin-coin', name: 'Daily Tier 3', price: this.prices.shop_tiers["tier3Price"], description: `${this.prices.shop_tiers.daily.tier3} char` },
+                { id: 'dailytier4', icon: 'cash-stack', name: 'Daily Tier 4', price: this.prices.shop_tiers["tier4Price"], description: `${this.prices.shop_tiers.daily.tier4} char` },],
             itemsWeekly: [
-                { id: 'weeklytier1', icon: 'coin', name: 'Weekly Tier 1', price: 2.99, description: '150 char' },
-                { id: 'weeklytier2', icon: 'cash', name: 'Weekly Tier 2', price: 4.99, description: '450 char' },
-                { id: 'weeklytier3', icon: 'coin-coin', name: 'Weekly Tier 3', price: 9.99, description: '1050 char' },
-                { id: 'weeklytier4', icon: 'cash-stack', name: 'Weekly Tier 4', price: 24.99, description: '2250 char' },],
+                { id: 'weeklytier1', icon: 'coin', name: 'Weekly Tier 1', price: this.prices.shop_tiers["tier1Price"], description: `${this.prices.shop_tiers.weekly.tier1} char` },
+                { id: 'weeklytier2', icon: 'cash', name: 'Weekly Tier 2', price: this.prices.shop_tiers["tier2Price"], description: `${this.prices.shop_tiers.weekly.tier2} char` },
+                { id: 'weeklytier3', icon: 'coin-coin', name: 'Weekly Tier 3', price: this.prices.shop_tiers["tier3Price"], description: `${this.prices.shop_tiers.weekly.tier3} char` },
+                { id: 'weeklytier4', icon: 'cash-stack', name: 'Weekly Tier 4', price: this.prices.shop_tiers["tier4Price"], description: `${this.prices.shop_tiers.weekly.tier4} char` }],
             itemsMonthly: [
-                { id: 'monthlytier1', icon: 'coin', name: 'Monthly Tier 1', price: 2.99, description: '500 char' },
-                { id: 'monthlytier2', icon: 'cash', name: 'Monthly Tier 2', price: 4.99, description: '1500 char' },
-                { id: 'monthlytier3', icon: 'cash-coin', name: 'Monthly Tier 3', price: 9.99, description: '3500 char' },
-                { id: 'monthlytier4', icon: 'cash-stack', name: 'Monthly Tier 4', price: 24.99, description: '7500 char' }
+                { id: 'monthlytier1', icon: 'coin', name: 'Monthly Tier 1', price: this.prices.shop_tiers["tier1Price"], description: `${this.prices.shop_tiers.monthly.tier1} char` },
+                { id: 'monthlytier2', icon: 'cash', name: 'Monthly Tier 2', price: this.prices.shop_tiers["tier2Price"], description: `${this.prices.shop_tiers.monthly.tier2} char` },
+                { id: 'monthlytier3', icon: 'cash-coin', name: 'Monthly Tier 3', price: this.prices.shop_tiers["tier3Price"], description: `${this.prices.shop_tiers.monthly.tier3} char` },
+                { id: 'monthlytier4', icon: 'cash-stack', name: 'Monthly Tier 4', price: this.prices.shop_tiers["tier4Price"], description: `${this.prices.shop_tiers.monthly.tier4} char` }
             ]
-
-
         }
     },
     methods: {
         async openShop(tier: string) {
-            //this.router.navigate([page]);
             window.open(
-                this.tiersUrl[tier], //
+                this.tiersUrl[tier],
                 '_blank',
                 'width=500,height=600'
             )
@@ -62,7 +57,22 @@ export default {
             await addCharacters(tier, this.vip.username).then((res) => {
                 this.$emit('updateChars', tier);
             })
+
         },
+        itemDescription() {
+            const TIERS = this.prices.shop_tiers;
+            const itemsBundle = Object.keys(TIERS)
+                .filter(key => key.startsWith('tier'))
+                .map(tierKey => ({
+                    id: tierKey,
+                    icon: 'coin', // Puoi cambiare l'icona secondo le tue esigenze
+                    name: `Tier ${tierKey.charAt(tierKey.length - 1)}`,
+                    price: TIERS[`${tierKey}Price`],
+                    description: `${TIERS[tierKey].daily} daily, ${TIERS[tierKey].weekly} weekly, ${TIERS[tierKey].monthly} monthly`,
+                }));
+
+        }
+
     },
     props: {
         user: {
@@ -72,7 +82,11 @@ export default {
         vip: {
             type: Object,
             required: true
-        }
+        },
+        prices: {
+            type: Object,
+            required: true
+        },//openShop(item.id)
     },
 }
 </script>
@@ -87,7 +101,7 @@ export default {
         <div>
             <div class="row row-cols-1 row-cols-2 g-4">
                 <div v-for="(item, index) in itemsBundle" class="col ">
-                    <div @click="openShop(item.id)" class="card border-light clickable bg-primary">
+                    <div @click="itemDescription()" class="card border-light clickable bg-primary">
                         <img class="card-img-top">
                         <div class="card-body">
                             <h2 class="card-title ">{{ item.name }}</h2>

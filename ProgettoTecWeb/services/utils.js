@@ -5,7 +5,6 @@ const config = require("../config");
 const { Notification, User, Squeal, Channel, Keyword, Chat, CommentSection } = require("./schemas");
 const { mentionNotification, squealInOfficialChannel, squealRemovedFromOfficialChannel, squealUpdatedOfficialChannel } = require("./messages.js");
 const {
-  MAX_DESCRIPTION_LENGTH,
   USERNAME_MIN_LENGTH,
   USERNAME_MAX_LENGTH,
   CHANNEL_NAME_MIN_LENGTH,
@@ -105,7 +104,6 @@ async function findUser(identifier) {
     return response;
   }
   if (!response.data) {
-    console.log(identifier, response);
     response.error = `User not found.`;
     response.status = 404;
   } else {
@@ -726,6 +724,8 @@ function generateToken(user_data, expireTime = config.tokenExpireTime) {
     preferences: user_data.preferences,
     notifications: user_data.notifications,
     messages: user_data.messages,
+    pending_requests: user_data.pending_requests,
+    smm: user_data.smm,
   };
 
   const payload = { user };

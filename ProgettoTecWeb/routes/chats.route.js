@@ -72,8 +72,6 @@ router.post("/direct/:identifier", verifyToken, async (req, res, next) => {
     };
     try {
       const result = await chats.sendDirectMessage(options);
-      console.log(options.identifier);
-      //identifier probably a object id
       const recipientSocketId = req.connectedUsers[options.identifier];
       if (recipientSocketId && result.status === 200) {
         req.io.to(recipientSocketId).emit("new_message", result.data);

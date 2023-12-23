@@ -59,6 +59,11 @@ const bannedUserNotification = (username) => `@${username}, you have been tempor
 
 const unbannedUserNotification = (username) => `@${username}, you have been unbanned from Squealer! You can now post and comment squeals again.`;
 
+const bannedChannelNotification = (channelName) =>
+  `Your channel §${channelName} has been temporarely banned from Squealer! No one will be able to post squeals or even see the channel.`;
+
+const unbannedChannelNotification = (channelName) => `Your channel §${channelName} has been unbanned from Squealer! Users can now see it and post squeals again.`;
+
 const declinedSMMrequestNotification = (username) => `@${username} declined your request to be your SMM! You'll be luckier next time!`;
 
 const updatedProfileTypeNotification = (username, old_account_type, new_account_type, old_professional_type, new_professional_type) =>
@@ -103,4 +108,6 @@ module.exports = {
   newEditorForChannelNotification,
   requestRejectedNotification,
   requestAcceptedNotification,
+  bannedChannelNotification,
+  unbannedChannelNotification,
 };

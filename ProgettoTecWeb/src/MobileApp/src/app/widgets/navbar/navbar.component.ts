@@ -59,6 +59,15 @@ export class NavbarComponent {
     }
   }
 
+  checkLogButton() {
+    const user = this.userService.getUserData();
+    if (!user) {
+      this.log_button = 'Login';
+    } else {
+      this.log_button = user.account_type == 'guest' || user.account_type == undefined ? 'Login' : 'Logout';
+    }
+  }
+
   deleteProfile() {
     this.usersService
       .deleteUser(this.userService.getUserData()?.username || '')

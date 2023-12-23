@@ -6,7 +6,8 @@
         </div>
     </div>
     <div class="ps-4 pt-4 user-select-none">
-
+        <div class="text-danger d-flex flex-md-row p-2 px-4 gap-4 align-items-center justify-content-center">{{ error }}
+        </div>
         <div type="button" :id="'request-' + request._id" data-bs-toggle="button" v-for="request in requests"
             class="d-flex flex-md-row p-2 px-4 gap-4 align-items-center justify-content-center">
             <div class="card border-secondary col-9 row" @click="toggleButtons(request._id)">
@@ -32,18 +33,15 @@
     </div>
 </template>
 <script lang=ts>
-import { getUsername, getSMMrequests, manageSMMrequest } from "../services/user.service";
-/*request.profile_picture*/ //
+import { getSMMrequests, manageSMMrequest } from "../services/user.service";
 export default {
     data() {
         return {
             requests: [] as any[],
+            error: "",
         };
     },
     methods: {
-        printUser() {
-            console.log(this.user);
-        },
         toggleButtons(id: string) {
             const request = document.getElementById(`request-${id}`);
             if (!request) return;
@@ -54,7 +52,6 @@ export default {
         acceptRequest(id: string) {
             const added = document.getElementById(`added-${id}`);
             manageSMMrequest(id, "accept").then((response: any) => {
-                console.log(response);
                 //rimuovo la richiesta dalla lista
                 added?.classList.remove("d-none");
                 document.getElementById(`removed-${id}`)?.classList.add("d-none");
@@ -63,10 +60,16 @@ export default {
                     this.requests = this.requests.filter((request: any) => request._id !== id);
                     added?.classList.add("d-none");
                 }, 2000);
+                setTimeout(() => {
+                    this.$emit("vip-request-accepted");
+                }, 3000);
             }).catch((error: any) => {
-                console.log(error);
+                this.error = error
+                setTimeout(() => {
+                    this.error = "";
+                }, 2000);
+
             });
-            console.log("confirm request " + id);
         },
         declineRequest(id: string) {
             const removed = document.getElementById(`removed-${id}`);
@@ -80,17 +83,12 @@ export default {
                     removed?.classList.add("d-none");
                 }, 2000);
             }).catch((error: any) => {
-                console.log(error);
+                this.error = error
             });
         },
-        sendRequest() {
-            getUsername().then((username: any) => {
-                console.log("send request to ", username);
-            });
-        }
     },
     mounted() {
-        getSMMrequests().then((requests: any) => {
+        getSMMrequests().then((requests: any | undefined) => {
             if (Array.isArray(requests) && requests.length > 0 && requests[0]._id && requests[0].username) {
                 this.requests = requests;
             } else {

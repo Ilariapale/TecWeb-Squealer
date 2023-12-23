@@ -1,7 +1,5 @@
 const cron = require("node-cron");
-const mongoose = require("mongoose");
 const { Notification, User } = require("./schemas");
-const {} = require("./utils");
 const { charQuotaGained, charQuotaLost } = require("./messages");
 
 const {

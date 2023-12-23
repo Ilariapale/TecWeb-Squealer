@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Notification } from 'src/app/models/notification.interface';
 import { UserQuery } from 'src/app/models/user.interface';
 import { firstValueFrom } from 'rxjs';
@@ -56,7 +55,6 @@ export class UsersService {
       if (query.last_loaded) url += `last_loaded=${query.last_loaded}&`;
       url = url.slice(0, -1);
     }
-    console.log(url);
     return firstValueFrom(this.http.get(url, this.headersGenerator(true)));
   }
 
@@ -122,6 +120,18 @@ export class UsersService {
     object.profile_picture ? (body['profile_picture'] = object.profile_picture) : null;
     object.profile_info ? (body['profile_info'] = object.profile_info) : null;
     return firstValueFrom(this.http.patch(`${this.apiUrl}/${identifier}/profile`, body, this.headersGenerator(true)));
+  }
+
+  sendSMMRequest(SMM_id: string, action: 'send' | 'withdraw'): Promise<any> {
+    let url = `${this.apiUrl}/SMM?`;
+    if (SMM_id) url += `SMM_id=${SMM_id}&`;
+    if (action) url += `action=${action}&`;
+    url = url.slice(0, -1);
+    return firstValueFrom(this.http.patch(url, {}, this.headersGenerator(true)));
+  }
+
+  fireSMMRequest(): Promise<any> {
+    return firstValueFrom(this.http.delete(`${this.apiUrl}/SMM`, this.headersGenerator(true)));
   }
 
   deleteUser(identifier: string): Promise<any> {

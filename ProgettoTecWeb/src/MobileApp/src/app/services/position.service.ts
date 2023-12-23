@@ -40,7 +40,6 @@ export class PositionService {
       .subscribe(async (position) => {
         this.positionSubject.next(await position);
       });
-    console.log(this.positionObservable);
   }
 
   setPosition(newPosition: [number, number]) {
@@ -69,15 +68,15 @@ export class PositionService {
     sessionStorage.setItem('isSocketActive', 'true');
     this.socket = io();
     this.socket.emit('authenticate', user_id);
-    console.log('socket connected -> ', user_id);
+    //console.log('socket connected -> ', user_id);
     this.socket.on('send_position_to_server', async () => {
       const position = await this.getCurrentPosition();
-      console.log('send_position_to_server -> ', position);
+      //console.log('send_position_to_server -> ', position);
       this.socket.emit('sending_position_to_server', user_id, position);
     });
 
     this.socket.on('send_last_position_to_server', async () => {
-      console.log('send_last_position_to_server');
+      //console.log('send_last_position_to_server');
       const position = await this.getCurrentPosition();
       this.socket.emit('sending_last_position_to_server', user_id, position);
       this.disconnectWebSocket();
@@ -87,6 +86,6 @@ export class PositionService {
   public disconnectWebSocket(): void {
     this.socket.disconnect();
     sessionStorage.setItem('isSocketActive', 'false');
-    console.log('socket disconnected');
+    //console.log('socket disconnected');
   }
 }

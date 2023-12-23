@@ -1,8 +1,8 @@
 <div class="m-2"><i *ngIf="isSquealPage" class="bi bi-arrow-left-circle-fill" (click)="goBack()"></i></div>
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-6">
-      <div class="squeal card text-center shadow-0" [class]="getDarkMode()">
+<div class="container of-vis">
+  <div class="row justify-content-center of-vis">
+    <div class="col-12 col-md-6 of-vis">
+      <div class="squeal card text-center shadow-0 of-vis" [class]="getDarkMode()">
         <div class=" bg-image hover-overlay ripple">
           <!-- <img src="../../assets/imgs/vulture-306727_960_720.webp" class="img-fluid" /> -->
           <a href="#!">
@@ -26,7 +26,7 @@
         </div>
 
 
-        <div class="card-body p-2">
+        <div class="card-body p-2 of-vis">
           <h5 class="card-title">@{{squeal.username}}</h5>
           <p *ngIf="squeal.content_type == 'text' || squeal.content_type == 'deleted'" class="card-text">
             {{squeal.content}}</p>

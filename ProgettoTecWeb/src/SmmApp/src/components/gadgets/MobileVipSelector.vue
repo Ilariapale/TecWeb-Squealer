@@ -25,9 +25,7 @@ export default {
     },
     methods: {
         updateVip() {
-            console.log("Mobile_vip_selector", this.select_form);
-            //this.selected_vip = event.target.value;
-            this.$emit('update-vip', this.select_form)//event.target.value);
+            this.$emit('update-vip', this.select_form)
         },
     },
     props: {
@@ -43,7 +41,6 @@ export default {
     watch: {
         selected_vip_out: {
             handler: function (vip: any) {
-                console.log("Mobile_vip_selector - watcher", vip);
                 this.select_form = vip;
             },
             deep: true

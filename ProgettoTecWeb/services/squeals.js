@@ -1,42 +1,27 @@
 const mongoose = require("mongoose");
 const { Notification, User, Squeal, Channel, Keyword, CommentSection } = require("./schemas");
 const {
-  usernameRegex,
-  channelNameRegex,
-  officialChannelNameRegex,
-  keywordRegex,
   mongooseObjectIdRegex,
   reactionTypes,
   contentTypes,
-  scheduledSquealsNUM,
-  scheduledSquealsDATE,
-  scheduledSquealsTIME,
   replaceString,
   findUser,
   findSqueal,
-  findChannel,
-  findKeyword,
-  findNotification,
   checkForAllUsers,
   checkForAllChannels,
   checkIfReactionsAreValid,
   hasEnoughCharQuota,
   removeQuota,
-  addedAndRemoved,
   updateRecipientsUsers,
   updateRecipientsChannels,
   updateRecipientsKeywords,
   containsOfficialChannels,
   checkIfRecipientsAreValid,
-  checkIfArrayIsValid,
   addCommentsCountToSqueals,
 } = require("./utils");
 
-const { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MEDIA_QUOTA } = require("./constants");
-const { mentionNotification, squealInOfficialChannel } = require("./messages");
-
-//TODO tradurre tutti i commenti in inglese
-//TODO reagire se non sei autenticato
+const { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MEDIA_QUOTA, TIERS } = require("./constants");
+const { mentionNotification } = require("./messages");
 
 //DONE Controllati i casi in cui l'utente che fa richiesta è bannato
 module.exports = {
@@ -214,8 +199,6 @@ module.exports = {
       pipeline.push({ $match: { reactions_count: { $gte: minReactions } } });
     }
 
-    //check if the ------------------------
-
     if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
       return {
         status: 400,
@@ -389,7 +372,6 @@ module.exports = {
     try {
       //vietare di postare in un canale ufficiales
       const { user_id, vip_id, content, recipients, is_scheduled } = options;
-      console.log(options);
       //set the default value for content_type
       const content_type = options.content_type || "text";
 
@@ -465,7 +447,6 @@ module.exports = {
       }
 
       //check if the content is specified and correctly formatted
-      //console.log(content);
       if (!content || content?.length == 0) {
         return {
           status: 400,
@@ -747,6 +728,7 @@ module.exports = {
       image_squeal: MEDIA_QUOTA.image,
       video_squeal: MEDIA_QUOTA.video,
       position_squeal: MEDIA_QUOTA.position,
+      shop_tiers: TIERS,
     };
     return {
       status: 200,
@@ -758,66 +740,60 @@ module.exports = {
    * @param options.identifier Squeal's identifier, can be either id
    */
   deleteSqueal: async (options) => {
-    // const replaceString = "[deleted squeal]";
-    // const deleted_content_type = "deleted";
-    try {
-      const { identifier, user_id } = options;
+    const { identifier, user_id } = options;
 
-      let response = await findSqueal(identifier);
-      if (response.status >= 300) {
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const squeal = response.data;
-
-      if (squeal.content_type == "deleted") {
-        return {
-          status: 400,
-          data: { error: `Squeal already deleted` },
-        };
-      }
-
-      response = await findUser(squeal.user_id);
-      if (response.status >= 300) {
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const squealAuthor = response.data;
-
-      //check if the user_id in the token is valid
-      response = await findUser(user_id);
-      if (response.status >= 300) {
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      let reqSender = response.data;
-
-      const isSenderAuthor = reqSender._id.equals(squeal.user_id);
-      const isModerator = reqSender.account_type == "moderator";
-      const isSMM = reqSender.account_type == "professional" && reqSender.professional_type == "SMM" && reqSender._id.equals(squealAuthor.smm);
-
-      if (!isSenderAuthor && !isModerator && !isSMM) {
-        return {
-          status: 403,
-          data: { error: `You are not allowed to delete this squeal.` },
-        };
-      }
-
-      await squeal.DeleteAndPreserveInDB();
-
+    let response = await findSqueal(identifier);
+    if (response.status >= 300) {
       return {
-        status: 200,
-        data: squeal,
+        status: response.status,
+        data: { error: response.error },
       };
-    } catch (error) {
-      console.log(error);
     }
+    const squeal = response.data;
+
+    if (squeal.content_type == "deleted") {
+      return {
+        status: 400,
+        data: { error: `Squeal already deleted` },
+      };
+    }
+
+    response = await findUser(squeal.user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const squealAuthor = response.data;
+
+    //check if the user_id in the token is valid
+    response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    let reqSender = response.data;
+
+    const isSenderAuthor = reqSender._id.equals(squeal.user_id);
+    const isModerator = reqSender.account_type == "moderator";
+    const isSMM = reqSender.account_type == "professional" && reqSender.professional_type == "SMM" && reqSender._id.equals(squealAuthor.smm);
+
+    if (!isSenderAuthor && !isModerator && !isSMM) {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to delete this squeal.` },
+      };
+    }
+
+    await squeal.DeleteAndPreserveInDB();
+
+    return {
+      status: 200,
+      data: squeal,
+    };
   },
 
   /**
@@ -936,7 +912,6 @@ module.exports = {
         data: { message: `You already reported this squeal.` },
       };
     }
-    //console.log(squeal.reported, squeal.reported.by.length);
     if (squeal.reported.by.length == 0) {
       squeal.reported.first_report = Date.now();
     }
@@ -985,10 +960,8 @@ module.exports = {
 
       if (sort_order && sort_by && sort_orders.includes(sort_order) && sort_types.includes(sort_by) && sort_order == "asc") {
         pipeline.push({ $match: { _id: { $lt: new mongoose.Types.ObjectId(last_loaded) } } });
-        console.log("LT");
       } else {
         pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
-        console.log("GT");
       }
     }
 
@@ -1037,7 +1010,6 @@ module.exports = {
     }
 
     if (sort_order && sort_by) {
-      console.log(sort_by, sort_order);
       if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
         return {
           status: 400,
@@ -1048,8 +1020,12 @@ module.exports = {
       if (sort_by == "first_report") {
         pipeline.push({ $sort: { "reported.first_report": order } });
       } else if (sort_by == "report_number") {
-        pipeline.push({ $sort: { "reported.by.length": order } });
-      } else if (sort_by == "ratio") {
+        pipeline.push({
+          $addFields: {
+            reported_by_length: { $size: "$reported.by" },
+          },
+        });
+        pipeline.push({ $sort: { reported_by_length: 1 } });
         pipeline.push({
           $addFields: {
             ratio: {
@@ -1079,7 +1055,6 @@ module.exports = {
       }
     }
     pipeline.push({ $limit: pag_size });
-    console.log(pipeline);
     //execute the query
     const data = await Squeal.aggregate(pipeline).exec();
 
@@ -1127,13 +1102,6 @@ module.exports = {
       };
     }
     const squeal = response.data;
-
-    //if (squeal.content_type == "deleted") {
-    //  return {
-    //    status: 404,
-    //    data: { error: `You can't check a deleted squeal` },
-    //  };
-    //}
 
     if (squeal.reported.checked) {
       return {
