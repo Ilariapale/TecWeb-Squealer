@@ -54,7 +54,6 @@ const reactionTypes = ["like", "dislike", "love", "laugh", "disgust", "disagree"
 const contentTypes = ["text", "image", "video", "position", "deleted"];
 
 function replaceString(string, num, date, scheduled_squeal_data) {
-  //TODO da rivedere e rimuovere il fuso orario, restituire la data e l'orario in UTC
   const date_options = { year: "numeric", month: "long", day: "numeric" };
   const english_date = date.toLocaleDateString("en-US", date_options);
   const italian_date = date.toLocaleDateString("it-IT", date_options);
@@ -738,7 +737,6 @@ function generateToken(user_data, expireTime = config.tokenExpireTime) {
   return token;
 }
 async function checkChar(req, res, next) {
-  //TODO vedere il caso in cui è il smm a mandare a nome del vip
   let user;
   if (mongooseObjectIdRegex.test(req.body.user_id)) user = await User.findById(req.user_id);
   else if (usernameRegex.test(req.body.user_id)) user = await User.findOne({ username: req.user_id });

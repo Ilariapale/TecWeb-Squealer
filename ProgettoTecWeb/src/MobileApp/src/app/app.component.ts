@@ -12,7 +12,7 @@ export class AppComponent {
   constructor(private darkModeService: DarkModeService) {}
 
   getThemeClass() {
-    let theme = this.darkModeService.getThemeClass(); //TODO body darktheme
+    let theme = this.darkModeService.getThemeClass();
 
     return theme;
   }

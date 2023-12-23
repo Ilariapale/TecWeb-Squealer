@@ -12,7 +12,6 @@ import { PositionService } from 'src/app/services/position.service';
 import LineString from 'ol/geom/LineString';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
-//TODO quando c'è l'itinerario, inquadrare l'ultima posizione
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',

@@ -1037,7 +1037,6 @@ module.exports = {
     const user = response.data;
 
     if (action === "decline") {
-      //TODO da controllare
       await Request.findByIdAndDelete(request_id);
       //mandiamo notifica allo user
       const newNotification = new Notification({
@@ -1147,8 +1146,6 @@ module.exports = {
   //TODO quando uno user viene cancellato le sue richieste devono essere cancellate
   getModRequestList: async (options) => {
     const { user_id, last_loaded, pag_size } = options;
-    console.log(user_id);
-    console.log(options);
     //check if the request sender exists
     let response = await findUser(user_id);
     if (response.status >= 300) {
@@ -1756,7 +1753,6 @@ module.exports = {
    * This function is used to remove the SMM
    * @param options.identifier Identifier of the VIP to remove
    */
-  //TODO testare
   removeVIP: async (options) => {
     const { identifier, user_id } = options;
 

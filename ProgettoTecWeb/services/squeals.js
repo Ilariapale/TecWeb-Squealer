@@ -56,7 +56,6 @@ module.exports = {
    * @param options.pag_size Number of squeals to retrieve
    * @param options.last_loaded Last loaded squeal id
    */
-  //TODO controllare squeal in canale ufficiale, canale cancellato
   getSqueals: async (options) => {
     const {
       user_id,

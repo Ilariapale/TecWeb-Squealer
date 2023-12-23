@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router'; // Add import for ActivatedRoute
-//TODO usare pag not found
 @Component({
   selector: 'app-error',
   templateUrl: './error.component.html',

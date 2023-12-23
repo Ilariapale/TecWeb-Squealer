@@ -8,6 +8,8 @@ export enum Source {
 export enum IdCode {
   newComment = 'newComment',
   newOwner = 'newOwner',
+  newEditor = 'newEditor',
+  removeEditor = 'removeEditor',
   noMoreVipSMM = 'noMoreVipSMM',
   noMoreSmmVIP = 'noMoreSmmVIP',
   mentionedInSqueal = 'mentionedInSqueal',

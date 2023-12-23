@@ -397,7 +397,6 @@ ChannelSchema.methods.Delete = async function () {
   //remove the channel from the editors users
 
   const editors = await User.find({ _id: { $in: this.editors } });
-  //TODO mandare notifiche agli editors
   for (const editor of editors) {
     const notification = new Notification({
       content: channelDeletedNotification(editor.username, this.name, "editor"),

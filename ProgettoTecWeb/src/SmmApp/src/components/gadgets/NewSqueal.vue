@@ -169,7 +169,6 @@ import { ref } from "vue";
 import { postSqueal } from '@/services/squeal.service';
 import { postImage, postVideo } from '@/services/media.service';
 
-//TODO dare feedback quando si posta un squeal
 export default {
     setup() {
         const image = ref<File | null>();

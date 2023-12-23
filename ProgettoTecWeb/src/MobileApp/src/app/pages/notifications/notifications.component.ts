@@ -128,11 +128,12 @@ export class NotificationsComponent implements OnInit {
     switch (notif.id_code) {
       case IdCode.welcomeSqueal:
       case IdCode.mentionedInSqueal:
-      case IdCode.newComment:
       case IdCode.officialStatusUpdate:
+      case IdCode.newComment:
         this.router.navigate([`squeal/${notif.squeal_ref}`]);
         break;
       case IdCode.newOwner:
+      case IdCode.newEditor:
         this.router.navigate([`channel/${notif.channel_ref}`]);
         break;
       case IdCode.SMMaccepted:
@@ -142,13 +143,7 @@ export class NotificationsComponent implements OnInit {
       case IdCode.accountUpdate:
         this.router.navigate([`profile/${notif.user_ref}`]);
         break;
-      case IdCode.SMMrequest:
-        //this.router.navigate([`SMM/${notif.sender_ref}`]);
-        //console.log(`SMM/${notif.sender_ref}`);
-        break;
       default:
-        //case IdCode.SMMdeclined, IdCode.noMoreVipSMM, IdCode.noMoreSmmVIP
-        //TODO finire i casi
         break;
     }
   }

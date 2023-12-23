@@ -666,7 +666,6 @@ module.exports = {
       // Attendere che tutte le promesse vengano risolte
       await Promise.all([...addedUserPromises, ...removedUserPromises]);
 
-      //TODO mando notifiche agli utenti aggiunti e rimossi
       if (added.length > 0) {
         added.forEach(async (user) => {
           const notification = new Notification({

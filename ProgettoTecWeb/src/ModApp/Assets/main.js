@@ -54,11 +54,11 @@ const last_of_arrays = {
 document.addEventListener("DOMContentLoaded", async function () {
   var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
   if (screenWidth <= 1200) {
-    this.body.innerHTML = "<div class='text-white center-screen'><h1>This page is not available on mobile</h1><p>Squealer - Mod Dashboard</p></div>"; //TODO template
+    this.body.innerHTML = "<div class='text-white center-screen'><h1>This page is not available on mobile</h1><p>Squealer - Mod Dashboard</p></div>";
     return;
   }
   if (!user.local_user) {
-    this.body.innerHTML = "<div class='text-white center-screen'><h1>No user found in local/session storage</h1><p>Squealer - Mod Dashboard</p></div>"; //TODO template
+    this.body.innerHTML = "<div class='text-white center-screen'><h1>No user found in local/session storage</h1><p>Squealer - Mod Dashboard</p></div>";
     return;
   }
   await getUser(user.local_user.username)
