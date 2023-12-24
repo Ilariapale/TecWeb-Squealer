@@ -44,6 +44,10 @@ const DOMelements = {
   reportedSquealsSelectSortBy: undefined,
 
   logoutButton: undefined,
+
+  daily_input: undefined,
+  weekly_input: undefined,
+  monthly_input: undefined,
 };
 
 const last_of_arrays = {
@@ -237,7 +241,7 @@ async function loadUser(username) {
 
       const VIPusers = [];
       user.managed_accounts.forEach(async (vip) => {
-        VIPusers.push(getUser(vip));
+        VIPusers.push(getUsername(vip));
       });
       await Promise.all(VIPusers).then((vips) => {
         vips.forEach((vip) => {
@@ -292,6 +296,9 @@ async function reloadUser() {
     const banButton = document.getElementById("banButton-" + user._id) || undefined;
     const unbanButton = document.getElementById("unbanButton-" + user._id) || undefined;
     const confirmChangesButton = document.getElementById("confirmChangesButton-" + user._id) || undefined;
+    DOMelements.daily_input = document.getElementById("daily-input-" + user._id);
+    DOMelements.weekly_input = document.getElementById("weekly-input-" + user._id);
+    DOMelements.monthly_input = document.getElementById("monthly-input-" + user._id);
     if (banButton) {
       banButton.addEventListener("click", async function () {
         await banUser(user.username, true)
@@ -578,25 +585,45 @@ async function banChannel(channelId, setBan) {
 
 async function confirmChanges(userToUpdate, accountType, professionalType) {
   const apiUrl = `users/${userToUpdate.username}/type`;
-  const body = {};
-  accountType ? (body.account_type = accountType) : null;
-  professionalType ? (body.professional_type = professionalType) : null;
+  const charUpdateUrl = `users/characters`;
+  if (accountType && professionalType) {
+    const body = {};
+    accountType ? (body.account_type = accountType) : null;
+    professionalType ? (body.professional_type = professionalType) : null;
 
-  let result;
-  await fetch(apiUrl, options(user.auth, "PATCH", body))
-    .then(async (response) => {
+    //modifying account type
+    await fetch(apiUrl, options(user.auth, "PATCH", body))
+      .then(async (response) => {
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(error || "Network response was not ok");
+        }
+        return response;
+      })
+      .then((response) => response.json())
+      .then((data) => {});
+  }
+  if (DOMelements.daily_input != undefined && DOMelements.weekly_input != undefined && DOMelements.monthly_input != undefined) {
+    //updating characters
+    const daily_changed = DOMelements.daily_input.value != userToUpdate.char_quota.daily;
+    const weekly_changed = DOMelements.weekly_input.value != userToUpdate.char_quota.weekly;
+    const monthly_changed = DOMelements.monthly_input.value != userToUpdate.char_quota.monthly;
+    //if nothing changed, return
+    if (!daily_changed && !weekly_changed && !monthly_changed) return;
+    const body_char = {
+      identifier: userToUpdate._id,
+      char_quota_daily: daily_changed ? DOMelements.daily_input.value : undefined,
+      char_quota_weekly: weekly_changed ? DOMelements.weekly_input.value : undefined,
+      char_quota_monthly: monthly_changed ? DOMelements.monthly_input.value : undefined,
+    };
+    await fetch(charUpdateUrl, options(user.auth, "PATCH", body_char)).then(async (response) => {
       if (!response.ok) {
         const error = await response.text();
         throw new Error(error || "Network response was not ok");
       }
-      return response;
-    })
-
-    .then((response) => response.json())
-    .then((data) => {
-      result = data;
     });
-  return result;
+  }
+  return;
 }
 
 //-------------------- DELETE --------------------//

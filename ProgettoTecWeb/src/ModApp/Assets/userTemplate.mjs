@@ -61,10 +61,24 @@ export const total_squeals_row = (total_squeals) => `
   <td colspan="2">${total_squeals || 0}</td>
 </tr>`;
 
-export const char_quota_row = (char_quota) => `
+export const char_quota_row = (user) => `
 <tr>
   <th scope="row"><b>Char Quota</b></th>
-    <td colspan="2">D:${char_quota?.daily || 0} W:${char_quota?.weekly || 0} M:${char_quota?.monthly || 0} B:${char_quota?.extra_daily || 0}</td>
+    <td colspan="2">
+    <div class="input-group mb-3">
+      <span class="input-group-text" id="basic-addon1">D</span>
+      <input id="daily-input-${user._id}" type="number" class="form-control" placeholder="${user.char_quota?.daily || 0}" 
+        value=${user.char_quota?.daily || 0} aria-label="Daily" aria-describedby="Daily character quota" min=0>
+      <span class="input-group-text" id="basic-addon1">W</span>
+      <input id="weekly-input-${user._id}" type="number" class="form-control" placeholder="${user.char_quota?.weekly || 0}" 
+        value="${user.char_quota?.weekly || 0}" aria-label="Weekly" aria-describedby="Weekly character quota" min=0>
+      <span class="input-group-text" id="basic-addon1">M</span>
+      <input id="monthly-input-${user._id}" type="number" class="form-control" placeholder="${user.char_quota?.monthly || 0}" 
+        value="${user.char_quota?.monthly || 0}" aria-label="Monthly" aria-describedby="Monthly character quota" min=0>
+    </div>
+    <hr class="mb-1" >
+    Extra characters: ${user.char_quota?.extra_daily || 0}
+  </td>
 </tr>`;
 
 export const smm_row = (smm) => `
@@ -74,7 +88,7 @@ export const smm_row = (smm) => `
 </tr>`;
 
 export const VIPDiv = (VIP) => `
-<div><h5><i class="bi bi-dot text-danger"></i>${VIP?.username || "vip_username"}</h5></div><hr class="my-0">`;
+<div><h5><i class="bi bi-dot text-danger"></i>${VIP || "vip_username"}</h5></div><hr class="my-0">`;
 
 export const managed_accounts_accordion = (managed_accounts) => {
   if (managed_accounts && managed_accounts.length == 0) {
@@ -229,7 +243,7 @@ export const user_card = (user) => `<div class="col"></div>
                           ${professional_type_row(user)}
                           ${email_row(user?.email)}
                           ${total_squeals_row(user?.squeals.posted.length)}
-                          ${char_quota_row(user?.char_quota)}
+                          ${char_quota_row(user)}
                           ${smm_row(user?.smm)}
                           ${managed_accounts_accordion(user?.managed_accounts)}
                           ${owned_channels_accordion(user?.owned_channels)}
