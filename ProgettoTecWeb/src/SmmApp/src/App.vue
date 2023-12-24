@@ -110,21 +110,14 @@ export default {
     </div>
   </main>
   <main v-else-if="user.username">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col col-12">
-          <h1 class="text-center">You do not have access to this page</h1>
-        </div>
-      </div>
+    <div class="center-screen unselectable">
+      <h1 class="text-center">You do not have access to this page</h1>
+      <p>You have to be a Social Media Manager to see this page</p>
     </div>
   </main>
   <main v-else>
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col col-12">
-          <h1 class="text-center"><a href="/login">Log in</a> as a Social Media Manager to access this page</h1>
-        </div>
-      </div>
+    <div class="center-screen unselectable">
+      <h1 class="text-center"><a href="/login">Log in</a> as a Social Media Manager to access this page</h1>
     </div>
   </main>
 </template>

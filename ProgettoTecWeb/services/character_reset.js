@@ -1,31 +1,16 @@
 const cron = require("node-cron");
-const mongoose = require("mongoose");
-const {} = require("./utils");
-const { charQuotaGained, charQuotaLost } = require("./messages");
 const { User } = require("./schemas");
 
-const {
-  EXTRA_DAILY_CHAR_QUOTA,
-  DAILY_CHAR_QUOTA,
-  WEEKLY_CHAR_QUOTA,
-  MONTHLY_CHAR_QUOTA,
-  VERY_POSITIVE_THRESHOLD,
-  POSITIVE_THRESHOLD,
-  NEGATIVE_THRESHOLD,
-  VERY_NEGATIVE_THRESHOLD,
-  CHAR_QUOTA_REWARD,
-  BIG_CHAR_QUOTA_REWARD,
-  CM_FACTOR,
-  MIN_SQUEAL_PERCENTAGE,
-  RESET_THRESHOLD,
-} = require("./constants");
+const { EXTRA_DAILY_CHAR_QUOTA, DAILY_CHAR_QUOTA, WEEKLY_CHAR_QUOTA, MONTHLY_CHAR_QUOTA } = require("./constants");
 
 const daily = "0 0 * * *";
 const weekly = "0 0 * * 0";
 const monthly = "0 0 1 * *";
+const annual = "0 0 1 1 *";
 
 //every day at midnight
 const character_reset_init = (req, res) => {
+  //annual_reset();
   cron.schedule(daily, () => {
     daily_reset();
   });
@@ -34,6 +19,9 @@ const character_reset_init = (req, res) => {
   });
   cron.schedule(monthly, () => {
     monthly_reset();
+  });
+  cron.schedule(annual, () => {
+    annual_reset();
   });
 };
 
@@ -63,6 +51,19 @@ const monthly_reset = async () => {
         "char_quota.monthly": MONTHLY_CHAR_QUOTA,
         "char_quota.earned_daily": 0,
         "char_quota.earned_weekly": 0,
+      },
+    }
+  );
+};
+//TODO finire
+const annual_reset = async () => {
+  await User.updateMany(
+    {},
+    {
+      $set: {
+        "char_quota.bought_daily": 0,
+        "char_quota.bought_weekly": 0,
+        "char_quota.bought_monthly": 0,
       },
     }
   );

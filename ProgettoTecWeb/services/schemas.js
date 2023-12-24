@@ -79,6 +79,9 @@ const UserSchema = new mongoose.Schema({
     extra_daily: { type: Number, default: EXTRA_DAILY_CHAR_QUOTA },
     earned_daily: { type: Number, default: 0 },
     earned_weekly: { type: Number, default: 0 },
+    bought_daily: { type: Number, default: 0 },
+    bought_weekly: { type: Number, default: 0 },
+    bought_monthly: { type: Number, default: 0 },
   },
   reaction_metrics: {
     positive_squeals: { type: Number, default: 0 },

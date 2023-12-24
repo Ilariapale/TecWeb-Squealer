@@ -53,6 +53,15 @@ a {
   cursor: pointer !important;
 }
 
+.center-screen {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 80vh;
+}
+
 
 .btn-primary {
   background-color: #303c5a !important;

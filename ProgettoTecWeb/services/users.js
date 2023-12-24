@@ -2027,12 +2027,18 @@ module.exports = {
         user.char_quota.daily += TIERS[tier].daily;
         user.char_quota.weekly += TIERS[tier].weekly;
         user.char_quota.monthly += TIERS[tier].monthly;
+        user.char_quota.bought_daily += TIERS[tier].daily;
+        user.char_quota.bought_weekly += TIERS[tier].weekly;
+        user.char_quota.bought_monthly += TIERS[tier].monthly;
       } else if (["dailytier1", "dailytier2", "dailytier3", "dailytier4"].includes(tier)) {
         user.char_quota.daily += TIERS.daily[tier.slice(5)];
+        user.char_quota.bought_daily += TIERS.daily[tier.slice(5)];
       } else if (["weeklytier1", "weeklytier2", "weeklytier3", "weeklytier4"].includes(tier)) {
         user.char_quota.weekly += TIERS.weekly[tier.slice(6)];
+        user.char_quota.bought_weekly += TIERS.weekly[tier.slice(6)];
       } else if (["monthlytier1", "monthlytier2", "monthlytier3", "monthlytier4"].includes(tier)) {
         user.char_quota.monthly += TIERS.monthly[tier.slice(7)];
+        user.char_quota.bought_monthly += TIERS.monthly[tier.slice(7)];
       } else {
         return {
           status: 400,
@@ -2053,15 +2059,9 @@ module.exports = {
           data: { error: "No valid char_quota field" },
         };
       }
-      if (char_quota_daily && !isNaN(char_quota_daily)) user.char_quota.daily += char_quota_daily;
-      else if (char_quota_weekly && !isNaN(char_quota_weekly)) user.char_quota.weekly += char_quota_weekly;
-      else if (char_quota_monthly && !isNaN(char_quota_monthly)) user.char_quota.monthly += char_quota_monthly;
-      else {
-        return {
-          status: 400,
-          data: { error: "No valid char_quota field" },
-        };
-      }
+      if (char_quota_daily && !isNaN(char_quota_daily)) user.char_quota.daily = char_quota_daily;
+      if (char_quota_weekly && !isNaN(char_quota_weekly)) user.char_quota.weekly = char_quota_weekly;
+      if (char_quota_monthly && !isNaN(char_quota_monthly)) user.char_quota.monthly = char_quota_monthly;
 
       await user.save();
       return {

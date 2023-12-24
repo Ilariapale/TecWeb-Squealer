@@ -32,7 +32,7 @@
             {{squeal.content}}</p>
           <div *ngIf="squeal.content_type == 'image'" class="card-img-top ">
             <img [src]="squeal.content?.startsWith('https')?squeal.content:('media/image/'+squeal.content)"
-              class="img-fluid" />
+              class="img-fluid" onerror="this.src='/../media/image/not-found.png'" />
           </div>
           <div *ngIf="squeal.content_type == 'video'">
             <video controls [poster]="'media/thumbnail/'+squeal.content" style="max-width: 100%; height: auto;"

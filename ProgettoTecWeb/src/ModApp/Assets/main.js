@@ -58,7 +58,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     return;
   }
   if (!user.local_user) {
-    this.body.innerHTML = "<div class='text-white center-screen'><h1>No user found in local/session storage</h1><p>Squealer - Mod Dashboard</p></div>";
+    this.body.innerHTML = `<div class='text-white center-screen'>
+        <h1>
+          <a href='/login' class='nopage'>Log in</a> as a Squealer Moderator to access this page
+        </h1>
+        <p>Squealer - Mod Dashboard</p>
+      </div> `;
     return;
   }
   await getUser(user.local_user.username)

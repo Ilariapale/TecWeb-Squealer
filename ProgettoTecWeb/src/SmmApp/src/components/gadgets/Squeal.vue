@@ -100,7 +100,7 @@ export default {
                             {{ squeal.content }}</p>
                         <div class="card-img-top ">
                             <img v-if="squeal.content_type == 'image'" :src="'/../media/image/' + squeal.content"
-                                class="img-fluid" alt="...">
+                                class="img-fluid" alt="..." onerror="this.src='/../media/image/not-found.png'">
                             <video v-if="squeal.content_type == 'video'" class="ratio ratio-16x9" controls>
                                 <source :src="'/../media/video/' + squeal.content">
                             </video>

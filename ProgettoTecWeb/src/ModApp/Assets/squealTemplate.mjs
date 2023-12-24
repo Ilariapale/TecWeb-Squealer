@@ -7,8 +7,8 @@ export const squeal_content = (squeal) => {
   if (squeal.content_type === "text") {
     return `<p class="card-text">${squeal.content}</p>`;
   } else if (squeal.content_type === "image") {
-    if (squeal.content.includes("http")) return `<img src="${squeal.content}" class="card-img-top" alt="...">`;
-    else return `<img src="/../media/image/${squeal.content || "squealer.png"}" class="card-img-top" alt="...">`;
+    if (squeal.content.includes("http")) return `<img src="${squeal.content}" onerror="this.src='/../media/image/not-found.png'" class="card-img-top" alt="...">`;
+    else return `<img src="/../media/image/${squeal.content || "squealer.png"}" onerror="this.src='/../media/image/not-found.png'" class="card-img-top" alt="...">`;
   } else if (squeal.content_type === "video") {
     return `<video class="ratio ratio-16x9" controls> <source src="/../media/video/${squeal.content}"></video>`;
   } else if (squeal.content_type === "position") {
