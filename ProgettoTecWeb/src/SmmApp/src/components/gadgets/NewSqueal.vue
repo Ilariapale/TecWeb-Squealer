@@ -415,6 +415,7 @@ export default {
             this.isEnough = this.enoughChar();
         }))
     },
+    emits: ['squeal-posted'],
     components: { MapVue }
 }
 

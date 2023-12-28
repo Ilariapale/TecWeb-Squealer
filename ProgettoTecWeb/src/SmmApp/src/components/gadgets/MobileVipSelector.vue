@@ -45,7 +45,8 @@ export default {
             },
             deep: true
         }
-    }
+    },
+    emits: ['update-vip']
 }
 
 </script>

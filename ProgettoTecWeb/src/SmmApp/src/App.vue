@@ -22,7 +22,7 @@ export default {
       vip: {} as any,
       prices: {},
       char_spent: 0,
-      vips_usermames: []
+      vips_usernames: []
     }
   },
   methods: {
@@ -40,7 +40,7 @@ export default {
     async getVip(vip: any) {
       if (vip == "none") {
         this.vip = {};
-        return;
+        return this.vip;
       }
       await getUser(vip).then((response) => {
         this.vip = response;
@@ -64,7 +64,8 @@ export default {
       await this.getVip(username);
     },
     updateVipsArray(vips: any) {
-      this.vips_usermames = vips;
+      console.log(vips);
+      this.vips_usernames = vips;
     },
     async updateCharacters(tier: string) {
       await this.getVip(this.vip.username);
@@ -75,7 +76,6 @@ export default {
     this.getUser();
     this.getPrices();
   },
-  emits: ['update-vip', 'update-vips-array', 'updateChars', 'removed-vip']
 }
 </script>
 
@@ -101,7 +101,7 @@ export default {
       </div>
 
       <div class="mobile-overview-menu">
-        <MobileVipSelector :vips_usernames="vips_usermames" @update-vip="getVip($event)"
+        <MobileVipSelector :vips_usernames="vips_usernames" @update-vip="getVip($event)"
           :selected_vip_out="vip.username || 'none'">
         </MobileVipSelector>
       </div>

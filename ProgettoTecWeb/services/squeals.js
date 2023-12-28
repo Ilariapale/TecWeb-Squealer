@@ -257,7 +257,8 @@ module.exports = {
     //if the query returned some results, increment the impressions counter for each squeal
     const squealImpressionsPromises = [];
     for (let squeal of data) {
-      if (squeal.content_type != "deleted" && !reqSender._id.equals(squeal.user_id) && !squeal.user_id.equals(reqSender.smm))
+      if (squeal.content_type != "deleted" && !reqSender._id.equals(squeal.user_id) && !reqSender.managed_accounts.includes(squeal.user_id))
+        // console.log(squeal._id + " incrementing impressions---------------------");
         squealImpressionsPromises.push(Squeal.findByIdAndUpdate(squeal._id, { $inc: { impressions: 1 } }));
     }
     await Promise.all(squealImpressionsPromises);
@@ -340,7 +341,8 @@ module.exports = {
     const squealAuthor = response.data;
 
     //impressions increment with save()
-    if ((user && !squeal.user_id.equals(squealAuthor._id) && !squeal.user_id.equals(squealAuthor.smm) && user.account_type != "moderator") || !user) {
+    if ((user && !squeal.user_id.equals(user._id) && !user.managed_accounts.includes(squeal.user_id) && user.account_type != "moderator") || !user) {
+      // console.log(squeal._id + " incrementing impressions---------------------");
       squeal.impressions++;
     }
     await squeal.save();
@@ -716,6 +718,17 @@ module.exports = {
         }
       }
     }
+
+    //increment the impressions counter for each squeal
+    const squealImpressionsPromises = [];
+    for (let squeal of squeals_array) {
+      if (squeal.content_type != "deleted" && !user?._id.equals(squeal.user_id) && !user.managed_accounts.includes(squeal.user_id)) {
+        //!squeal.user_id.equals(user?.smm)
+        // console.log(squeal._id + " incrementing impressions---------------------");
+        squealImpressionsPromises.push(Squeal.findByIdAndUpdate(squeal._id, { $inc: { impressions: 1 } }));
+      }
+    }
+    await Promise.all(squealImpressionsPromises);
 
     return {
       status: 200,

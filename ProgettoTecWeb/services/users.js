@@ -1017,7 +1017,7 @@ module.exports = {
       const newNotification = new Notification({
         user_ref: request.user_id,
         created_at: Date.now(),
-        content: requestRejectedNotification(request.username, request.account_type),
+        content: requestRejectedNotification(request.username, request.type),
         source: "system",
         id_code: "accountUpdate",
       });
@@ -1056,7 +1056,7 @@ module.exports = {
     const newNotification = new Notification({
       user_ref: request.user_id,
       created_at: Date.now(),
-      content: requestAcceptedNotification(request.username, request.account_type),
+      content: requestAcceptedNotification(request.username, request.type),
       source: "system",
       id_code: "accountUpdate",
     });

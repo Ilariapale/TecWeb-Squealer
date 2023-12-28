@@ -33,7 +33,7 @@ export default {
             required: true
         },
     },
-    emits: ['update-vip', 'update-vips-array', 'updateChars', 'remove-vip']// 
+    emits: ['update-vip', 'update-vips-array', 'updateChars', 'remove-vip']
 }
 
 

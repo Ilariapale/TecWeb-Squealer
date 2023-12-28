@@ -88,6 +88,7 @@ export default {
             required: true
         },//openShop(item.id)
     },
+    emits: ['updateChars']
 }
 </script>
 

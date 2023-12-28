@@ -50,6 +50,7 @@ export default {
         this.showedSqueals = this.squeals.slice(0, 10);
         this.showLoadMore = this.squeals.length > 10;
     },
+    emits: ['squeal-posted'],
     watch: {
         vip: {
             handler: function (val: any) {

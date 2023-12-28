@@ -114,6 +114,7 @@ export default {
         }
 
     },
+    emits: ['updateChars']
 }
 </script>
 

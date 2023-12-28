@@ -245,6 +245,7 @@ async function postRandomSqueals() {
     channel_ref: channel._id,
     content: squealInOfficialChannel(squeal.content, [channel.name]),
     created_at: new Date(),
+    source: "system",
     id_code: "officialStatusUpdate",
   });
   await notification.save();
@@ -269,6 +270,7 @@ async function postControversialSqueals() {
       channel_ref: channel._id,
       content: squealInOfficialChannel(squeal.content, [channel.name]),
       created_at: new Date(),
+      source: "system",
       id_code: "officialStatusUpdate",
     });
     await notification.save();

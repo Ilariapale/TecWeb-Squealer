@@ -79,6 +79,8 @@ export default {
     emits: ['update-vip', 'update-vips-array', 'remove-vip'],
 
     mounted() {
+        this.getUsernames(this.vip_users);
+        this.$emit('update-vips-array', this.usernames);
     },
 }
 

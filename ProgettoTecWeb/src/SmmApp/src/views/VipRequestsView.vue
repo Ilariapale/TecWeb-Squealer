@@ -106,5 +106,6 @@ export default {
             required: true
         }
     },
+    emits: ["vip-request-accepted"],
 };
 </script>
