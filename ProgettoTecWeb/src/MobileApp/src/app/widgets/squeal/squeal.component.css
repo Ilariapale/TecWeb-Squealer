@@ -38,3 +38,11 @@ img {
 .of-vis {
   overflow: visible;
 }
+
+.btn-secondary.report {
+  --bs-btn-active-bg: rgb(109, 41, 41);
+}
+
+.btn-secondary.comments {
+  --bs-btn-active-bg: #303c5a;
+}

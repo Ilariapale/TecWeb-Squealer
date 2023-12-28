@@ -14,8 +14,8 @@
           <div class="row">
             <div class="col">
             </div>
-            <div class="col" (click)="squeal.content_type!='deleted' ? goToSqueal() : null">
-              HEX{{squeal.hex_id}}
+            <div class="col clickable" (click)="squeal.content_type!='deleted' ? goToSqueal() : null">
+              <i *ngIf="squeal.is_in_official_channel" class="bi bi-award-fill text-warning"></i> HEX{{squeal.hex_id}}
             </div>
             <div class="col text-end">
               <i *ngIf="mySqueal && squeal.content_type != 'deleted' && isProfile" class="bi bi-trash" type="button"
@@ -51,7 +51,8 @@
 
               <div class="col-5 px-1">
                 <button id="comment_button" type="button" title="toggle comments section"
-                  class="btn btn-secondary btn-rounded px-2" (click)="isGuest?null:toggleComments()">
+                  class="btn btn-secondary comments btn-rounded px-2" (click)="isGuest?null:toggleComments()"
+                  data-bs-toggle="button">
                   <i class="bi bi-chat-dots-fill"></i>
                   <p class="badge bg-danger ms-2 my-auto">{{squeal.comments_count || 0}}</p>
                 </button>
@@ -65,7 +66,7 @@
 
               <div class="col-5 px-1">
                 <button title="report a squeal" (click)="reportSqueal()" type="button"
-                  class="btn btn-secondary btn-rounded px-4 py-2">
+                  class="btn btn-secondary btn-rounded report px-4 py-2" data-bs-toggle="button">
                   <i class="bi bi-flag-fill"></i>
                 </button>
               </div>
@@ -121,7 +122,7 @@
 
           </div>
 
-          <div *ngIf="squeal.content_type!='deleted'" class="card-footer" (click)="goToSqueal()"><i
+          <div *ngIf="squeal.content_type!='deleted'" class="card-footer clickable" (click)="goToSqueal()"><i
               class="bi bi-calendar4-week"></i>
             {{timeService.getRelativeTime(squeal.created_at)}}</div>
           <div *ngIf="squeal.content_type=='deleted'" class="card-footer"><i class="bi bi-trash-fill"></i>

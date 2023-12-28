@@ -14,7 +14,7 @@
     <div *ngFor="let notification of notifications">
       <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center row">
         <div class="col-1"></div>
-        <div class="toast show m-1 col col-md-2" [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert"
+        <div class="toast show m-1 col col-md-2 clickable" [class.dark-toast]="getDarkMode()=='dark-theme'" role="alert"
           aria-live="assertive" aria-atomic="true" (click)="notificationLink(notification)">
           <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
             <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"

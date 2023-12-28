@@ -651,6 +651,8 @@ module.exports = {
                   major: {
                     enabled: true,
                   },
+                  suggestedMin: 0,
+                  beginAtZero: true, // Imposta a true per far partire da zero
                 },
               },
             ],
@@ -662,6 +664,10 @@ module.exports = {
                 scaleLabel: {
                   display: true,
                   labelString: "Squeal number",
+                },
+                ticks: {
+                  suggestedMin: 0,
+                  beginAtZero: true, // Imposta a true per far partire da zero
                 },
               },
               {
@@ -711,6 +717,7 @@ module.exports = {
       ]).exec();
 
       interactionsImpressions[0].comments_tot = commentsTot[0].comments_tot;
+      interactionsImpressions[0].impressions_tot == 0 ? (interactionsImpressions[0].impressions_tot = 1) : null;
       // Supponendo che tu abbia ottenuto i risultati da MongoDB e li abbia memorizzati in interactionsImpressions e commentsTot
 
       // Calcola la percentuale di interazioni rispetto alle impressioni
