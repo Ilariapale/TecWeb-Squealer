@@ -1,4 +1,6 @@
-const { bcrypt, usernameRegex, emailRegex, findUser, generateToken, verifyToken } = require("./utils");
+const { bcrypt, usernameRegex, emailRegex, findUser, generateToken, generateGuestToken, verifyToken } = require("./utils");
+const { Guest } = require("./schemas");
+const uuidGen = require("uuid").v4;
 
 module.exports = {
   login: async (options) => {
@@ -79,7 +81,7 @@ module.exports = {
     const now = Math.floor(Date.now() / 1000);
     const timeLeft = tokenExpiration - now;
     if (timeLeft <= 60 * 30) {
-      const newToken = generateToken(user.data); // Funzione per generare il token JWT (da implementare)
+      const newToken = generateToken(user.data); // JWT Token generator function
       return {
         status: 200,
         data: { token: newToken },
@@ -90,5 +92,37 @@ module.exports = {
         data: { token: token },
       };
     }
+  },
+
+  login_guest: async (options) => {
+    //User has no credentials and is assigned a random uuid
+    let { uuid } = options;
+    let guest;
+
+    if (!uuid) {
+      uuid = uuidGen();
+      guest = new Guest({
+        uuid: uuid,
+        created_at: Date.now(),
+        last_login: Date.now(),
+      });
+    } else {
+      guest = await Guest.findOne({ uuid: uuid });
+      if (!guest) {
+        guest = new Guest({
+          uuid: uuid,
+          created_at: Date.now(),
+          last_login: Date.now(),
+        });
+      } else {
+        guest.last_login = Date.now();
+      }
+    }
+    await guest.save();
+    const token = generateGuestToken({ uuid: guest.uuid, reacted_to: guest.reacted_to });
+    return {
+      status: 200,
+      data: { token },
+    };
   },
 };

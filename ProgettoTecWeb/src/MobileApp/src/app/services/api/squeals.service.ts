@@ -27,6 +27,15 @@ export class SquealsService {
     }
   }
 
+  guestHeadersGenerator() {
+    const token = localStorage.getItem('Guest_Authorization');
+    // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
+    if (!token) return { headers: new HttpHeaders() };
+    const headers = new HttpHeaders().set('Authorization', `${token}`);
+    const requestOptions = { headers: headers };
+    return requestOptions;
+  }
+
   getSqueals(query: SquealQuery): Promise<any> {
     let url = `${this.apiUrl}`;
     if (query) {
@@ -87,7 +96,9 @@ export class SquealsService {
   }
 
   getHome(isGuest: boolean, lastLoaded?: number, pagSize?: number): Promise<any> {
-    const requestOptions = this.headersGenerator(!isGuest);
+    let requestOptions;
+    if (isGuest) requestOptions = this.guestHeadersGenerator();
+    else requestOptions = this.headersGenerator(true);
     let url = `${this.apiUrl}/home?`;
 
     if (lastLoaded !== undefined) url += `last_loaded=${lastLoaded}&`;
@@ -96,16 +107,23 @@ export class SquealsService {
 
     return firstValueFrom(this.http.get(url, requestOptions));
   }
-  getSqueal(identifier: String): Promise<any> {
-    const requestOptions = this.headersGenerator(true);
+  getSqueal(identifier: String, guest: boolean = false): Promise<any> {
+    let requestOptions;
+    if (guest) requestOptions = this.guestHeadersGenerator();
+    else requestOptions = this.headersGenerator(true);
+    //const requestOptions = this.headersGenerator(true);
     return firstValueFrom(this.http.get(`${this.apiUrl}/${identifier}`, requestOptions));
   }
   deleteSqueal(identifier: string): Promise<any> {
     const requestOptions = this.headersGenerator(true);
     return firstValueFrom(this.http.delete(`${this.apiUrl}/${identifier}`, requestOptions));
   }
-  addReaction(reaction: String, squeal_id: String): Promise<any> {
-    const requestOptions = this.headersGenerator(true);
+
+  addReaction(reaction: String, squeal_id: String, guest: boolean = false): Promise<any> {
+    let requestOptions;
+    if (guest) requestOptions = this.guestHeadersGenerator();
+    else requestOptions = this.headersGenerator(true);
+    console.log(requestOptions);
     return firstValueFrom(this.http.patch(`${this.apiUrl}/${squeal_id}/reaction/${reaction}`, {}, requestOptions));
   }
 

@@ -30,11 +30,11 @@ function parseTickRate(input) {
     const num = parseInt(match[1]);
     const unit = match[2];
     if ((unit == "hours" && (num > 24 || num <= 0)) || (unit == "mins" && (num > 60 || num <= 0))) {
-      return null; // La stringa non corrisponde al formato atteso
+      return null; // The string does not match the expected format
     }
     return { num, unit };
   } else {
-    return null; // La stringa non corrisponde al formato atteso
+    return null; // The string does not match the expected format
   }
 }
 
@@ -101,6 +101,10 @@ async function deleteFromSendingPositionObject(userId) {
     delete alreadySendingPosition[username];
   } catch (err) {
     console.log(err);
+    return {
+      status: 500,
+      message: err || "Something went wrong.",
+    };
   }
 }
 
@@ -134,7 +138,7 @@ async function askForPositionToClient(options, is_last = false) {
   }
 }
 
-// Post ogni tot per un tot di volte
+// Post every 'tick_rate' for a 'repeat' number of times
 async function postPeriodicallyForLimitedTimes(tick_rate, repeat, options) {
   const tr = parseTickRate(tick_rate);
   const rep = parseInt(repeat);
@@ -207,7 +211,7 @@ async function postPeriodicallyForLimitedTimes(tick_rate, repeat, options) {
   };
 }
 
-// Fare post ogni tot fino ad una specifica data
+// Post every 'tick_rate' until 'scheduled_date'
 async function postAtIntervalsUntilDate(tick_rate, scheduled_date, options) {
   const tr = parseTickRate(tick_rate);
   if (tr == null || scheduled_date == null) {
@@ -281,7 +285,7 @@ async function postAtIntervalsUntilDate(tick_rate, scheduled_date, options) {
   };
 }
 
-// Fare un post tra tot minuti
+// Post after a delay of 'tick_rate'
 async function postAfterDelay(tick_rate, options) {
   const tr = parseTickRate(tick_rate);
   if (tr == null) {
@@ -340,7 +344,7 @@ async function postAfterDelay(tick_rate, options) {
   };
 }
 
-// Fare un post ad una specifica data
+// Post at a specific date
 async function postAtDate(scheduled_date, options) {
   const date_to_run = new Date(scheduled_date);
   if (date_to_run == null || date_to_run == undefined) {

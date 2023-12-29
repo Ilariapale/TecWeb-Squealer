@@ -7,7 +7,7 @@ const cron = require("node-cron");
 
 async function initializeDB() {
   await createModsProfiles();
-  //controlliamo se nel db è presente un utente con username admin
+  // Check if there is an admin user in the db
   let admin = await User.findOne({ username: "ADMIN" });
   let controversialExists = await Channel.exists({ name: "CONTROVERSIAL" });
   let emergencyExists = await Channel.exists({ name: "EMERGENCY" });
@@ -21,7 +21,7 @@ async function initializeDB() {
     const salt = await bcrypt.genSalt(securityLvl);
     const hashedPassword = await bcrypt.hash("6E3^NcAEKOko)@8?o$;=", salt);
 
-    //creiamo l'utente admin
+    // Crete the admin user
     admin = new User({
       username: "ADMIN",
       password: hashedPassword,
@@ -33,7 +33,7 @@ async function initializeDB() {
   }
 
   if (!controversialExists) {
-    //Creiamo il canale CONTROVERSIAL
+    // Create the CONTROVERSIAL channel
     controversial = new Channel({
       name: "CONTROVERSIAL",
       is_official: true,
@@ -47,7 +47,7 @@ async function initializeDB() {
   }
 
   if (!emergencyExists) {
-    //Creiamo il canale EMERGENCY
+    // Create the EMERGENCY channel
     emergency = new Channel({
       name: "EMERGENCY",
       is_official: true,
@@ -61,7 +61,7 @@ async function initializeDB() {
   }
 
   if (!randomExists) {
-    //Creiamo il canale RANDOM
+    //Create the RANDOM channel
     random = new Channel({
       name: "RANDOM",
       is_official: true,
@@ -75,7 +75,7 @@ async function initializeDB() {
   }
 
   if (!weatherExists) {
-    //Creiamo il canale METEO
+    // Create the RANDOM_WEATHER channel
     weather = new Channel({
       name: "RANDOM_WEATHER",
       is_official: true,
@@ -89,7 +89,7 @@ async function initializeDB() {
   }
 
   if (!imageExists) {
-    //Creiamo la keyword RANDOM_IMAGE
+    // Create the RANDOM_IMAGES channel
     image = new Channel({
       name: "RANDOM_IMAGES",
       is_official: true,
@@ -260,7 +260,7 @@ async function postControversialSqueals() {
 
   channel.squeals.push(...squeals);
   await channel.save();
-  //mandiamo notifica ai proprietari degli squeal
+  // Send notification to the squeal owners
 
   for (let squeal of squeals) {
     const user = await User.findById(squeal.user_id);
@@ -282,7 +282,7 @@ async function postControversialSqueals() {
 async function postRandomImage() {
   const admin = await User.findOne({ username: "ADMIN" });
   const channel = await Channel.findOne({ name: "RANDOM_IMAGES" });
-  //creo un numero random da 0 a 1084
+  // Create a random number from 0 to 1084 (the number of images available on picsum.photos)
   const random = Math.floor(Math.random() * 1084);
   const squeal = new Squeal({
     hex_id: admin.squeals.posted.length,

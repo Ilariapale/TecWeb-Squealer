@@ -39,9 +39,24 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
 
   isMySMM: boolean = false;
 
+  amVip: boolean = false;
+
   alreadyRequestedSMM: boolean = false;
 
   listenerSet: boolean = false;
+
+  vipAccountRequested: boolean = false;
+  smmAccountRequested: boolean = false;
+  verifiedAccountRequested: boolean = false;
+  standardAccountRequested: boolean = false;
+
+  vipRequestSuccess: boolean = false;
+  smmRequestSuccess: boolean = false;
+  verifiedRequestSuccess: boolean = false;
+  standardRequestSuccess: boolean = false;
+
+  showAccountRequestError: boolean = false;
+  accountRequestError: string = '';
 
   user: User = {
     _id: '0',
@@ -98,6 +113,7 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
         try {
           const user = await this.usersService.getUser(this.identifier);
           this.mySelf = this.userService.isMyself(user._id);
+          this.amVip = this.userService.isVIP();
           this.loading = true;
           this.user = user;
           this.alreadyRequestedSMM = this.userService.alreadySentSMMRequest(user._id);
@@ -109,7 +125,7 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
           const squealsPromises = [];
 
           for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS && i >= 0; i--) {
-            squealsPromises.push(this.squealsService.getSqueal(user.squeals.posted[i]));
+            squealsPromises.push(this.squealsService.getSqueal(user.squeals.posted[i], this.isGuest));
           }
 
           const squeals = await Promise.all(squealsPromises);
@@ -133,10 +149,50 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
     this.usersService
       .accountChangeRequest(type)
       .then((response) => {
-        //TODO feedback visivo
+        switch (type) {
+          case 'SMM':
+            this.smmAccountRequested = true;
+            this.smmRequestSuccess = true;
+            break;
+          case 'VIP':
+            this.vipAccountRequested = true;
+            this.vipRequestSuccess = true;
+            break;
+          case 'standard':
+            this.standardAccountRequested = true;
+            this.standardRequestSuccess = true;
+            break;
+          case 'verified':
+            this.verifiedAccountRequested = true;
+            this.verifiedRequestSuccess = true;
+            break;
+          default:
+            break;
+        }
       })
       .catch((error) => {
-        console.log(error);
+        this.showAccountRequestError = true;
+        this.accountRequestError = error.error.error;
+        switch (type) {
+          case 'SMM':
+            this.smmAccountRequested = true;
+            this.smmRequestSuccess = false;
+            break;
+          case 'VIP':
+            this.vipAccountRequested = true;
+            this.vipRequestSuccess = false;
+            break;
+          case 'standard':
+            this.standardAccountRequested = true;
+            this.standardRequestSuccess = false;
+            break;
+          case 'verified':
+            this.verifiedAccountRequested = true;
+            this.verifiedRequestSuccess = false;
+            break;
+          default:
+            break;
+        }
       });
   }
 
@@ -162,7 +218,7 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
     const squealsRequests = [];
     for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS; i--) {
       const squeal_id = this.user?.squeals?.posted?.[i];
-      if (squeal_id) squealsRequests.push(this.squealsService.getSqueal(squeal_id));
+      if (squeal_id) squealsRequests.push(this.squealsService.getSqueal(squeal_id, this.isGuest));
     }
     this.lastSquealLoaded -= this.MAX_SQUEALS;
 

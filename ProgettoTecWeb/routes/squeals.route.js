@@ -49,7 +49,7 @@ router.get("/prices", async (req, res, next) => {
 
 router.post("/", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
-    // Utente loggato, gestisci la richiesta come vuoi
+    // User logged in handle the request as you wish
     let options = {
       user_id: req.user_id,
       content: req.body["content"],
@@ -68,7 +68,7 @@ router.post("/", verifyToken, async (req, res, next) => {
       });
     }
   } else {
-    // Utente non loggato, invia una risposta di errore o reindirizza alla pagina di login
+    // User not logged in, send an error response or redirect to login page
     res.status(401).send({ error: "Token is either missing invalid or expired" });
   }
 });
@@ -76,7 +76,7 @@ router.post("/", verifyToken, async (req, res, next) => {
 router.post("/scheduled", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     try {
-      //user_id = nome utente
+      //user_id = username
       let options = {
         user_id: req.user_id,
         content: req.body["content"],
@@ -113,10 +113,14 @@ router.get("/home", verifyToken, async (req, res, next) => {
   let options = {
     user_id: req.user_id,
     is_logged_in: req.isTokenValid,
+    is_guest_token_valid: req.isGuestTokenValid,
+    guest_uuid: req.guest_uuid,
     token_error: req.tokenError || "",
     last_loaded: req.query.last_loaded,
     pag_size: req.query.pag_size,
   };
+  console.log("options: ", options);
+
   try {
     const result = await squeals.getHomeSqueals(options);
     res.status(result.status || 200).send(result.data);
@@ -158,6 +162,8 @@ router.get(["/:identifier", "/user_id/:user_identifier/hex/:squeal_hex"], verify
     squeal_hex: req.params.squeal_hex,
     is_in_official_channel: !req.isTokenValid || req.query.is_in_official_channel == "true",
     user_id: req.user_id,
+    guest_uuid: req.guest_uuid,
+    is_guest_token_valid: req.isGuestTokenValid,
     is_token_valid: req.isTokenValid,
   };
   try {
@@ -235,23 +241,22 @@ router.patch("/report/:identifier", verifyToken, async (req, res, next) => {
 });
 
 router.patch("/:identifier/reaction/:reaction", verifyToken, async (req, res, next) => {
-  if (req.isTokenValid) {
-    let options = {
-      identifier: req.params.identifier,
-      reaction: req.params.reaction,
-      user_id: req.user_id,
-    };
+  let options = {
+    identifier: req.params.identifier,
+    reaction: req.params.reaction,
+    user_id: req.user_id,
+    guest_uuid: req.guest_uuid,
+    is_guest_token_valid: req.isGuestTokenValid,
+    isTokenValid: req.isTokenValid,
+  };
 
-    try {
-      const result = await squeals.addReaction(options);
-      res.status(result.status || 200).send(result.data);
-    } catch (err) {
-      return res.status(500).send({
-        error: err || "Something went wrong.",
-      });
-    }
-  } else {
-    res.status(401).send({ error: "Token is either missing invalid or expired" });
+  try {
+    const result = await squeals.addReaction(options);
+    res.status(result.status || 200).send(result.data);
+  } catch (err) {
+    return res.status(500).send({
+      error: err || "Something went wrong.",
+    });
   }
 });
 

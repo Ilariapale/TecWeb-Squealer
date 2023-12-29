@@ -38,6 +38,7 @@ export class ChannelComponent {
 
   bannerClass = '';
   muted: boolean = false;
+  isGuest: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -46,7 +47,10 @@ export class ChannelComponent {
     public darkModeService: DarkModeService,
     private channelsService: ChannelsService,
     private location: Location
-  ) {}
+  ) {
+    if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
+    else if (localStorage.getItem('Guest_Authorization')) this.isGuest = true;
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe((params: ParamMap) => {
@@ -63,7 +67,7 @@ export class ChannelComponent {
             const squealsRequests = [];
 
             for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS && i >= 0; i--) {
-              squealsRequests.push(this.squealsService.getSqueal(channel.squeals[i]));
+              squealsRequests.push(this.squealsService.getSqueal(channel.squeals[i], this.isGuest));
             }
             if (squealsRequests.length > 0) {
               const squeals = await Promise.all(squealsRequests);
@@ -107,7 +111,7 @@ export class ChannelComponent {
     const squealsRequests = [];
     for (let i = this.lastSquealLoaded; i > this.lastSquealLoaded - this.MAX_SQUEALS; i--) {
       const squeal_id = this.channel?.squeals?.[i];
-      if (squeal_id) squealsRequests.push(this.squealsService.getSqueal(squeal_id));
+      if (squeal_id) squealsRequests.push(this.squealsService.getSqueal(squeal_id, this.isGuest));
     }
     this.lastSquealLoaded -= this.MAX_SQUEALS;
     forkJoin(squealsRequests).subscribe((squeals) => {

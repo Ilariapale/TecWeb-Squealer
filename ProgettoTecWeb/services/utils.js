@@ -114,7 +114,7 @@ async function findUser(identifier) {
 }
 
 async function findSqueal(identifier, just_official = false, include_deleted = true) {
-  //aggiunto il parametro include_deleted e settato di base a false
+  // Added the include_deleted parameter and set it to false by default
   let response;
   if (!identifier) {
     return {
@@ -145,7 +145,7 @@ async function findSqueal(identifier, just_official = false, include_deleted = t
 }
 
 async function findChannel(identifier, includeBlocked = false, includeOfficial = true) {
-  //modificato il default di includeOfficial da false a true
+  //modified includeOfficial default from false to true
   let response = {};
   if (!identifier) {
     response.error = `Channel 'identifier' is required.`;
@@ -736,6 +736,18 @@ function generateToken(user_data, expireTime = config.tokenExpireTime) {
 
   return token;
 }
+
+//generateGuestToken({ uuid: guest.uuid, reacted_to: guest.reacted_to })
+function generateGuestToken(guest, expireTime = "32d") {
+  const payload = { guest };
+  const secretKey = config.secretKey; // Sostituisci con una chiave segreta robusta e casuale
+
+  // Crea il token con una data di scadenza (1 ora in questo esempio)
+  const token = jwt.sign(payload, secretKey, { expiresIn: expireTime });
+
+  return token;
+}
+
 async function checkChar(req, res, next) {
   let user;
   if (mongooseObjectIdRegex.test(req.body.user_id)) user = await User.findById(req.user_id);
@@ -756,25 +768,28 @@ function verifyToken(req, res, next) {
   }
 
   const token = req.headers.authorization;
-
   if (!token || !token.startsWith("Bearer ")) {
-    req.isTokenValid = false;
-    req.tokenError = !token ? "noToken" : "invalidTokenFormat";
-    next(); // If the token is not valid, continue without setting req.user_id
+    req.isGuestTokenValid = false;
   } else {
     const tokenValue = token.slice(7); // Remove "Bearer " from token
     //Verify token with jwt
     jwt.verify(tokenValue, config.secretKey, (err, decodedToken) => {
       if (err) {
+        req.isGuestTokenValid = false;
         req.isTokenValid = false;
-        req.tokenError = err.name;
+        req.guestTokenError = err.name;
       } else {
-        req.isTokenValid = true;
-        req.user_id = decodedToken.user.username;
+        if (decodedToken.guest) {
+          req.guest_uuid = decodedToken.guest.uuid;
+          req.isGuestTokenValid = true;
+        } else {
+          req.user_id = decodedToken.user.username;
+          req.isTokenValid = true;
+        }
       }
     });
-    next();
   }
+  next();
 }
 
 module.exports = {
@@ -796,6 +811,7 @@ module.exports = {
   checkIfArrayIsValid,
   verifyToken,
   generateToken,
+  generateGuestToken,
   addCommentsCountToSqueals,
   hasEnoughCharQuota,
   removeQuota,

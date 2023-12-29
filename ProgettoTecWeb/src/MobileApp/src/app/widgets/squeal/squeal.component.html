@@ -52,7 +52,8 @@
               <div class="col-5 px-1">
                 <button id="comment_button" type="button" title="toggle comments section"
                   class="btn btn-secondary comments btn-rounded px-2" (click)="isGuest?null:toggleComments()"
-                  data-bs-toggle="button">
+                  data-bs-toggle="button"
+                  [disabled]="squeal.comments_count === 0 || squeal.comments_count == undefined || isGuest">
                   <i class="bi bi-chat-dots-fill"></i>
                   <p class="badge bg-danger ms-2 my-auto">{{squeal.comments_count || 0}}</p>
                 </button>
@@ -61,12 +62,12 @@
 
               <div class="col-2 p-0 d-flex justify-content-center reaction-container">
                 <app-reactions-menu [alreadyReacted]="squeal.reacted || false" [squealId]="squeal._id ?? '0'"
-                  class="on-top"></app-reactions-menu>
+                  [isGuest]="isGuest" class="on-top"></app-reactions-menu>
               </div>
 
               <div class="col-5 px-1">
                 <button title="report a squeal" (click)="reportSqueal()" type="button"
-                  class="btn btn-secondary btn-rounded report px-4 py-2" data-bs-toggle="button">
+                  class="btn btn-secondary btn-rounded report px-4 py-2" data-bs-toggle="button" [disabled]="isGuest">
                   <i class="bi bi-flag-fill"></i>
                 </button>
               </div>
@@ -129,11 +130,11 @@
             {{timeService.getRelativeTime(squeal.last_modified)}}</div>
           <div *ngIf="showComments" class="mt-3">
             <h4>Comments</h4>
-            <button *ngIf="loadMore" (click)="loadMoreComments()">Load more</button>
+            <button class="btn btn-secondary pb-2" *ngIf="loadMore" (click)="loadMoreComments()">Load more</button>
             <!-- Lista dei commenti -->
-            <ul class="list-unstyled">
+            <ul class="list-unstyled pt-2">
               <li *ngFor="let comment of comment_section.comments_array">
-                <p><strong>{{comment.author_username}}</strong>: {{comment.text}}</p>
+                <p class="mb-1"><strong>{{comment.author_username}}</strong>: {{comment.text}}</p>
               </li>
             </ul>
 

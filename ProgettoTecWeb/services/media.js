@@ -9,14 +9,13 @@ const ffprobePath = require("ffprobe-static").path;
 const uploadsPath = path.join(__dirname, "../uploads");
 module.exports = {
   generateThumbnail: async (videoPath, outputPath, callback) => {
-    const videoName = path.parse(videoPath).name; // Ottieni il nome del video senza l'estensione
+    const videoName = path.parse(videoPath).name; // Get the video name without the extension
     ffmpeg.setFfmpegPath(ffmpegPath);
     ffmpeg.setFfprobePath(ffprobePath);
 
     ffmpeg(videoPath)
       .on("end", () => {
-        const thumbnailName = `${videoName}-thumbnail.png`; // Nome del file thumbnail
-        console.log("Thumbnail generata con successo!");
+        const thumbnailName = `${videoName}-thumbnail.png`; // Thumbnail file name
         callback(null, thumbnailName);
       })
       .on("error", (err) => {
@@ -27,7 +26,7 @@ module.exports = {
         count: 1,
         folder: outputPath,
         size: "320x?",
-        filename: `${videoName}-thumbnail.png`, // Il nome reale verrà sostituito dalla riga precedente
+        filename: `${videoName}-thumbnail.png`, // The real name will be replaced by the previous line
       });
   },
 
@@ -40,9 +39,9 @@ module.exports = {
         mediaPath = path.join(uploadsPath, "video", mediaName);
         fs.unlink(thumbnailPath, (err) => {
           if (err) {
-            console.error("Errore durante la rimozione della thumbnail:", err);
+            console.error("Error while removing thumbnail:", err);
           } else {
-            console.log("Thumbnail rimossa con successo!");
+            //console.log("Thumbnail removed succesfully!");
           }
         });
       } else if (type === "image") {
@@ -50,9 +49,9 @@ module.exports = {
       }
       fs.unlink(mediaPath, (err) => {
         if (err) {
-          console.error("Errore durante la rimozione del file:", err);
+          console.error("Error while removing file:", err);
         } else {
-          console.log("File rimosso con successo!");
+          //console.log("File removed succesfully!");
         }
       });
     } catch (err) {

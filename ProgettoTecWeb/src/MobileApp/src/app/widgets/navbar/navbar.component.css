@@ -13,3 +13,7 @@
 .clickable {
   cursor: pointer;
 }
+
+.ov-hidden {
+  overflow: hidden;
+}

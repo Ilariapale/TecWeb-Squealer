@@ -70,6 +70,20 @@ export class UserService {
     );
   }
 
+  isVIP(): boolean {
+    if (!this.userData) {
+      const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      if (savedUserData) {
+        this.setUserData(JSON.parse(savedUserData));
+      }
+    }
+
+    const currentUserData = this.userData;
+    return (
+      currentUserData && currentUserData.account_type === 'professional' && currentUserData.professional_type === 'VIP'
+    );
+  }
+
   alreadySentSMMRequest(SMM_id: String | undefined): boolean {
     if (!SMM_id) return false;
     if (!this.userData) {

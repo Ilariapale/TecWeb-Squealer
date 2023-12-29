@@ -5,7 +5,7 @@ const router = new express.Router();
 const path = require("path");
 const { stringify } = require("querystring");
 
-//gives your username back if no identifier in query, otherwise gives back the username of the user with the given identifier
+//Gives your username back if no identifier in query, otherwise gives back the username of the user with the given identifier
 router.get("/username", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     const options = {
@@ -40,7 +40,7 @@ router.get("/notifications", verifyToken, async (req, res, next) => {
       });
     }
   } else {
-    // Utente non loggato, invia una risposta di errore o reindirizza alla pagina di login
+    // User not logged in, send an error response or redirect to the login page
     res.status(401).send({ error: "Token is either missing invalid or expired" });
   }
 });
@@ -58,7 +58,7 @@ router.get("/statistics/:identifier", verifyToken, async (req, res, next) => {
       return res.status(500).send({ error: err || "Something went wrong." });
     }
   } else {
-    // Utente non loggato, invia una risposta di errore o reindirizza alla pagina di login
+    // User not logged in, send an error response or redirect to the login page
     res.status(401).send({ error: "Token is either missing invalid or expired" });
   }
 });
@@ -76,7 +76,7 @@ router.post("/request/:type", verifyToken, async (req, res, next) => {
       return res.status(500).send({ error: err || "Something went wrong." });
     }
   } else {
-    // Utente non loggato, invia una risposta di errore o reindirizza alla pagina di login
+    // User not logged in, send an error response or redirect to the login page
     res.status(401).send({ error: "Token is either missing invalid or expired" });
   }
 });
@@ -361,7 +361,6 @@ router.patch("/:identifier/profile", verifyToken, async (req, res, next) => {
     };
 
     options.inlineReqJson = req.body;
-    console.log(options);
     try {
       const result = await users.updateProfile(options);
       res.status(result.status || 200).send(result.data);

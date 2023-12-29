@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { Notification, User, Squeal, Channel, Keyword, CommentSection } = require("./schemas");
+const { Notification, User, Squeal, Channel, Keyword, CommentSection, Guest } = require("./schemas");
 const {
   mongooseObjectIdRegex,
   reactionTypes,
@@ -258,12 +258,11 @@ module.exports = {
     const squealImpressionsPromises = [];
     for (let squeal of data) {
       if (squeal.content_type != "deleted" && !reqSender._id.equals(squeal.user_id) && !reqSender.managed_accounts.includes(squeal.user_id))
-        // console.log(squeal._id + " incrementing impressions---------------------");
         squealImpressionsPromises.push(Squeal.findByIdAndUpdate(squeal._id, { $inc: { impressions: 1 } }));
     }
     await Promise.all(squealImpressionsPromises);
 
-    //aggiungo il campo "comments_total" ad ogni squeal:
+    // Add the "comments_total" field to each squeal:
 
     const newData = await addCommentsCountToSqueals(data);
     //return the squeals
@@ -279,7 +278,7 @@ module.exports = {
    */
   //TESTED
   getSqueal: async (options) => {
-    const { identifier, is_in_official_channel, user_identifier, squeal_hex, user_id, is_token_valid } = options;
+    const { identifier, is_in_official_channel, user_identifier, squeal_hex, user_id, is_token_valid, guest_uuid } = options;
     let squeal;
     let user;
     if (is_token_valid) {
@@ -294,7 +293,7 @@ module.exports = {
       user = response.data;
     }
     if (identifier) {
-      //ricerca per id dello squeal
+      // Search by squeal id
       const response = await findSqueal(identifier, is_in_official_channel);
       if (response.status >= 300) {
         return {
@@ -304,7 +303,7 @@ module.exports = {
       }
       squeal = response.data;
     } else if (user_identifier && squeal_hex) {
-      //ricerca per idUser e hex
+      // Search by squeal hex
       const hex = parseInt(squeal_hex);
       const response = await findUser(user_identifier);
       if (response.status >= 300) {
@@ -331,27 +330,24 @@ module.exports = {
       squeal = squeal_response.data;
     }
 
-    let response = await findUser(squeal.user_id);
-    if (response.status >= 300) {
-      return {
-        status: response.status,
-        data: { error: response.error },
-      };
-    }
-    const squealAuthor = response.data;
-
     //impressions increment with save()
     if ((user && !squeal.user_id.equals(user._id) && !user.managed_accounts.includes(squeal.user_id) && user.account_type != "moderator") || !user) {
-      // console.log(squeal._id + " incrementing impressions---------------------");
       squeal.impressions++;
     }
     await squeal.save();
     squeal = await addCommentsCountToSqueals([squeal]);
 
-    //se l'utente ha reagito allo squeal, aggiungo il campo "reacted" allo squeal e lo setto a true
-    //altrimenti false
+    // If the user has reacted to the squeal, I add the "reacted" field to the squeal and set it to True
+    // Else False
     if (user) {
       if (user.squeals.reacted_to.includes(squeal[0]._id)) {
+        squeal[0].reacted = true;
+      } else {
+        squeal[0].reacted = false;
+      }
+    } else if (guest_uuid) {
+      const guest = await Guest.findOne({ uuid: guest_uuid });
+      if (guest.reacted_to.includes(squeal[0]._id)) {
         squeal[0].reacted = true;
       } else {
         squeal[0].reacted = false;
@@ -371,241 +367,236 @@ module.exports = {
    */
   //TESTED
   createSqueal: async (options) => {
-    try {
-      //vietare di postare in un canale ufficiales
-      const { user_id, vip_id, content, recipients, is_scheduled } = options;
-      //set the default value for content_type
-      const content_type = options.content_type || "text";
+    const { user_id, vip_id, content, recipients, is_scheduled } = options;
+    //set the default value for content_type
+    const content_type = options.content_type || "text";
 
-      //check for the request sender's id
+    //check for the request sender's id
 
-      let response = await findUser(user_id);
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const reqSender = response.data;
+    //check in the db if the vip_id is valid
+    let vip_user;
+    if (vip_id) {
+      response = await findUser(vip_id);
       if (response.status >= 300) {
         return {
           status: response.status,
           data: { error: response.error },
         };
       }
-      const reqSender = response.data;
-      //check in the db if the vip_id is valid
-      let vip_user;
-      if (vip_id) {
-        response = await findUser(vip_id);
-        if (response.status >= 300) {
-          return {
-            status: response.status,
-            data: { error: response.error },
-          };
-        }
-        vip_user = response.data;
-      }
-
-      //abbiamo sicuramente un reqSender valido
-      //forse c'è anche un vip_user che puo' essere undefined o un utente valido
-
-      //author is the reqSender by default
-      var author = reqSender;
-
-      if (vip_user && !reqSender._id.equals(vip_user._id)) {
-        //equals funziona anche con ids
-        //Sto cercando di postare a nome di qualcun altro
-        //quindi controllo se l'utente che manda la richiesta ha i permessi per farlo, ovvero è un SMM di un utente VIP
-        if (reqSender.account_type != "professional" || reqSender.professional_type != "SMM") {
-          return {
-            status: 403,
-            data: { error: `You are not allowed to post as another user.` },
-          };
-        }
-        //altrimenti controllo se hai i permessi per postare a nome di un utente VIP
-        if (!reqSender._id.equals(vip_user.smm)) {
-          return {
-            status: 403,
-            data: { error: `You are not allowed to post as this user.` },
-          };
-        }
-
-        //here I know that the reqSender is a SMM of the user, so I can post as the user
-        author = vip_user;
-        if (!reqSender.is_active || !vip_user.is_active) {
-          return {
-            status: 403,
-            data: { error: `Either the vip or the smm is banned and they are not allowed to post a squeal.` },
-          };
-        }
-      }
-      if (!reqSender.is_active) {
-        return {
-          status: 403,
-          data: { error: `You are banned and you are not allowed to post a squeal.` },
-        };
-      }
-
-      //check if the content_type is valid
-      if (!contentTypes.includes(content_type) || content_type == "deleted") {
-        return {
-          status: 400,
-          data: { error: `Invalid 'content_type'.` },
-        };
-      }
-
-      //check if the content is specified and correctly formatted
-      if (!content || content?.length == 0) {
-        return {
-          status: 400,
-          data: { error: `'content' is required.` },
-        };
-      }
-
-      //check if the recipients are specified
-      if (!recipients) {
-        return {
-          status: 400,
-          data: { error: `'recipients'is required.` },
-        };
-      }
-
-      response = checkIfRecipientsAreValid(recipients);
-      if (!response.isValid) {
-        return {
-          status: 400,
-          data: { error: `Formatting error in 'recipients' parameter.` },
-        };
-      }
-
-      const { users, channels, keywords } = response.value;
-
-      //check if the user has enough char_quota
-      const enoughQuota = hasEnoughCharQuota(author, content_type, content);
-      if (!enoughQuota.outcome) {
-        return {
-          status: 403,
-          data: { error: enoughQuota.reason },
-        };
-      }
-
-      //CHECK FOR CHANNELS
-      const { channelsOutcome, channelsArray, notFound } = await checkForAllChannels(channels);
-      if (!channelsOutcome) {
-        return {
-          status: 404,
-          data: { error: `One or more channels not found: ` + notFound.join(", ") + `.` },
-        };
-      }
-
-      //check if the user is trying to post in an official channel
-      const hasOfficialChannels = await containsOfficialChannels(channelsArray);
-      if (hasOfficialChannels && author.account_type != "moderator") {
-        return {
-          status: 403,
-          data: { error: `You are not allowed to post in an official channel.` },
-        };
-      }
-
-      //CHECK FOR USERS
-      const { usersOutcome, usersArray } = await checkForAllUsers(users);
-      if (!usersOutcome) {
-        return {
-          status: 404,
-          data: { error: `One or more users not found.` },
-        };
-      }
-
-      const date = new Date();
-
-      //create the hex_id from the length of the user squeals array
-      hex_id = author.squeals?.posted?.length || 0;
-      //create the squeal object
-      const newSqueal = new Squeal({
-        username: author.username,
-        hex_id: hex_id,
-        user_id: author._id,
-        is_scheduled: is_scheduled || false,
-        content_type: content_type,
-        content: replaceString(content, hex_id, date, options.scheduled_squeal_data),
-        recipients: {
-          users: usersArray,
-          channels: channelsArray,
-          keywords: keywords,
-        },
-        created_at: date,
-        last_modified: date,
-        is_in_official_channel: hasOfficialChannels,
-      });
-
-      //save the squeal in the db
-      let result = await newSqueal.save();
-
-      //remove the char_quota from the user
-      await removeQuota(author, enoughQuota.quotaToSubtract);
-      //subtract the squeal length from the user's char_quota
-
-      //push the squeal in the user squeals array
-      author.squeals.posted.push(result._id);
-      await author.save();
-
-      //push the squeal in the users squeals.mentioned_in array
-      const userUpdatePromises = [];
-      for (const user of usersArray) {
-        //send a notification to the mentioned user
-        const notification = new Notification({
-          user_ref: user,
-          squeal_ref: result._id,
-          content: mentionNotification(author.username, content),
-          created_at: new Date(),
-          source: "squeal",
-          id_code: "mentionedInSqueal",
-        });
-        await notification.save();
-
-        let promise = User.findByIdAndUpdate(user, { $push: { "squeals.mentioned_in": result._id }, $push: { notifications: notification._id } });
-        userUpdatePromises.push(promise);
-      }
-      await Promise.all(userUpdatePromises);
-
-      //push the squeal in the channels squeals array
-      const channelUpdatePromises = [];
-      for (const channel of channelsArray) {
-        let promise = Channel.findByIdAndUpdate(channel._id, { $push: { squeals: result._id } });
-        channelUpdatePromises.push(promise);
-      }
-      await Promise.all(channelUpdatePromises);
-
-      //push the squeal in the keywords squeals array
-      const promises = keywords.map(async (keyword) => {
-        const existingKeyword = await Keyword.findOne({ name: keyword });
-
-        if (existingKeyword) {
-          existingKeyword.squeals.push(result._id);
-          await existingKeyword.save();
-        } else {
-          const newKeyword = new Keyword({
-            name: keyword,
-            squeals: [result._id],
-            created_at: new Date(),
-          });
-          await newKeyword.save();
-        }
-      });
-
-      await Promise.all(promises);
-
-      //Create the comments section
-      const newCommentSection = new CommentSection({
-        squeal_ref: result._id,
-        comments_array: [],
-      });
-      result.comment_section = (await newCommentSection.save())._id;
-
-      await result.save();
-      await newCommentSection.save();
-
-      return {
-        status: result ? 201 : 400,
-        data: result ? result : { error: `Failed to create squeal` },
-      };
-    } catch (error) {
-      console.log(error);
+      vip_user = response.data;
     }
+
+    // We have a valid reqSender for sure
+    // Maybe there is a valid vip_user, possibly undefined or a valid user
+
+    //author is the reqSender by default
+    var author = reqSender;
+
+    if (vip_user && !reqSender._id.equals(vip_user._id)) {
+      // equals works with ids too
+      // Trying to post as someone else
+      // Check if the reqSender has permissions, as he needs to be a SMM of the user
+      if (reqSender.account_type != "professional" || reqSender.professional_type != "SMM") {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to post as another user.` },
+        };
+      }
+      // else check if the reqSender has permissions to post as a VIP user
+      if (!reqSender._id.equals(vip_user.smm)) {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to post as this user.` },
+        };
+      }
+
+      //here I know that the reqSender is a SMM of the user, so I can post as the user
+      author = vip_user;
+      if (!reqSender.is_active || !vip_user.is_active) {
+        return {
+          status: 403,
+          data: { error: `Either the vip or the smm is banned and they are not allowed to post a squeal.` },
+        };
+      }
+    }
+    if (!reqSender.is_active) {
+      return {
+        status: 403,
+        data: { error: `You are banned and you are not allowed to post a squeal.` },
+      };
+    }
+
+    //check if the content_type is valid
+    if (!contentTypes.includes(content_type) || content_type == "deleted") {
+      return {
+        status: 400,
+        data: { error: `Invalid 'content_type'.` },
+      };
+    }
+
+    //check if the content is specified and correctly formatted
+    if (!content || content?.length == 0) {
+      return {
+        status: 400,
+        data: { error: `'content' is required.` },
+      };
+    }
+
+    //check if the recipients are specified
+    if (!recipients) {
+      return {
+        status: 400,
+        data: { error: `'recipients'is required.` },
+      };
+    }
+
+    response = checkIfRecipientsAreValid(recipients);
+    if (!response.isValid) {
+      return {
+        status: 400,
+        data: { error: `Formatting error in 'recipients' parameter.` },
+      };
+    }
+
+    const { users, channels, keywords } = response.value;
+
+    //check if the user has enough char_quota
+    const enoughQuota = hasEnoughCharQuota(author, content_type, content);
+    if (!enoughQuota.outcome) {
+      return {
+        status: 403,
+        data: { error: enoughQuota.reason },
+      };
+    }
+
+    //CHECK FOR CHANNELS
+    const { channelsOutcome, channelsArray, notFound } = await checkForAllChannels(channels);
+    if (!channelsOutcome) {
+      return {
+        status: 404,
+        data: { error: `One or more channels not found: ` + notFound.join(", ") + `.` },
+      };
+    }
+
+    //check if the user is trying to post in an official channel
+    const hasOfficialChannels = await containsOfficialChannels(channelsArray);
+    if (hasOfficialChannels && author.account_type != "moderator") {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to post in an official channel.` },
+      };
+    }
+
+    //CHECK FOR USERS
+    const { usersOutcome, usersArray } = await checkForAllUsers(users);
+    if (!usersOutcome) {
+      return {
+        status: 404,
+        data: { error: `One or more users not found.` },
+      };
+    }
+
+    const date = new Date();
+
+    //create the hex_id from the length of the user squeals array
+    hex_id = author.squeals?.posted?.length || 0;
+    //create the squeal object
+    const newSqueal = new Squeal({
+      username: author.username,
+      hex_id: hex_id,
+      user_id: author._id,
+      is_scheduled: is_scheduled || false,
+      content_type: content_type,
+      content: replaceString(content, hex_id, date, options.scheduled_squeal_data),
+      recipients: {
+        users: usersArray,
+        channels: channelsArray,
+        keywords: keywords,
+      },
+      created_at: date,
+      last_modified: date,
+      is_in_official_channel: hasOfficialChannels,
+    });
+
+    //save the squeal in the db
+    let result = await newSqueal.save();
+
+    //remove the char_quota from the user
+    await removeQuota(author, enoughQuota.quotaToSubtract);
+    //subtract the squeal length from the user's char_quota
+
+    //push the squeal in the user squeals array
+    author.squeals.posted.push(result._id);
+    await author.save();
+
+    //push the squeal in the users squeals.mentioned_in array
+    const userUpdatePromises = [];
+    for (const user of usersArray) {
+      //send a notification to the mentioned user
+      const notification = new Notification({
+        user_ref: user,
+        squeal_ref: result._id,
+        content: mentionNotification(author.username, content),
+        created_at: new Date(),
+        source: "squeal",
+        id_code: "mentionedInSqueal",
+      });
+      await notification.save();
+
+      let promise = User.findByIdAndUpdate(user, { $push: { "squeals.mentioned_in": result._id }, $push: { notifications: notification._id } });
+      userUpdatePromises.push(promise);
+    }
+    await Promise.all(userUpdatePromises);
+
+    //push the squeal in the channels squeals array
+    const channelUpdatePromises = [];
+    for (const channel of channelsArray) {
+      let promise = Channel.findByIdAndUpdate(channel._id, { $push: { squeals: result._id } });
+      channelUpdatePromises.push(promise);
+    }
+    await Promise.all(channelUpdatePromises);
+
+    //push the squeal in the keywords squeals array
+    const promises = keywords.map(async (keyword) => {
+      const existingKeyword = await Keyword.findOne({ name: keyword });
+
+      if (existingKeyword) {
+        existingKeyword.squeals.push(result._id);
+        await existingKeyword.save();
+      } else {
+        const newKeyword = new Keyword({
+          name: keyword,
+          squeals: [result._id],
+          created_at: new Date(),
+        });
+        await newKeyword.save();
+      }
+    });
+
+    await Promise.all(promises);
+
+    //Create the comments section
+    const newCommentSection = new CommentSection({
+      squeal_ref: result._id,
+      comments_array: [],
+    });
+    result.comment_section = (await newCommentSection.save())._id;
+
+    await result.save();
+    await newCommentSection.save();
+
+    return {
+      status: result ? 201 : 400,
+      data: result ? result : { error: `Failed to create squeal` },
+    };
   },
 
   /**
@@ -614,7 +605,7 @@ module.exports = {
    * @param pag_size      Number of squeals to retrieve
    */
   getHomeSqueals: async (options) => {
-    const { user_id, is_logged_in, token_error } = options;
+    const { user_id, is_logged_in, token_error, guest_uuid } = options;
     let { last_loaded, pag_size } = options;
     const query = {};
     let user;
@@ -641,7 +632,7 @@ module.exports = {
       query._id = { $lt: last_loaded };
     }
     if (!is_logged_in) {
-      //Utente non loggato, vede solo gli squeal nei canali ufficiali
+      // User not logged in, can only see squeals in official channels
       if (token_error == "noToken") query.is_in_official_channel = true;
       else if (token_error == "invalidTokenFormat")
         return {
@@ -654,7 +645,7 @@ module.exports = {
           data: { error: token_error },
         };
     } else {
-      //Utente loggato, vede gli squeal dei canali a cui è iscritto, quelli dei canali ufficiali, e quelli in cui è taggato, ma non quelli dei canali silenziati
+      //User logged in, can see squeals in subscribed channels, official channels, and squeals where he is mentioned in, but not in muted channels
       const response = await findUser(user_id);
       if (response.status >= 300) {
         return {
@@ -680,7 +671,7 @@ module.exports = {
     let squeals_array = await Squeal.find(query).sort({ created_at: -1 }).limit(pag_size).exec();
     squeals_array = await addCommentsCountToSqueals(squeals_array);
 
-    //aggiungo un campo "is_liked" ad ogni squeal e un campo che dice perchè è stato selezionato
+    // Add a "is_liked" field to each squeal and a field that says why it was selected
     if (user) {
       for (const squeal of squeals_array) {
         if (user.squeals.reacted_to.includes(squeal._id)) {
@@ -705,7 +696,7 @@ module.exports = {
             ids: names,
           };
         } else if (squeal.is_in_official_channel) {
-          //ottengo i canali in recipients.channels (che sono solo id) e li filtro, prendendo solo quelli ufficiali, e infine prendo solo gli id
+          // Get the channels in recipients.channels (which are only ids) and filter them, taking only the official ones, and only take the ids
           const channels = (
             await Channel.find({ _id: { $in: squeal.recipients.channels }, is_official: true })
               .select("name")
@@ -717,14 +708,32 @@ module.exports = {
           };
         }
       }
+    } else if (guest_uuid) {
+      const guest = await Guest.findOne({ uuid: guest_uuid });
+      for (const squeal of squeals_array) {
+        if (squeal.is_in_official_channel) {
+          const channels = (
+            await Channel.find({ _id: { $in: squeal.recipients.channels }, is_official: true })
+              .select("name")
+              .exec()
+          ).map((channel) => channel.name);
+          squeal.selected = {
+            because: "official",
+            ids: channels,
+          };
+        }
+        if (guest.reacted_to.includes(squeal._id)) {
+          squeal.reacted = true;
+        } else {
+          squeal.reacted = false;
+        }
+      }
     }
 
     //increment the impressions counter for each squeal
     const squealImpressionsPromises = [];
     for (let squeal of squeals_array) {
-      if (squeal.content_type != "deleted" && !user?._id.equals(squeal.user_id) && !user.managed_accounts.includes(squeal.user_id)) {
-        //!squeal.user_id.equals(user?.smm)
-        // console.log(squeal._id + " incrementing impressions---------------------");
+      if (squeal.content_type != "deleted" && !user?._id.equals(squeal.user_id) && !user?.managed_accounts.includes(squeal.user_id)) {
         squealImpressionsPromises.push(Squeal.findByIdAndUpdate(squeal._id, { $inc: { impressions: 1 } }));
       }
     }
@@ -814,29 +823,48 @@ module.exports = {
    * @param options.reaction    Reaction type one of the following: (like, love, laugh, dislike, disgust, disagree)
    */
   addReaction: async (options) => {
-    const { identifier, reaction, user_id } = options;
+    const { identifier, reaction, user_id, isTokenValid, guest_uuid, is_guest_token_valid } = options;
     if (!reaction) {
       return {
         status: 400,
         data: { error: `'reaction' is required.` },
       };
     }
-    //check if the user_id is specified
-    let response = await findUser(user_id);
-    if (response.status >= 300) {
+    let user, guest;
+    if (!isTokenValid && !is_guest_token_valid) {
       return {
-        status: response.status,
-        data: { error: response.error },
+        status: 401,
+        data: { error: `Token is not valid. Try to go back to the login page and log again.` },
       };
     }
-    const user = response.data;
-    //check if the user is active
-    if (user.is_active == false) {
-      return {
-        status: 403,
-        data: { error: `You're not allowed to react to a squeal while banned` },
-      };
+    //------------------------------------------------
+    if (user_id) {
+      //check if the user_id is specified
+      let response = await findUser(user_id);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      user = response.data;
+      //check if the user is active
+      if (user.is_active == false) {
+        return {
+          status: 403,
+          data: { error: `You're not allowed to react to a squeal while banned` },
+        };
+      }
+    } else if (guest_uuid) {
+      guest = await Guest.findOne({ uuid: guest_uuid });
+      if (guest == null) {
+        return {
+          status: 404,
+          data: { error: `Guest not found.` },
+        };
+      }
     }
+    //------------------------------------------------
     //check if the identifier is specified
     response = await findSqueal(identifier);
     if (response.status >= 300) {
@@ -860,7 +888,7 @@ module.exports = {
       };
     }
     //check if the user already reacted to the squeal
-    if (user.squeals.reacted_to.includes(squeal._id)) {
+    if ((user && user.squeals.reacted_to.includes(squeal._id)) || (guest && guest.reacted_to.includes(squeal._id))) {
       return {
         status: 409,
         data: { error: `You already reacted to this squeal.` },
@@ -871,8 +899,14 @@ module.exports = {
     squeal.save();
 
     //add the squeal to the user squeals.reacted_to
-    user.squeals.reacted_to.push(squeal._id);
-    await user.save();
+    if (user) {
+      user.squeals.reacted_to.push(squeal._id);
+      await user.save();
+    }
+    if (guest) {
+      guest.reacted_to.push(squeal._id);
+      await guest.save();
+    }
 
     return {
       status: 200,
@@ -1079,7 +1113,7 @@ module.exports = {
       };
     }
 
-    //aggiungo il campo "comments_total" ad ogni squeal:
+    // Add the "comments_total" field to each squeal:
     const newData = await addCommentsCountToSqueals(data);
 
     return {

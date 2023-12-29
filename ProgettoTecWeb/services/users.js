@@ -20,7 +20,7 @@ const {
 } = require("./messages");
 
 const QuickChart = require("quickchart-js");
-const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TIERS } = require("./constants");
+const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TIERS, PROHIBITED_USERNAMES } = require("./constants");
 //--------------------------------------------------------------------------
 module.exports = {
   getUsername: async (options) => {
@@ -296,6 +296,13 @@ module.exports = {
       };
     }
 
+    if (PROHIBITED_USERNAMES.includes(username.toLowerCase())) {
+      return {
+        status: 400,
+        data: { error: `You're not allowed to have this username.` },
+      };
+    }
+
     //-----------PASSWORD ENCRYPTION----------------
 
     const salt = await bcrypt.genSalt(securityLvl);
@@ -484,438 +491,430 @@ module.exports = {
   },
 
   getStatistics: async (options) => {
-    try {
-      const { user_id, identifier } = options;
-      let response = await findUser(user_id);
-      if (response.status >= 300) {
-        // If the response is an error, return the error message
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const SMMuser = response.data;
-
-      response = await findUser(identifier);
-      if (response.status >= 300) {
-        // If the response is an error, return the error message
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-      const VIPuser = response.data;
-
-      if (SMMuser.account_type !== "professional" || SMMuser.professional_type !== "SMM") {
-        return {
-          status: 400,
-          data: { error: `You are not a SMM.` },
-        };
-      }
-      const isVip = VIPuser.account_type === "professional" && VIPuser.professional_type === "VIP";
-      const isManagedAccount = SMMuser.managed_accounts.includes(VIPuser._id);
-
-      if (!isVip || !isManagedAccount) {
-        return {
-          status: 400,
-          data: { error: `You are not a SMM of this user.` },
-        };
-      }
-
-      const squeals = VIPuser.squeals.posted;
-
-      // Distribuzione dei tipi di contenuto: dataDistribution
-      // Puoi generare un grafico a torta o un diagramma a barre
-      // per mostrare la distribuzione dei tipi di contenuto
-      // (text, image, video, position, deleted) nei post di una persona.
-
-      // DATA DISTRIBUTION
-
-      //ottengo dati per diagramma a barre
-      const contentTypes = ["text", "image", "video", "position"];
-      const colors = ["rgba(224, 110, 123, 88)", "rgba(111, 128, 224, 88)", "rgba(224, 197, 110, 88)", "rgba(110, 224, 135, 88)"];
-      const contentTypesPromises = contentTypes.map(async (type) => {
-        const count = await Squeal.countDocuments({ _id: { $in: squeals }, content_type: type });
-        return { type: type, count: count };
-      });
-      const dataDistribution = await Promise.all(contentTypesPromises);
-      //creo il grafico
-      const dataDistributionChart = new QuickChart();
-      dataDistributionChart.setWidth(500).setHeight(300).setVersion("2");
-      dataDistributionChart.setConfig({
-        type: "bar",
-        data: {
-          labels: dataDistribution.map((item) => item.type),
-          datasets: [
-            {
-              label: "",
-              data: dataDistribution.map((item) => item.count),
-              backgroundColor: colors,
-              borderColor: "rgba(70, 70, 70, 0.7)",
-              borderWidth: 2,
-            },
-          ],
-        },
-        options: {
-          plugins: {
-            datalabels: {
-              anchor: "end",
-              align: "top",
-              color: "#fff",
-              backgroundColor: "rgba(48, 60, 90, 0.8)",
-              borderColor: "rgba(48, 60, 90, 1)",
-              borderWidth: 1,
-              borderRadius: 5,
-            },
-          },
-        },
-      });
-
-      // Storia temporale delle pubblicazioni: squealsHistory
-      // Mostra quanti post sono stati pubblicati in ogni settimana e le impressions.
-      // ottengo i dati per il grafico a linee, segnando la data nel formato yyyy-mm-dd
-
-      const date = new Date();
-      const dateArray = [];
-      for (let i = 0; i < 52; i++) {
-        date.setDate(date.getDate() - 7);
-        dateArray.push(new Date(date));
-      }
-
-      const squealsHistoryPromises = dateArray.map(async (date) => {
-        const count = await Squeal.countDocuments({ _id: { $in: squeals }, created_at: { $gte: date } });
-        return { x: date, y: count };
-      });
-
-      const impressionsHistoryPromises = dateArray.map(async (date) => {
-        const impressions = await Squeal.aggregate([
-          {
-            $match: {
-              _id: { $in: squeals },
-              created_at: { $gte: date },
-            },
-          },
-          {
-            $group: {
-              _id: null,
-              totalImpressions: { $sum: "$impressions" },
-            },
-          },
-        ]).exec();
-        return { x: date, y: impressions.length > 0 ? impressions[0].totalImpressions : 0 };
-      });
-
-      const [squealsHistory, impressionsHistory] = await Promise.all([Promise.all(squealsHistoryPromises), Promise.all(impressionsHistoryPromises)]);
-
-      const squealsHistoryChart = new QuickChart();
-      squealsHistoryChart.setWidth(500).setHeight(300).setVersion("2");
-      squealsHistoryChart.setConfig({
-        type: "line",
-        data: {
-          labels: dateArray,
-          datasets: [
-            {
-              label: "Squeals",
-              backgroundColor: "rgba(178, 71, 41, 0.7)",
-              borderColor: "rgb(248, 189, 87)",
-              fill: false,
-              yAxisID: "squeals-y-axis",
-              data: squealsHistory.reverse().map((item, index) => ({ x: item.x, y: item.y - (squealsHistory[index + 1]?.y || 0) })),
-            },
-            {
-              label: "Impressions",
-              backgroundColor: "rgba(41, 71, 178, 0.7)",
-              borderColor: "rgb(87, 189, 248)",
-              fill: false,
-              yAxisID: "impressions-y-axis",
-              data: impressionsHistory.reverse().map((item, index) => ({ x: item.x, y: item.y - (impressionsHistory[index + 1]?.y || 0) })),
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          title: {
-            display: true,
-            text: "Squeals and Impressions History",
-          },
-          scales: {
-            xAxes: [
-              {
-                type: "time",
-                display: true,
-                scaleLabel: {
-                  display: true,
-                  labelString: "Date",
-                },
-                ticks: {
-                  major: {
-                    enabled: true,
-                  },
-                  suggestedMin: 0,
-                  beginAtZero: true, // Imposta a true per far partire da zero
-                },
-              },
-            ],
-            yAxes: [
-              {
-                id: "squeals-y-axis",
-                display: true,
-                position: "left",
-                scaleLabel: {
-                  display: true,
-                  labelString: "Squeal number",
-                },
-                ticks: {
-                  suggestedMin: 0,
-                  beginAtZero: true, // Imposta a true per far partire da zero
-                },
-              },
-              {
-                id: "impressions-y-axis",
-                display: true,
-                position: "right",
-                scaleLabel: {
-                  display: true,
-                  labelString: "Impressions",
-                },
-              },
-            ],
-          },
-        },
-      });
-
-      // Ora puoi utilizzare squealsHistoryChart.toURL() o altri metodi per visualizzare il grafico
-
-      // Interazioni e impressioni: interactionsImpressions
-      // Calcola il numero di impressioni e mostra
-      // come variano in relazione alle interazioni
-      // (reazioni, commenti) su base temporale.
-      // ottengo i dati per il grafico
-
-      //sommo tutte le impressions di tutti i post in un campo "impressions_tot"
-      // e tutte le reactions divise tra positive e negative in campi "positive_reactions_tot" e "negative_reactions_tot"
-      const interactionsImpressions = await Squeal.aggregate([
-        { $match: { _id: { $in: squeals } } },
-        {
-          $group: {
-            _id: null,
-            impressions_tot: { $sum: "$impressions" },
-            positive_reactions_tot: { $sum: "$reactions.positive_reactions" },
-            negative_reactions_tot: { $sum: "$reactions.negative_reactions" },
-          },
-        },
-      ]).exec();
-      //voglio anche sapere il numero totale di commenti
-      const commentsTot = await Squeal.aggregate([
-        { $match: { _id: { $in: squeals } } },
-        {
-          $group: {
-            _id: null,
-            comments_tot: { $sum: "$comments_count" },
-          },
-        },
-      ]).exec();
-
-      interactionsImpressions[0].comments_tot = commentsTot[0].comments_tot;
-      interactionsImpressions[0].impressions_tot == 0 ? (interactionsImpressions[0].impressions_tot = 1) : null;
-      // Supponendo che tu abbia ottenuto i risultati da MongoDB e li abbia memorizzati in interactionsImpressions e commentsTot
-
-      // Calcola la percentuale di interazioni rispetto alle impressioni
-      const interactionPercentage =
-        ((interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot + commentsTot[0].comments_tot) /
-          interactionsImpressions[0].impressions_tot) *
-        100;
-
-      // Calcola la percentuale di mancate interazioni rispetto alle impressioni
-      const nonInteractionPercentage = 100 - interactionPercentage;
-
-      // Calcola la percentuale di reazioni rispetto alle impressioni
-      const reactionsPercentage =
-        ((interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot) / interactionsImpressions[0].impressions_tot) * 100;
-
-      // Calcola la percentuale di commenti rispetto alle impressioni
-      const commentsPercentage = (commentsTot[0].comments_tot / interactionsImpressions[0].impressions_tot) * 100;
-
-      // Configura i dati per il grafico a barre
-
-      // Crea il grafico a barre
-      const interactionsImpressionsChart = new QuickChart();
-      interactionsImpressionsChart.setWidth(500).setHeight(300).setVersion("2");
-      interactionsImpressionsChart.setConfig({
-        type: "pie",
-        data: {
-          labels: ["Reactions", "Comments", "No Interactions"],
-          datasets: [
-            {
-              data: [reactionsPercentage.toFixed(1), commentsPercentage.toFixed(1), nonInteractionPercentage.toFixed(1)],
-              backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
-              hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          title: {
-            display: true,
-            text: "Interactions over impressions",
-          },
-        },
-      });
-
-      // Distribuzione delle reazioni in base alla categoria di tag: tagsDistribution
-      // Mostra come le reazioni si distribuiscono tra post con tag
-      // "none", "popular", "unpopular", "controversial".
-      // ottengo i dati per il grafico
-      const tags = ["none", "popular", "unpopular", "controversial"];
-      const tagsColors = ["rgba(111, 128, 224, 88)", "rgba(110, 224, 135, 88)", "rgba(224, 110, 123, 88)", "rgba(224, 197, 110, 88)"];
-      const tagsPromises = tags.map(async (tag) => {
-        const count = await Squeal.countDocuments({ _id: { $in: squeals }, reaction_tag: tag });
-        return { tag: tag, count: count };
-      });
-      const tagsDistribution = await Promise.all(tagsPromises);
-
-      const tagsDistributionChart = new QuickChart();
-      tagsDistributionChart.setWidth(500).setHeight(300).setVersion("2");
-      tagsDistributionChart.setConfig({
-        type: "pie",
-        data: {
-          datasets: [
-            {
-              data: tagsDistribution.map((item) => item.count),
-              backgroundColor: tagsColors,
-              label: "Squeals Tags",
-            },
-          ],
-          labels: tags,
-        },
-      });
-
-      // Coinvolgimento in canali ufficiali vs. non ufficiali:   officialChannelInvolvement
-      // Rappresenta visivamente la differenza nell'coinvolgimento
-      //  e nelle impressioni tra post con "in_official_channel" = true e "in_official_channel" = false.
-      // ottengo i dati per il grafico: sommo tutte le impressions dei post in canali ufficiali e non ufficiali
-      //e ottengo il numero di post nei canali ufficiali e non ufficiali
-      const officialChannelInvolvement = await Squeal.aggregate([
-        { $match: { _id: { $in: squeals } } },
-        {
-          $group: {
-            _id: "$is_in_official_channel",
-            impressions_tot: { $sum: "$impressions" },
-            count: { $sum: 1 },
-          },
-        },
-      ]).exec();
-
-      const offChanData = officialChannelInvolvement.find((item) => item._id === true);
-      const notOffChanData = officialChannelInvolvement.find((item) => item._id === false);
-
-      const officialChannelInvolvementChart = new QuickChart();
-      officialChannelInvolvementChart.setWidth(500).setHeight(300).setVersion("2");
-      officialChannelInvolvementChart.setConfig({
-        type: "bar",
-        data: {
-          labels: ["Official Channel", "Not Official Channel"],
-          datasets: [
-            {
-              label: "Impressions",
-              data: [offChanData?.impressions_tot || 0, notOffChanData?.impressions_tot || 0],
-              backgroundColor: "#B24729",
-            },
-            {
-              label: "Squeals",
-              data: [offChanData?.count || 0, notOffChanData?.count || 0],
-              backgroundColor: "#F8BD57",
-            },
-          ],
-        },
-      });
-
-      //totale di ogni tipo di reaction
-      const reactions = ["like", "laugh", "love", "dislike", "disagree", "disgust"];
-      const emojis = ["👍", "😂", "😍", "👎", "🙅", "🤮"];
-      const rgbs = ["rgb(255, 205, 86)", "rgb(255, 159, 64)", "rgb(255, 99, 132)", "rgb(54, 162, 235)", "rgb(166,136, 220)", "rgb(75, 192, 192)"];
-      const reactionsPromises = reactions.map(async (reaction) => {
-        const count = await Squeal.aggregate([
-          { $match: { _id: { $in: squeals } } },
-          {
-            $group: {
-              _id: null,
-              count: { $sum: `$reactions.${reaction}` },
-            },
-          },
-        ]).exec();
-        return { reaction: reaction, count: count[0].count };
-      });
-      const reactionsTot = await Promise.all(reactionsPromises);
-
-      const reactionsChart = new QuickChart();
-      reactionsChart.setWidth(300).setHeight(350).setVersion("2");
-      reactionsChart.setConfig({
-        type: "radar",
-        data: {
-          labels: reactions.map((item, index) => [item, emojis[index]]),
-          datasets: [
-            {
-              backgroundColor: "rgba(3, 99, 132, 0.2)",
-              borderColor: "#303C5A",
-              pointBackgroundColor: rgbs,
-              pointBorderColor: rgbs,
-              data: reactionsTot.map((item) => item.count),
-              borderWidth: 6,
-            },
-          ],
-        },
-        options: {
-          title: {
-            display: true,
-            text: "Reactions distribution",
-          },
-          legend: {
-            display: false,
-          },
-        },
-      });
-
-      //combino i dati per il grafico
-      reactionsTot.forEach((reaction, index) => {
-        reaction.emoji = emojis[index];
-        reaction.rgb = rgbs[index];
-      });
-
-      //TOP 3 squeals per reactions e per impressions
-      const top3ByTotalReactions = await Squeal.aggregate([
-        { $match: { _id: { $in: squeals } } },
-        {
-          $addFields: {
-            totalReactions: {
-              $sum: ["$reactions.positive_reactions", "$reactions.negative_reactions"],
-            },
-          },
-        },
-        { $sort: { totalReactions: -1 } },
-        { $limit: 3 },
-      ]).exec();
-      const top3ByImpressions = await Squeal.aggregate([{ $match: { _id: { $in: squeals } } }, { $sort: { impressions: -1 } }, { $limit: 3 }]).exec();
-
-      const data = {
-        dataDistribution: dataDistributionChart.getUrl(),
-        squealsHistory: squealsHistoryChart.getUrl(),
-        interactionsImpressions: interactionsImpressionsChart.getUrl(),
-        tagsDistribution: tagsDistributionChart.getUrl(),
-        officialChannelInvolvement: officialChannelInvolvementChart.getUrl(),
-        reactionsTot: reactionsChart.getUrl(),
-        reactionsTotData: reactionsTot,
-        top3ByTotalReactions: top3ByTotalReactions,
-        top3ByImpressions: top3ByImpressions,
-      };
+    const { user_id, identifier } = options;
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      // If the response is an error, return the error message
       return {
-        status: 200,
-        data: data,
+        status: response.status,
+        data: { error: response.error },
       };
-    } catch (err) {
-      console.log(err);
     }
+    const SMMuser = response.data;
+
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      // If the response is an error, return the error message
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const VIPuser = response.data;
+
+    if (SMMuser.account_type !== "professional" || SMMuser.professional_type !== "SMM") {
+      return {
+        status: 400,
+        data: { error: `You are not a SMM.` },
+      };
+    }
+    const isVip = VIPuser.account_type === "professional" && VIPuser.professional_type === "VIP";
+    const isManagedAccount = SMMuser.managed_accounts.includes(VIPuser._id);
+
+    if (!isVip || !isManagedAccount) {
+      return {
+        status: 400,
+        data: { error: `You are not a SMM of this user.` },
+      };
+    }
+
+    const squeals = VIPuser.squeals.posted;
+
+    // Distribute content types: dataDistribution
+    // Puoi generare un grafico a torta o un diagramma a barre // A graph showing the distribution of content types
+    // To show the distribution of content types
+    // (text, image, video, position, deleted) in a person's posts.
+
+    // DATA DISTRIBUTION
+    // Obtain data for the bar chart
+    const contentTypes = ["text", "image", "video", "position"];
+    const colors = ["rgba(224, 110, 123, 88)", "rgba(111, 128, 224, 88)", "rgba(224, 197, 110, 88)", "rgba(110, 224, 135, 88)"];
+    const contentTypesPromises = contentTypes.map(async (type) => {
+      const count = await Squeal.countDocuments({ _id: { $in: squeals }, content_type: type });
+      return { type: type, count: count };
+    });
+    const dataDistribution = await Promise.all(contentTypesPromises);
+    // Create the chart
+    const dataDistributionChart = new QuickChart();
+    dataDistributionChart.setWidth(500).setHeight(300).setVersion("2");
+    dataDistributionChart.setConfig({
+      type: "bar",
+      data: {
+        labels: dataDistribution.map((item) => item.type),
+        datasets: [
+          {
+            label: "",
+            data: dataDistribution.map((item) => item.count),
+            backgroundColor: colors,
+            borderColor: "rgba(70, 70, 70, 0.7)",
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        plugins: {
+          datalabels: {
+            anchor: "end",
+            align: "top",
+            color: "#fff",
+            backgroundColor: "rgba(48, 60, 90, 0.8)",
+            borderColor: "rgba(48, 60, 90, 1)",
+            borderWidth: 1,
+            borderRadius: 5,
+          },
+        },
+      },
+    });
+    // Historical timeline of publications: squealsHistory
+    // Shows how many posts were published each week and the impressions.
+    // I get the data for the line chart, marking the date in the format yyyy-mm-dd
+
+    const date = new Date();
+    const dateArray = [];
+    for (let i = 0; i < 52; i++) {
+      date.setDate(date.getDate() - 7);
+      dateArray.push(new Date(date));
+    }
+
+    const squealsHistoryPromises = dateArray.map(async (date) => {
+      const count = await Squeal.countDocuments({ _id: { $in: squeals }, created_at: { $gte: date } });
+      return { x: date, y: count };
+    });
+
+    const impressionsHistoryPromises = dateArray.map(async (date) => {
+      const impressions = await Squeal.aggregate([
+        {
+          $match: {
+            _id: { $in: squeals },
+            created_at: { $gte: date },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalImpressions: { $sum: "$impressions" },
+          },
+        },
+      ]).exec();
+      return { x: date, y: impressions.length > 0 ? impressions[0].totalImpressions : 0 };
+    });
+
+    const [squealsHistory, impressionsHistory] = await Promise.all([Promise.all(squealsHistoryPromises), Promise.all(impressionsHistoryPromises)]);
+
+    const squealsHistoryChart = new QuickChart();
+    squealsHistoryChart.setWidth(500).setHeight(300).setVersion("2");
+    squealsHistoryChart.setConfig({
+      type: "line",
+      data: {
+        labels: dateArray,
+        datasets: [
+          {
+            label: "Squeals",
+            backgroundColor: "rgba(178, 71, 41, 0.7)",
+            borderColor: "rgb(248, 189, 87)",
+            fill: false,
+            yAxisID: "squeals-y-axis",
+            data: squealsHistory.reverse().map((item, index) => ({ x: item.x, y: item.y - (squealsHistory[index + 1]?.y || 0) })),
+          },
+          {
+            label: "Impressions",
+            backgroundColor: "rgba(41, 71, 178, 0.7)",
+            borderColor: "rgb(87, 189, 248)",
+            fill: false,
+            yAxisID: "impressions-y-axis",
+            data: impressionsHistory.reverse().map((item, index) => ({ x: item.x, y: item.y - (impressionsHistory[index + 1]?.y || 0) })),
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        title: {
+          display: true,
+          text: "Squeals and Impressions History",
+        },
+        scales: {
+          xAxes: [
+            {
+              type: "time",
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: "Date",
+              },
+              ticks: {
+                major: {
+                  enabled: true,
+                },
+                suggestedMin: 0,
+                beginAtZero: true, // Set to true to start from zero
+              },
+            },
+          ],
+          yAxes: [
+            {
+              id: "squeals-y-axis",
+              display: true,
+              position: "left",
+              scaleLabel: {
+                display: true,
+                labelString: "Squeal number",
+              },
+              ticks: {
+                suggestedMin: 0,
+                beginAtZero: true, // Set to true to start from zero
+              },
+            },
+            {
+              id: "impressions-y-axis",
+              display: true,
+              position: "right",
+              scaleLabel: {
+                display: true,
+                labelString: "Impressions",
+              },
+            },
+          ],
+        },
+      },
+    });
+
+    // Now you can use squealsHistoryChart.toURL() or other methods to display the graph
+
+    // Interactions and impressions: interactionsImpressions
+    // Calculate the number of impressions and show
+    // how they vary in relation to interactions
+    // (reactions, comments) on a time basis.
+    // I get the data for the graph
+
+    // Sum all the impressions of all the posts in a field "impressions_tot"
+    // and all the reactions divided between positive and negative in fields "positive_reactions_tot" and "negative_reactions_tot"
+    const interactionsImpressions = await Squeal.aggregate([
+      { $match: { _id: { $in: squeals } } },
+      {
+        $group: {
+          _id: null,
+          impressions_tot: { $sum: "$impressions" },
+          positive_reactions_tot: { $sum: "$reactions.positive_reactions" },
+          negative_reactions_tot: { $sum: "$reactions.negative_reactions" },
+        },
+      },
+    ]).exec();
+    // I also want to know the total number of comments
+    const commentsTot = await Squeal.aggregate([
+      { $match: { _id: { $in: squeals } } },
+      {
+        $group: {
+          _id: null,
+          comments_tot: { $sum: "$comments_count" },
+        },
+      },
+    ]).exec();
+
+    interactionsImpressions[0].comments_tot = commentsTot[0].comments_tot;
+    interactionsImpressions[0].impressions_tot == 0 ? (interactionsImpressions[0].impressions_tot = 1) : null;
+    // We suppose you have obtained the results from MongoDB and stored them in interactionsImpressions and commentsTot
+
+    // Calculate the percentage of interactions over impressions
+    const interactionPercentage =
+      ((interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot + commentsTot[0].comments_tot) /
+        interactionsImpressions[0].impressions_tot) *
+      100;
+
+    // Calculate the percentage of non-interactions over impressions
+    const nonInteractionPercentage = 100 - interactionPercentage;
+
+    // Calculate the percentage of reactions over impressions
+    const reactionsPercentage =
+      ((interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot) / interactionsImpressions[0].impressions_tot) * 100;
+
+    // Calculate the percentage of comments over impressions
+    const commentsPercentage = (commentsTot[0].comments_tot / interactionsImpressions[0].impressions_tot) * 100;
+
+    // Create the bar chart
+    const interactionsImpressionsChart = new QuickChart();
+    interactionsImpressionsChart.setWidth(500).setHeight(300).setVersion("2");
+    interactionsImpressionsChart.setConfig({
+      type: "pie",
+      data: {
+        labels: ["Reactions", "Comments", "No Interactions"],
+        datasets: [
+          {
+            data: [reactionsPercentage.toFixed(1), commentsPercentage.toFixed(1), nonInteractionPercentage.toFixed(1)],
+            backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
+            hoverBackgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        title: {
+          display: true,
+          text: "Interactions over impressions",
+        },
+      },
+    });
+
+    // Tags distribution
+    // Shows how reactions are distributed among posts with tag
+    // "none", "popular", "unpopular", "controversial".
+    // I get the data for the graph
+    const tags = ["none", "popular", "unpopular", "controversial"];
+    const tagsColors = ["rgba(111, 128, 224, 88)", "rgba(110, 224, 135, 88)", "rgba(224, 110, 123, 88)", "rgba(224, 197, 110, 88)"];
+    const tagsPromises = tags.map(async (tag) => {
+      const count = await Squeal.countDocuments({ _id: { $in: squeals }, reaction_tag: tag });
+      return { tag: tag, count: count };
+    });
+    const tagsDistribution = await Promise.all(tagsPromises);
+
+    const tagsDistributionChart = new QuickChart();
+    tagsDistributionChart.setWidth(500).setHeight(300).setVersion("2");
+    tagsDistributionChart.setConfig({
+      type: "pie",
+      data: {
+        datasets: [
+          {
+            data: tagsDistribution.map((item) => item.count),
+            backgroundColor: tagsColors,
+            label: "Squeals Tags",
+          },
+        ],
+        labels: tags,
+      },
+    });
+
+    // Official channel involvement vs. non official: officialChannelInvolvement
+    // Shows visually the difference in involvement
+    // and impressions between posts with "in_official_channel" = true and "in_official_channel" = false.
+    // I get the data for the graph: I add up all the impressions of the posts in official and non-official channels
+    // and get the number of posts in official and non-official channels
+    const officialChannelInvolvement = await Squeal.aggregate([
+      { $match: { _id: { $in: squeals } } },
+      {
+        $group: {
+          _id: "$is_in_official_channel",
+          impressions_tot: { $sum: "$impressions" },
+          count: { $sum: 1 },
+        },
+      },
+    ]).exec();
+
+    const offChanData = officialChannelInvolvement.find((item) => item._id === true);
+    const notOffChanData = officialChannelInvolvement.find((item) => item._id === false);
+
+    const officialChannelInvolvementChart = new QuickChart();
+    officialChannelInvolvementChart.setWidth(500).setHeight(300).setVersion("2");
+    officialChannelInvolvementChart.setConfig({
+      type: "bar",
+      data: {
+        labels: ["Official Channel", "Not Official Channel"],
+        datasets: [
+          {
+            label: "Impressions",
+            data: [offChanData?.impressions_tot || 0, notOffChanData?.impressions_tot || 0],
+            backgroundColor: "#B24729",
+          },
+          {
+            label: "Squeals",
+            data: [offChanData?.count || 0, notOffChanData?.count || 0],
+            backgroundColor: "#F8BD57",
+          },
+        ],
+      },
+    });
+
+    //Reactions Total
+    const reactions = ["like", "laugh", "love", "dislike", "disagree", "disgust"];
+    const emojis = ["👍", "😂", "😍", "👎", "🙅", "🤮"];
+    const rgbs = ["rgb(255, 205, 86)", "rgb(255, 159, 64)", "rgb(255, 99, 132)", "rgb(54, 162, 235)", "rgb(166,136, 220)", "rgb(75, 192, 192)"];
+    const reactionsPromises = reactions.map(async (reaction) => {
+      const count = await Squeal.aggregate([
+        { $match: { _id: { $in: squeals } } },
+        {
+          $group: {
+            _id: null,
+            count: { $sum: `$reactions.${reaction}` },
+          },
+        },
+      ]).exec();
+      return { reaction: reaction, count: count[0].count };
+    });
+    const reactionsTot = await Promise.all(reactionsPromises);
+
+    const reactionsChart = new QuickChart();
+    reactionsChart.setWidth(300).setHeight(350).setVersion("2");
+    reactionsChart.setConfig({
+      type: "radar",
+      data: {
+        labels: reactions.map((item, index) => [item, emojis[index]]),
+        datasets: [
+          {
+            backgroundColor: "rgba(3, 99, 132, 0.2)",
+            borderColor: "#303C5A",
+            pointBackgroundColor: rgbs,
+            pointBorderColor: rgbs,
+            data: reactionsTot.map((item) => item.count),
+            borderWidth: 6,
+          },
+        ],
+      },
+      options: {
+        title: {
+          display: true,
+          text: "Reactions distribution",
+        },
+        legend: {
+          display: false,
+        },
+      },
+    });
+
+    // Combine data for the chart
+    reactionsTot.forEach((reaction, index) => {
+      reaction.emoji = emojis[index];
+      reaction.rgb = rgbs[index];
+    });
+
+    //TOP 3 squeals per reactions and impressions
+    const top3ByTotalReactions = await Squeal.aggregate([
+      { $match: { _id: { $in: squeals } } },
+      {
+        $addFields: {
+          totalReactions: {
+            $sum: ["$reactions.positive_reactions", "$reactions.negative_reactions"],
+          },
+        },
+      },
+      { $sort: { totalReactions: -1 } },
+      { $limit: 3 },
+    ]).exec();
+    const top3ByImpressions = await Squeal.aggregate([{ $match: { _id: { $in: squeals } } }, { $sort: { impressions: -1 } }, { $limit: 3 }]).exec();
+
+    const data = {
+      dataDistribution: dataDistributionChart.getUrl(),
+      squealsHistory: squealsHistoryChart.getUrl(),
+      interactionsImpressions: interactionsImpressionsChart.getUrl(),
+      tagsDistribution: tagsDistributionChart.getUrl(),
+      officialChannelInvolvement: officialChannelInvolvementChart.getUrl(),
+      reactionsTot: reactionsChart.getUrl(),
+      reactionsTotData: reactionsTot,
+      top3ByTotalReactions: top3ByTotalReactions,
+      top3ByImpressions: top3ByImpressions,
+    };
+    return {
+      status: 200,
+      data: data,
+    };
   },
 
   accountChangeRequest: async (options) => {
@@ -951,7 +950,7 @@ module.exports = {
       };
     }
 
-    const isAlreadyRequested = await Request.exists({ user_id: reqSender._id, account_type: account_type });
+    const isAlreadyRequested = await Request.findOne({ user_id: reqSender._id, type: account_type });
     if (isAlreadyRequested) {
       return {
         status: 400,
@@ -1059,7 +1058,7 @@ module.exports = {
       user.account_type = request.type;
     }
 
-    //mandiamo notifica allo user
+    // Send notification to the user
     const newNotification = new Notification({
       user_ref: request.user_id,
       created_at: Date.now(),
@@ -1292,9 +1291,9 @@ module.exports = {
     const old_account_type = userToUpdate.account_type;
     const old_professional_type = userToUpdate.professional_type;
 
-    //se era professional vip
+    // If the user was a VIP
     if (userToUpdate.account_type === "professional" && userToUpdate.professional_type === "VIP" && professional_type !== "VIP") {
-      //se aveva un SMM rimuovere il smm dal profilo e il profilo dal smm
+      // If he had a SMM remove the smm from the profile and the profile from the smm
       if (userToUpdate.smm) {
         response = await findUser(userToUpdate.smm);
         if (response.status >= 300) {
@@ -1318,8 +1317,7 @@ module.exports = {
         smm.notifications.push(notification._id);
         await smm.save();
       }
-      //gestire la coda di richieste del VIP
-      //rimuovo dall'array tutte le richieste e rimuovo dai vip la richiesta in coda
+      // Remove all the requests from the array and remove the request from the VIPs
       const VIPRequestsPromises = userToUpdate.pending_requests.VIP_requests.map(async (request) => {
         const response = await findUser(request);
         if (response.status >= 300) {
@@ -1336,7 +1334,7 @@ module.exports = {
       await Promise.all(VIPRequestsPromises);
       userToUpdate.pending_requests.VIP_requests = [];
     }
-    //se era professional smm, rimuovere tutti i managed_accounts dal profilo e il smm da tutti i managed_accounts
+    // If the user was a SMM, remove all the managed accounts from the profile and the SMM from all the managed accounts
     if (userToUpdate.account_type === "professional" && userToUpdate.professional_type === "SMM" && professional_type !== "SMM") {
       if (userToUpdate.managed_accounts.length > 0) {
         const managedAccountsPromises = userToUpdate.managed_accounts.map(async (managed_account) => {
@@ -1733,73 +1731,69 @@ module.exports = {
    * @param options.identifier Identifier of the VIP to remove
    */
   removeVIP: async (options) => {
-    try {
-      const { identifier, user_id } = options;
+    const { identifier, user_id } = options;
 
-      if (!identifier || identifier === "" || (!mongooseObjectIdRegex.test(identifier) && !usernameRegex.test(identifier))) {
-        return {
-          status: 400,
-          data: { error: `Missing or invalid value for 'identifier' field.` },
-        };
-      }
-
-      let response = await findUser(user_id);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: response.error,
-        };
-      }
-      const user = response.data;
-      //check if the user is a SMM
-      if (user.account_type !== "professional" || user.professional_type !== "SMM") {
-        return {
-          status: 403,
-          data: { error: `You are not a SMM.` },
-        };
-      }
-
-      response = await findUser(identifier);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: response.error,
-        };
-      }
-      const vip = response.data;
-
-      //check if the user has a VIP
-      if (!user.managed_accounts.includes(vip._id)) {
-        return {
-          status: 400,
-          data: { error: `You are not their SMM.` },
-        };
-      }
-
-      const notification = new Notification({
-        user_ref: vip._id,
-        created_at: Date.now(),
-        content: noLongerManagedAccount(user.username),
-        source: "user",
-        id_code: "noMoreSmmVIP",
-        sender_ref: user._id,
-      });
-      await notification.save();
-
-      await User.findByIdAndUpdate(vip._id, { $unset: { smm: 1 }, $push: { notifications: notification._id } });
-      user.managed_accounts.pull(vip._id);
-
-      await user.save();
-
+    if (!identifier || identifier === "" || (!mongooseObjectIdRegex.test(identifier) && !usernameRegex.test(identifier))) {
       return {
-        status: 200,
-        data: { message: `VIP removed successfully.` },
+        status: 400,
+        data: { error: `Missing or invalid value for 'identifier' field.` },
       };
-    } catch (err) {
-      console.log(err);
     }
+
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: response.error,
+      };
+    }
+    const user = response.data;
+    //check if the user is a SMM
+    if (user.account_type !== "professional" || user.professional_type !== "SMM") {
+      return {
+        status: 403,
+        data: { error: `You are not a SMM.` },
+      };
+    }
+
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: response.error,
+      };
+    }
+    const vip = response.data;
+
+    //check if the user has a VIP
+    if (!user.managed_accounts.includes(vip._id)) {
+      return {
+        status: 400,
+        data: { error: `You are not their SMM.` },
+      };
+    }
+
+    const notification = new Notification({
+      user_ref: vip._id,
+      created_at: Date.now(),
+      content: noLongerManagedAccount(user.username),
+      source: "user",
+      id_code: "noMoreSmmVIP",
+      sender_ref: user._id,
+    });
+    await notification.save();
+
+    await User.findByIdAndUpdate(vip._id, { $unset: { smm: 1 }, $push: { notifications: notification._id } });
+    user.managed_accounts.pull(vip._id);
+
+    await user.save();
+
+    return {
+      status: 200,
+      data: { message: `VIP removed successfully.` },
+    };
   },
 
   /**
@@ -1885,7 +1879,7 @@ module.exports = {
       };
     }
 
-    //controllare che gli utenti esistano
+    // Check if the userr exists
     let response = await findUser(user_id);
     if (response.status >= 300) {
       //if the response is an error
@@ -1957,7 +1951,7 @@ module.exports = {
       };
     }
 
-    //controllare che gli utenti esistano e abbia la stessa email
+    // Check if the user exists and have the same mail
     const response = await findUser(identifier);
     if (response.status >= 300) {
       //if the response is an error
@@ -2023,7 +2017,7 @@ module.exports = {
     const isSMM = reqSender.account_type === "professional" && reqSender.professional_type === "SMM" && reqSender.managed_accounts.includes(user._id);
 
     if (!isThemselves && !isModerator && !isSMM) {
-      //caso qualcuno che vuole updateare il profilo di un altro utente
+      //caso qualcuno che vuole updateare il profilo di un altro utente // Case:  someone who wants to update another user's profile
       return {
         status: 400,
         data: { error: "You don't have the permissions to update this user's character quota" },
@@ -2089,8 +2083,8 @@ module.exports = {
    * @param options.ban_status New user's ban status, "true" if banned, "false" if not
    */
   userBanStatus: async (options) => {
-    //Se ha un smm anche il smm riceve la notifica.
-    //Se è un smm, tutti i vip che lo hanno come smm ricevono la notifica
+    // If he has a smm, the smm also receives the notification.
+    // If he's a smm, all the vips that have him as smm receive the notification.
 
     const { identifier, user_id, ban_status } = options;
 
@@ -2110,7 +2104,7 @@ module.exports = {
       };
     }
 
-    //controllare che gli utenti esistano
+    // Check if the users exist
     let response = await findUser(user_id);
     if (response.status >= 300) {
       //if the response is an error
@@ -2165,72 +2159,64 @@ module.exports = {
    * @param options.value New notification status
    */
   setNotificationStatus: async (options) => {
-    try {
-      const { user_id, value } = options;
-      const { notification_array } = options.inlineReqJson;
+    const { user_id, value } = options;
+    const { notification_array } = options.inlineReqJson;
 
-      const new_is_unseen = value === "true" ? true : value[0] == "true" ? true : false;
+    const new_is_unseen = value === "true" ? true : value[0] == "true" ? true : false;
 
-      let data = checkIfArrayIsValid(notification_array);
-      if (!data.isValid) {
-        return {
-          status: 400,
-          data: { error: `Notification 'identifiers' are not valid.` },
-        };
-      }
-      const array = data.value;
-
-      // Check if the required fields are present
-      if (array === undefined || array.length <= 0) {
-        return {
-          status: 400,
-          data: { error: `Notification 'identifier' is required.` },
-        };
-      }
-
-      // Check if the array contains only valid ids
-      for (let i = 0; i < array.length; i++) {
-        let notificationId = array[i];
-        if (!mongooseObjectIdRegex.test(notificationId)) {
-          return {
-            status: 400,
-            data: { error: `Notification 'identifier' ${i} is not valid.` },
-          };
-        }
-      }
-
-      let response = await findUser(user_id);
-      if (response.status >= 300) {
-        //if the response is an error
-        return {
-          status: response.status,
-          data: { error: `'user_id' in token is not valid.` },
-        };
-      }
-      const reqSender = response.data;
-      //controllare che gli utenti esistano
-      response = await checkForAllNotifications(array, reqSender);
-      if (!response.notificationsOutcome) {
-        //if the response is an error
-        return {
-          status: 404,
-          data: { error: `One or more notifications not found.` },
-        };
-      }
-
-      await Notification.updateMany({ _id: { $in: response.notificationsArray } }, { $set: { is_unseen: new_is_unseen } });
-      // Return the result
+    let data = checkIfArrayIsValid(notification_array);
+    if (!data.isValid) {
       return {
-        status: 200,
-        data: { message: "Notifications updated successfully." },
-      };
-    } catch (error) {
-      console.log(error);
-      return {
-        status: 500,
-        data: { error: `Internal server error.` },
+        status: 400,
+        data: { error: `Notification 'identifiers' are not valid.` },
       };
     }
+    const array = data.value;
+
+    // Check if the required fields are present
+    if (array === undefined || array.length <= 0) {
+      return {
+        status: 400,
+        data: { error: `Notification 'identifier' is required.` },
+      };
+    }
+
+    // Check if the array contains only valid ids
+    for (let i = 0; i < array.length; i++) {
+      let notificationId = array[i];
+      if (!mongooseObjectIdRegex.test(notificationId)) {
+        return {
+          status: 400,
+          data: { error: `Notification 'identifier' ${i} is not valid.` },
+        };
+      }
+    }
+
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: `'user_id' in token is not valid.` },
+      };
+    }
+    const reqSender = response.data;
+    // Check if the users exist
+    response = await checkForAllNotifications(array, reqSender);
+    if (!response.notificationsOutcome) {
+      //if the response is an error
+      return {
+        status: 404,
+        data: { error: `One or more notifications not found.` },
+      };
+    }
+
+    await Notification.updateMany({ _id: { $in: response.notificationsArray } }, { $set: { is_unseen: new_is_unseen } });
+    // Return the result
+    return {
+      status: 200,
+      data: { message: "Notifications updated successfully." },
+    };
   },
 
   /**

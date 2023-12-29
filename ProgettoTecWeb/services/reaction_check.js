@@ -38,12 +38,12 @@ const setTags = async () => {
   //users -> user {username, _id, reaction_metrics, squeals.posted}
   //squeals.posted -> squeal {_id, created_at, reactions, reaction_tag}
 
-  //Per gli squeal di ogni user creato dopo reaction_metrics.last_checkpoint,
-  //controlla il numero di reactions e aggiorna reaction_tag
-  //Se il numero di reaction positive supera 0.25*impressions e numero di reaction negative supera 0.25*impressions, reaction_tag = "controversial"
-  //Se il numero di reaction positive supera 0.25*impressions, reaction_tag = "popular"
-  //Se il numero di reaction negative supera 0.25*impressions, reaction_tag = "unpopular"
-  //Altrimenti, reaction_tag = "none"
+  // For each squeal of each user created after reaction_metrics.last_checkpoint
+  // check the number of reactions and update reaction_tag
+  // If the number of positive reactions exceeds 0.25*impressions and the number of negative reactions exceeds 0.25*impressions, reaction_tag = "controversial"
+  // If the number of positive reactions exceeds 0.25*impressions, reaction_tag = "popular"
+  // If the number of negative reactions exceeds 0.25*impressions, reaction_tag = "unpopular"
+  // else reaction_tag = "none"
 
   users.forEach(async (user) => {
     user.squeals.posted.forEach(async (squeal) => {
@@ -244,7 +244,7 @@ const sendNotification = async (operations) => {
     } else if (rewardDaily < 0) {
       notificationText = charQuotaLost();
     } else {
-      // Nessun cambiamento nella quota
+      // No change in quota
       return;
     }
 
@@ -260,11 +260,11 @@ const sendNotification = async (operations) => {
   });
 
   let inserted_notifications;
-  // Salva le notifiche nel database
+  // Save notifications in the database
   if (notifications.length > 0) {
     inserted_notifications = await Notification.insertMany(notifications);
   }
-  //aggiungi le notifiche agli utenti
+  // Add notifications to users
   if (!inserted_notifications) return;
   await User.bulkWrite(
     inserted_notifications.map((notification) => ({

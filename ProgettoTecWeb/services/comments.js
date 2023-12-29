@@ -7,71 +7,63 @@ const { mentionNotification, squealInOfficialChannel, someoneCommentedYourSqueal
 
 module.exports = {
   getCommentSection: async (options) => {
-    try {
-      const { identifier, user_id, last_comment_loaded, is_token_valid } = options;
+    const { identifier, user_id, last_comment_loaded, is_token_valid } = options;
 
-      if (!mongooseObjectIdRegex.test(identifier)) {
-        return {
-          status: 400,
-          data: { error: `Invalid identifier.` },
-        };
-      }
-
-      let query = { $slice: -COMMENTS_TO_LOAD };
-      if (last_comment_loaded && mongooseObjectIdRegex.test(last_comment_loaded)) {
-        query = {
-          $filter: {
-            input: "$comments_array",
-            as: "comment",
-            cond: {
-              $lt: ["$$comment._id", new mongoose.Types.ObjectId(last_comment_loaded)],
-            },
-          },
-        };
-      }
-
-      let comment_section = await CommentSection.findOne({ _id: identifier })
-        .select({
-          _id: 1,
-          squeal_ref: 1,
-          comments_array: query,
-        })
-        .exec();
-
-      if (!is_token_valid) {
-        let response = await findSqueal(comment_section.squeal_ref);
-        if (response.status >= 300) {
-          return {
-            status: response.status,
-            data: { error: response.error },
-          };
-        }
-        const squeal = response.data;
-
-        if (!squeal.is_in_official_channel) {
-          return {
-            status: 403,
-            data: { error: `You are not allowed to see this comment section.` },
-          };
-        }
-      }
-
-      if (comment_section.comments_array.length > COMMENTS_TO_LOAD) {
-        //prendo gli ultimi COMMENTS_TO_LOAD commenti
-        comment_section.comments_array = comment_section.comments_array.slice(comment_section.comments_array.length - COMMENTS_TO_LOAD);
-      }
-
+    if (!mongooseObjectIdRegex.test(identifier)) {
       return {
-        status: 200,
-        data: comment_section,
-      };
-    } catch (err) {
-      console.log(err);
-      return {
-        status: 500,
-        data: { error: `Something went wrong.` },
+        status: 400,
+        data: { error: `Invalid identifier.` },
       };
     }
+
+    let query = { $slice: -COMMENTS_TO_LOAD };
+    if (last_comment_loaded && mongooseObjectIdRegex.test(last_comment_loaded)) {
+      query = {
+        $filter: {
+          input: "$comments_array",
+          as: "comment",
+          cond: {
+            $lt: ["$$comment._id", new mongoose.Types.ObjectId(last_comment_loaded)],
+          },
+        },
+      };
+    }
+
+    let comment_section = await CommentSection.findOne({ _id: identifier })
+      .select({
+        _id: 1,
+        squeal_ref: 1,
+        comments_array: query,
+      })
+      .exec();
+
+    if (!is_token_valid) {
+      let response = await findSqueal(comment_section.squeal_ref);
+      if (response.status >= 300) {
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const squeal = response.data;
+
+      if (!squeal.is_in_official_channel) {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to see this comment section.` },
+        };
+      }
+    }
+
+    if (comment_section.comments_array.length > COMMENTS_TO_LOAD) {
+      // Use the last COMMENTS_TO_LOAD number of comments
+      comment_section.comments_array = comment_section.comments_array.slice(comment_section.comments_array.length - COMMENTS_TO_LOAD);
+    }
+
+    return {
+      status: 200,
+      data: comment_section,
+    };
   },
 
   addComment: async (options) => {
@@ -156,7 +148,7 @@ module.exports = {
     const commentSection = response.data;
 
     const comment = commentSection.comments_array.filter((comment) => JSON.stringify(comment._id) === JSON.stringify(identifier))[0];
-    //controlli permessi
+    // Check permissions
     const isUserMod = user.account_type === "moderator";
     const isUserSquealOwner = user._id.equals((await Squeal.findById(commentSection.squeal_ref).select("user_id").exec()).user_id);
     const isUserCommentAuthor = user._id.equals(comment.author_id);

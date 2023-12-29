@@ -192,9 +192,10 @@ router.get("/thumbnail/:name", async (req, res) => {
 
 router.delete("/delete-image/:imageName", (req, res) => {
   const imageName = req.params.imageName;
-  const imagePath = path.join(__dirname, "upload", imageName); // Assicurati di adattare il percorso
+  const imagePath = path.join(__dirname, "upload", imageName);
+  ath;
 
-  // Verifica se il file esiste prima di eliminarlo
+  // Check if file exists before deleting it
   if (fs.existsSync(imagePath)) {
     fs.unlinkSync(imagePath);
     res.status(200).json({ message: "Immagine eliminata con successo" });

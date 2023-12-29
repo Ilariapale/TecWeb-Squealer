@@ -45,6 +45,31 @@ export class AuthService {
     });
   }
 
+  loginGuest(token?: string): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+      let decodedToken: any = undefined;
+      if (token) decodedToken = jwt_decode(token);
+      let url = this.apiUrl + '/auth/guest';
+      decodedToken?.guest?.uuid ? (url += `?uuid=${decodedToken.guest.uuid}`) : null;
+      firstValueFrom(this.http.post(url, {}, { observe: 'response' })).then(
+        (response: HttpResponse<any>) => {
+          const authToken = response.headers.get('Authorization');
+          if (authToken) {
+            localStorage.setItem('Guest_Authorization', authToken);
+            const decodedToken: { guest: any } = jwt_decode(authToken || '');
+            localStorage.setItem('Guest_user', JSON.stringify(decodedToken.guest || {}));
+            resolve(true); // L'operazione è avvenuta con successo
+          } else {
+            reject('Authorization token not found'); // Token di autorizzazione non trovato
+          }
+        },
+        (error) => {
+          reject(error.error.error); // L'operazione non è avvenuta con successo
+        }
+      );
+    });
+  }
+
   logout() {
     localStorage.removeItem('Authorization');
     sessionStorage.removeItem('Authorization');

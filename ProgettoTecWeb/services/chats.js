@@ -5,55 +5,51 @@ const { DIRECT_MESSAGE_MAX_LENGTH, MESSAGES_TO_LOAD } = require("./constants");
 
 module.exports = {
   getAllChatsPreview: async (options) => {
-    try {
-      const { user_id } = options;
-      const response = await findUser(user_id);
+    const { user_id } = options;
+    const response = await findUser(user_id);
 
-      if (response.status >= 300) {
-        return {
-          status: response.status,
-          data: { error: response.error },
-        };
-      }
-
-      const reqSender = response.data;
-      const chatIds = reqSender.direct_chats;
-
-      const chatPreviews = await Promise.all(
-        chatIds.map(async (chatId) => {
-          const chat = await Chat.findById(chatId).populate({
-            path: "partecipants",
-            select: "username",
-          });
-
-          if (!chat) {
-            return null;
-          }
-
-          const lastMessage = chat.messages[chat.messages.length - 1];
-          const sentByMe = chat.partecipants[lastMessage.sender] === reqSender.username;
-
-          const recipientIndex = chat.partecipants.findIndex((participant) => participant._id.toString() !== reqSender._id.toString());
-          const recipient = chat.partecipants[recipientIndex].username;
-          return {
-            _id: chat._id.toString(),
-            recipient: recipient,
-            last_message: lastMessage.text,
-            sent_by_me: sentByMe,
-            last_modified: chat.last_modified,
-          };
-        })
-      );
-
-      const filteredChatPreviews = chatPreviews.filter((chatPreview) => chatPreview !== null);
-
+    if (response.status >= 300) {
       return {
-        status: 200,
-        data: filteredChatPreviews,
+        status: response.status,
+        data: { error: response.error },
       };
-    } catch (err) {
-      console.log(err);
     }
+
+    const reqSender = response.data;
+    const chatIds = reqSender.direct_chats;
+
+    const chatPreviews = await Promise.all(
+      chatIds.map(async (chatId) => {
+        const chat = await Chat.findById(chatId).populate({
+          path: "partecipants",
+          select: "username",
+        });
+
+        if (!chat) {
+          return null;
+        }
+
+        const lastMessage = chat.messages[chat.messages.length - 1];
+        const sentByMe = chat.partecipants[lastMessage.sender] === reqSender.username;
+
+        const recipientIndex = chat.partecipants.findIndex((participant) => participant._id.toString() !== reqSender._id.toString());
+        const recipient = chat.partecipants[recipientIndex].username;
+        return {
+          _id: chat._id.toString(),
+          recipient: recipient,
+          last_message: lastMessage.text,
+          sent_by_me: sentByMe,
+          last_modified: chat.last_modified,
+        };
+      })
+    );
+
+    const filteredChatPreviews = chatPreviews.filter((chatPreview) => chatPreview !== null);
+
+    return {
+      status: 200,
+      data: filteredChatPreviews,
+    };
   },
   /**
    * @param options.identifier The identifier of the chat
@@ -159,7 +155,7 @@ module.exports = {
       };
     }
     const chat_length = chat.messages.length;
-    //prendi gli ultimi 20 messaggi
+    // Use the last 20 messages
     chat.messages = chat.messages.slice(-MESSAGES_TO_LOAD);
 
     chat.reqSenderPosition = chat.partecipants.indexOf(sender._id);

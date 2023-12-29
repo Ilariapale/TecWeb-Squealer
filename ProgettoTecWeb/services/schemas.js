@@ -3,7 +3,16 @@ const { newOwnerNotification, deletedManagedAccountNotification, deletedSMMNotif
 const { removeMedia } = require("./media.js");
 const { DAILY_CHAR_QUOTA, WEEKLY_CHAR_QUOTA, MONTHLY_CHAR_QUOTA, EXTRA_DAILY_CHAR_QUOTA } = require("./constants");
 
-// Chat
+// ========== GUEST ==========
+const GuestSchema = new mongoose.Schema({
+  uuid: { type: String, required: true, unique: true },
+  created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+  last_login: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
+  reacted_to: { type: [{ type: mongoose.Types.ObjectId, ref: "Squeal" }], default: [] },
+});
+const Guest = mongoose.model("Guest", GuestSchema);
+
+// ========== CHAT ==========
 const ChatSchema = new mongoose.Schema({
   //_id: { type: mongoose.Types.ObjectId },
   partecipants: { type: [{ type: mongoose.Types.ObjectId, ref: "User" }], default: [] },
@@ -21,7 +30,7 @@ const ChatSchema = new mongoose.Schema({
 });
 const Chat = mongoose.model("Chat", ChatSchema);
 
-// Notification
+// ========== NOTIFICATION ==========
 const NotificationSchema = new mongoose.Schema({
   is_unseen: { type: Boolean, default: true },
   created_at: { type: Date, default: new Date("1970-01-01T00:00:00Z") },
@@ -129,22 +138,22 @@ UserSchema.methods.Delete = async function () {
   // Remove the reference of the squeal from the "squeals" array of all the users
   await User.updateMany({ "squeals.mentioned_in": { $in: postedSqueals } }, { $pull: { "squeal.mentioned_in": { $in: postedSqueals } } });
 
-  // Rimuovi il riferimento dello squeal dal campo "squeals" di tutti i canali
+  // Remove the reference of the squeal from the "squeals" array of all the channels
   await Channel.updateMany({ squeals: { $in: postedSqueals } }, { $pull: { squeals: { $in: postedSqueals } } });
 
-  // Rimuovi il riferimento dello squeal dal campo "squeals" di tutte le keywords
+  // Remove the reference of the squeal from the "squeals" array of all the keywords
   await Keyword.updateMany({ squeals: { $in: postedSqueals } }, { $pull: { squeals: { $in: postedSqueals } } });
 
-  //Elimina tutti i commenti associati agli squeals dell'utente dal database
+  // Remove every comment associated to the user's squeals from the database
   await CommentSection.deleteMany({ squeal_ref: { $in: postedSqueals } });
 
-  // Elimina tutti gli squeals dell'utente dal database
+  // Remove every squeal associated to the user from the database
   await Squeal.deleteMany({ _id: { $in: postedSqueals } });
 
   // remove the reference of the user from the "recipients.users" array of all the squeals
   await Squeal.updateMany({ _id: { $in: mentionedInSqueals } }, { $pull: { "recipients.users": this._id } });
 
-  // trova tutte le notifiche associate all'utente
+  // Find every notification associated to the user
   await Notification.deleteMany({ _id: { $in: notifications } });
 
   await Request.deleteMany({ user_id: this._id });
@@ -203,7 +212,7 @@ UserSchema.methods.Delete = async function () {
 
   //if the deleted account is a smm, remove the smm from the managed accounts
   if (this.managed_accounts.length > 0) {
-    //mando la notifica a tutti gli smm
+    // Send the notification to every smm
     const promises = this.managed_accounts.map(async (managed_account) => {
       const notification = new Notification({
         user_ref: managed_account,
@@ -225,10 +234,10 @@ UserSchema.methods.Delete = async function () {
   }
 
   if (this.pending_requests.VIP_requests != undefined && this.account_type == "professional" && professional_type == "VIP") {
-    //rimuovo dalla lista SMM_request degli SMM presenti nella VIP_request list l'id dell'utente che ha fatto la richiesta
+    // Remove the reference of the user from the "pending_requests.VIP_requests" array of all the SMMs
     await User.updateMany({ _id: { $in: this.pending_requests.VIP_requests } }, { $pull: { "pending_requests.SMM_requests": this._id } });
   } else if (this.pending_requests.SMM_requests != undefined && this.account_type == "professional" && professional_type == "SMM") {
-    //rimuovo dalla lista VIP_request degli VIP presenti nella SMM_request list l'id dell'utente che ha fatto la richiesta
+    // Remove the reference of the user from the "pending_requests.SMM_requests" array of all the VIPs
     await User.updateMany({ _id: { $in: this.pending_requests.SMM_requests } }, { $pull: { "pending_requests.VIP_requests": this._id } });
   }
 
@@ -306,9 +315,9 @@ SquealSchema.methods.DeleteAndPreserveInDB = async function () {
   await User.updateMany({ _id: { $in: this.recipients.users } }, { $pull: { "squeals.mentioned_in": this._id } });
   //2) squeal.recipients.channels are the target channels and I have to remove the squeal from each channel.squeals
   await Channel.updateMany({ _id: { $in: this.recipients.channels } }, { $pull: { squeals: this._id } });
-  //3) squeal.recipients.keywords sono le keywords destinatarie e devo rimuovere lo squeal da ogni keyword.squeals
+  // 3) squeal.recipients.keywords are the target keywords and I have to remove the squeal from each keyword.squeals
   await Keyword.updateMany({ name: { $in: this.recipients.keywords } }, { $pull: { squeals: this._id } });
-  //4) cancello le notifiche che avevano come squeal_ref lo squeal cancellato
+  // 4) Delete the notifications that had the deleted squeal as squeal_ref
   await Notification.deleteMany({ squeal_ref: this._id });
   try {
     if (this.content_type == "image" || this.content_type == "video") {
@@ -336,7 +345,7 @@ SquealSchema.methods.Delete = async function () {
 
   await Keyword.updateMany({ name: { $in: this.recipients.keywords } }, { $pull: { squeals: this._id } });
 
-  //4) cancello le notifiche che avevano come squeal_ref lo squeal cancellato
+  // 4) Delete the notifications that had the deleted squeal as squeal_ref
   await Notification.deleteMany({ squeal_ref: this._id });
 
   this.deleteOne();
@@ -381,7 +390,7 @@ ChannelSchema.methods.Delete = async function () {
   //if the channel is official and it's the only official in the squeals, remove the official tag from the squeals
   if (this.is_official) {
     const squeals = await Squeal.find({ _id: { $in: this.squeals }, is_in_official_channel: true });
-    //per ogni squeal controllo se ha tra i destinatari almeno un canale ufficiale, altrimenti setto is_in_official_channel a false
+    //for each squeal check if it has at least one official channel in the recipients, otherwise set is_in_official_channel to false
     for (const squeal of squeals) {
       const squealChannels = squeal.recipients.channels;
       const officialChannels = await Channel.find({ _id: { $in: squealChannels }, is_official: true });
@@ -429,6 +438,7 @@ const Keyword = mongoose.model("Keyword", KeywordSchema);
 
 //EXPORTS
 module.exports = {
+  Guest,
   Notification,
   User,
   Squeal,

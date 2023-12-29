@@ -13,6 +13,7 @@ export class ReactionsMenuComponent {
   isMenuClosing = false;
   menu_opened: Boolean = false;
   imageUrl = './../../../assets/imgs/reactionsBW.png';
+  @Input() isGuest: boolean = false;
 
   constructor(private squealService: SquealsService) {}
   ngOnInit() {
@@ -27,7 +28,7 @@ export class ReactionsMenuComponent {
   }
   addReaction(reaction: string, event: Event) {
     event.preventDefault();
-    this.squealService.addReaction(reaction, this.squealId).then(
+    this.squealService.addReaction(reaction, this.squealId, this.isGuest).then(
       (response: any) => {
         this.menu_opened = false;
         this.alreadyReacted = true;

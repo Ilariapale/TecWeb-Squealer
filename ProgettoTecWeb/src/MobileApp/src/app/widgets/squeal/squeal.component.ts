@@ -39,9 +39,8 @@ export class SquealComponent implements OnInit {
     private location: Location
   ) {
     if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
-    else {
-      this.isGuest = true;
-    }
+    else this.isGuest = true;
+
     this.squeal = {};
     this.route.paramMap.subscribe((params) => {
       // if ((this.route.snapshot.url[0].path == 'home'))
@@ -54,7 +53,7 @@ export class SquealComponent implements OnInit {
   ngOnInit() {
     if (JSON.stringify(this.squeal) == JSON.stringify({}) && this.squeal_id != '' && this.squeal_id != ' ') {
       this.squealsService
-        .getSqueal(this.squeal_id)
+        .getSqueal(this.squeal_id, this.isGuest)
         .then((response: any) => {
           this.squeal = response[0];
           //Check if the squeal is mine

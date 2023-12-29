@@ -1,5 +1,5 @@
 const cron = require("node-cron");
-const { User } = require("./schemas");
+const { User, Guest } = require("./schemas");
 
 const { EXTRA_DAILY_CHAR_QUOTA, DAILY_CHAR_QUOTA, WEEKLY_CHAR_QUOTA, MONTHLY_CHAR_QUOTA } = require("./constants");
 
@@ -19,6 +19,7 @@ const character_reset_init = (req, res) => {
     }, 5000); // 2000 milliseconds = 2 seconds
   });
   cron.schedule(monthly, () => {
+    resetGuests(); //reset guests every month
     setTimeout(() => {
       monthly_reset();
     }, 10000); // 10000 milliseconds = 10 seconds
@@ -80,6 +81,10 @@ const annual_reset = async () => {
       },
     }
   );
+};
+
+const resetGuests = async () => {
+  await Guest.deleteMany({});
 };
 
 module.exports = {

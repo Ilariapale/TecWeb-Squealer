@@ -20,7 +20,8 @@
           <button type="button" class="btn bi bi-gear h-50 no-overflow" [class.text-light]="getDarkMode()=='dark-theme'"
             data-bs-toggle="modal" data-bs-target="#settingsModal"></button>
         </span>
-        <span *ngIf="user.professional_type=='SMM' && !mySelf && !alreadyGotSMM" class="col d-flex flex-row-reverse">
+        <span *ngIf="user.professional_type=='SMM' && !mySelf && !alreadyGotSMM && amVip"
+          class="col d-flex flex-row-reverse">
           <button type="button" (click)="alreadyRequestedSMM ? sendRequestSMM('withdraw'):sendRequestSMM('send')"
             class="btn btn-warning no-overflow text-dark"
             [class.text-light]="getDarkMode()=='dark-theme'">{{alreadyRequestedSMM ?
@@ -162,14 +163,56 @@
                 class="accordion-collapse collapse" aria-labelledby="flush-headingFour"
                 data-bs-parent="#accordionFlushProfileSettings">
                 <div class="accordion-body">
-                  <button type="button" class="btn btn-secondary col-12 m-2"
-                    (click)="requestAccountChange('VIP')">Request VIP</button>
-                  <button type="button" class="btn btn-secondary col-12 m-2"
-                    (click)="requestAccountChange('SMM')">Request SMM</button>
-                  <button type="button" class="btn btn-secondary col-12 m-2"
-                    (click)="requestAccountChange('verified')">Request Verified</button>
-                  <button type="button" class="btn btn-secondary col-12 m-2"
-                    (click)="requestAccountChange('standard')">Request Standard</button>
+                  <div class="row">
+                    <div class="col">
+                      <button type="button" class="btn btn-secondary col-12 m-2" (click)="requestAccountChange('VIP')"
+                        [disabled]="vipAccountRequested">Request VIP</button>
+                    </div>
+                    <div *ngIf="vipAccountRequested" class="col-auto d-flex align-items-center">
+                      <i *ngIf="vipRequestSuccess" class="bi bi-check text-success h1 mb-0"></i>
+                      <i *ngIf="!vipRequestSuccess" class="bi bi-x text-danger h1 mb-0"></i>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col">
+                      <button type="button" class="btn btn-secondary col-12 m-2" (click)="requestAccountChange('SMM')"
+                        [disabled]="smmAccountRequested">Request
+                        SMM</button>
+                    </div>
+                    <div *ngIf="smmAccountRequested" class="col-auto d-flex align-items-center">
+                      <i *ngIf="smmRequestSuccess" class="bi bi-check text-success h1 mb-0"></i>
+                      <i *ngIf="!smmRequestSuccess" class="bi bi-x text-danger h1 mb-0"></i>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col">
+                      <button type="button" class="btn btn-secondary col-12 m-2"
+                        (click)="requestAccountChange('verified')" [disabled]="verifiedAccountRequested">Request
+                        Verified</button>
+                    </div>
+                    <div *ngIf="verifiedAccountRequested" class="col-auto d-flex align-items-center">
+                      <i *ngIf="verifiedRequestSuccess" class="bi bi-check text-success h1 mb-0"></i>
+                      <i *ngIf="!verifiedRequestSuccess" class="bi bi-x text-danger h1 mb-0"></i>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col">
+                      <button type="button" class="btn btn-secondary col-12 m-2"
+                        (click)="requestAccountChange('standard')" [disabled]="standardAccountRequested">Request
+                        Standard</button>
+                    </div>
+                    <div *ngIf="standardAccountRequested" class="col-auto d-flex align-items-center">
+                      <i *ngIf="standardRequestSuccess" class="bi bi-check text-success h1 mb-0"></i>
+                      <i *ngIf="!standardRequestSuccess" class="bi bi-x text-danger h1 mb-0"></i>
+                    </div>
+                  </div>
+
+                  <div *ngIf="showAccountRequestError" class="text-danger">
+                    {{accountRequestError}}
+                  </div>
 
                 </div>
               </div>

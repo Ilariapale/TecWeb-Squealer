@@ -30,11 +30,18 @@ export class LoginComponent {
     if (this.guestMode) {
       localStorage.removeItem('Authorization');
       sessionStorage.removeItem('Authorization');
+
       localStorage.removeItem('user');
       sessionStorage.removeItem('user');
+
       this.userService.setUserData({ account_type: 'guest', username: 'user' });
       sessionStorage.setItem('user', JSON.stringify({ account_type: 'guest', username: 'user' }));
-      this.router.navigate(['/home']);
+
+      const Guest_Authorization = localStorage.getItem('Guest_Authorization');
+
+      this.authService.loginGuest(Guest_Authorization || undefined).then((response: boolean) => {
+        this.router.navigate(['/home']);
+      });
     } else {
       this.authService
         .login(this.username, this.password, this.rememberMe)
