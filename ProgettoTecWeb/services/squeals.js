@@ -468,8 +468,15 @@ module.exports = {
 
     const { users, channels, keywords } = response.value;
 
+    if (content_type == "text" && content.replace(/\s/g, "").length <= 0) {
+      return {
+        status: 400,
+        data: { error: `Invalid 'content'.` },
+      };
+    }
+
     //check if the user has enough char_quota
-    const enoughQuota = hasEnoughCharQuota(author, content_type, content);
+    const enoughQuota = hasEnoughCharQuota(author, content_type, content.replace(/\s/g, "")); //remove all whitespaces when counting the quota
     if (!enoughQuota.outcome) {
       return {
         status: 403,
@@ -514,7 +521,7 @@ module.exports = {
       hex_id: hex_id,
       user_id: author._id,
       is_scheduled: is_scheduled || false,
-      content_type: content_type,
+      content_type: content_type.replace(/\s/g, " "),
       content: replaceString(content, hex_id, date, options.scheduled_squeal_data),
       recipients: {
         users: usersArray,

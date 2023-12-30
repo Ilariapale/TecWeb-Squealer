@@ -15,6 +15,7 @@ import { Location } from '@angular/common';
   styleUrls: ['./squeal.component.css'],
 })
 export class SquealComponent implements OnInit {
+  TRUNCATE_LENGTH = 200;
   title = 'Squeal';
   @Input() squeal: Squeal;
   squeal_id: string = '';
@@ -27,7 +28,7 @@ export class SquealComponent implements OnInit {
   isHome = false;
   isProfile = false;
   isGuest = false;
-  //TODO incrementare la reaction quando reagisci
+  showMore = false;
   constructor(
     private commentService: CommentService,
     private darkModeService: DarkModeService,
@@ -138,6 +139,13 @@ export class SquealComponent implements OnInit {
       .catch((error) => {
         console.log(error);
       });
+  }
+
+  handleReactionAdd(reaction: string) {
+    if (this.squeal.reactions != undefined) {
+      this.squeal.reactions[reaction as keyof typeof this.squeal.reactions] =
+        (this.squeal.reactions[reaction as keyof typeof this.squeal.reactions] as number) + 1;
+    }
   }
 
   getLon(coord: String | undefined) {

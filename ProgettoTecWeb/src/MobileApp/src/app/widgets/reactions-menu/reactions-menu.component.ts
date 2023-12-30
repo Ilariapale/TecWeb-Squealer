@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { SquealsService } from 'src/app/services/api/squeals.service';
 
 @Component({
@@ -7,6 +7,7 @@ import { SquealsService } from 'src/app/services/api/squeals.service';
   styleUrls: ['./reactions-menu.component.css'],
 })
 export class ReactionsMenuComponent {
+  @Output() reaction = new EventEmitter<string>();
   @Input() alreadyReacted: Boolean = false;
   @Input() squealId: string = '0';
   isMouseOver = false;
@@ -30,6 +31,9 @@ export class ReactionsMenuComponent {
     event.preventDefault();
     this.squealService.addReaction(reaction, this.squealId, this.isGuest).then(
       (response: any) => {
+        //emit event to update the reactions in the squeal component
+        this.reaction.emit(reaction);
+
         this.menu_opened = false;
         this.alreadyReacted = true;
         this.imageUrl = './../../../assets/imgs/reactionsCOLORS.png';

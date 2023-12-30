@@ -10,7 +10,7 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root',
 })
 export class ChannelsService {
-  private apiUrl = '/channels'; // Replace with your API backend URL
+  private apiUrl = '/channels';
 
   constructor(private http: HttpClient) {}
 

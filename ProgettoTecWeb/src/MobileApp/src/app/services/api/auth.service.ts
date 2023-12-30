@@ -3,14 +3,14 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { UserService } from '../../services/user.service';
 import jwt_decode from 'jwt-decode';
-import { User } from '../../models/user.interface'; // Impoer user interface
+import { User } from '../../models/user.interface';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = ''; // Replace with your API backend URL
+  private apiUrl = '';
 
   constructor(private http: HttpClient, private userService: UserService, private router: Router) {}
 

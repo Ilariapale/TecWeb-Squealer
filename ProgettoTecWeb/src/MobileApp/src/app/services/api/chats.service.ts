@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root',
 })
 export class ChatsService {
-  private apiUrl = '/chats'; // Replace with your API backend URL
+  private apiUrl = '/chats';
 
   constructor(private http: HttpClient) {}
 

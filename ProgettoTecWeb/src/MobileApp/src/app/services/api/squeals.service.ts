@@ -9,7 +9,7 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root',
 })
 export class SquealsService {
-  private apiUrl = '/squeals'; // Replace with your API backend URL
+  private apiUrl = '/squeals';
 
   constructor(private http: HttpClient) {}
 

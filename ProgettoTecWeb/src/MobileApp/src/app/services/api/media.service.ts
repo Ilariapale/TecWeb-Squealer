@@ -9,7 +9,7 @@ import { request } from 'express';
 })
 export class MediaService {
   constructor(private http: HttpClient) {}
-  private apiUrl = '/media'; // Replace with your API backend URL
+  private apiUrl = '/media';
 
   headersGenerator(authenticated: boolean) {
     if (!authenticated) {

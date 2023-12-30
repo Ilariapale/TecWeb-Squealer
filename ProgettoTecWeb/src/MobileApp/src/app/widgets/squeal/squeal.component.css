@@ -46,3 +46,7 @@ img {
 .btn-secondary.comments {
   --bs-btn-active-bg: #303c5a;
 }
+
+.link {
+  color: rgb(207, 114, 0);
+}

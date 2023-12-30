@@ -8,7 +8,7 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root',
 })
 export class CommentService {
-  private apiUrl = '/comments'; // Replace with your API backend URL
+  private apiUrl = '/comments';
 
   constructor(private http: HttpClient) {}
 

@@ -81,6 +81,7 @@ export class SquealFormComponent {
 
   squealForm!: FormGroup;
   lastLength: number = 0;
+  lastMessage: string = '';
   enoughChars: boolean = true;
   isGuest: boolean = true;
   char_left: {
@@ -138,13 +139,14 @@ export class SquealFormComponent {
 
   onInput(value?: number) {
     this.adjustTextareaHeight();
-    const currentLength = this.squealForm.value.text?.length ?? 0;
-    const previousLength = this.lastLength;
+    const currentMessage = this.squealForm.value.text;
+    const currentLength = currentMessage.replace(/\s/g, '').length ?? 0;
+    const previousLength = this.lastMessage?.replace(/\s/g, '').length ?? 0;
 
     // Calculate the difference between the current length and the previous length
     const difference: number = value ? value : currentLength - previousLength;
 
-    this.lastLength = currentLength; // Update the previous length
+    this.lastMessage = currentMessage; // Update the previous message
 
     // Update the quota based on the difference
     this.char_left.daily -= difference;
@@ -238,6 +240,9 @@ export class SquealFormComponent {
     if (this.squealForm.valid) {
       this.getRecipients();
       const squeal_content = this.squealForm.value.text;
+      //-----------------------------------------------------------
+      console.log(squeal_content);
+      //-----------------------------------------------------------
       const schedule_options = {
         tick_rate: this.getTickRate(),
         repeat: this.getRepeat(),
@@ -269,7 +274,6 @@ export class SquealFormComponent {
           this.extra_chars = this.char_left.extra_daily;
         })
         .catch((error: any) => {
-          console.log(error);
           this.postResponse = error.error.error;
           this.request_outcome = false;
           this.showSquealPostResponse = true;

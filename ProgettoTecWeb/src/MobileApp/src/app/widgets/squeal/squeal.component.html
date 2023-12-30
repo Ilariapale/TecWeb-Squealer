@@ -28,8 +28,15 @@
 
         <div class="card-body p-2 of-vis">
           <h5 class="card-title">@{{squeal.username}}</h5>
-          <p *ngIf="squeal.content_type == 'text' || squeal.content_type == 'deleted'" class="card-text">
-            {{squeal.content}}</p>
+          <p *ngIf="squeal.content_type == 'text' || squeal.content_type == 'deleted'" class="card-text mb-1"
+            (click)="(squeal.content && squeal.content.length > TRUNCATE_LENGTH && showMore) ? showMore = false : null"
+            [class.clickable]="squeal.content && squeal.content.length > TRUNCATE_LENGTH && showMore">
+            {{showMore ? squeal.content : (squeal.content?.substring(0, TRUNCATE_LENGTH))}}
+            {{squeal.content && squeal.content.length> TRUNCATE_LENGTH && !showMore ? "..." : ""}}
+          </p>
+          <a *ngIf="squeal.content && squeal.content.length > TRUNCATE_LENGTH" class="clickable link mb-2"
+            (click)="showMore = !showMore">{{showMore ?"...less" : "more..."}}</a>
+
           <div *ngIf="squeal.content_type == 'image'" class="card-img-top ">
             <img [src]="squeal.content?.startsWith('https')?squeal.content:('media/image/'+squeal.content)"
               class="img-fluid" onerror="this.src='/../media/image/not-found.png'" />
@@ -52,8 +59,7 @@
               <div class="col-5 px-1">
                 <button id="comment_button" type="button" title="toggle comments section"
                   class="btn btn-secondary comments btn-rounded px-2" (click)="isGuest?null:toggleComments()"
-                  data-bs-toggle="button"
-                  [disabled]="squeal.comments_count === 0 || squeal.comments_count == undefined || isGuest">
+                  data-bs-toggle="button" [disabled]="isGuest">
                   <i class="bi bi-chat-dots-fill"></i>
                   <p class="badge bg-danger ms-2 my-auto">{{squeal.comments_count || 0}}</p>
                 </button>
@@ -61,8 +67,8 @@
 
 
               <div class="col-2 p-0 d-flex justify-content-center reaction-container">
-                <app-reactions-menu [alreadyReacted]="squeal.reacted || false" [squealId]="squeal._id ?? '0'"
-                  [isGuest]="isGuest" class="on-top"></app-reactions-menu>
+                <app-reactions-menu (reaction)="handleReactionAdd($event)" [alreadyReacted]="squeal.reacted || false"
+                  [squealId]="squeal._id ?? '0'" [isGuest]="isGuest" class="on-top"></app-reactions-menu>
               </div>
 
               <div class="col-5 px-1">
