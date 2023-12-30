@@ -227,8 +227,12 @@ async function loadUser(username) {
     const vipsExist = user.managed_accounts.length > 0;
     const channelsExist = user.owned_channels.length > 0;
     const editorsExist = user.editor_channels.length > 0;
+    let smm;
+    if (user.smm) {
+      smm = await getUsername(user.smm);
+    }
 
-    DOMelements.userCard.innerHTML = userTemplates.user_card(user);
+    DOMelements.userCard.innerHTML = userTemplates.user_card(user, smm);
     let channelListDiv = "";
     let VIPlistDiv = "";
     let editorListDiv = "";
@@ -292,6 +296,7 @@ async function loadUser(username) {
 }
 
 async function reloadUser() {
+  //qua devi controllare
   await loadUser(DOMelements.usernameInput.value).then((user) => {
     const banButton = document.getElementById("banButton-" + user._id) || undefined;
     const unbanButton = document.getElementById("unbanButton-" + user._id) || undefined;
@@ -322,10 +327,11 @@ async function reloadUser() {
       });
     }
     if (confirmChangesButton) {
+      //<-- qui
       confirmChangesButton.addEventListener("click", async function () {
         const accountType = document.getElementById("accountType-" + user._id).value;
         const professionalType = document.getElementById("professionalType-" + user._id).value;
-        await confirmChanges(user, accountType, professionalType)
+        await confirmChanges(user, accountType, professionalType) //<-- qui
           .then(async () => {
             await reloadUser();
           })
@@ -584,6 +590,7 @@ async function banChannel(channelId, setBan) {
 }
 
 async function confirmChanges(userToUpdate, accountType, professionalType) {
+  //<-- qui ECCOMI
   const apiUrl = `users/${userToUpdate.username}/type`;
   const charUpdateUrl = `users/characters`;
   if (accountType && professionalType) {

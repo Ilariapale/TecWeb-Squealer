@@ -84,7 +84,7 @@ export const char_quota_row = (user) => `
 export const smm_row = (smm) => `
 <tr>
   <th scope="row"><b>Social Media Manager</b></th>
-  <td colspan="2">${smm || "none"}</td>
+  <td colspan="2">${smm ? "@" : ""}${smm || "none"}</td>
 </tr>`;
 
 export const VIPDiv = (VIP) => `
@@ -214,7 +214,7 @@ export const editor_channels_accordion = (editor_channels) => {
   }
 };
 
-export const user_card = (user) => `<div class="col"></div>
+export const user_card = (user, smm) => `<div class="col"></div>
   <div class="card mb-3 mt-4 datacard col-8">
       <div class="row g-0">
         <div class="col-md-4 py-3">
@@ -244,7 +244,7 @@ export const user_card = (user) => `<div class="col"></div>
                           ${email_row(user?.email)}
                           ${total_squeals_row(user?.squeals.posted.length)}
                           ${char_quota_row(user)}
-                          ${smm_row(user?.smm)}
+                          ${smm_row(smm)}
                           ${managed_accounts_accordion(user?.managed_accounts)}
                           ${owned_channels_accordion(user?.owned_channels)}
                           ${editor_channels_accordion(user?.editor_channels)}
