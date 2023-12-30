@@ -20,7 +20,7 @@ const {
   addCommentsCountToSqueals,
 } = require("./utils");
 
-const { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MEDIA_QUOTA, TIERS } = require("./constants");
+const { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MEDIA_QUOTA, TIERS, FULL_DAY_MINUS_ONE_MILLISECOND } = require("./constants");
 const { mentionNotification } = require("./messages");
 
 //DONE Controllati i casi in cui l'utente che fa richiesta è bannato
@@ -85,6 +85,8 @@ module.exports = {
     //check if the request has specified created_after or created_before
     if (created_after) {
       const date = Date.parse(created_after);
+      console.log("gte", date);
+
       if (isNaN(date)) {
         return {
           status: 400,
@@ -94,7 +96,7 @@ module.exports = {
       pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
     }
     if (created_before) {
-      const date = Date.parse(created_before);
+      const date = Date.parse(created_before) + FULL_DAY_MINUS_ONE_MILLISECOND;
       if (isNaN(date)) {
         return {
           status: 400,
@@ -1212,8 +1214,6 @@ module.exports = {
       };
     }
     const squeal = squealResponse.data;
-    console.log(squeal.recipients.channels);
-    console.log(reqSender.editor_channels);
     //check if the reqSender is a editor of the channel where the squeal is posted
     if (!squeal.recipients.channels.some((channel) => reqSender.editor_channels.includes(channel)) && reqSender.account_type != "moderator") {
       return {

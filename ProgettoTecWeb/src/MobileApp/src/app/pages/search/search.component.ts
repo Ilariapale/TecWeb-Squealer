@@ -91,7 +91,7 @@ export class SearchComponent {
 
   sendSearch(last_loaded?: string, tab?: string) {
     this.loading = true;
-
+    console.log(last_loaded);
     if (!last_loaded) {
       this.userResults = [];
       this.channelResults = [];
@@ -193,8 +193,8 @@ export class SearchComponent {
     this.sort_order != 'none' ? (this.userQuery.sort_order = this.sort_order as 'asc' | 'desc') : null;
     this.sort_by != 'none' ? (this.userQuery.sort_by = this.sort_by as 'username' | 'squeals' | 'date') : null;
 
-    pag_size ? (this.userQuery.pag_size = pag_size) : null;
-    last_loaded ? (this.userQuery.last_loaded = last_loaded) : null;
+    pag_size ? (this.userQuery.pag_size = pag_size) : (this.userQuery.pag_size = undefined);
+    last_loaded ? (this.userQuery.last_loaded = last_loaded) : (this.userQuery.last_loaded = undefined);
   }
 
   createChannelQuery(pag_size?: number, last_loaded?: string) {
@@ -209,8 +209,8 @@ export class SearchComponent {
     this.sort_order != 'none' ? (this.channelQuery.sort_order = this.sort_order as 'asc' | 'desc') : null;
     this.sort_by != 'none' ? (this.channelQuery.sort_by = this.sort_by as 'name' | 'squeals' | 'date') : null;
 
-    pag_size ? (this.channelQuery.pag_size = pag_size) : null;
-    last_loaded ? (this.channelQuery.last_loaded = last_loaded) : null;
+    pag_size ? (this.channelQuery.pag_size = pag_size) : (this.channelQuery.pag_size = undefined);
+    last_loaded ? (this.channelQuery.last_loaded = last_loaded) : (this.channelQuery.last_loaded = undefined);
   }
 
   createKeywordQuery(pag_size?: number, last_loaded?: string) {
@@ -225,8 +225,8 @@ export class SearchComponent {
     this.sort_order != 'none' ? (this.keywordQuery.sort_order = this.sort_order as 'asc' | 'desc') : null;
     this.sort_by != 'none' ? (this.keywordQuery.sort_by = this.sort_by as 'date' | 'reactions' | 'balance') : null;
     this.is_official ? (this.keywordQuery.is_in_official_channel = this.is_official) : null;
-    pag_size ? (this.keywordQuery.pag_size = pag_size) : null;
-    last_loaded ? (this.keywordQuery.last_loaded = last_loaded) : null;
+    pag_size ? (this.keywordQuery.pag_size = pag_size) : (this.keywordQuery.pag_size = undefined);
+    last_loaded ? (this.keywordQuery.last_loaded = last_loaded) : (this.keywordQuery.last_loaded = undefined);
   }
 
   extractKeywords(input: string): string[] {

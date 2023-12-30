@@ -20,7 +20,7 @@ const {
 } = require("./messages");
 
 const QuickChart = require("quickchart-js");
-const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TIERS, PROHIBITED_USERNAMES } = require("./constants");
+const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TIERS, PROHIBITED_USERNAMES, FULL_DAY_MINUS_ONE_MILLISECOND } = require("./constants");
 //--------------------------------------------------------------------------
 module.exports = {
   getUsername: async (options) => {
@@ -143,7 +143,7 @@ module.exports = {
           data: { error: "'created_before' must be a valid date: YYYY-MM-DD." },
         };
       }
-      pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
+      pipeline.push({ $match: { created_at: { $lte: new Date(date) + FULL_DAY_MINUS_ONE_MILLISECOND } } });
     }
 
     //PROJECTION
