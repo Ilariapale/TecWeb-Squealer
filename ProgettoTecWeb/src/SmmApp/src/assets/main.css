@@ -16,6 +16,8 @@
   background-color: #ac833d;
 }
 
+
+
 .unselectable {
   -webkit-user-select: none;
   /* Safari */
@@ -41,6 +43,18 @@ body {
   min-width: 250px;
 }
 
+
+a.link {
+  text-decoration: underline;
+  color: #886220;
+  transition: 0.5s;
+  padding: 3px;
+  font-weight: bold;
+}
+
+a.link:hover {
+  color: #303C5A;
+}
 
 a {
   text-decoration: none;

@@ -6,8 +6,11 @@ import { getRelativeTime } from '@/services/time.service';
 export default {
     data() {
         return {
+            MAX_CONTENT_LENGTH: 200,
+            isTooLong: false,
             isCommentOpen: false,
             isDataOpen: false,
+            showMore: false,
             squeal: {} as any,
             comment_section: {} as any,
             loadMoreCommentsButton: true,
@@ -24,6 +27,9 @@ export default {
         async getSqueal() {
             await getSqueal(this.squeal_id).then(async (response) => {
                 this.squeal = response[0];
+                if (this.squeal.content_type == 'text' && this.squeal.content.length > this.MAX_CONTENT_LENGTH) {
+                    this.isTooLong = true;
+                }
             }).catch((error) => {
                 console.log(error);
                 return error;
@@ -94,22 +100,29 @@ export default {
                     </div>
 
 
-                    <div class="card-body p-2">
+                    <div class="card-body p-2 unselectable">
                         <h5 class="card-title">@{{ squeal.username }}</h5>
-                        <p v-if="squeal.content_type == 'text'" class="card-text">
-                            {{ squeal.content }}</p>
-                        <div class="card-img-top ">
+                        <div v-if="squeal.content_type == 'text'" class="card-text">
+                            <p @click="showMore && isTooLong ? showMore = false : null"
+                                :class="{ 'clickable': showMore && isTooLong }">
+                                {{
+                                    isTooLong && !showMore
+                                    ? (squeal.content.substring(0, MAX_CONTENT_LENGTH) + "...")
+                                    : squeal.content
+                                }}
+                            </p>
+                            <a v-if="isTooLong" class="link clickable" @click="showMore = !showMore">{{
+                                showMore ? "...less" : "more..." }}</a>
+                        </div>
+                        <p v-if="squeal.content_type == 'position' || squeal.content_type == 'deleted'" class="card-text">
+                            [{{ squeal.content_type }}]
+                        </p>
+                        <div class="card-img-top" v-if="squeal.content_type == 'image' || squeal.content_type == 'video'">
                             <img v-if="squeal.content_type == 'image'" :src="'/../media/image/' + squeal.content"
                                 class="img-fluid" alt="..." onerror="this.src='/../media/image/not-found.png'">
                             <video v-if="squeal.content_type == 'video'" class="ratio ratio-16x9" controls>
                                 <source :src="'/../media/video/' + squeal.content">
                             </video>
-                            <p v-if="squeal.content_type == 'position' || squeal.content_type == 'deleted'"
-                                class="card-text">
-                                [{{ squeal.content_type }}]
-                            </p>
-
-
                         </div>
                         <!--position-->
                         <div class="w-100">
