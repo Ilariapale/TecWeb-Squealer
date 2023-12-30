@@ -9,247 +9,48 @@
       <a (click)="goToPage('login')" class="text-primary">Log-in</a> to view the Store
     </div>
     <div *ngIf="!isGuest">
+      <!-- ----------------------------------------------------------------------------------------------- -->
+
       <div class="row row-cols-1 row-cols-2 g-4">
-        <div class="col ">
-          <div class="card  border-light clickable" (click)="addCharacters('tier1')"
-            [class.bg-dark]="getThemeClass() == 'dark-theme' " [class.border-light]="getThemeClass() == 'dark-theme'"
-            [class.border-dark]="getThemeClass() == 'light-theme'">
-            <img class="card-img-top">
-            <div class="card-body">
-              <h5 class="card-title">Tier 1 $2.99</h5>
-              <h1 class="card-text"><i class="bi bi-coin"></i></h1>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="card border-light clickable" (click)="addCharacters('tier2')"
+        <div class="col" *ngFor="let item of itemsBundle">
+          <div class="card border-light clickable h-100" (click)="addCharacters(item.id)"
             [class.bg-dark]="getThemeClass() == 'dark-theme'" [class.border-light]="getThemeClass() == 'dark-theme'"
             [class.border-dark]="getThemeClass() == 'light-theme'">
-            <img class="card-img-top">
-            <div class="card-body ">
-              <h5 class="card-title">Tier 2 $4.99</h5>
-              <h1 class="card-text"><i class="bi bi-cash"></i></h1>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="card border-light clickable" (click)="addCharacters('tier3')"
-            [class.bg-dark]="getThemeClass() == 'dark-theme'" [class.border-light]="getThemeClass() == 'dark-theme'"
-            [class.border-dark]="getThemeClass() == 'light-theme'">
-            <img class="card-img-top">
             <div class="card-body">
-              <h5 class="card-title">Tier 3 $9.99</h5>
-              <h1 class="card-text"><i class="bi bi-cash-coin"></i></h1>
-            </div>
-          </div>
-        </div>
-        <div class="col">
-          <div class="card border-light clickable" (click)="addCharacters('tier4')"
-            [class.bg-dark]="getThemeClass() == 'dark-theme'" [class.border-light]="getThemeClass() == 'dark-theme'"
-            [class.border-dark]="getThemeClass() == 'light-theme'">
-            <img class="card-img-top">
-            <div class="card-body">
-              <h5 class="card-title">Tier 4 $24.99</h5>
-              <h1 class="card-text"><i class="bi bi-cash-stack"></i></h1>
+              <h5 class="card-title">{{ item.name }}</h5>
+              <p>${{ item.price }}</p>
+              <hr class="m-1">
+              <div class="card-text"><i class="bi bi-{{ item.icon }} h1 pe-2"></i>{{item.description}}</div>
             </div>
           </div>
         </div>
       </div>
-
-
 
       <div class="accordion accordion-flush mt-4" id="accordionQuota">
-        <div class="accordion-item">
+        <div class="accordion-item" *ngFor="let accordion of [itemsDaily, itemsWeekly, itemsMonthly]; let i = index">
           <h2 class="accordion-header">
-            <button class="accordion-button collapsed" [class.bg-dark]="getThemeClass() == 'dark-theme' "
-              [class.border-light]="getThemeClass() == 'dark-theme'"
-              [class.border-dark]="getThemeClass() == 'light-theme'"
-              [class.text-light]="getThemeClass() == 'dark-theme'" type=" button" data-bs-toggle="collapse"
-              data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-              <h1>ONLY DAILY</h1>
-            </button>
-          </h2>
-          <div id="collapseOne" class="accordion-collapse collapse " data-bs-parent="#accordionExample">
-            <div class="accordion-body" [class.bg-dark]="getThemeClass() == 'dark-theme'  "
-              [class.text-light]="getThemeClass() == 'dark-theme'">
-              <div class="row row-cols-1 row-cols-2 g-4">
-                <div class="col ">
-                  <div class="card  border-light clickable" (click)="addCharacters('dailytier1')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme' "
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body">
-                      <h5 class="card-title">Tier 1 $2.99</h5>
-                      <h1 class="card-text"><i class="bi bi-coin"></i> 50 char</h1>
-                    </div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="card border-light clickable" (click)="addCharacters('dailytier2')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme'"
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body ">
-                      <h5 class="card-title">Tier 2 $4.99</h5>
-                      <h1 class="card-text"><i class="bi bi-cash"></i> 150 char</h1>
-                    </div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="card border-light clickable" (click)="addCharacters('dailytier3')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme'"
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body">
-                      <h5 class="card-title">Tier 3 $9.99</h5>
-                      <h1 class="card-text"><i class="bi bi-cash-coin"></i> 350 char</h1>
-                    </div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="card border-light clickable" (click)="addCharacters('dailytier4')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme'"
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body">
-                      <h5 class="card-title">Tier 4 $24.99</h5>
-                      <h1 class="card-text"><i class="bi bi-cash-stack"></i> 750 char</h1>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="accordion-item">
-          <h2 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" [class.bg-dark]="getThemeClass() == 'dark-theme' "
+            <button class="accordion-button collapsed" type="button" [class.bg-dark]="getThemeClass() == 'dark-theme'"
               [class.border-light]="getThemeClass() == 'dark-theme'"
               [class.border-dark]="getThemeClass() == 'light-theme'"
               [class.text-light]="getThemeClass() == 'dark-theme'" data-bs-toggle="collapse"
-              data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-              <h1>ONLY WEEKLY</h1>
+              [attr.data-bs-target]="'#collapse' + i" aria-expanded="false" [attr.aria-controls]="'collapse' + i">
+              <h1>{{ bundlesNames[i] }}</h1>
             </button>
           </h2>
-          <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-            <div class="accordion-body" [class.bg-dark]="getThemeClass() == 'dark-theme' "
+          <div [id]="'collapse' + i" class="accordion-collapse collapse" data-bs-parent="#accordionQuota">
+            <div class="accordion-body" [class.bg-dark]="getThemeClass() == 'dark-theme'"
               [class.text-light]="getThemeClass() == 'dark-theme'">
               <div class="row row-cols-1 row-cols-2 g-4">
-                <div class="col ">
-                  <div class="card  border-light clickable" (click)="addCharacters('weeklytier1')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme' "
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body">
-                      <h5 class="card-title">Tier 1 $2.99</h5>
-                      <h1 class="card-text"><i class="bi bi-coin"></i> 150 char</h1>
-                    </div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="card border-light clickable" (click)="addCharacters('weeklytier2')"
+                <div class="col" *ngFor="let item of accordion">
+                  <div class="card border-light clickable h-100" (click)="addCharacters(item.id)"
                     [class.bg-dark]="getThemeClass() == 'dark-theme'"
                     [class.border-light]="getThemeClass() == 'dark-theme'"
                     [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body ">
-                      <h5 class="card-title">Tier 2 $4.99</h5>
-                      <h1 class="card-text"><i class="bi bi-cash"></i> 450 char</h1>
-                    </div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="card border-light clickable" (click)="addCharacters('weeklytier3')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme'"
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
                     <div class="card-body">
-                      <h5 class="card-title">Tier 3 $9.99</h5>
-                      <h1 class="card-text"><i class="bi bi-cash-coin"></i> 1050 char</h1>
-                    </div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="card border-light clickable" (click)="addCharacters('weeklytier4')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme'"
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body">
-                      <h5 class="card-title">Tier 4 $24.99</h5>
-                      <h1 class="card-text"><i class="bi bi-cash-stack"></i> 2250 char</h1>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="accordion-item">
-          <h2 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" [class.bg-dark]="getThemeClass() == 'dark-theme' "
-              [class.border-light]="getThemeClass() == 'dark-theme'"
-              [class.border-dark]="getThemeClass() == 'light-theme'"
-              [class.text-light]="getThemeClass() == 'dark-theme'" data-bs-toggle="collapse"
-              data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-              <h1>ONLY MONTHLY</h1>
-            </button>
-          </h2>
-          <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-            <div class="accordion-body" [class.bg-dark]="getThemeClass() == 'dark-theme' "
-              [class.text-light]="getThemeClass() == 'dark-theme'">
-              <div class="row row-cols-1 row-cols-2 g-4">
-                <div class="col ">
-                  <div class="card  border-light clickable" (click)="addCharacters('monthlytier1')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme' "
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body">
-                      <h5 class="card-title">Tier 1 $2.99</h5>
-                      <h1 class="card-text"><i class="bi bi-coin"></i> 500 char</h1>
-                    </div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="card border-light clickable" (click)="addCharacters('monthlytier2')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme'"
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body ">
-                      <h5 class="card-title">Tier 2 $4.99</h5>
-                      <h1 class="card-text"><i class="bi bi-cash"></i> 1500 char</h1>
-                    </div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="card border-light clickable" (click)="addCharacters('monthlytier3')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme'"
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body">
-                      <h5 class="card-title">Tier 3 $9.99</h5>
-                      <h1 class="card-text"><i class="bi bi-cash-coin"></i> 3500 char</h1>
-                    </div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="card border-light clickable" (click)="addCharacters('monthlytier4')"
-                    [class.bg-dark]="getThemeClass() == 'dark-theme'"
-                    [class.border-light]="getThemeClass() == 'dark-theme'"
-                    [class.border-dark]="getThemeClass() == 'light-theme'">
-                    <img class="card-img-top">
-                    <div class="card-body">
-                      <h5 class="card-title">Tier 4 $24.99</h5>
-                      <h1 class="card-text"><i class="bi bi-cash-stack"></i> 7500 char</h1>
+                      <h5 class="card-title">{{ item.name }}</h5>
+                      <p>${{ item.price }}</p>
+                      <hr class="m-1">
+                      <div class="card-text h3"><i class="bi bi-{{ item.icon }} h1"></i> {{ item.description }}</div>
                     </div>
                   </div>
                 </div>
@@ -258,6 +59,7 @@
           </div>
         </div>
       </div>
+      <!-- ----------------------------------------------------------------------------------------------- -->
     </div>
   </div>
 </div>

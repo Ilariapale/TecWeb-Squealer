@@ -63,6 +63,11 @@ export class SquealsService {
     return firstValueFrom(this.http.get(`${url}`, requestOptions));
   }
 
+  getPrices(): Promise<any> {
+    const requestOptions = this.headersGenerator(false);
+    return firstValueFrom(this.http.get(`${this.apiUrl}/prices`, requestOptions));
+  }
+
   postSqueal(
     content: string,
     recipients?: object,

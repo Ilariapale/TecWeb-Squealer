@@ -62,6 +62,20 @@ module.exports = {
     const sort_orders = ["asc", "desc"];
     const pipeline = [];
 
+    if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
+      return {
+        status: 400,
+        data: { error: `Both 'sort_order' and 'sort_by' must be specified.` },
+      };
+    } else if (sort_order && sort_by) {
+      if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+        return {
+          status: 400,
+          data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join("', '")}. 'sort_order' options are '${sort_orders.join("', '")}'.` },
+        };
+      }
+    }
+
     if (last_loaded) {
       if (!mongooseObjectIdRegex.test(last_loaded)) {
         return {
@@ -69,7 +83,8 @@ module.exports = {
           data: { error: `'last_loaded' must be a valid ObjectId.` },
         };
       }
-      pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
+      if (sort_order == "desc") pipeline.push({ $match: { _id: { $lt: new mongoose.Types.ObjectId(last_loaded) } } });
+      else pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
     }
 
     if (content_type) {
@@ -201,20 +216,7 @@ module.exports = {
       pipeline.push({ $match: { reactions_count: { $gte: minReactions } } });
     }
 
-    if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
-      return {
-        status: 400,
-        data: { error: `Both 'sort_order' and 'sort_by' must be specified.` },
-      };
-    }
-
     if (sort_order && sort_by) {
-      if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
-        return {
-          status: 400,
-          data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join("', '")}. 'sort_order' options are '${sort_orders.join("', '")}'.` },
-        };
-      }
       const order = sort_order == "asc" ? 1 : -1;
       if (sort_by == "reactions") pipeline.push({ $sort: { "reactions.reactions_count": order } });
       else if (sort_by == "impressions") pipeline.push({ $sort: { impressions: order } });

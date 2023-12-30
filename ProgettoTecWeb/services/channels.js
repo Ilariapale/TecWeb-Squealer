@@ -88,6 +88,20 @@ module.exports = {
       pipeline.push({ $match: { is_blocked: false } });
     }
 
+    if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
+      return {
+        status: 400,
+        data: { error: `Both 'sort_order' and 'sort_by' must be specified.` },
+      };
+    } else if (sort_order && sort_by) {
+      if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
+        return {
+          status: 400,
+          data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join(`', '`)}'. 'sort_order' options are '${sort_orders.join(`', '`)}'.` },
+        };
+      }
+    }
+
     if (last_loaded) {
       if (!mongooseObjectIdRegex.test(last_loaded)) {
         return {
@@ -95,6 +109,7 @@ module.exports = {
           data: { error: `'last_loaded' must be a valid ObjectId.` },
         };
       }
+      if (sort_order === "desc") pipeline.push({ $match: { _id: { $lt: new mongoose.Types.ObjectId(last_loaded) } } });
       pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
     }
 
@@ -197,20 +212,7 @@ module.exports = {
       pipeline.push({ $match: { squeals_count: { $lte: int_max_squeals } } });
     }
 
-    if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
-      return {
-        status: 400,
-        data: { error: `Both 'sort_order' and 'sort_by' must be specified.` },
-      };
-    }
     if (sort_order && sort_by) {
-      if (!sort_orders.includes(sort_order) || !sort_types.includes(sort_by)) {
-        return {
-          status: 400,
-          data: { error: `Invalid 'sort_order' or 'sort_by'. 'sort_by' options are '${sort_types.join(`', '`)}'. 'sort_order' options are '${sort_orders.join(`', '`)}'.` },
-        };
-      }
-
       const order = sort_order === "asc" ? 1 : -1;
 
       if (sort_by === "name") pipeline.push({ $sort: { name: order } });
@@ -249,6 +251,12 @@ module.exports = {
       });
     }
 
+    if (result.length <= 0) {
+      return {
+        status: 404,
+        data: { error: `No channels found.` },
+      };
+    }
     return {
       status: 200,
       data: result,

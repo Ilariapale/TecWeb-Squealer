@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { Router } from '@angular/router';
 import { UsersService } from 'src/app/services/api/users.service';
+import { SquealsService } from 'src/app/services/api/squeals.service';
 
 @Component({
   selector: 'app-store',
@@ -11,6 +12,7 @@ import { UsersService } from 'src/app/services/api/users.service';
 export class StoreComponent implements OnInit {
   isGuest = true;
   bannerClass = '';
+  prices: any = {};
   tiers = [
     'tier1',
     'tier2',
@@ -49,7 +51,19 @@ export class StoreComponent implements OnInit {
     monthlytier4: 'https://www.sandbox.paypal.com/instantcommerce/checkout/K9ARXPJPGEWYC',
   };
 
-  constructor(public darkModeService: DarkModeService, private router: Router, private usersService: UsersService) {
+  itemsBundle = [] as any;
+  itemsDaily = [] as any;
+  itemsWeekly = [] as any;
+  itemsMonthly = [] as any;
+
+  bundlesNames = ['Only Daily', 'Only Weekly', 'Only Monthly'];
+
+  constructor(
+    public darkModeService: DarkModeService,
+    private router: Router,
+    private usersService: UsersService,
+    private squealsService: SquealsService
+  ) {
     if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
     else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
       this.isGuest = true;
@@ -58,7 +72,136 @@ export class StoreComponent implements OnInit {
     }
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.squealsService
+      .getPrices()
+      .then((res) => {
+        this.prices = res;
+        this.itemsBundle = [
+          {
+            id: 'tier1',
+            icon: 'coin',
+            name: 'Tier 1',
+            price: this.prices.shop_tiers['tier1Price'],
+            description: `${this.prices.shop_tiers.tier1.daily} daily, ${this.prices.shop_tiers.tier1.weekly} weekly, ${this.prices.shop_tiers.tier1.monthly} monthly`,
+          },
+          {
+            id: 'tier2',
+            icon: 'cash',
+            name: 'Tier 2',
+            price: this.prices.shop_tiers['tier2Price'],
+            description: `${this.prices.shop_tiers.tier2.daily} daily, ${this.prices.shop_tiers.tier2.weekly} weekly, ${this.prices.shop_tiers.tier2.monthly} monthly`,
+          },
+          {
+            id: 'tier3',
+            icon: 'cash-coin',
+            name: 'Tier 3',
+            price: this.prices.shop_tiers['tier3Price'],
+            description: `${this.prices.shop_tiers.tier3.daily} daily, ${this.prices.shop_tiers.tier3.weekly} weekly, ${this.prices.shop_tiers.tier3.monthly} monthly`,
+          },
+          {
+            id: 'tier4',
+            icon: 'cash-stack',
+            name: 'Tier 4',
+            price: this.prices.shop_tiers['tier4Price'],
+            description: `${this.prices.shop_tiers.tier4.daily} daily, ${this.prices.shop_tiers.tier4.weekly} weekly, ${this.prices.shop_tiers.tier4.monthly} monthly`,
+          },
+        ];
+        this.itemsDaily = [
+          {
+            id: 'dailytier1',
+            icon: 'coin',
+            name: 'Daily Tier 1',
+            price: this.prices.shop_tiers['tier1Price'],
+            description: `${this.prices.shop_tiers.daily.tier1} char`,
+          },
+          {
+            id: 'dailytier2',
+            icon: 'cash',
+            name: 'Daily Tier 2',
+            price: this.prices.shop_tiers['tier2Price'],
+            description: `${this.prices.shop_tiers.daily.tier2} char`,
+          },
+          {
+            id: 'dailytier3',
+            icon: 'cash-coin',
+            name: 'Daily Tier 3',
+            price: this.prices.shop_tiers['tier3Price'],
+            description: `${this.prices.shop_tiers.daily.tier3} char`,
+          },
+          {
+            id: 'dailytier4',
+            icon: 'cash-stack',
+            name: 'Daily Tier 4',
+            price: this.prices.shop_tiers['tier4Price'],
+            description: `${this.prices.shop_tiers.daily.tier4} char`,
+          },
+        ];
+        this.itemsWeekly = [
+          {
+            id: 'weeklytier1',
+            icon: 'coin',
+            name: 'Weekly Tier 1',
+            price: this.prices.shop_tiers['tier1Price'],
+            description: `${this.prices.shop_tiers.weekly.tier1} char`,
+          },
+          {
+            id: 'weeklytier2',
+            icon: 'cash',
+            name: 'Weekly Tier 2',
+            price: this.prices.shop_tiers['tier2Price'],
+            description: `${this.prices.shop_tiers.weekly.tier2} char`,
+          },
+          {
+            id: 'weeklytier3',
+            icon: 'cash-coin',
+            name: 'Weekly Tier 3',
+            price: this.prices.shop_tiers['tier3Price'],
+            description: `${this.prices.shop_tiers.weekly.tier3} char`,
+          },
+          {
+            id: 'weeklytier4',
+            icon: 'cash-stack',
+            name: 'Weekly Tier 4',
+            price: this.prices.shop_tiers['tier4Price'],
+            description: `${this.prices.shop_tiers.weekly.tier4} char`,
+          },
+        ];
+        this.itemsMonthly = [
+          {
+            id: 'monthlytier1',
+            icon: 'coin',
+            name: 'Monthly Tier 1',
+            price: this.prices.shop_tiers['tier1Price'],
+            description: `${this.prices.shop_tiers.monthly.tier1} char`,
+          },
+          {
+            id: 'monthlytier2',
+            icon: 'cash',
+            name: 'Monthly Tier 2',
+            price: this.prices.shop_tiers['tier2Price'],
+            description: `${this.prices.shop_tiers.monthly.tier2} char`,
+          },
+          {
+            id: 'monthlytier3',
+            icon: 'cash-coin',
+            name: 'Monthly Tier 3',
+            price: this.prices.shop_tiers['tier3Price'],
+            description: `${this.prices.shop_tiers.monthly.tier3} char`,
+          },
+          {
+            id: 'monthlytier4',
+            icon: 'cash-stack',
+            name: 'Monthly Tier 4',
+            price: this.prices.shop_tiers['tier4Price'],
+            description: `${this.prices.shop_tiers.monthly.tier4} char`,
+          },
+        ];
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
 
   addCharacters(tier: string) {
     if (this.tiers.indexOf(tier) === -1) {
