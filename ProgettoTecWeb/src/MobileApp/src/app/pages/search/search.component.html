@@ -298,9 +298,6 @@
     <div class="col-1 col-md-4"></div>
 
     <div class="pt-3 col-10 col-md-4">
-      <i class="spinner-border text-light" *ngIf="loading" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </i>
 
       <div *ngIf="showUserResults" aria-live="polite" aria-atomic="true"
         class="d-flex justify-content-center align-items-center row">
@@ -324,6 +321,10 @@
               </a>
             </div>
           </div>
+        </div>
+        <div *ngIf="loadMoreUsersButton" class=" d-flex justify-content-center align-items-center py-2">
+          <button (click)="loadMoreUsers()" type=" button" class="btn btn-outline-secondary rounded-pill"><i
+              class="bi bi-arrow-clockwise"></i></button>
         </div>
       </div>
 
@@ -354,7 +355,10 @@
             </div>
           </div>
         </div>
-
+        <div *ngIf="loadMoreChannelsButton" class=" d-flex justify-content-center align-items-center py-2">
+          <button (click)="loadMoreChannels()" type=" button" class="btn btn-outline-secondary rounded-pill"><i
+              class="bi bi-arrow-clockwise"></i></button>
+        </div>
       </div>
 
 
@@ -377,9 +381,16 @@
             </div>
           </div>
         </div>
+        <div *ngIf="loadMoreSquealsButton" class=" d-flex justify-content-center align-items-center py-2">
+          <button (click)="loadMoreSqueals()" type=" button" class="btn btn-outline-secondary rounded-pill"><i
+              class="bi bi-arrow-clockwise"></i></button>
+        </div>
       </div>
-
-
+      <div *ngIf="loading" class="d-flex justify-content-center align-items-center row of-hid">
+        <i class="spinner-border text-light" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </i>
+      </div>
     </div>
 
     <div class="col-1 col-md-4"></div>

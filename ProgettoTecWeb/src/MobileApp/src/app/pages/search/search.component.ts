@@ -13,6 +13,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./search.component.css'],
 })
 export class SearchComponent {
+  RESULT_LIMIT = 5;
   isGuest: boolean = true;
 
   searchInput: string = '';
@@ -48,6 +49,10 @@ export class SearchComponent {
   channelResults: Channel[] = [];
   keywordResults: Squeal[] = [];
 
+  loadMoreUsersButton: boolean = false;
+  loadMoreChannelsButton: boolean = false;
+  loadMoreSquealsButton: boolean = false;
+
   placeholder: string = 'Type username here...';
 
   testArray: string[] = ['test1', 'test2', 'test3'];
@@ -63,7 +68,17 @@ export class SearchComponent {
       this.isGuest = true;
     } else {
       this.router.navigate(['/login']);
-    }  // Ask the server for the notifications with the specified ids
+    } // Ask the server for the notifications with the specified ids
+  }
+
+  loadMoreUsers() {
+    this.sendSearch(this.userResults[this.userResults.length - 1]._id as string, 'user-search');
+  }
+  loadMoreChannels() {
+    this.sendSearch(this.channelResults[this.channelResults.length - 1]._id as string, 'channel-search');
+  }
+  loadMoreSqueals() {
+    this.sendSearch(this.keywordResults[this.keywordResults.length - 1]._id as string, 'keyword-search');
   }
 
   triggerTest() {
@@ -74,19 +89,25 @@ export class SearchComponent {
     return this.darkModeService.getThemeClass();
   }
 
-  sendSearch() {
+  sendSearch(last_loaded?: string, tab?: string) {
     this.loading = true;
 
-    this.userResults = [];
-    this.channelResults = [];
-    this.keywordResults = [];
+    if (!last_loaded) {
+      this.userResults = [];
+      this.channelResults = [];
+      this.keywordResults = [];
+    }
 
-    if (this.selectedOption === 'user-search') {
-      this.createUserQuery();
+    if ((tab == undefined && this.selectedOption === 'user-search') || (tab != undefined && tab === 'user-search')) {
+      last_loaded ? this.createUserQuery(this.RESULT_LIMIT, last_loaded) : this.createUserQuery(this.RESULT_LIMIT);
       this.usersService
         .getUsers(this.userQuery)
         .then((users) => {
-          this.userResults = users as User[];
+          users.length >= this.RESULT_LIMIT ? (this.loadMoreUsersButton = true) : (this.loadMoreUsersButton = false);
+
+          users.forEach((user: User) => {
+            this.userResults.push(user);
+          });
           this.loading = false;
 
           this.showUserResults = true;
@@ -97,12 +118,24 @@ export class SearchComponent {
           console.log(err);
           this.loading = false;
         });
-    } else if (this.selectedOption === 'channel-search') {
-      this.createChannelQuery();
+    } else if (
+      (tab == undefined && this.selectedOption === 'channel-search') ||
+      (tab != undefined && tab === 'channel-search')
+    ) {
+      last_loaded
+        ? this.createChannelQuery(this.RESULT_LIMIT, last_loaded)
+        : this.createChannelQuery(this.RESULT_LIMIT);
       this.channelsService
         .getChannels(this.channelQuery)
         .then((channels: Channel[]) => {
-          this.channelResults = channels;
+          channels.length >= this.RESULT_LIMIT
+            ? (this.loadMoreChannelsButton = true)
+            : (this.loadMoreChannelsButton = false);
+
+          channels.forEach((channel: Channel) => {
+            this.channelResults.push(channel);
+          });
+
           this.loading = false;
 
           this.showUserResults = false;
@@ -113,12 +146,23 @@ export class SearchComponent {
           console.log(err);
           this.loading = false;
         });
-    } else if (this.selectedOption === 'keyword-search') {
-      this.createKeywordQuery();
+    } else if (
+      (tab == undefined && this.selectedOption === 'keyword-search') ||
+      (tab != undefined && tab === 'keyword-search')
+    ) {
+      last_loaded
+        ? this.createKeywordQuery(this.RESULT_LIMIT, last_loaded)
+        : this.createKeywordQuery(this.RESULT_LIMIT);
       this.squealService
         .getSqueals(this.keywordQuery)
         .then((squeals: Squeal[]) => {
-          this.keywordResults = squeals;
+          squeals.length >= this.RESULT_LIMIT
+            ? (this.loadMoreSquealsButton = true)
+            : (this.loadMoreSquealsButton = false);
+
+          squeals.forEach((squeal: Squeal) => {
+            this.keywordResults.push(squeal);
+          });
           this.loading = false;
 
           this.showUserResults = false;

@@ -35,10 +35,6 @@ img {
   overflow: visible
 }
 
-.of-vis {
-  overflow: visible;
-}
-
 .btn-secondary.report {
   --bs-btn-active-bg: rgb(109, 41, 41);
 }

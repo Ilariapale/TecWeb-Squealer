@@ -124,7 +124,13 @@ body {
 }
 
 
+.of-vis {
+  overflow: visible;
+}
 
+.of-hid {
+  overflow: hidden;
+}
 
 .submit-button.dark-theme {
   background-color: #ff4081;
