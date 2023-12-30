@@ -530,6 +530,7 @@ module.exports = {
 
     const squeals = VIPuser.squeals.posted;
 
+    const dateString = new Date().toLocaleString("it-IT", { timeZone: "CET" });
     // Distribute content types: dataDistribution
     // Puoi generare un grafico a torta o un diagramma a barre // A graph showing the distribution of content types
     // To show the distribution of content types
@@ -553,7 +554,7 @@ module.exports = {
         labels: dataDistribution.map((item) => item.type),
         datasets: [
           {
-            label: "",
+            label: "squeals",
             data: dataDistribution.map((item) => item.count),
             backgroundColor: colors,
             borderColor: "rgba(70, 70, 70, 0.7)",
@@ -562,6 +563,9 @@ module.exports = {
         ],
       },
       options: {
+        legend: {
+          display: false,
+        },
         plugins: {
           datalabels: {
             anchor: "end",
@@ -572,6 +576,10 @@ module.exports = {
             borderWidth: 1,
             borderRadius: 5,
           },
+        },
+        title: {
+          display: true,
+          text: "Squeal types distribution for @" + VIPuser.username + " at " + dateString,
         },
       },
     });
@@ -640,7 +648,7 @@ module.exports = {
         responsive: true,
         title: {
           display: true,
-          text: "Squeals and Impressions History",
+          text: "Squeals and Impressions History for @" + VIPuser.username + " at " + dateString,
         },
         scales: {
           xAxes: [
@@ -760,7 +768,7 @@ module.exports = {
         maintainAspectRatio: false,
         title: {
           display: true,
-          text: "Interactions over impressions",
+          text: "Interactions over impressions for @" + VIPuser.username + " at " + dateString,
         },
       },
     });
@@ -790,6 +798,12 @@ module.exports = {
           },
         ],
         labels: tags,
+      },
+      options: {
+        title: {
+          display: true,
+          text: "Squeal tags distribution for @" + VIPuser.username + " at " + dateString,
+        },
       },
     });
 
@@ -831,6 +845,12 @@ module.exports = {
           },
         ],
       },
+      options: {
+        title: {
+          display: true,
+          text: "Impressions in official and unofficial channels for @" + VIPuser.username + " at " + dateString,
+        },
+      },
     });
 
     //Reactions Total
@@ -871,7 +891,7 @@ module.exports = {
       options: {
         title: {
           display: true,
-          text: "Reactions distribution",
+          text: "Reactions distribution for @" + VIPuser.username + " at " + dateString,
         },
         legend: {
           display: false,
