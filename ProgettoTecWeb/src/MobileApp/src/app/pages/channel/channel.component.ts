@@ -72,7 +72,7 @@ export class ChannelComponent {
             if (squealsRequests.length > 0) {
               const squeals = await Promise.all(squealsRequests);
               squeals.forEach((squeal) => {
-                this.squeals.push(squeal[0]); // Aggiungi il nuovo squeal all'inizio dell'array
+                this.squeals.push(squeal[0]); // Add the new squeal at the beginning of the array
               });
               this.lastSquealLoaded -= this.MAX_SQUEALS;
             }

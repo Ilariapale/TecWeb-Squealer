@@ -137,8 +137,8 @@ export class ChannelManagerComponent {
 
     this.selectedChannel = JSON.parse(JSON.stringify(channel));
     this.selectedEditors = [];
-    //richiesta per ottenere i nomi degli editor
-    //ottengo lo username dell'owner
+    // Request to get the names of the editors
+    // Get the username of the owner
     this.selectedChannel.owner = '';
     const editorsRequests = this.selectedChannel.editors.map((editorId) =>
       this.usersService.getUsername('' + editorId)
@@ -155,7 +155,7 @@ export class ChannelManagerComponent {
 
   updateOwnedChannel() {
     this.resetMessages();
-    //prendo il canale dall'array tramite l'id di quello updetato
+    // Get the channel from the array using the id of the updated one
     const oldChannel = this.channelsOwned.find((channel) => channel._id === this.selectedChannel._id);
     const updatedChannel = this.selectedChannel;
     const newEditors = this.editorComponent1.getTags();

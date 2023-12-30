@@ -41,7 +41,7 @@ export class NotificationsComponent implements OnInit {
     public timeService: TimeService,
     private router: Router
   ) {
-    //ottieni l'array degli id delle notifiche
+    // Get the notifications ids array
     if (localStorage.getItem('Authorization') || sessionStorage.getItem('Authorization')) this.isGuest = false;
     else if (localStorage.getItem('user') || sessionStorage.getItem('user')) {
       this.isGuest = true;
@@ -118,7 +118,7 @@ export class NotificationsComponent implements OnInit {
   }
 
   notificationLink(notif: Notification) {
-    //setta la notifica come letta
+    // Set the notification as read
     if (notif._id && notif.is_unseen) {
       this.usersService
         .setNotificationStatus([notif._id], false)

@@ -63,7 +63,7 @@ export class SearchComponent {
       this.isGuest = true;
     } else {
       this.router.navigate(['/login']);
-    } //richiedi al server le notifiche con gli id specificati
+    }  // Ask the server for the notifications with the specified ids
   }
 
   triggerTest() {

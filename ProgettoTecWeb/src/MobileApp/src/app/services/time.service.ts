@@ -42,12 +42,12 @@ export class TimeService {
   }
 
   private formatTime(date: Date): string {
-    // Personalizza il formato dell'orario in base alle tue esigenze
+    // Customize time format according to your needs
     return `${date.getHours()}:${('0' + date.getMinutes()).slice(-2)}`;
   }
 
   private formatDate(date: Date): string {
-    // Personalizza il formato della data in base alle tue esigenze
+    // Customize date format according to your needs
     return `${('0' + date.getDate()).slice(-2)}/${('0' + (date.getMonth() + 1)).slice(-2)}/${date.getFullYear()}`;
   }
 }

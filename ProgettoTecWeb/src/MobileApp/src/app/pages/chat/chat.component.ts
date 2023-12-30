@@ -77,7 +77,7 @@ export class ChatComponent {
   }
 
   ngOnDestroy() {
-    if (this.socket) this.socket.disconnect(); // Disconnetti il socket quando il componente viene distrutto
+    if (this.socket) this.socket.disconnect(); // Disconnect the socket when the component is destroyed
   }
 
   private connectWebSocket(): void {
@@ -85,7 +85,7 @@ export class ChatComponent {
     this.socket.emit('authenticate', this.user._id);
     this.socket.on('new_message', (message: Message) => {
       if (message.from != this.recipient) return;
-      // Gestisci il messaggio ricevuto dal server
+      // Handle the message received from the server
       this.chat.messages.push({
         sender: message.sender,
         text: message.text,

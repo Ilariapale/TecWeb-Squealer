@@ -15,7 +15,7 @@ export class TagInputComponent {
   addTag() {
     if (this.tagInput && !this.tags.includes(this.tagInput) && this.tagInput.trim() !== '') {
       const tag = this.tagInput.replace(/\s/g, '');
-      //se il tag è già presente non aggiungerlo e svuota l'input
+      // If the tag is already present, do not add it and empty the input
       if (this.tags.includes(tag)) {
         this.tagInput = '';
         return;

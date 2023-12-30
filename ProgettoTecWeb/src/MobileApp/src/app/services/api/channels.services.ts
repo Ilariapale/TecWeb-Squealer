@@ -10,7 +10,7 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root',
 })
 export class ChannelsService {
-  private apiUrl = '/channels'; // Sostituisci con l'URL del tuo backend API
+  private apiUrl = '/channels'; // Replace with your API backend URL
 
   constructor(private http: HttpClient) {}
 
@@ -21,7 +21,7 @@ export class ChannelsService {
       return requestOptions;
     } else {
       const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
-      // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
+      // Create a HttpHeaders object and add the Authorization header
       const headers = new HttpHeaders().set('Authorization', `${token}`);
       const requestOptions = { headers: headers };
       return requestOptions;
@@ -104,7 +104,7 @@ export class ChannelsService {
     const requestOptions = this.headersGenerator(true);
     return firstValueFrom(this.http.delete(`${this.apiUrl}/${identifier}`, requestOptions));
   }
-  // Altre funzioni per il recupero password, aggiornamento del profilo, ecc. possono essere implementate qui.
+  // Other functions for password recovery, profile update, etc. can be implemented here.
 }
 interface UpdateChannelBody {
   identifier: string;

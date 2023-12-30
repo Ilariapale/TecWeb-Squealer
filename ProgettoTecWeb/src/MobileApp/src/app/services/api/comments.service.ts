@@ -8,13 +8,13 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root',
 })
 export class CommentService {
-  private apiUrl = '/comments'; // Sostituisci con l'URL del tuo backend API
+  private apiUrl = '/comments'; // Replace with your API backend URL
 
   constructor(private http: HttpClient) {}
 
   headersGenerator() {
     const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
-    // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
+    // Create a HttpHeaders object and add the Authorization header
     const headers = new HttpHeaders().set('Authorization', `${token}`);
     const requestOptions = { headers: headers };
     return requestOptions;

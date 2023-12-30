@@ -9,7 +9,7 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root',
 })
 export class SquealsService {
-  private apiUrl = '/squeals'; // Sostituisci con l'URL del tuo backend API
+  private apiUrl = '/squeals'; // Replace with your API backend URL
 
   constructor(private http: HttpClient) {}
 
@@ -20,7 +20,7 @@ export class SquealsService {
       return requestOptions;
     } else {
       const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
-      // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
+      // Create a HttpHeaders object and add the Authorization header
       const headers = new HttpHeaders().set('Authorization', `${token}`);
       const requestOptions = { headers: headers };
       return requestOptions;
@@ -29,7 +29,7 @@ export class SquealsService {
 
   guestHeadersGenerator() {
     const token = localStorage.getItem('Guest_Authorization');
-    // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
+    // Create a HttpHeaders object and add the Authorization header for the guest user
     if (!token) return { headers: new HttpHeaders() };
     const headers = new HttpHeaders().set('Authorization', `${token}`);
     const requestOptions = { headers: headers };

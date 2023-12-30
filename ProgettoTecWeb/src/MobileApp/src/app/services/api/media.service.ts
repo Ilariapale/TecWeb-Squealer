@@ -9,7 +9,7 @@ import { request } from 'express';
 })
 export class MediaService {
   constructor(private http: HttpClient) {}
-  private apiUrl = '/media'; // Sostituisci con l'URL del tuo backend API
+  private apiUrl = '/media'; // Replace with your API backend URL
 
   headersGenerator(authenticated: boolean) {
     if (!authenticated) {
@@ -18,7 +18,7 @@ export class MediaService {
       return requestOptions;
     } else {
       const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
-      // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
+      // Create a HttpHeaders object and add the Authorization header
       const headers = new HttpHeaders().set('Authorization', `${token}`);
       const requestOptions = { headers: headers };
       return requestOptions;

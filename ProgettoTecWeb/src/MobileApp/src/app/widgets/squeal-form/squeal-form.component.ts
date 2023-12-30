@@ -343,7 +343,7 @@ export class SquealFormComponent {
     } else {
       console.log('No file selected');
     }
-    //Mando l'immagine al server e aspetto che mi restituisca il nome del file
+    // Send the image to the server and wait for the file name to be returned
   }
   createVideoSqueal() {
     this.getRecipients();
@@ -399,7 +399,7 @@ export class SquealFormComponent {
     } else {
       console.log('No file selected');
     }
-    //Mando l'immagine al server e aspetto che mi restituisca il nome del file
+    // Send the image to the server and wait for the file name to be returned
   }
   createPositionSqueal() {
     const content = `${this.mapComponent?.userPosition[0]} ${this.mapComponent?.userPosition[1]}`;
@@ -446,7 +446,7 @@ export class SquealFormComponent {
           }
         });
     } else {
-      // Gestisci il caso in cui il form non sia valido
+      // Handle the case where the form is not valid
       console.log('Form non valido');
     }
   }
@@ -457,7 +457,7 @@ export class SquealFormComponent {
     if (fileInput.files && fileInput.files[0]) {
       this.mediaService.postImage(fileInput.files[0]).subscribe({
         next: (response: any) => {
-          //rimuovo il file dall'input per evitare che venga caricato più volte
+          // Remove the file from the input to avoid it being uploaded multiple times
           this.imageInput.nativeElement.value = '';
           this.imageInput.nativeElement.files = null;
           this.imageInput.nativeElement.files = undefined;

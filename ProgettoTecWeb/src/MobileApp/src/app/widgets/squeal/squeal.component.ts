@@ -92,7 +92,7 @@ export class SquealComponent implements OnInit {
       this.showComments &&
       (this.comment_section?.comments_array?.length == 0 || this.comment_section?.comments_array == undefined)
     ) {
-      // Ottieni i commenti
+      // Get comments
       this.commentService
         .getComments(this.squeal.comment_section || '')
         .then((response: any) => {

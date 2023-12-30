@@ -326,12 +326,12 @@ async function checkForAllChannels(channelArray, includeBlocked = false) {
 }
 
 async function checkForAllNotifications(notificationArray, user) {
-  // Controlla se user è undefined o se notificationArray è vuoto
+  // Check if user is undefined or if notificationArray is empty
   if (!user || !notificationArray || notificationArray.length === 0) {
     return { notificationsOutcome: true, notificationsArray: [] };
   }
 
-  // Verifica che ogni elemento in notificationArray sia un ObjectID valido
+  // Check if every element in notificationArray is a valid ObjectID
   const isValidObjectID = (id) => mongooseObjectIdRegex.test(id);
   if (!notificationArray.every(isValidObjectID)) {
     return {
@@ -341,13 +341,13 @@ async function checkForAllNotifications(notificationArray, user) {
     };
   }
 
-  // Verifica se tutte le notifiche nell'array esistono nel database
+  // Check if every element in notificationArray exists in the database
   const notificationResults = await Notification.find({ _id: { $in: notificationArray } });
 
-  // Estrai gli _id delle notifiche esistenti
+  // Get the _id of the existing notifications
   const existingNotificationIds = notificationResults.map((notification) => notification._id);
 
-  // Verifica se tutte le notifiche nell'array sono presenti nelle notifiche dell'utente
+  // Check if all the notifications in the array are present in the user's notifications
   const allNotificationsInUser = notificationArray.every((notification) => user.notifications.includes(notification));
 
   return {
@@ -712,7 +712,7 @@ function addedAndRemoved(oldArray, newArray) {
 
 //TOKEN FUNCTIONS
 function generateToken(user_data, expireTime = config.tokenExpireTime) {
-  //Aggiungere dati al token se necessario
+  // Add data to token if needed
 
   const user = {
     _id: user_data._id,
@@ -729,9 +729,9 @@ function generateToken(user_data, expireTime = config.tokenExpireTime) {
   };
 
   const payload = { user };
-  const secretKey = config.secretKey; // Sostituisci con una chiave segreta robusta e casuale
+  const secretKey = config.secretKey; // Substituted with a robust and random secret key
 
-  // Crea il token con una data di scadenza (1 ora in questo esempio)
+  // Create token with an expiration date (1 hour in this example)
   const token = jwt.sign(payload, secretKey, { expiresIn: expireTime });
 
   return token;
@@ -740,9 +740,9 @@ function generateToken(user_data, expireTime = config.tokenExpireTime) {
 //generateGuestToken({ uuid: guest.uuid, reacted_to: guest.reacted_to })
 function generateGuestToken(guest, expireTime = "32d") {
   const payload = { guest };
-  const secretKey = config.secretKey; // Sostituisci con una chiave segreta robusta e casuale
+  const secretKey = config.secretKey; // Substituted with a robust and random secret key
 
-  // Crea il token con una data di scadenza (1 ora in questo esempio)
+  // Create token with an expiration date (1 hour in this example)
   const token = jwt.sign(payload, secretKey, { expiresIn: expireTime });
 
   return token;

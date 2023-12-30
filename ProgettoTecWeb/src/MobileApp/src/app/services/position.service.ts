@@ -18,7 +18,7 @@ export class PositionService {
   private socket: any;
 
   constructor() {
-    // Avvia l'aggiornamento periodico della posizione ogni 5 secondi
+    // Start updating position every 5 seconds
     //this.startUpdatingPosition();
     const isSocketActive = sessionStorage.getItem('isSocketActive') === 'true';
     const user = sessionStorage.getItem('user');
@@ -28,12 +28,12 @@ export class PositionService {
     }
   }
 
-  // Restituisce un Observable contenente la posizione corrente
+  // Return an Observable containing the current position
   getPosition(): Observable<[number, number]> {
     return this.positionObservable;
   }
 
-  // Avvia l'aggiornamento periodico della posizione ogni 5 secondi
+  // Start updating position every 5 seconds
   public startUpdatingPosition() {
     interval(5000) // Aggiorna ogni 5 secondi
       .pipe(map(() => this.getCurrentPosition()))
@@ -46,7 +46,7 @@ export class PositionService {
     this.positionSubject.next(newPosition);
   }
 
-  // Ottiene la posizione corrente
+  // Get current position
   private async getCurrentPosition(): Promise<[number, number]> {
     return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(

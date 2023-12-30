@@ -20,7 +20,7 @@ export class UsersService {
       return requestOptions;
     } else {
       const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
-      // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
+      // Create a HttpHeaders object and add the Authorization header
       const headers = new HttpHeaders().set('Authorization', `${token}`);
       const requestOptions = { headers: headers };
       return requestOptions;

@@ -8,13 +8,13 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root',
 })
 export class ChatsService {
-  private apiUrl = '/chats'; // Sostituisci con l'URL del tuo backend API
+  private apiUrl = '/chats'; // Replace with your API backend URL
 
   constructor(private http: HttpClient) {}
 
   authenticatedHeadersGenerator() {
     const token = sessionStorage.getItem('Authorization') || localStorage.getItem('Authorization');
-    // Crea un oggetto HttpHeaders e aggiungi l'header Authorization
+    // Create a HttpHeaders object and add the Authorization header
     const headers = new HttpHeaders().set('Authorization', `${token}`);
     const requestOptions = { headers: headers };
     return requestOptions;

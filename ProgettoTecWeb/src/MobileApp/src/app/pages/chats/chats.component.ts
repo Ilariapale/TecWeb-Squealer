@@ -32,7 +32,7 @@ export class ChatsComponent {
       this.isGuest = true;
     } else {
       this.router.navigate(['/login']);
-    } //richiedi al server le notifiche con gli id specificati
+    } // Ask the server for the notifications with the specified ids
     const userData = this.userService.getUserData();
     if (userData.account_type === 'guest') {
       this.isGuest = true;

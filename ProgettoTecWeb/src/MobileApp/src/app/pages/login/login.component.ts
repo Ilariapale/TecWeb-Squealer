@@ -49,7 +49,7 @@ export class LoginComponent {
           this.router.navigate(['/home']);
         })
         .catch((error: any) => {
-          // Gestisci gli errori qui, ad esempio mostrando un messaggio all'utente
+          // Handle errors here, for example by showing a notification to the user
           this.errorMessage = error;
         });
     }

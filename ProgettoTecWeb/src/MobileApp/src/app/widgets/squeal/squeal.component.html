@@ -131,14 +131,14 @@
           <div *ngIf="showComments" class="mt-3">
             <h4>Comments</h4>
             <button class="btn btn-secondary pb-2" *ngIf="loadMore" (click)="loadMoreComments()">Load more</button>
-            <!-- Lista dei commenti -->
+            <!-- Comment list -->
             <ul class="list-unstyled pt-2">
               <li *ngFor="let comment of comment_section.comments_array">
                 <p class="mb-1"><strong>{{comment.author_username}}</strong>: {{comment.text}}</p>
               </li>
             </ul>
 
-            <!-- Modulo per aggiungere un nuovo commento -->
+            <!-- Add more comments form -->
 
             <form class="input-group mb-3">
               <input type="text" [(ngModel)]="newCommentText" class="form-control" placeholder="Insert your comment..."

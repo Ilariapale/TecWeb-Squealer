@@ -41,11 +41,11 @@ export class ResetPasswordComponent implements OnInit {
   onSubmit(): void {
     this.usersService.resetPassword(this.username, this.email, this.password).then(
       (response) => {
-        //la richiesta è andata a buon fine
+        // The request went well
         this.router.navigate(['/login']);
       },
       (error) => {
-        //la richiesta NON è andata a buon fine
+        // The request went wrong
         this.errorMessage = error.error.error || 'Something went wrong';
       }
     );

@@ -64,7 +64,7 @@ textarea {
 
 #squeal-txt-input {
   background-color: #ffffff;
-  /* Colore rosso, sostituiscilo con il colore desiderato */
+  /* Color red, can be modified as desired */
 }
 
 #recipientsButton {
@@ -167,19 +167,19 @@ textarea {
   .highlight-input {
     position: relative;
     padding-left: 20px;
-    /* Spazio per l'icona */
+    /* icon part */
   }
 
   .user-input::before {
     content: "@";
     position: absolute;
     left: 5px;
-    /* Posizione dell'icona */
+    /* icon position */
     top: 50%;
-    /* Posizione verticale centrata */
+    /* vertical centered position */
     transform: translateY(-50%);
     color: #007bff;
-    /* Colore del simbolo "@" */
+    /*  "@" color */
   }
 
   .channel-input::before {
@@ -189,7 +189,7 @@ textarea {
     top: 50%;
     transform: translateY(-50%);
     color: #28a745;
-    /* Colore del simbolo "§" */
+    /*  "§" color */
   }
 
   .keyword-input::before {
@@ -199,11 +199,11 @@ textarea {
     top: 50%;
     transform: translateY(-50%);
     color: #dc3545;
-    /* Colore del simbolo "#" */
+    /* "#" color */
   }
 
 
-  /* Aggiungi queste classi nel tuo file CSS per definire l'animazione e il colore */
+  /* Add these classes in your CSS file to define the animation and color */
 
 
 }
