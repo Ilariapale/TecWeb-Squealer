@@ -43,7 +43,8 @@ export default {
                 { id: 'monthlytier2', icon: 'cash', name: 'Monthly Tier 2', price: this.prices.shop_tiers["tier2Price"], description: `${this.prices.shop_tiers.monthly.tier2} char` },
                 { id: 'monthlytier3', icon: 'cash-coin', name: 'Monthly Tier 3', price: this.prices.shop_tiers["tier3Price"], description: `${this.prices.shop_tiers.monthly.tier3} char` },
                 { id: 'monthlytier4', icon: 'cash-stack', name: 'Monthly Tier 4', price: this.prices.shop_tiers["tier4Price"], description: `${this.prices.shop_tiers.monthly.tier4} char` }
-            ]
+            ],
+            bundlesNames: ['Only Daily', 'Only Weekly', 'Only Monthly'],
         }
     },
     methods: {
@@ -101,86 +102,46 @@ export default {
 
 
 
+
+
+
+
+
             <div class="accordion accordion-flush mt-4" id="accordionQuota">
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed  bg-primary" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                            <h1 class="text-light">ONLY DAILY</h1>
+                <div class="accordion-item almost-black"
+                    v-for="(accordion, index) in [itemsDaily, itemsWeekly, itemsMonthly]">
+                    <h2 class="accordion-header ">
+                        <button class="accordion-button collapsed accordion-button-color" type="button"
+                            data-bs-toggle="collapse" :data-bs-target="'#collapse' + index" aria-expanded="false"
+                            :aria-controls="'collapse' + index">
+                            <h1>{{ bundlesNames[index] }}</h1>
                         </button>
                     </h2>
-                    <div id="collapseOne" class="accordion-collapse collapse " data-bs-parent="#accordionQuota">
-                        <div class="accordion-body bg-primary">
-                            <div class="row row-cols-1 row-cols-2 g-4 ">
-                                <div v-for="item in itemsDaily" class="col ">
-                                    <div @click="openShop(item.id)" class="card bg-primary  border-light  clickable">
-                                        <img class="card-img-top">
-                                        <div class="card-body">
-                                            <h2 class="card-title ">{{ item.name }}</h2>
-                                            <h1 class="card-text "><i :class="'bi bi-' + item.icon"></i> ${{ item.price
-                                            }} </h1>
-                                            {{ item.description }}
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed  bg-primary" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                            <h1 class="text-light">ONLY WEEKLY</h1>
-                        </button>
-                    </h2>
-                    <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionQuota">
-                        <div class="accordion-body bg-primary">
+                    <div :id="'collapse' + index" class="accordion-collapse collapse" data-bs-parent="#accordionQuota">
+                        <div class="accordion-body">
                             <div class="row row-cols-1 row-cols-2 g-4">
-                                <div v-for="item in itemsWeekly" class="col ">
-                                    <div @click="openShop(item.id)" class="card  bg-primary border-light  clickable">
-                                        <img class="card-img-top">
+                                <div class="col" v-for=" item in accordion">
+                                    <div class="card border-light clickable h-100 bg-primary" @click="openShop(item.id)">
                                         <div class="card-body">
-                                            <h2 class="card-title ">{{ item.name }}</h2>
-                                            <h1 class="card-text "><i :class="'bi bi-' + item.icon"></i> ${{ item.price
-                                            }} </h1>
-                                            {{ item.description }}
+                                            <h5 class="card-title">{{ item.name }}</h5>
+                                            <p>${{ item.price }}</p>
+                                            <hr class="m-1">
+                                            <div class="card-text h3"><i :class="'h1 bi bi-' + item.icon"></i> {{
+                                                item.description }}</div>
                                         </div>
                                     </div>
                                 </div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed  bg-primary" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                            <h1 class="text-light">ONLY MONTHLY</h1>
-                        </button>
-                    </h2>
-                    <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionQuota">
-                        <div class="accordion-body bg-primary">
-                            <div class="row row-cols-1 row-cols-2 g-4">
-                                <div v-for="item in itemsMonthly" class="col ">
-                                    <div @click="openShop(item.id)" class="card  border-light  bg-primary clickable">
-                                        <img class="card-img-top">
-                                        <div class="card-body">
-                                            <h2 class="card-title ">{{ item.name }}</h2>
-                                            <h1 class="card-text "><i :class="'bi bi-' + item.icon"></i> ${{ item.price
-                                            }} </h1>
-                                            {{ item.description }}
-                                        </div>
-                                    </div>
-                                </div>
-
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+
+
+
+
+
         </div>
     </div>
 </template>

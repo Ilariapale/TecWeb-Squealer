@@ -16,6 +16,18 @@
   background-color: #ac833d;
 }
 
+.almost-black {
+  background-color: #181818;
+}
+
+.accordion-button-color {
+  background-color: #dfb369 !important;
+  transition: 0.5s;
+}
+
+.accordion-button-color.collapsed {
+  background-color: #d8bf93 !important;
+}
 
 
 .unselectable {
