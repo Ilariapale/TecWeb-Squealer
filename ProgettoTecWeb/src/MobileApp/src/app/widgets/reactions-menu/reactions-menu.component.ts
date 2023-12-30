@@ -39,6 +39,7 @@ export class ReactionsMenuComponent {
         this.imageUrl = './../../../assets/imgs/reactionsCOLORS.png';
       },
       (error: any) => {
+        if (error.status == 401) this.reaction.emit('error');
         console.log(error);
       }
     );

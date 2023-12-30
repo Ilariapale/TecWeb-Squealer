@@ -502,7 +502,7 @@ async function updateRecipientsUsers(users, squeal) {
   };
 }
 
-async function updateRecipientsChannels(channels, squeal) {
+async function updateRecipientsChannels(channels, squeal, reqSender) {
   const { channelsOutcome, channelsArray } = await checkForAllChannels(channels);
 
   if (!channelsOutcome) {
@@ -522,8 +522,24 @@ async function updateRecipientsChannels(channels, squeal) {
   const addedOfficialNames = [];
   const removedOfficialNames = [];
 
-  //UPDATE REMOVED CHANNELS
+  if (reqSender?.account_type != "moderator") {
+    if (addedChannels && addedChannels.length > 0) {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to add channels to this squeal.` },
+      };
+    }
+    if (removedChannels && removedChannels.length > 0) {
+      if (removedChannels.length != 1 || reqSender?.editor_channels.indexOf(removedChannels[0]) == -1) {
+        return {
+          status: 403,
+          data: { error: `You are not allowed to remove channels from this squeal.` },
+        };
+      }
+    }
+  }
   if (removedChannels && removedChannels.length > 0) {
+    //UPDATE REMOVED CHANNELS
     const removedResult = await Channel.find({ _id: { $in: removedChannels } });
     const removedPromises = removedResult.map((channel) => {
       if (channel.is_official) removedOfficialNames.push(channel.name);

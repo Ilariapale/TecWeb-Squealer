@@ -21,6 +21,7 @@ export class NavbarComponent {
     private usersService: UsersService
   ) {
     const user = userService.getUserData();
+    this.textMode = this.darkModeService.darkMode ? 'Light mode' : 'Dark mode';
     if (!user) {
       this.log_button = 'Login';
     } else {

@@ -36,22 +36,23 @@
   <hr class="mt-1">
   <div class="pb-2">
     <div *ngFor="let squeal of squeals">
-      <div class="text-end bt-3">
-        <i *ngIf="channel.is_editor" class="bi bi-x-circle" data-bs-toggle="collapse"
-          [attr.data-bs-target]="'#deleteSqueal'+squeal._id" role="button" aria-expanded="false"
-          aria-controls="deleteSqueal"></i>
+      <div class="text-end mt-3 mb-2 me-2" *ngIf="channel.is_editor">
+        <i class="bi bi-x-circle h2 me-1" data-bs-toggle="collapse" [attr.data-bs-target]="'#deleteSqueal'+squeal._id"
+          role="button" aria-expanded="false" aria-controls="deleteSqueal"></i>
       </div>
-      <div class="collapse mx-3" [id]="'deleteSqueal'+squeal._id">
-        <div class="card card-body">
+      <div class="collapse mx-3 mb-1" [id]="'deleteSqueal'+squeal._id" *ngIf="channel.is_editor">
+        <div class="card card-body text-dark text-center">
           Do you want to remove this squeal?
-          <div>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="collapse">Cancel</button>
+          <div class="d-flex justify-content-around mt-2">
+            <button type="button" class="btn btn-secondary" data-bs-toggle="collapse"
+              [attr.data-bs-target]="'#deleteSqueal'+squeal._id" role="button" aria-expanded="false"
+              aria-controls="deleteSqueal">Cancel</button>
             <button type="button" class="btn btn-danger text-end" (click)="removeSqueal(squeal)"
               data-bs-dismiss="collapse">Remove Squeal</button>
           </div>
         </div>
       </div>
-      <app-squeal [squeal]="squeal"></app-squeal>
+      <app-squeal [squeal]="squeal" class="of-vis"></app-squeal>
     </div>
 
     <div *ngIf="lastSquealLoaded>=0" class=" d-flex justify-content-center align-items-center py-2">

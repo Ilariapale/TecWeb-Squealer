@@ -29,6 +29,7 @@ export class SquealComponent implements OnInit {
   isProfile = false;
   isGuest = false;
   showMore = false;
+  showLoginMessage = false;
   constructor(
     private commentService: CommentService,
     private darkModeService: DarkModeService,
@@ -142,9 +143,13 @@ export class SquealComponent implements OnInit {
   }
 
   handleReactionAdd(reaction: string) {
-    if (this.squeal.reactions != undefined) {
-      this.squeal.reactions[reaction as keyof typeof this.squeal.reactions] =
-        (this.squeal.reactions[reaction as keyof typeof this.squeal.reactions] as number) + 1;
+    if (reaction == 'error') {
+      this.showLoginMessage = true;
+    } else {
+      if (this.squeal.reactions != undefined) {
+        this.squeal.reactions[reaction as keyof typeof this.squeal.reactions] =
+          (this.squeal.reactions[reaction as keyof typeof this.squeal.reactions] as number) + 1;
+      }
     }
   }
 

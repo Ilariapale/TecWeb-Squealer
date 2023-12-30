@@ -257,7 +257,7 @@ module.exports = {
     //if the query returned some results, increment the impressions counter for each squeal
     const squealImpressionsPromises = [];
     for (let squeal of data) {
-      if (squeal.content_type != "deleted" && !reqSender._id.equals(squeal.user_id) && !reqSender.managed_accounts.includes(squeal.user_id))
+      if (squeal.content_type != "deleted" && !reqSender?._id.equals(squeal.user_id) && !reqSender?.managed_accounts.includes(squeal.user_id))
         squealImpressionsPromises.push(Squeal.findByIdAndUpdate(squeal._id, { $inc: { impressions: 1 } }));
     }
     await Promise.all(squealImpressionsPromises);
@@ -1185,6 +1185,7 @@ module.exports = {
     const { identifier, user_id } = options;
     const recipients = options.inlineReqJson.recipients;
     const reactions = options.inlineReqJson.reactions;
+    console.log(options);
     if (!identifier) {
       return {
         status: 400,
@@ -1201,12 +1202,6 @@ module.exports = {
     const reqSender = response.data;
 
     //check if the reqSender is a moderator
-    if (reqSender.account_type != "moderator") {
-      return {
-        status: 403,
-        data: { error: `You are not allowed to update this squeal.` },
-      };
-    }
 
     //check if the squeal exists
     let squealResponse = await findSqueal(identifier);
@@ -1217,6 +1212,15 @@ module.exports = {
       };
     }
     const squeal = squealResponse.data;
+    console.log(squeal.recipients.channels);
+    console.log(reqSender.editor_channels);
+    //check if the reqSender is a editor of the channel where the squeal is posted
+    if (!squeal.recipients.channels.some((channel) => reqSender.editor_channels.includes(channel)) && reqSender.account_type != "moderator") {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to update this squeal.` },
+      };
+    }
 
     if (!recipients && !reactions) {
       return {
@@ -1224,6 +1228,7 @@ module.exports = {
         data: { error: `Both 'recipients' and 'reactions' must be specified.` },
       };
     }
+
     if (recipients) {
       response = checkIfRecipientsAreValid(recipients);
       if (!response.isValid) {
@@ -1246,7 +1251,7 @@ module.exports = {
       squeal.recipients.users = usersResponse.data.usersArray;
 
       //UPDATE CHANNELS
-      let channelsResponse = await updateRecipientsChannels(channels, squeal);
+      let channelsResponse = await updateRecipientsChannels(channels, squeal, reqSender);
       if (channelsResponse.status >= 300) {
         return {
           status: channelsResponse.status,
