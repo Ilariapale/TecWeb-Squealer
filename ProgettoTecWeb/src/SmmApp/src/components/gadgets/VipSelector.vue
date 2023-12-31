@@ -1,8 +1,8 @@
 <template>
     <div class="p-1">You're now managing:</div>
     <div class="d-flex input-group">
-        <select class="form-select form-select-lg  clickable" v-model="select_form" aria-label=".form-select-lg example"
-            v-on:change="updateVip">
+        <select class="form-select form-select-lg  clickable" v-model="select_form" name="vip selector"
+            aria-label=".form-select-lg example" v-on:change="updateVip">
             <option :value="'none'" selected>Select a VIP</option>
             <option v-for="user in usernames" :value="user">{{ user }}</option>
         </select>

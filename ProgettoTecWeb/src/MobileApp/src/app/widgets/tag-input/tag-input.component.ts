@@ -11,6 +11,12 @@ export class TagInputComponent {
   @Input() tags: string[] = [];
   @Input() specialChar: string = '@';
   @Input() placeholder: string = 'Add a tag';
+  @Input() id_modifier: string = '';
+  tagInputIds = {
+    '@': 'users',
+    '#': 'tags',
+    '§': 'channels',
+  } as any;
   tagInput: string = '';
   addTag() {
     if (this.tagInput && !this.tags.includes(this.tagInput) && this.tagInput.trim() !== '') {

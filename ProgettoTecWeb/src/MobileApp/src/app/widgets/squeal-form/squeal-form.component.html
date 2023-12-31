@@ -19,29 +19,29 @@
           <div>
             <ul class="nav nav-pills mb-3 " id="pills-tab" role="tablist">
               <li class="nav-item fs-3" role="presentation">
-                <button class="nav-link active" id="pills-text-tab" data-bs-toggle="pill" data-bs-target="#pills-text"
-                  type="button" role="tab" aria-controls="pills-text" aria-selected="true"
+                <button class="nav-link active" id="pills-text-tab" title="text tab" data-bs-toggle="pill"
+                  data-bs-target="#pills-text" type="button" role="tab" aria-controls="pills-text" aria-selected="true"
                   (click)="selectedTab('text')"><i class="bi bi-card-text"></i></button>
               </li>
               <li class="nav-item fs-3" role="presentation">
-                <button class="nav-link" id="pills-image-tab" data-bs-toggle="pill" data-bs-target="#pills-image"
-                  type="button" role="tab" aria-controls="pills-image" aria-selected="false"
-                  (click)="selectedTab('image')"><i class="bi bi-card-image"></i></button>
+                <button class="nav-link" id="pills-image-tab" title="image tab" data-bs-toggle="pill"
+                  data-bs-target="#pills-image" type="button" role="tab" aria-controls="pills-image"
+                  aria-selected="false" (click)="selectedTab('image')"><i class="bi bi-card-image"></i></button>
               </li>
               <li class="nav-item fs-3" role="presentation">
-                <button class="nav-link" id="pills-video-tab" data-bs-toggle="pill" data-bs-target="#pills-video"
-                  type="button" role="tab" aria-controls="pills-video" aria-selected="false"
-                  (click)="selectedTab('video')"><i class="bi bi-play-btn"></i></button>
+                <button class="nav-link" id="pills-video-tab" title="video tab" data-bs-toggle="pill"
+                  data-bs-target="#pills-video" type="button" role="tab" aria-controls="pills-video"
+                  aria-selected="false" (click)="selectedTab('video')"><i class="bi bi-play-btn"></i></button>
               </li>
               <li class="nav-item fs-3" role="presentation">
-                <button class="nav-link" id="pills-position-tab" data-bs-toggle="pill" data-bs-target="#pills-position"
-                  type="button" role="tab" aria-controls="pills-position" aria-selected="false"
-                  (click)="selectedTab('position')"><i class="bi bi-cursor"></i></button>
+                <button class="nav-link" id="pills-position-tab" title="position tab" data-bs-toggle="pill"
+                  data-bs-target="#pills-position" type="button" role="tab" aria-controls="pills-position"
+                  aria-selected="false" (click)="selectedTab('position')"><i class="bi bi-cursor"></i></button>
               </li>
               <li class="nav-item ms-auto fs-3" role="presentation">
                 <button class="nav-link" id="delayedSquealsTab" #delayedSquealsTab data-bs-toggle="collapse"
-                  data-bs-target="#delayedSqueal" type="button" role="tab" aria-controls="delayedSqueal"
-                  aria-selected="false" aria-expanded="false" (click)="toggleScheduled()"
+                  data-bs-target="#delayedSqueal" title="delay settings tab" type="button" role="tab"
+                  aria-controls="delayedSqueal" aria-selected="false" aria-expanded="false" (click)="toggleScheduled()"
                   [class.bg-primary]="delayedSquealsTab.getAttribute('aria-expanded') === 'true'"
                   [class.text-white]="delayedSquealsTab.getAttribute('aria-expanded') === 'true'"><i
                     class="bi bi-clock"></i></button>
@@ -56,7 +56,8 @@
                   <!--TODO cambiare #accordionExample-->
                   <label for="delayedSquealType" class="form-label m-0 mt-2">Type of delayed squeal</label>
                   <div class="input-group">
-                    <select #delayedSquealType class="form-select" aria-label="Default select example">
+                    <select #delayedSquealType id="delayedSquealType" class="form-select"
+                      aria-label="Default select example">
                       <option value="postPeriodicallyForLimitedTimes" default>Post
                         every 'tickRate' for a 'repeat' number
                         of times
@@ -166,8 +167,8 @@
               <!--image-->
               <div class="mb-3">
                 <label for="imageInput" class="form-label">Image input</label>
-                <input class="form-control" type="file" #imageInput accept="image/*" name="image"
-                  (change)="onFileSelected($event)">
+                <input class="form-control" placeholder="Upload Image here" title="image input" type="file" #imageInput
+                  id="imageInput" accept="image/*" name="image" (change)="onFileSelected($event)">
               </div>
               <!--End image-->
             </div>
@@ -175,8 +176,8 @@
               <!--video-->
               <div class="mb-3">
                 <label for="videoInput" class="form-label">Video input</label>
-                <input class="form-control" type="file" #videoInput accept="video/*" name="video"
-                  (change)="onFileSelected($event)">
+                <input class="form-control" placeholder="Upload Video here" title="video input" type="file" #videoInput
+                  id="videoInput" accept="video/*" name="video" (change)="onFileSelected($event)">
               </div>
               <!--End video-->
             </div>

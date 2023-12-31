@@ -121,6 +121,7 @@ export class SearchComponent {
         .catch((err) => {
           console.log(err);
           this.loading = false;
+          this.loadMoreUsersButton = false;
           this.searchError = err?.error?.error;
           if (err?.error?.error != undefined) this.searchErrorShown = true;
           else this.searchErrorShown = false;
@@ -153,6 +154,7 @@ export class SearchComponent {
         .catch((err: any) => {
           console.log(err);
           this.loading = false;
+          this.loadMoreChannelsButton = false;
           this.searchError = err?.error?.error;
           if (err?.error?.error != undefined) this.searchErrorShown = true;
           else this.searchErrorShown = false;
@@ -184,6 +186,7 @@ export class SearchComponent {
         .catch((err: any) => {
           console.log(err);
           this.loading = false;
+          this.loadMoreSquealsButton = false;
           this.searchError = err?.error?.error;
           if (err?.error?.error != undefined) this.searchErrorShown = true;
           else this.searchErrorShown = false;

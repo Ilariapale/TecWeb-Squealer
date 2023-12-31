@@ -1,6 +1,6 @@
 <template>
     <select v-model="select_form" class="form-select form-select-xl vips-selection w-50 bg-primary"
-        aria-label=".form-select-sm example" v-on:change="updateVip">
+        aria-label=".form-select-sm example" name="form selector" v-on:change="updateVip">
         <option :value="'none'" selected>Select vip</option>
         <option v-for="vip in vips_usernames" :value="vip">{{ vip }}</option>
     </select>

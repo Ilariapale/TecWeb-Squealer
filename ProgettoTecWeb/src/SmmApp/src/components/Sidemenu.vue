@@ -110,31 +110,31 @@ export default {
         <ul class="nav nav-pills nav-flush flex-column text-center mb-auto" role="tablist" aria-orientation="vertical">
             <li class="nav-item nav-link active border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-home"
                 type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
-                <RouterLink :to="{ name: 'dashboard' }" class="nav-link  py-3  text-white">
+                <RouterLink :to="{ name: 'dashboard' }" title="dashboard" class="nav-link  py-3  text-white">
                     <i class="bi bi-house-door  m-0"></i>
                 </RouterLink>
             </li>
             <li class="nav-item nav-link  border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-VIPrequests"
                 type="button" role="tab" aria-controls="v-pills-VIPrequests" aria-selected="false">
-                <RouterLink :to="{ name: 'vip-requests' }" class="nav-link py-3 text-white">
+                <RouterLink :to="{ name: 'vip-requests' }" title="VIP requests" class="nav-link py-3 text-white">
                     <i class="bi bi-people-fill m-0"></i>
                 </RouterLink>
             </li>
             <li class="nav-item nav-link  border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-shop" type="button"
                 role="tab" aria-controls="v-pills-shop" aria-selected="false">
-                <RouterLink :to="{ name: 'shop' }" class="nav-link py-3 text-white">
+                <RouterLink :to="{ name: 'shop' }" title="shop" class="nav-link py-3 text-white">
                     <i class="bi bi-shop  m-0"></i>
                 </RouterLink>
             </li>
             <li class="nav-item nav-link  border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button"
                 role="tab" aria-controls="v-pills-home" aria-selected="false">
-                <a :href="'profile/' + user.username" class="nav-link py-3 text-white">
+                <a :href="'profile/' + user.username" title="profile smm" class="nav-link py-3 text-white">
                     <i class="bi bi-person-fill  m-0"></i>
                 </a>
             </li>
             <li v-if="vip.username" class="nav-item nav-link border-bottom" data-bs-toggle="pill"
                 data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home" aria-selected="false">
-                <a :href="'profile/' + vip.username" class="nav-link py-3 text-white">
+                <a :href="'profile/' + vip.username" title="pofile vip" class="nav-link py-3 text-white">
                     <i class="bi bi-arrow-90deg-left  m-0"></i>
                 </a>
             </li>

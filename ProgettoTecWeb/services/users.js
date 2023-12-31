@@ -158,7 +158,8 @@ module.exports = {
           data: { error: "'created_before' must be a valid date: YYYY-MM-DD." },
         };
       }
-      pipeline.push({ $match: { created_at: { $lte: new Date(date) + FULL_DAY_MINUS_ONE_MILLISECOND } } });
+      const datePlusConst = new Date(date).getTime() + FULL_DAY_MINUS_ONE_MILLISECOND;
+      pipeline.push({ $match: { created_at: { $lte: new Date(datePlusConst) } } });
     }
 
     //PROJECTION

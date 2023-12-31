@@ -73,7 +73,7 @@ export default {
         prices: {
             type: Object,
             required: true
-        },//openShop(item.id)
+        },
     },
     emits: ['updateChars']
 }
@@ -99,13 +99,6 @@ export default {
                     </div>
                 </div>
             </div>
-
-
-
-
-
-
-
 
             <div class="accordion accordion-flush mt-4" id="accordionQuota">
                 <div class="accordion-item almost-black"
@@ -136,11 +129,6 @@ export default {
                     </div>
                 </div>
             </div>
-
-
-
-
-
 
         </div>
     </div>

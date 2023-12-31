@@ -136,7 +136,8 @@ module.exports = {
           data: { error: `'created_before' must be a valid date: YYYY-MM-DD.` },
         };
       }
-      pipeline.push({ $match: { created_at: { $lte: new Date(date) + FULL_DAY_MINUS_ONE_MILLISECOND } } });
+      const datePlusConst = new Date(date).getTime() + FULL_DAY_MINUS_ONE_MILLISECOND;
+      pipeline.push({ $match: { created_at: { $lte: new Date(datePlusConst) } } });
     }
     if (is_official) {
       pipeline.push({ $match: { is_official: is_official } });
@@ -625,12 +626,6 @@ module.exports = {
     }
     // Modify editors or owner
     if (editors_array) {
-      if (!(user._id.equals(channel.owner) || user.account_type == "moderator")) {
-        return {
-          status: 403,
-          data: { error: `You don't have the permission to change editors in this channel.` },
-        };
-      }
       // Change editors
       let response = checkIfArrayIsValid(editors_array);
       if (!response.isValid) {
@@ -668,6 +663,16 @@ module.exports = {
 
       // Check if the editors exist
       const { added, removed } = addedAndRemoved(channel.editors, editorsIds);
+
+      // if (added.length >= 0 && removed.length >= 0) {
+      //   if (!(user._id.equals(channel.owner) || user.account_type == "moderator" || (removed.length == 1 && added.length == 0 && removed[0].equals(user._id)))) {
+      //     return {
+      //       status: 403,
+      //       data: { error: `You don't have the permission to change editors in this channel.` },
+      //     };
+      //   }
+      // }
+
       const addedUserPromises = added.map(async (user) => {
         await User.updateOne({ _id: user }, { $push: { editor_channels: channel._id } });
       });

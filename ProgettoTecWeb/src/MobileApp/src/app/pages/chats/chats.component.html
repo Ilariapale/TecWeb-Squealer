@@ -2,16 +2,20 @@
   <div>
     <div class="m-1 p-2 pt-3 row">
       <h1 class="col-auto">Private messages</h1>
-      <a *ngIf="!isGuest" class="btn btn-primary col-auto ms-auto px-3" data-bs-toggle="collapse" href="#newMessage"
-        role="button" aria-expanded="false" aria-controls="newMessage">+</a>
-      <div *ngIf="!isGuest" class="collapse multi-collapse" id="newMessage">
-        <div class="card card-body p-0">
-          <div class="input-group">
-            <span class="input-group-text" id="username-addon">@</span>
-            <input type="text" class="form-control" placeholder="Username" aria-label="Username"
-              aria-describedby="username-addon" [(ngModel)]="newChatUsername">
-            <button class="btn btn-outline-secondary" type="button" id="send-button" (click)="newChat()"><i
-                class="bi bi-send-plus"></i></button>
+      <div *ngIf="!isGuest" class="col-auto ms-auto d-flex justify-content-center align-items-center">
+        <a class="btn btn-primary" data-bs-toggle="collapse" href="#newMessage" role="button" aria-expanded="false"
+          aria-controls="newMessage">+</a>
+      </div>
+      <div *ngIf="!isGuest" class="row d-flex justify-content-end">
+        <div class="collapse multi-collapse col col-md-auto" id="newMessage">
+          <div class="card card-body p-0">
+            <div class="input-group">
+              <span class="input-group-text" id="username-addon">@</span>
+              <input type="text" name="new chat input" class="form-control" placeholder="Username" aria-label="Username"
+                aria-describedby="username-addon" [(ngModel)]="newChatUsername">
+              <button class="btn btn-outline-secondary" type="button" title="send button" id="send-button"
+                (click)="newChat()"><i class="bi bi-send-plus"></i></button>
+            </div>
           </div>
         </div>
       </div>

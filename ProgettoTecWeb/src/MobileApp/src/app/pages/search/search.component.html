@@ -9,8 +9,8 @@
     </div>
     <form class="input-group col" (ngSubmit)="sendSearch()">
       <input type="text" class="form-control" [placeholder]="placeholder" aria-label="Recipient's username"
-        aria-describedby="searchButton" [(ngModel)]="searchInput">
-      <button class="btn btn-primary" type="button" id="searchButton"
+        aria-describedby="searchButton" name="username input" [(ngModel)]="searchInput">
+      <button class="btn btn-primary" type="button" title="search button" id="searchButton"
         [disabled]="selectedOption === 'user-search' && isGuest" type="submit"><i class="bi bi-search"></i></button>
     </form>
     <div class="col-1 col-md-4"></div>
@@ -64,15 +64,15 @@
                 <li class="list-group-item p-2">
                   <div class="input-group flex-nowrap pb-2">
                     <span class="input-group-text col-6" id="user-max_squeals">Max Squeals</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Max Squeals"
-                      aria-label="Max Squeals" aria-describedby="Maximum number of squeals the accounts have"
-                      [(ngModel)]="max_squeals">
+                    <input type="number" min="0" class="form-control col-6" name="max number of squeals"
+                      placeholder="Max Squeals" aria-label="Max Squeals"
+                      aria-describedby="Maximum number of squeals the accounts have" [(ngModel)]="max_squeals">
                   </div>
                   <div class="input-group flex-nowrap">
                     <span class="input-group-text col-6" id="user-min_squeals">Min Squeals</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Min Squeals"
-                      aria-label="Min Squeals" aria-describedby="Minimum number of squeals the accounts have"
-                      [(ngModel)]="min_squeals">
+                    <input type="number" min="0" class="form-control col-6" name="min number of squeals"
+                      placeholder="Min Squeals" aria-label="Min Squeals"
+                      aria-describedby="Minimum number of squeals the accounts have" [(ngModel)]="min_squeals">
                   </div>
                 </li>
 
@@ -101,13 +101,13 @@
 
                 <li class="list-group-item p-2">
                   <div class="input-group">
-                    <select class="form-select form-select-sm" aria-label="Sort order"
+                    <select class="form-select form-select-sm" name="sort order" aria-label="Sort order"
                       aria-describedby="Search in the database ordering in:" [(ngModel)]="sort_order">
                       <option value="none" selected>Sort Order</option>
                       <option value="desc">Desc</option>
                       <option value="asc">Asc</option>
                     </select>
-                    <select class="form-select form-select-sm" aria-label="Sort by"
+                    <select class="form-select form-select-sm" name="sort by" aria-label="Sort by"
                       aria-describedby="Search in the database ordering by:" [(ngModel)]="sort_by">
                       <option value="none" selected>Sort By</option>
                       <option value="username">Username</option>
@@ -138,42 +138,42 @@
                 <li class="list-group-item p-2">
                   <div class="input-group flex-nowrap pb-2">
                     <span class="input-group-text col-6" id="channel-max_squeals">Max Squeals</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Max Squeals"
-                      aria-label="Max Squeals" aria-describedby="Maximum number of squeals the channels have"
-                      [(ngModel)]="max_squeals">
+                    <input type="number" min="0" class="form-control col-6" name="max number of squeals"
+                      placeholder="Max Squeals" aria-label="Max Squeals"
+                      aria-describedby="Maximum number of squeals the channels have" [(ngModel)]="max_squeals">
                   </div>
                   <div class="input-group flex-nowrap">
                     <span class="input-group-text col-6" id="channel-min_squeals">Min Squeals</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Min Squeals"
-                      aria-label="Min Squeals" aria-describedby="Minimum number of squeals the channels have"
-                      [(ngModel)]="min_squeals">
+                    <input type="number" min="0" class="form-control col-6" name="min number of squeals"
+                      placeholder="Min Squeals" aria-label="Min Squeals"
+                      aria-describedby="Minimum number of squeals the channels have" [(ngModel)]="min_squeals">
                   </div>
                 </li>
                 <li class="list-group-item p-2">
                   <div class="input-group flex-nowrap pb-2">
                     <span class="input-group-text col-6" id="channel-max_subscribers">Max Subs</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Max Subscribers"
-                      aria-label="Max Subscribers" aria-describedby="Maximum number of subscribers the channels have"
-                      [(ngModel)]="max_subscribers">
+                    <input type="number" min="0" class="form-control col-6" name="max number of sbscribers"
+                      placeholder="Max Subscribers" aria-label="Max Subscribers"
+                      aria-describedby="Maximum number of subscribers the channels have" [(ngModel)]="max_subscribers">
                   </div>
                   <div class="input-group flex-nowrap">
                     <span class="input-group-text col-6" id="channel-min_subscribers">Min Subs</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Min Subscribers"
-                      aria-label="Min Subscribers" aria-describedby="Minimum number of subscribers the channels have"
-                      [(ngModel)]="min_subscribers">
+                    <input type="number" min="0" class="form-control col-6" name="min number of subscribers"
+                      placeholder="Min Subscribers" aria-label="Min Subscribers"
+                      aria-describedby="Minimum number of subscribers the channels have" [(ngModel)]="min_subscribers">
                   </div>
                 </li>
 
                 <li class="list-group-item p-2">
                   <div class="input-group">
 
-                    <select class="form-select form-select-sm" aria-label="Sort order"
+                    <select class="form-select form-select-sm" name="sort order" aria-label="Sort order"
                       aria-describedby="Search in the database ordering in:" [(ngModel)]="sort_order">
                       <option value="none" selected>Sort Order</option>
                       <option value="desc">Desc</option>
                       <option value="asc">Asc</option>
                     </select>
-                    <select class="form-select form-select-sm" aria-label="Sort by"
+                    <select class="form-select form-select-sm" name="sort by" aria-label="Sort by"
                       aria-describedby="Search in the database ordering by:" [(ngModel)]="sort_by">
                       <option value="none" selected>Sort By</option>
                       <option value="name">Name</option>
@@ -199,7 +199,7 @@
                 <li class="list-group-item p-2">
                   <div class="input-group">
 
-                    <select class="form-select form-select-sm" aria-label="Sort order"
+                    <select class="form-select form-select-sm" name="sort order" aria-label="Sort order"
                       aria-describedby="Search in the database ordering in:" [(ngModel)]="content_type">
                       <option value="none" selected>Content type</option>
                       <option value="text">Text</option>
@@ -235,21 +235,21 @@
                 <li class="list-group-item p-2">
                   <div class="input-group flex-nowrap">
                     <span class="input-group-text col-6" id="squeal-min_reactions">Min Reactions</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Min Reactions"
-                      aria-label="Min Reactions" aria-describedby="Minimum number of reactions the squeals have"
-                      [(ngModel)]="min_reactions">
+                    <input type="number" min="0" class="form-control col-6" name="min number of reactions"
+                      placeholder="Min Reactions" aria-label="Min Reactions"
+                      aria-describedby="Minimum number of reactions the squeals have" [(ngModel)]="min_reactions">
                   </div>
                 </li>
                 <li class="list-group-item p-2">
                   <div class="input-group flex-nowrap pb-2">
                     <span class="input-group-text col-6" id="squeal-max_balance">Max Balance</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Max Balance"
+                    <input type="number" min="0" class="form-control col-6" name="max balance" placeholder="Max Balance"
                       aria-label="Max Balance" aria-describedby="Maximum number of balance the squeals have"
                       [(ngModel)]="max_balance">
                   </div>
                   <div class="input-group flex-nowrap">
                     <span class="input-group-text col-6" id="squeal-min_balance">Min Balance</span>
-                    <input type="number" min="0" class="form-control col-6" placeholder="Min Balance"
+                    <input type="number" min="0" class="form-control col-6" name="min balance" placeholder="Min Balance"
                       aria-label="Min Balance" aria-describedby="Minimum number of balance the squeals have"
                       [(ngModel)]="min_balance">
                   </div>
@@ -258,13 +258,13 @@
                 <li class="list-group-item p-2">
                   <div class="input-group">
 
-                    <select class="form-select form-select-sm" aria-label="Sort order"
+                    <select class="form-select form-select-sm" name="sort order" aria-label="Sort order"
                       aria-describedby="Search in the database ordering in:" [(ngModel)]="sort_order">
                       <option value="none" selected>Sort Order</option>
                       <option value="desc">Desc</option>
                       <option value="asc">Asc</option>
                     </select>
-                    <select class="form-select form-select-sm" aria-label="Sort by"
+                    <select class="form-select form-select-sm" name="sort by" aria-label="Sort by"
                       aria-describedby="Search in the database ordering by:" [(ngModel)]="sort_by">
                       <option value="none" selected>Sort By</option>
                       <option value="reactions">Reactions</option>

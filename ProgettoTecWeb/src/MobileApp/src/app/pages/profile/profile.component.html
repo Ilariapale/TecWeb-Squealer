@@ -17,8 +17,9 @@
         </div>
         <!---->
         <span *ngIf="mySelf" class="col d-flex flex-row-reverse">
-          <button type="button" class="btn bi bi-gear h-50 no-overflow" [class.text-light]="getDarkMode()=='dark-theme'"
-            data-bs-toggle="modal" data-bs-target="#settingsModal"></button>
+          <button type="button" title="profile settings" class="btn bi bi-gear h-50 no-overflow"
+            [class.text-light]="getDarkMode()=='dark-theme'" data-bs-toggle="modal"
+            data-bs-target="#settingsModal"></button>
         </span>
         <span *ngIf="user.professional_type=='SMM' && !mySelf && !alreadyGotSMM && amVip"
           class="col d-flex flex-row-reverse">
@@ -46,8 +47,8 @@
       <span class="visually-hidden">Loading...</span>
     </i>
     <div *ngIf="lastSquealLoaded>=0" class=" d-flex justify-content-center align-items-center py-2">
-      <button (click)="loadMoreSqueals()" type=" button" class="btn btn-outline-secondary rounded-pill"><i
-          class="bi bi-arrow-clockwise"></i></button>
+      <button (click)="loadMoreSqueals()" type="button" title="load more"
+        class="btn btn-outline-secondary rounded-pill"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
     <!-------------------------------------------------------->
     <!-- Modal -->

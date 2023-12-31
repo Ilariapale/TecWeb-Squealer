@@ -3,12 +3,11 @@
   <div class="row justify-content-center of-vis">
     <div class="col-12 col-md-6 of-vis">
       <div class="squeal card text-center shadow-0 of-vis" [class]="getDarkMode()">
-        <div class=" bg-image hover-overlay ripple">
-          <!-- <img src="../../assets/imgs/vulture-306727_960_720.webp" class="img-fluid" /> -->
+        <!-- <div class=" bg-image hover-overlay ripple">
           <a href="#!">
             <div class="mask" style="background-color: rgba(251, 251, 251, 0.15)"></div>
           </a>
-        </div>
+        </div> -->
 
         <div class="card-header">
           <div class="row">
@@ -39,7 +38,7 @@
 
           <div *ngIf="squeal.content_type == 'image'" class="card-img-top ">
             <img [src]="squeal.content?.startsWith('https')?squeal.content:('media/image/'+squeal.content)"
-              class="img-fluid" onerror="this.src='/../media/image/not-found.png'" />
+              alt="Uploaded image" class="img-fluid" onerror="this.src='/../media/image/not-found.png'" />
           </div>
           <div *ngIf="squeal.content_type == 'video'">
             <video controls [poster]="'media/thumbnail/'+squeal.content" style="max-width: 100%; height: auto;"
@@ -57,7 +56,7 @@
             <div class="row flex-nowrap justify-content-between d-flex align-items-center my-2 buttons-container">
 
               <div class="col-5 px-1">
-                <button id="comment_button" type="button" title="toggle comments section"
+                <button [id]="'comment_button'+squeal._id" type="button" title="toggle comments section"
                   class="btn btn-secondary comments btn-rounded px-2" (click)="isGuest?null:toggleComments()"
                   data-bs-toggle="button" [disabled]="isGuest">
                   <i class="bi bi-chat-dots-fill"></i>
@@ -147,8 +146,8 @@
             <!-- Add more comments form -->
 
             <form class="input-group mb-3">
-              <input type="text" [(ngModel)]="newCommentText" class="form-control" placeholder="Insert your comment..."
-                aria-label="Recipient's username" aria-describedby="button-addon2">
+              <input type="text" [(ngModel)]="newCommentText" class="form-control" name="squeal comment"
+                placeholder="Insert your comment..." aria-label="Recipient's username" aria-describedby="button-addon2">
               <button class="btn btn-outline-secondary" type="submit" (click)="addComment()"
                 id="button-addon2">Post</button>
             </form>

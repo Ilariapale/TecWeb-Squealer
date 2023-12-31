@@ -111,14 +111,15 @@ module.exports = {
       pipeline.push({ $match: { created_at: { $gte: new Date(date) } } });
     }
     if (created_before) {
-      const date = Date.parse(created_before) + FULL_DAY_MINUS_ONE_MILLISECOND;
+      const date = Date.parse(created_before);
       if (isNaN(date)) {
         return {
           status: 400,
           data: { error: `Invalid date format.` },
         };
       }
-      pipeline.push({ $match: { created_at: { $lte: new Date(date) } } });
+      const datePlusConst = new Date(date).getTime() + FULL_DAY_MINUS_ONE_MILLISECOND;
+      pipeline.push({ $match: { created_at: { $lte: new Date(datePlusConst) } } });
     }
     if (keywords) {
       let keywordsArray = keywords;

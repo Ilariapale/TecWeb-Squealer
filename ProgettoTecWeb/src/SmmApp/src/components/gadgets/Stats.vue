@@ -3,29 +3,30 @@
         <div class="card-body p-2">
             <ul class="nav nav-pills mb-2" id="pills-tab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link fs-3 " id="pills-overview-tab" data-bs-toggle="pill"
+                    <button class="nav-link fs-3 " title="overview tab" id="pills-overview-tab" data-bs-toggle="pill"
                         data-bs-target="#pills-overview" type="button" role="tab" aria-controls="pills-overview"
                         aria-selected="true">
                         <i class="bi bi-bar-chart-line"></i><!--Squeal stats-->
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link fs-3" id="pills-top-squeals-tab" data-bs-toggle="pill"
+                    <button class="nav-link fs-3" title="top squeals tab" id="pills-top-squeals-tab" data-bs-toggle="pill"
                         data-bs-target="#pills-top-squeals" type="button" role="tab" aria-controls="pills-top-squeals"
                         aria-selected="false">
                         <i class="bi bi-trophy-fill"></i><!--Top squeals-->
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link fs-3" id="pills-history-tab" data-bs-toggle="pill"
+                    <button class="nav-link fs-3" title="histoy tab" id="pills-history-tab" data-bs-toggle="pill"
                         data-bs-target="#pills-history" type="button" role="tab" aria-controls="pills-history"
                         aria-selected="false">
                         <i class="bi bi-calendar2-week"></i><!--Yearly activity-->
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link fs-3" id="pills-charts-tab" data-bs-toggle="pill" data-bs-target="#pills-charts"
-                        type="button" role="tab" aria-controls="pills-charts" aria-selected="false">
+                    <button class="nav-link fs-3" title="charts tab" id="pills-charts-tab" data-bs-toggle="pill"
+                        data-bs-target="#pills-charts" type="button" role="tab" aria-controls="pills-charts"
+                        aria-selected="false">
                         <i class="bi bi-graph-up-arrow"></i><!--Overview-->
                     </button>
                 </li>

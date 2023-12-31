@@ -2,8 +2,9 @@
 
   <div class="m-1 p-2 pt-3 row">
     <h1 class="col-auto ps-1">Channel Manager</h1>
-    <a *ngIf="!isGuest" class="btn btn-primary col-auto ms-auto d-flex justify-content-center align-items-center"
-      data-bs-toggle="modal" href="#toggleCreateNewChannel" role="button"><i class="bi bi-plus"></i></a>
+    <div *ngIf="!isGuest" class="col-auto ms-auto d-flex justify-content-center align-items-center">
+      <a class="btn btn-primary" data-bs-toggle="modal" href="#toggleCreateNewChannel" role="button">+</a>
+    </div>
   </div>
   <div *ngIf="errorCreation" name="error message" class="alert alert-danger mt-3">{{ errorCreation }}</div>
   <div *ngIf="successCreation" name="success message" class="alert alert-success mt-3">{{ successCreation }}
@@ -34,8 +35,8 @@
             <div class="col-1"></div>
             <div class="toast show m-1 col col-md-2 clickable" [class.dark-toast]="getDarkMode()=='dark-theme'"
               role="alert" aria-live="assertive" aria-atomic="true">
-              <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'" data-bs-toggle="modal"
-                data-bs-target="#owndedChannelModif" (click)="selectChannel(channel)">
+              <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'"
+                (click)="goToPage('/channel/'+channel._id)">
                 <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
                   aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
                   <rect width="100%" height="100%" [ngStyle]="{ 'fill': getColor(channel.is_blocked) }"></rect>
@@ -43,7 +44,8 @@
                 <strong class="me-auto">{{channel.name}}</strong>
                 <small>{{channel.subscribers.length}} Subscribers</small>
               </div>
-              <div class="toast-body">
+              <div class="toast-body" data-bs-toggle="modal" data-bs-target="#owndedChannelModif"
+                (click)="selectChannel(channel)">
                 {{channel.description}}
               </div>
             </div>
@@ -80,9 +82,9 @@
           <div aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center row">
             <div class="col-1"></div>
             <div class="toast show m-1 col col-md-2 clickable" [class.dark-toast]="getDarkMode()=='dark-theme'"
-              role="alert" aria-live="assertive" aria-atomic="true" data-bs-toggle="modal"
-              data-bs-target="#editorChannelModif" (click)="selectChannel(channel)">
-              <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'">
+              role="alert" aria-live="assertive" aria-atomic="true">
+              <div class="toast-header" [class.dark-toast]="getDarkMode()=='dark-theme'"
+                (click)="goToPage('/channel/'+channel._id)">
                 <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg"
                   aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
                   <rect width="100%" height="100%" [ngStyle]="{ 'fill': getColor(channel.is_blocked) }"></rect>
@@ -90,7 +92,8 @@
                 <strong class="me-auto">{{channel.name}}</strong>
                 <small>{{channel.subscribers.length}} Subscribers</small>
               </div>
-              <div class="toast-body">
+              <div class="toast-body" data-bs-toggle="modal" data-bs-target="#editorChannelModif"
+                (click)="selectChannel(channel)">
                 {{channel.description}}
               </div>
             </div>
@@ -114,10 +117,10 @@
           <div class="modal-body" [class.border-secondary]="getDarkMode()=='dark-theme'">
             <form>
               <div class="mb-3">
-                <label for="channel-name" class="col-form-label"></label>
-                <input type="text" class="form-control" id="recipient-name"
+                <label for="newChannelName" class="col-form-label"></label>
+                <input type="text" class="form-control" id="newChannelName"
                   [class.border-secondary]="getDarkMode()=='dark-theme'"
-                  [class.text-light]="getDarkMode()=='dark-theme'" name="channelName" placeholder="§Channel name"
+                  [class.text-light]="getDarkMode()=='dark-theme'" name="new channel name" placeholder="§Channel name"
                   [(ngModel)]="newChannel.name" [class.bg-dark]="getDarkMode()=='dark-theme'">
               </div>
               <div class="mb-3">
@@ -138,19 +141,19 @@
           </div>
           <div class="modal-footer " [class.border-secondary]="getDarkMode()=='dark-theme'">
             <button class="btn btn-secondary" data-bs-dismiss="modal" data-bs-toggle="Close">Cancel</button>
-            <button class="btn btn-primary" data-bs-target="#toggleCreateNewChannel2"
+            <button class="btn btn-primary" data-bs-target="#confirmChannelCreation"
               data-bs-toggle="modal">Confirm</button>
           </div>
         </div>
       </div>
     </div>
-    <div class="modal fade" id="toggleCreateNewChannel2" aria-hidden="true"
-      aria-labelledby="toggleCreateNewChannelLabel2" tabindex="-1">
+    <div class="modal fade" id="confirmChannelCreation" aria-hidden="true" aria-labelledby="confirmChannelCreationLabel"
+      tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" [class.border-secondary]="getDarkMode()=='dark-theme'"
           [class.bg-dark]="getDarkMode()=='dark-theme'">
           <div class="modal-header" [class.border-secondary]="getDarkMode()=='dark-theme'">
-            <h1 class="modal-title fs-5" id="toggleCreateNewChannelLabel2">§{{newChannel.name}} creation confirmation
+            <h1 class="modal-title fs-5" id="confirmChannelCreationLabel">§{{newChannel.name}} creation confirmation
             </h1>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
@@ -186,13 +189,12 @@
             <div class="modal-body" [class.border-secondary]="getDarkMode()=='dark-theme'">
               <!--  BODY   -->
               <!-- Channel name-->
-
               <div class="input-group mb-3">
-                <span class="input-group-text tag" id="basic-addon1" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                <span class="input-group-text tag" id="channelName" [class.bg-dark]="getDarkMode()=='dark-theme'"
                   [class.border-secondary]="getDarkMode()=='dark-theme'"
                   [class.text-light]="getDarkMode()=='dark-theme'">§</span>
                 <input type="text" class="form-control" name="channel name" placeholder="Channel name"
-                  aria-label="channel name" aria-describedby="basic-addon1"
+                  aria-label="channel name" aria-describedby="channelName"
                   [class.border-secondary]="getDarkMode()=='dark-theme'"
                   [class.text-light]="getDarkMode()=='dark-theme'" [(ngModel)]="selectedChannel.name"
                   [class.bg-dark]="getDarkMode()=='dark-theme'">
@@ -209,18 +211,18 @@
               </div>
               <!-- New owner -->
               <div class="input-group my-3">
-                <span class="input-group-text tag" id="basic-addon1" [class.bg-dark]="getDarkMode()=='dark-theme'"
+                <span class="input-group-text tag" id="ownerName" [class.bg-dark]="getDarkMode()=='dark-theme'"
                   [class.border-secondary]="getDarkMode()=='dark-theme'"
                   [class.text-light]="getDarkMode()=='dark-theme'">New owner</span>
                 <input type="text" name="owner username" class="form-control" placeholder="Username"
-                  aria-label="owner username" aria-describedby="basic-addon1"
+                  aria-label="owner username" aria-describedby="ownerName"
                   [class.border-secondary]="getDarkMode()=='dark-theme'"
                   [class.text-light]="getDarkMode()=='dark-theme'" [(ngModel)]="selectedChannel.owner"
                   [class.bg-dark]="getDarkMode()=='dark-theme'">
               </div>
               <!-- Editors array -->
               <app-tag-input #editorInput1 [placeholder]="'Add an editor...'" [specialChar]="'@'"
-                [tags]="selectedEditors"></app-tag-input>
+                [tags]="selectedEditors" [id_modifier]="'owner'"></app-tag-input>
               <!--  END BODY   -->
               <div *ngIf="errorMessage" name="error message" class="alert alert-danger mt-3">{{ errorMessage }}</div>
               <div *ngIf="successMessage" name="success message" class="alert alert-success mt-3">{{ successMessage }}
@@ -254,11 +256,11 @@
               <!--  BODY   -->
               <!-- Channel name-->
               <div class="input-group mb-3">
-                <span class="input-group-text tag" id="basic-addon2" [class.bg-dark]="getDarkMode()=='dark-theme'"
-                  [class.border-secondary]="getDarkMode()=='dark-theme'"
+                <span class="input-group-text tag" id="newChannelName_editors"
+                  [class.bg-dark]="getDarkMode()=='dark-theme'" [class.border-secondary]="getDarkMode()=='dark-theme'"
                   [class.text-light]="getDarkMode()=='dark-theme'">§</span>
                 <input type="text" class="form-control" placeholder="Channel name" name="channel name"
-                  aria-label="channel name" aria-describedby="basic-addon2"
+                  aria-label="channel name" aria-describedby="newChannelName_editors"
                   [class.border-secondary]="getDarkMode()=='dark-theme'"
                   [class.text-light]="getDarkMode()=='dark-theme'" [(ngModel)]="selectedChannel.name"
                   [class.bg-dark]="getDarkMode()=='dark-theme'">
@@ -275,7 +277,7 @@
               </div>
               <!-- Editors array -->
               <app-tag-input #editorInput2 [placeholder]="'Add an editor...'" [specialChar]="'@'"
-                [tags]="selectedEditors"></app-tag-input>
+                [tags]="selectedEditors" [id_modifier]="'editors'"></app-tag-input>
               <!--  END BODY   -->
 
               <div *ngIf="errorMessage" name="error message" class="alert alert-danger mt-3">{{ errorMessage }}</div>
