@@ -4,11 +4,12 @@ const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
 
 router.get("/", verifyToken, async (req, res, next) => {
+  const is_official = req.query.is_official === "true" ? true : req.query.is_official === "false" ? false : undefined;
   let options = {
     name: req.query.name,
     created_after: req.query.created_after,
     created_before: req.query.created_before,
-    is_official: !req.isTokenValid || req.query.is_official === "true",
+    is_official: is_official != undefined ? !req.isTokenValid || is_official : undefined, //!req.isTokenValid || req.query.is_official === "true",
     min_subscribers: req.query.min_subscribers,
     max_subscribers: req.query.max_subscribers,
     min_squeals: req.query.min_squeals,

@@ -110,7 +110,7 @@ module.exports = {
         };
       }
       if (sort_order === "desc") pipeline.push({ $match: { _id: { $lt: new mongoose.Types.ObjectId(last_loaded) } } });
-      pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
+      else pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
     }
 
     if (name) {
@@ -139,7 +139,7 @@ module.exports = {
       const datePlusConst = new Date(date).getTime() + FULL_DAY_MINUS_ONE_MILLISECOND;
       pipeline.push({ $match: { created_at: { $lte: new Date(datePlusConst) } } });
     }
-    if (is_official) {
+    if (is_official != undefined) {
       pipeline.push({ $match: { is_official: is_official } });
     }
 

@@ -93,6 +93,7 @@ const UserSchema = new mongoose.Schema({
     bought_monthly: { type: Number, default: 0 },
   },
   reaction_metrics: {
+    popularity_score: { type: Number, default: 0 },
     positive_squeals: { type: Number, default: 0 },
     negative_squeals: { type: Number, default: 0 },
     total_squeals: { type: Number, default: 0 },

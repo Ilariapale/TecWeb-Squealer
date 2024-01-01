@@ -54,6 +54,8 @@ module.exports = {
       min_balance,
       max_balance,
       is_in_official_channel,
+      recipient,
+      sender,
       sort_order,
       sort_by,
     } = options;
@@ -141,8 +143,34 @@ module.exports = {
     }
 
     //check if the request has specified is_in_official_channel
-    if (is_in_official_channel) {
+    if (is_in_official_channel != undefined) {
       pipeline.push({ $match: { is_in_official_channel: is_in_official_channel } });
+    }
+
+    if (recipient && recipient.replace(/\s/g, "").length > 0) {
+      let result = await findUser(recipient);
+      if (result.status >= 300) {
+        return {
+          status: 404,
+          data: { error: `Recipient not found.` },
+        };
+      }
+      const recipientId = result.data._id;
+      //check if the squeals found have the recipient in the recipients array
+      pipeline.push({ $match: { "recipients.users": recipientId } });
+    }
+
+    if (sender && sender.replace(/\s/g, "").length > 0) {
+      let result = await findUser(sender);
+      if (result.status >= 300) {
+        return {
+          status: 404,
+          data: { error: `Sender not found.` },
+        };
+      }
+      const senderId = result.data._id;
+      //check if the squeals found have the sender in the recipients array
+      pipeline.push({ $match: { user_id: senderId } });
     }
 
     //PROJECTION
@@ -262,7 +290,12 @@ module.exports = {
     //if the query returned some results, increment the impressions counter for each squeal
     const squealImpressionsPromises = [];
     for (let squeal of data) {
-      if (squeal.content_type != "deleted" && !reqSender?._id.equals(squeal.user_id) && !reqSender?.managed_accounts.includes(squeal.user_id))
+      if (
+        squeal.content_type != "deleted" &&
+        !reqSender?._id.equals(squeal.user_id) &&
+        !reqSender?.managed_accounts.includes(squeal.user_id) &&
+        reqSender?.account_type != "moderator"
+      )
         squealImpressionsPromises.push(Squeal.findByIdAndUpdate(squeal._id, { $inc: { impressions: 1 } }));
     }
     await Promise.all(squealImpressionsPromises);

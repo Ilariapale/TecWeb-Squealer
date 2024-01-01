@@ -76,7 +76,7 @@ module.exports = {
     const { username, last_loaded, created_after, created_before, max_squeals, min_squeals, account_type, professional_type, user_id, sort_order, sort_by } = options;
     let { pag_size } = options;
     const sort_orders = ["asc", "desc"];
-    const sort_types = ["username", "date", "squeals"];
+    const sort_types = ["username", "date", "squeals", "popularity"];
     const pipeline = [];
 
     if ((sort_order && !sort_by) || (!sort_order && sort_by)) {
@@ -94,6 +94,7 @@ module.exports = {
     }
 
     if (last_loaded) {
+      console.log(last_loaded);
       if (!mongooseObjectIdRegex.test(last_loaded)) {
         return {
           status: 400,
@@ -101,7 +102,7 @@ module.exports = {
         };
       }
       if (sort_order == "desc") pipeline.push({ $match: { _id: { $lt: new mongoose.Types.ObjectId(last_loaded) } } });
-      pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
+      else pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
     }
 
     //ACCOUNT TYPE
@@ -171,6 +172,7 @@ module.exports = {
         profile_picture: 1,
         created_at: 1,
         professional_type: 1,
+        "reaction_metrics.popularity_score": 1,
         account_type: 1,
         squeals_count: { $size: "$squeals.posted" },
         is_active: 1,
@@ -237,6 +239,7 @@ module.exports = {
       if (sort_by === "username") pipeline.push({ $sort: { username: order } });
       else if (sort_by === "date") pipeline.push({ $sort: { created_at: order } });
       else if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order } });
+      else if (sort_by === "popularity") pipeline.push({ $sort: { "reaction_metrics.popularity_score": order } });
     }
 
     //PAGE SIZE

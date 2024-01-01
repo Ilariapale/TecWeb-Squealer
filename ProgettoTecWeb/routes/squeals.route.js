@@ -7,6 +7,7 @@ const router = new express.Router();
 
 router.get("/", verifyToken, async (req, res, next) => {
   //if user is not logged in, filter only official channels
+  const is_official = req.query.is_in_official_channel === "true" ? true : req.query.is_in_official_channel === "false" ? false : undefined;
   let options = {
     content_type: req.query.content_type,
     created_after: req.query.created_after,
@@ -20,7 +21,9 @@ router.get("/", verifyToken, async (req, res, next) => {
     pag_size: req.query.pag_size,
     last_loaded: req.query.last_loaded,
     keywords: req.query.keywords,
-    is_in_official_channel: !req.isTokenValid || req.query.is_in_official_channel,
+    recipient: req.query.recipient,
+    sender: req.query.sender,
+    is_in_official_channel: is_official != undefined ? !req.isTokenValid || is_official : undefined,
     user_id: req.user_id,
   };
 

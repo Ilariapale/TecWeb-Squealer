@@ -16,7 +16,6 @@ import { TagInputComponent } from 'src/app/widgets/tag-input/tag-input.component
 export class ChannelManagerComponent {
   @ViewChild('editorInput1') editorComponent1!: TagInputComponent;
   @ViewChild('editorInput2') editorComponent2!: TagInputComponent;
-  //TODO quando la richiesta fallisce metti l'errore
   isGuest = false;
 
   successCreation: string = '';

@@ -181,9 +181,6 @@ const setRewards = async () => {
         monthly: -CHAR_QUOTA_REWARD * MONTHLY_CHAR_QUOTA,
       };
     } else {
-      if ((enoughNegative || enoughPositive || enoughVeryNegative || enoughVeryPositive) && DEBUG) {
-      }
-
       if (totalSqueals >= RESET_THRESHOLD) {
         reward = {
           daily: 0,
@@ -205,6 +202,7 @@ const setRewards = async () => {
             "char_quota.monthly": reward.monthly,
             "char_quota.earned_daily": reward.daily,
             "char_quota.earned_weekly": reward.weekly,
+            "reaction_metrics.popularity_score": (positiveSqueals - negativeSqueals) / totalSqueals,
           },
           $set: {
             "reaction_metrics.last_checkpoint": new Date(),
