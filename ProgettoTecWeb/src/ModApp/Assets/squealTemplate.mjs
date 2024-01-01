@@ -1,9 +1,9 @@
 // File: squealTemplate.js
 
-export const comment_collapse = (squeal) => `
+export const reported_squeal_comment_collapse = (squeal) => `
 `;
 
-export const squeal_content = (squeal) => {
+export const reported_squeal_content = (squeal) => {
   if (squeal.content_type === "text") {
     return `<p class="card-text">${squeal.content}</p>`;
   } else if (squeal.content_type === "image") {
@@ -17,7 +17,64 @@ export const squeal_content = (squeal) => {
     return `<p class="card-text">[deleted]</p>`;
   }
 };
-export const squeal_card = (squeal) => {
+
+export const squeal_in_list_content = (squeal) => {
+  if (squeal.content_type === "text") return `<p class="card-text">${squeal.content}</p>`;
+  return `<p class="card-text">[${squeal.content_type}]</p>`;
+};
+
+export const official_squeal_in_list = (squeal) => {
+  if (squeal.is_in_official_channel) {
+    return `<i class="bi bi-award-fill text-warning"></i>`;
+  } else {
+    return ``;
+  }
+};
+
+export const squeal_in_list = (squeal) => {
+  const div = document.createElement("div");
+  div.id = `squeal_in_list-${squeal._id}`;
+  div.className = "row mt-1 col-11";
+  div.innerHTML = `
+    <div class="card clickable mb-3 mt-2 datacard ">
+        <div id="squeal-body-${squeal._id}" class="row g-0">
+            <div class="col">
+                <div class="card-body">
+                    <div class="d-flex"><b class="me-auto">@${squeal?.username || "username"}</b>${official_squeal_in_list(squeal)}</div>
+                    <div class="text-muted">Created: ${new Date(squeal?.created_at).toLocaleString()}</div>
+                    <div>${squeal_in_list_content(squeal)}</div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    `;
+  return div;
+};
+
+export const squeal_card = (squeal) => `
+
+<div class="card mb-3 mt-4 datacard col-11 ">
+
+<div class="col">
+    <div class="card-body">
+        <h3 class="card-title row">
+            <div class="col-md-1 col-2">
+                <img src="./../media/propic/squealer.png"
+                class="img-fluid rounded-start rounded" onerror="if (this.src != 'Assets/logo.png') this.src = 'assets/logo.png'"
+                alt="squealer">
+            </div>
+            @${squeal.username || "Squeal User"}
+        </h3>
+        ${squeal.content}
+        <h6 class="card-subtitle mb-2 text-muted">Created: ${new Date(squeal?.created_at).toLocaleString()}</h6>
+        <div class="row-1">
+            <p class="text-danger m-0" id="squealErrorMessage"></p>
+        </div>
+    </div>
+`;
+
+export const reported_squeal_card = (squeal) => {
   const div = document.createElement("div");
   div.id = `squeal-${squeal._id}`;
   div.className = "container pb-3";
@@ -44,7 +101,7 @@ export const squeal_card = (squeal) => {
                 </a>
                 <div class="card-body p-2">
                     <h5 class="card-title"><a class="text-dark" href="/profile/${squeal.username}" target="_blank">@${squeal.username || username}</a></h5>
-                    ${squeal_content(squeal)}
+                    ${reported_squeal_content(squeal)}
                     <div class="card-icons container">
                         <div class="row flex-nowrap justify-content-between d-flex align-items-center my-2">
                             <div class="col-5 px-1">
@@ -65,14 +122,14 @@ export const squeal_card = (squeal) => {
                 </div>
             </div>
         </div>
-        ${squeal_card_actions(squeal)}
+        ${reported_squeal_card_actions(squeal)}
     </div>
     <hr>
 `;
   return div;
 };
 
-export const squeal_card_actions = (squeal) => `
+export const reported_squeal_card_actions = (squeal) => `
 <div class="col-2 col-md-4 d-flex flex-column justify-content-center align-items-center">
     <div class="d-flex row">
         <button type="button" class="btn btn-outline-danger btn-outline-lg px-4 mb-5 flex-fill" id="banButton-${squeal._id}">BAN USER</button>
@@ -82,3 +139,22 @@ export const squeal_card_actions = (squeal) => `
     </div>
 </div>
 `;
+
+/*
+<ul class="list-group">
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    A list item
+    <span class="badge bg-primary rounded-pill">14</span>
+  </li>
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    A second list item
+    <span class="badge bg-primary rounded-pill">2</span>
+  </li>
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    A third list item
+    <span class="badge bg-primary rounded-pill">1</span>
+  </li>
+</ul>
+
+
+*/

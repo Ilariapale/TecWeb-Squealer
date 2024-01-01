@@ -3,6 +3,53 @@ import * as userTemplates from "./userTemplate.mjs";
 import * as squealTemplates from "./squealTemplate.mjs";
 import * as channelTemplates from "./channelTemplate.mjs";
 
+/*
+Il moderator dashboard è la parte dell'applicazione che permette agli
+amministratori di Squealer di gestire i dati degli utenti e abilitare e configurare i
+servizi e i prodotti. Può accedere solo un utente moderatore Squealer.
+
+E' un'applicazione web tradizionale, solo online, principalmente per PC.
+
+• Utenti. Il moderatore può elencare gli utenti e filtrarli per nome, tipo e popolarità.
+Può bloccare e riabilitare gli utenti a mano. Può aumentare a mano i caratteri residui
+per singoli utenti.
+
+• Squeal: il moderatore può elencare i post e filtrarli per mittente, data e destinatari.
+Può cambiare a mano i destinatari (ad esempio, aggiungere §CANALI ufficiali
+Squealer). Può cambiare a mano il numero di reazioni positive e/o negative.
+
+• §canali: il moderatore può elencare i §canali degli utenti e filtrarli per proprietari,
+numero di post e popolarità. Può cambiare a mano i proprietari ed il nome. Può
+bloccare un §canale.
+
+• §CANALI: il moderatore può elencare i §CANALI ufficiali Squealer, aggiungerne,
+toglierne e cambiarne la descrizione (utile per gli altri moderatori). Può aggiungere
+uno squeal ad un §CANALE o rimuoverlo in qualunque momento. Può aggiungere
+una regola che attribuisce automaticamente un post ad un canale se soddisfa un
+criterio.Il moderator dashboard è la parte dell'applicazione che permette agli
+amministratori di Squealer di gestire i dati degli utenti e abilitare e configurare i
+servizi e i prodotti. Può accedere solo un utente moderatore Squealer.
+E' un'applicazione web tradizionale, solo online, principalmente per PC.
+
+• Utenti. Il moderatore può elencare gli utenti e filtrarli per nome, tipo e popolarità.
+Può bloccare e riabilitare gli utenti a mano. Può aumentare a mano i caratteri residui
+per singoli utenti.
+
+• Squeal: il moderatore può elencare i post e filtrarli per mittente, data e destinatari.
+Può cambiare a mano i destinatari (ad esempio, aggiungere §CANALI ufficiali
+Squealer). Può cambiare a mano il numero di reazioni positive e/o negative.
+
+• §canali: il moderatore può elencare i §canali degli utenti e filtrarli per proprietari,
+numero di post e popolarità. Può cambiare a mano i proprietari ed il nome. Può
+bloccare un §canale.
+
+• §CANALI: il moderatore può elencare i §CANALI ufficiali Squealer, aggiungerne,
+toglierne e cambiarne la descrizione (utile per gli altri moderatori). Può aggiungere
+uno squeal ad un §CANALE o rimuoverlo in qualunque momento. Può aggiungere
+una regola che attribuisce automaticamente un post ad un canale se soddisfa un
+criterio.
+*/
+
 const user = {
   local_user: JSON.parse(window.localStorage.getItem("user") || window.sessionStorage.getItem("user")) || undefined,
   auth: window.localStorage.getItem("Authorization") || window.sessionStorage.getItem("Authorization") || undefined,
@@ -20,39 +67,63 @@ const options = (auth, type, body) => ({
 });
 
 const DOMelements = {
+  daily_input: undefined,
+  weekly_input: undefined,
+  monthly_input: undefined,
+
+  usersForm: undefined,
   usernameInput: undefined,
-  channelInput: undefined,
-
-  userForm: undefined,
-  channelForm: undefined,
-
   userCard: undefined,
+  usersList: undefined,
+  usersSelectSortType: undefined,
+  usersSelectSortBy: undefined,
+  usersVipRadio: undefined,
+  usersSmmRadio: undefined,
+  usersVerifiedRadio: undefined,
+  usersStandardRadio: undefined,
+  usersLoadMoreButton: undefined,
+
+  channelsForm: undefined,
+  channelInput: undefined,
   channelCard: undefined,
+  channelsList: undefined,
+  channelsSelectSortType: undefined,
+  channelsSelectSortBy: undefined,
+  channelsOfficialRadio: undefined,
+  channelsUnofficialRadio: undefined,
+  channelsLoadMoreButton: undefined,
+
+  squealsForm: undefined,
+  squealInput: undefined,
+  squealSenderInput: undefined,
+  squealRecipientInput: undefined,
+  squealCard: undefined,
+  squealsList: undefined,
+  squealsSelectSortType: undefined,
+  squealsSelectSortBy: undefined,
+  squealsOfficialRadio: undefined,
+  squealsUnofficialRadio: undefined,
+  squealsLoadMoreButton: undefined,
 
   requestTab: undefined,
   reportsLoadMoreButton: undefined,
-
   reportedSquealsTab: undefined,
   requestsLoadMoreButton: undefined,
 
-  squealCardsDiv: undefined,
-
-  iframe: undefined,
+  reportedSquealCards: undefined,
 
   reportedSquealsForm: undefined,
   reportedSquealsSelectSortType: undefined,
   reportedSquealsSelectSortBy: undefined,
 
+  iframe: undefined,
   logoutButton: undefined,
-
-  daily_input: undefined,
-  weekly_input: undefined,
-  monthly_input: undefined,
 };
 
 const last_of_arrays = {
   last_reported_squeal: undefined,
-  last_user_request: [],
+  last_user_request: undefined,
+  last_user_list: undefined,
 };
 
 document.addEventListener("DOMContentLoaded", async function () {
@@ -82,41 +153,70 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   //DOM ELEMENTS ----------------------------------------------------------------------------------------
-
-  DOMelements.usernameInput = document.getElementById("usernameInput");
-  DOMelements.channelInput = document.getElementById("channelInput");
-
-  DOMelements.userForm = document.getElementById("userForm");
-  DOMelements.channelForm = document.getElementById("channelForm");
-
-  DOMelements.userCard = document.getElementById("userCard");
-  DOMelements.channelCard = document.getElementById("channelCard");
+  DOMelements.iframe = document.getElementById("iframe");
 
   DOMelements.requestTab = document.getElementById("nav-requests-tab");
-  DOMelements.reportedSquealsTab = document.getElementById("nav-squeals-tab");
-
-  DOMelements.iframe = document.getElementById("iframe");
+  DOMelements.reportedSquealsTab = document.getElementById("nav-reports-tab");
 
   DOMelements.reportsLoadMoreButton = document.getElementById("reportsLoadMoreButton");
   DOMelements.requestsLoadMoreButton = document.getElementById("requestsLoadMoreButton");
 
-  DOMelements.squealCardsDiv = document.getElementById("squealCards");
-
+  DOMelements.reportedSquealCards = document.getElementById("reportedSquealCards");
   DOMelements.reportedSquealsForm = document.getElementById("reportedSquealsForm");
   DOMelements.reportedSquealsSelectSortType = document.getElementById("reportedSquealsSelectSortType");
   DOMelements.reportedSquealsSelectSortBy = document.getElementById("reportedSquealsSelectSortBy");
 
+  DOMelements.usersForm = document.getElementById("usersForm");
+  DOMelements.usernameInput = document.getElementById("usernameInput");
+
+  DOMelements.userCard = document.getElementById("userCard");
+  DOMelements.usersList = document.getElementById("usersList");
+  DOMelements.usersSelectSortType = document.getElementById("usersSelectSortType");
+  DOMelements.usersSelectSortBy = document.getElementById("usersSelectSortBy");
+  DOMelements.usersVipRadio = document.getElementById("vip-radio");
+  DOMelements.usersSmmRadio = document.getElementById("smm-radio");
+  DOMelements.usersVerifiedRadio = document.getElementById("verified-radio");
+  DOMelements.usersStandardRadio = document.getElementById("standard-radio");
+  DOMelements.usersLoadMoreButton = document.getElementById("usersLoadMoreButton");
+
+  DOMelements.channelsForm = document.getElementById("channelsForm");
+  DOMelements.channelInput = document.getElementById("channelInput");
+  DOMelements.channelCard = document.getElementById("channelCard");
+  DOMelements.channelsList = document.getElementById("channelsList");
+  DOMelements.channelsSelectSortType = document.getElementById("channelsSelectSortType");
+  DOMelements.channelsSelectSortBy = document.getElementById("channelsSelectSortBy");
+  DOMelements.channelsOfficialRadio = document.getElementById("channels-official-radio");
+  DOMelements.channelsUnofficialRadio = document.getElementById("channels-unofficial-radio");
+  DOMelements.channelsLoadMoreButton = document.getElementById("channelsLoadMoreButton");
+
+  DOMelements.squealsForm = document.getElementById("squealsForm");
+  DOMelements.squealInput = document.getElementById("squealInput");
+  DOMelements.squealCard = document.getElementById("squealCard");
+  DOMelements.squealsList = document.getElementById("squealsList");
+  DOMelements.squealSenderInput = document.getElementById("squealSenderInput");
+  DOMelements.squealRecipientInput = document.getElementById("squealRecipientInput");
+  DOMelements.squealsSelectSortType = document.getElementById("squealsSelectSortType");
+  DOMelements.squealsSelectSortBy = document.getElementById("squealsSelectSortBy");
+  DOMelements.squealsLoadMoreButton = document.getElementById("squealsLoadMoreButton");
+  DOMelements.squealsOfficialRadio = document.getElementById("squeals-official-radio");
+  DOMelements.squealsUnofficialRadio = document.getElementById("squeals-unofficial-radio");
+
   DOMelements.logoutButton = document.getElementById("logout-button");
 
   //EVENT LISTENERS -------------------------------------------------------------------------------------
-  DOMelements.userForm.addEventListener("submit", async function (e) {
+  DOMelements.usersForm.addEventListener("submit", async function (e) {
     e.preventDefault();
-    await reloadUser().catch((error) => (DOMelements.userCard.innerHTML = "<div class='text-center text-danger h5 pt-3'>User not found</div>"));
+    await loadUsers();
   });
 
-  DOMelements.channelForm.addEventListener("submit", async function (e) {
+  DOMelements.channelsForm.addEventListener("submit", async function (e) {
     e.preventDefault();
-    await reloadChannel().catch((error) => (DOMelements.channelCard.innerHTML = "<div class='text-center text-danger h5 pt-3'>Channel not found</div>"));
+    await loadChannels();
+  });
+
+  DOMelements.squealsForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    await loadSqueals();
   });
 
   DOMelements.requestTab.addEventListener("click", async function (e) {
@@ -135,6 +235,18 @@ document.addEventListener("DOMContentLoaded", async function () {
     await loadRequests(true).catch((error) => alert(error));
   });
 
+  DOMelements.usersLoadMoreButton.addEventListener("click", async function (e) {
+    await loadUsers(true).catch((error) => alert(error));
+  });
+
+  DOMelements.channelsLoadMoreButton.addEventListener("click", async function (e) {
+    await loadChannels(true).catch((error) => alert(error));
+  });
+
+  DOMelements.squealsLoadMoreButton.addEventListener("click", async function (e) {
+    await loadSqueals(true).catch((error) => alert(error));
+  });
+
   DOMelements.reportedSquealsForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     DOMelements.reportsLoadMoreButton.style.display = "block";
@@ -151,10 +263,13 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   //-------------------------------FIRST PAGE FUNCTION-----------------------------------------------------------------
   await loadReportedSqueals().catch((error) => alert(error));
+  DOMelements.usersLoadMoreButton.style.display = "none";
+  DOMelements.channelsLoadMoreButton.style.display = "none";
+  DOMelements.squealsLoadMoreButton.style.display = "none";
 });
 
 //CHANNELS
-async function loadChannels(channel) {
+async function loadChannel(channel) {
   await getChannel(channel).then(async (channel) => {
     if (!channel) throw new Error("Channel not found");
     const channel_owner = await getUsername(channel.owner);
@@ -168,7 +283,7 @@ async function loadChannels(channel) {
     if (banButton) {
       banButton.addEventListener("click", async function () {
         await banChannel(channel._id, true).then(async () => {
-          await reloadChannel();
+          await reloadChannel(channel);
         });
       });
     }
@@ -176,7 +291,7 @@ async function loadChannels(channel) {
     if (unbanButton) {
       unbanButton.addEventListener("click", async function () {
         await banChannel(channel._id, false).then(async () => {
-          await reloadChannel();
+          await reloadChannel(channel);
         });
       });
     }
@@ -192,48 +307,97 @@ async function loadChannels(channel) {
   return channel;
 }
 
-async function reloadChannel() {
-  await loadChannels(DOMelements.channelInput.value).then((channel) => {
+async function reloadChannel(channel) {
+  await loadChannel(channel.name).then((channel) => {
     const banButton = document.getElementById("banChannelButton-" + channel._id) || undefined;
     const unbanButton = document.getElementById("unbanChannelButton-" + channel._id) || undefined;
     const deleteButton = document.getElementById("deleteChannelButton-" + channel._id) || undefined;
     if (banButton) {
       banButton.addEventListener("click", async function () {
         await banChannel(channel._id, true).then(async () => {
-          await reloadChannel();
+          await reloadChannel(channel);
         });
       });
     }
     if (unbanButton) {
       unbanButton.addEventListener("click", async function () {
         await banChannel(channel._id, false).then(async () => {
-          await reloadChannel();
+          await reloadChannel(channel);
         });
       });
     }
     if (deleteButton) {
       deleteButton.addEventListener("click", async function () {
         await deleteChannel(channel._id).then(async () => {
-          await reloadChannel();
+          await reloadChannel(channel);
         });
       });
     }
   });
 }
 
+async function searchChannels(load_more = false) {
+  let apiUrl = "channels?";
+  if ((DOMelements.channelsSelectSortBy.value != "none") ^ (DOMelements.channelsSelectSortType.value != "none")) {
+    throw new Error("You must select both sort by and sort type");
+  }
+  if (DOMelements.channelInput.value) apiUrl += "name=" + DOMelements.channelInput.value + "&";
+  if (DOMelements.channelsSelectSortBy.value != "none") apiUrl += "sort_by=" + DOMelements.channelsSelectSortBy.value + "&";
+  if (DOMelements.channelsSelectSortType.value != "none") apiUrl += "sort_order=" + DOMelements.channelsSelectSortType.value + "&";
+  if (DOMelements.channelsOfficialRadio.checked) apiUrl += "is_official=true&";
+  else if (DOMelements.channelsUnofficialRadio.checked) apiUrl += "is_official=false&";
+
+  if (load_more) apiUrl += "last_loaded=" + last_of_arrays.last_user_list + "&";
+  apiUrl = apiUrl.slice(0, -1);
+  let result;
+  await fetch(apiUrl, options(user.auth))
+    .then((response) => {
+      if (!response.ok) {
+        //error
+      }
+      return response;
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      result = data;
+      if (result?.length > 0) last_of_arrays.last_user_list = result[result.length - 1]._id;
+    });
+  return result;
+}
+
+async function loadChannels(load_more = false) {
+  DOMelements.channelsLoadMoreButton.style.display = "block";
+  await searchChannels(load_more).then(async (channels) => {
+    if (!channels || !channels.length || channels.length <= 0) {
+      if (!load_more) DOMelements.channelsList.innerHTML = "<div class='text-center text-danger h5 pt-3'>No channels found</div>";
+      DOMelements.channelsLoadMoreButton.style.display = "none";
+      return;
+    }
+    if (!load_more) DOMelements.channelsList.innerHTML = "";
+    channels.forEach(async (channel) => {
+      DOMelements.channelsList.appendChild(channelTemplates.channel_in_list(channel));
+    });
+    channels.forEach(async (channel) => {
+      document.getElementById("channel_in_list-" + channel._id).addEventListener("click", async function () {
+        await reloadChannel(channel).catch((error) => alert(error));
+      });
+    });
+  });
+}
+
 //USERS
 async function loadUser(username) {
   return await getUser(username).then(async (user) => {
-    const vipsExist = user.managed_accounts.length > 0;
-    const channelsExist = user.owned_channels.length > 0;
-    const editorsExist = user.editor_channels.length > 0;
+    const vipsExist = user.managed_accounts?.length > 0;
+    const channelsExist = user.owned_channels?.length > 0;
+    const editorsExist = user.editor_channels?.length > 0;
     let smm;
     if (user.smm) {
       smm = await getUsername(user.smm);
     }
 
     DOMelements.userCard.innerHTML = userTemplates.user_card(user, smm);
-    let channelListDiv = "";
+    let channelsListDiv = "";
     let VIPlistDiv = "";
     let editorListDiv = "";
 
@@ -259,18 +423,18 @@ async function loadUser(username) {
 
     //channels get
     if (channelsExist) {
-      const channelList = [];
+      const channelsList = [];
       user.owned_channels.forEach(async (channel) => {
-        channelList.push(getChannel(channel));
+        channelsList.push(getChannel(channel));
       });
-      await Promise.all(channelList).then((channels) => {
+      await Promise.all(channelsList).then((channels) => {
         channels.forEach((channel) => {
-          channelListDiv += userTemplates.channelDiv(channel);
+          channelsListDiv += userTemplates.channelDiv(channel);
         });
       });
-      document.getElementById("channelUserCard").innerHTML = channelListDiv;
+      document.getElementById("channelUserCard").innerHTML = channelsListDiv;
     } else {
-      channelListDiv = "No channels managed by this user";
+      channelsListDiv = "No channels managed by this user";
     }
     //editors get
     if (editorsExist) {
@@ -295,9 +459,8 @@ async function loadUser(username) {
   });
 }
 
-async function reloadUser() {
-  //qua devi controllare
-  await loadUser(DOMelements.usernameInput.value).then((user) => {
+async function reloadUser(username) {
+  await loadUser(username).then((user) => {
     const banButton = document.getElementById("banButton-" + user._id) || undefined;
     const unbanButton = document.getElementById("unbanButton-" + user._id) || undefined;
     const confirmChangesButton = document.getElementById("confirmChangesButton-" + user._id) || undefined;
@@ -308,7 +471,7 @@ async function reloadUser() {
       banButton.addEventListener("click", async function () {
         await banUser(user.username, true)
           .then(async () => {
-            await reloadUser();
+            await reloadUser(username);
           })
           .catch((error) => {
             document.getElementById("userErrorMessage").innerHTML = error;
@@ -319,7 +482,7 @@ async function reloadUser() {
       unbanButton.addEventListener("click", async function () {
         await banUser(user.username, false)
           .then(async () => {
-            await reloadUser();
+            await reloadUser(username);
           })
           .catch((error) => {
             document.getElementById("userErrorMessage").innerHTML = error;
@@ -327,13 +490,12 @@ async function reloadUser() {
       });
     }
     if (confirmChangesButton) {
-      //<-- qui
       confirmChangesButton.addEventListener("click", async function () {
         const accountType = document.getElementById("accountType-" + user._id).value;
         const professionalType = document.getElementById("professionalType-" + user._id).value;
-        await confirmChanges(user, accountType, professionalType) //<-- qui
+        await confirmChanges(user, accountType, professionalType)
           .then(async () => {
-            await reloadUser();
+            await reloadUser(username);
           })
           .catch((error) => {
             document.getElementById("userErrorMessage").innerHTML = error;
@@ -343,11 +505,131 @@ async function reloadUser() {
   });
 }
 
+async function searchUsers(load_more = false) {
+  let apiUrl = "users?";
+  if ((DOMelements.usersSelectSortBy.value != "none") ^ (DOMelements.usersSelectSortType.value != "none")) {
+    throw new Error("You must select both sort by and sort type");
+  }
+  if (DOMelements.usersSelectSortBy.value != "none") apiUrl += "sort_by=" + DOMelements.usersSelectSortBy.value + "&";
+  if (DOMelements.usersSelectSortType.value != "none") apiUrl += "sort_order=" + DOMelements.usersSelectSortType.value + "&";
+  if (DOMelements.usersVipRadio.checked) apiUrl += "account_type=professional&professional_type=VIP&";
+  else if (DOMelements.usersSmmRadio.checked) apiUrl += "account_type=professional&professional_type=SMM&";
+  else if (DOMelements.usersVerifiedRadio.checked) apiUrl += "account_type=verified&professional_type=none&";
+  else if (DOMelements.usersStandardRadio.checked) apiUrl += "account_type=standard&professional_type=none&";
+  if (DOMelements.usernameInput.value) apiUrl += "username=" + DOMelements.usernameInput.value + "&";
+  if (load_more) apiUrl += "last_loaded=" + last_of_arrays.last_user_list + "&";
+
+  apiUrl = apiUrl.slice(0, -1);
+  let result;
+  await fetch(apiUrl, options(user.auth))
+    .then((response) => {
+      if (!response.ok) {
+        //error
+      }
+      return response;
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      result = data;
+      if (result?.length > 0) last_of_arrays.last_user_list = result[result.length - 1]._id;
+    });
+  return result;
+}
+
+async function loadUsers(load_more = false) {
+  DOMelements.usersLoadMoreButton.style.display = "block";
+  await searchUsers(load_more).then(async (users) => {
+    if (!users || !users.length || users.length <= 0) {
+      if (!load_more) DOMelements.usersList.innerHTML = "<div class='text-center text-danger h5 pt-3'>No users found</div>";
+      DOMelements.usersLoadMoreButton.style.display = "none";
+      return;
+    }
+    if (!load_more) DOMelements.usersList.innerHTML = "";
+    users.forEach(async (user) => {
+      DOMelements.usersList.appendChild(userTemplates.user_in_list(user));
+    });
+    users.forEach(async (user) => {
+      document.getElementById("user_in_list-" + user._id).addEventListener("click", async function () {
+        await reloadUser(user.username).catch((error) => alert(error));
+      });
+    });
+  });
+}
+
+//SQUEALS ----------------------------------------------------------------------------------------
+async function loadSqueal(squeal) {
+  //TODO
+}
+
+async function reloadSqueal(squeal) {
+  //TODO
+}
+
+async function searchSqueals(load_more = false) {
+  //Funzionante
+  let apiUrl = "squeals?";
+  if ((DOMelements.squealsSelectSortBy.value != "none") ^ (DOMelements.squealsSelectSortType.value != "none")) {
+    throw new Error("You must select both sort by and sort type");
+  }
+  const words = DOMelements.squealInput.value.replace(/#/g, "");
+
+  const keywords = words.replace(/\s/g, "") != "" ? words.split(" ") : [];
+  if (keywords.length > 0) {
+    keywords.forEach((keyword) => {
+      apiUrl += "keywords=" + keyword + "&";
+    });
+  }
+  if (DOMelements.squealSenderInput.value) apiUrl += "sender=" + DOMelements.squealSenderInput.value + "&";
+  if (DOMelements.squealRecipientInput.value) apiUrl += "recipient=" + DOMelements.squealRecipientInput.value + "&";
+  if (DOMelements.squealsSelectSortBy.value != "none") apiUrl += "sort_by=" + DOMelements.squealsSelectSortBy.value + "&";
+  if (DOMelements.squealsSelectSortType.value != "none") apiUrl += "sort_order=" + DOMelements.squealsSelectSortType.value + "&";
+  if (DOMelements.squealsOfficialRadio.checked) apiUrl += "is_in_official_channel=true&";
+  else if (DOMelements.squealsUnofficialRadio.checked) apiUrl += "is_in_official_channel=false&";
+  if (load_more) apiUrl += "last_loaded=" + last_of_arrays.last_user_list + "&";
+  console.log(apiUrl);
+  apiUrl = apiUrl.slice(0, -1);
+  let result;
+  await fetch(apiUrl, options(user.auth))
+    .then((response) => {
+      if (!response.ok) {
+        //error
+      }
+      return response;
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      result = data;
+      if (result?.length > 0) last_of_arrays.last_user_list = result[result.length - 1]._id;
+    });
+  console.log(result);
+  return result;
+}
+
+async function loadSqueals(load_more = false) {
+  DOMelements.squealsLoadMoreButton.style.display = "block";
+  await searchSqueals(load_more).then(async (squeals) => {
+    if (!squeals || !squeals.length || squeals.length <= 0) {
+      if (!load_more) DOMelements.squealsList.innerHTML = "<div class='text-center text-danger h5 pt-3'>No squeals found</div>";
+      DOMelements.squealsLoadMoreButton.style.display = "none";
+      return;
+    }
+    if (!load_more) DOMelements.squealsList.innerHTML = "";
+    squeals.forEach(async (squeal) => {
+      DOMelements.squealsList.appendChild(squealTemplates.squeal_in_list(squeal));
+    });
+    squeals.forEach(async (squeal) => {
+      document.getElementById("squeal_in_list-" + squeal._id).addEventListener("click", async function () {
+        await reloadSqueal(squeal).catch((error) => alert(error));
+      });
+    });
+  });
+}
+//-----------------------------------------------------------------------------------------------------------------------------
 //REPORTED SQUEALS
 async function loadReportedSqueals(load_more = false) {
   let squeals;
   if (!load_more) {
-    DOMelements.squealCardsDiv.innerHTML = "";
+    DOMelements.reportedSquealCards.innerHTML = "";
     squeals = await getReports(false);
   } else {
     squeals = await getReports(true);
@@ -356,12 +638,12 @@ async function loadReportedSqueals(load_more = false) {
     const noSquealsMessage = document.createElement("div");
     noSquealsMessage.className = "text-white text-center";
     noSquealsMessage.innerHTML = "No squeals reported";
-    DOMelements.squealCardsDiv.appendChild(noSquealsMessage);
+    DOMelements.reportedSquealCards.appendChild(noSquealsMessage);
     DOMelements.reportsLoadMoreButton.style.display = "none";
   } else {
     last_of_arrays.last_reported_squeal = squeals[squeals.length - 1]._id;
     squeals.forEach(async (squeal) => {
-      DOMelements.squealCardsDiv.appendChild(squealTemplates.squeal_card(squeal));
+      DOMelements.reportedSquealCards.appendChild(squealTemplates.reported_squeal_card(squeal));
     });
     squeals.forEach(async (squeal) => {
       document.getElementById("squealSafeButton-" + squeal._id).addEventListener("click", async function () {
@@ -474,18 +756,18 @@ async function getChannel(channel) {
 
 async function getReports(load_more = false, checked = false) {
   let apiUrl = "squeals/reported?checked=" + checked;
+  if ((DOMelements.reportedSquealsSelectSortBy.value != "none") ^ (DOMelements.reportedSquealsSelectSortType.value != "none")) {
+    throw new Error("You must select both sort by and sort type");
+  }
   if (load_more) apiUrl += "&last_loaded=" + last_of_arrays.last_reported_squeal;
   if (DOMelements.reportedSquealsSelectSortBy.value != "none") apiUrl += "&sort_by=" + DOMelements.reportedSquealsSelectSortBy.value;
   if (DOMelements.reportedSquealsSelectSortType.value != "none") apiUrl += "&sort_order=" + DOMelements.reportedSquealsSelectSortType.value;
+
   let result;
   await fetch(apiUrl, options(user.auth))
     .then((response) => {
       if (!response.ok) {
-        if ((DOMelements.reportedSquealsSelectSortBy.value != "none") ^ (DOMelements.reportedSquealsSelectSortType.value != "none")) {
-          throw new Error("You must select both sort by and sort type");
-        } else {
-          throw new Error("Network response was not ok");
-        }
+        throw new Error("Network response was not ok");
       }
       return response;
     })

@@ -36,6 +36,11 @@ a.nopage:hover {
     color: #e6b752d0 !important;
 }
 
+.of-scroll {
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -125,6 +130,11 @@ main {
     background-color: #f2f2f2;
 }
 
+.btn-check:not(:checked)+label:hover {
+    background-color: #c9d7ec !important;
+    transition: 0.5s;
+}
+
 .nav-link:not(.active) {
     color: #f2f2f2 !important;
 }
@@ -140,7 +150,7 @@ main {
 }
 
 .datacard {
-    width: 80vw;
+    width: 120vw;
 }
 
 
