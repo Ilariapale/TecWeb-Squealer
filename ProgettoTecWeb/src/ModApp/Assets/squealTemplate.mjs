@@ -52,26 +52,177 @@ export const squeal_in_list = (squeal) => {
   return div;
 };
 
-export const squeal_card = (squeal) => `
+export const squeal_content = (squeal) => {
+  if (squeal.content_type === "text") {
+    return `<p class="card-text of-auto text-break max-vh-10 border rounded">${squeal.content}</p>`;
+  } else if (squeal.content_type === "position") {
+    return `
+    <p class="card-text">
+      <a href="squeal/${squeal._id}" target="_blank">[position] 
+        <i class="bi bi-box-arrow-up-right"></i>
+      </a>
+    </p>`;
+  } else if (squeal.content_type === "deleted") {
+    return `<p class="card-text">[deleted]</p>`;
+  } else {
+    if (squeal.content.includes("http"))
+      return `<p class="card-text"><a href="${squeal.content}" target="_blank">[${squeal.content_type}] <i class="bi bi-box-arrow-up-right"></i></a></p>`;
+    return `<p class="card-text"><a href="/media/${squeal.content_type}/${squeal.content}" target="_blank">[${squeal.content_type}] <i class="bi bi-box-arrow-up-right"></i></a></p>`;
+  }
+};
 
+export const elementRecipientDiv = (element, type) => {
+  const div = document.createElement("div");
+  div.id = `${type}Element-${element}`;
+  div.className = "row";
+  div.innerHTML = `
+  <div class="d-flex">
+    <i class="bi bi-dot text-danger"></i>${element || "list element"}
+    <button type="button" class="btn-close ms-auto" aria-label="Close" id="remove-${type}-${element}"></button>
+  </div>
+  <hr class="my-0">`;
+  return div;
+};
+export const recipient_accordion = (type) => {
+  if (type) type = type.charAt(0).toUpperCase() + type.slice(1);
+  const special_char = type === "User" ? "@" : type === "Channel" ? "§" : "#";
+
+  const input = `
+  <div class="input-group">
+    <div class="input-group-text" id="basic-addon1">
+      <span class="h4 m-0 px-1">${special_char}</span>
+    </div>
+    <input type="text" class="form-control" id="add-${type}-input" placeholder="${type}" aria-label="${type}-input" aria-describedby="basic-addon1">
+    <button class="btn btn-outline-secondary" type="submit" id="add-${type}-button">+</button>
+  </div>`;
+
+  return `
+    ${input}
+    <div class="accordion accordion-flush" id="accordionFlush${type}Recipient">
+      <div class="accordion-item">
+          <h2 class="accordion-header" id="flush-${type}s-Recipients">
+              <button class="accordion-button collapsed" type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#flush-collapse${type}Recipient"
+                  aria-expanded="false"
+                  aria-controls="flush-collapse${type}Recipient">
+                  <b>${type}s</b>
+              </button>
+          </h2>
+          
+          <div id="flush-collapse${type}Recipient"
+              class="accordion-collapse collapse show pb-2""
+              aria-labelledby="flush-heading${type}Recipient"
+              data-bs-parent="#accordionFlush${type}Recipient">
+              <div class="accordion-body recipient-list">
+              <div id="${type.toLowerCase()}RecipientsAccordion">       
+              </div>
+              </div>
+          </div>
+      </div>
+    </div>`;
+};
+
+export const squeal_card = (squeal) => `
 <div class="card mb-3 mt-4 datacard col-11 ">
 
-<div class="col">
-    <div class="card-body">
-        <h3 class="card-title row">
-            <div class="col-md-1 col-2">
+  <div class="row g-0">
+
+    <div class="col">
+      <div class="card-body card-container">
+        <div class="card-title row">
+          <div class="col-5 me-auto">
+           
+            <h3 class="row">
+              <div class="col-2">
                 <img src="./../media/propic/squealer.png"
                 class="img-fluid rounded-start rounded" onerror="if (this.src != 'Assets/logo.png') this.src = 'assets/logo.png'"
-                alt="squealer">
-            </div>
-            @${squeal.username || "Squeal User"}
-        </h3>
-        ${squeal.content}
-        <h6 class="card-subtitle mb-2 text-muted">Created: ${new Date(squeal?.created_at).toLocaleString()}</h6>
-        <div class="row-1">
-            <p class="text-danger m-0" id="squealErrorMessage"></p>
+                alt="squealer"> 
+              </div>
+              
+              <div class="col-auto">
+                @${squeal.username || "Squeal User"}
+              </div>
+            </h3>
+          </div>
+          <div class="col-3">
+            HEX: ${squeal.hex_id} <b>|</b>
+            Comments: ${squeal.comments_count} <b>|</b>
+            Impressions: ${squeal.impressions}
+          </div>
+          <div class="col-2 text-end">
+            <button id="deleteSquealButton-${squeal._id}" class="btn btn-danger">DELETE SQUEAL</button>
+          </div>
+          <div class="col-2 text-end">
+            <button id="confirmChangesButton-${squeal._id}" class="btn btn-primary">CONFIRM CHANGES</button>
+          </div>
         </div>
+        <div id="squeal-body-${squeal._id}" class="pb-2">
+        ${squeal_content(squeal)}
+        </div>
+
+        <div id="updateSquealResult">
+        </div>
+
+        <div class="row pb-4">
+          <div class="col-4">
+            ${recipient_accordion("user")}
+            </div>
+            <div class="col-4">
+              ${recipient_accordion("channel")}
+            </div>
+            <div class="col-4">
+              ${recipient_accordion("keyword")}
+            </div>
+        </div>
+
+        <div class="row-1">
+          <p class="text-danger m-0" id="squealErrorMessage"></p>
+        </div>
+      </div>
     </div>
+    
+    <div class="vr col-1 mb-5"></div>
+    <div class="col-2 p-2 my-2 pb-5 ps-3"> 
+
+        <div class="input-group mb-3">
+          <span class="input-group-text">👍</span>
+          <input min=0 value="${squeal.reactions.like}" placeholder="${squeal.reactions.like}" id="like-input-${squeal._id}" type="number" class="form-control">
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">😍</span>
+          <input min=0 value="${squeal.reactions.love}" placeholder="${squeal.reactions.love}" id="love-input-${squeal._id}" type="number" class="form-control">
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">😂</span>
+          <input min=0 value="${squeal.reactions.laugh}" placeholder="${squeal.reactions.laugh}" id="laugh-input-${squeal._id}" type="number" class="form-control">
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">👎</span>
+          <input min=0 value="${squeal.reactions.dislike}" placeholder="${squeal.reactions.dislike}" id="dislike-input-${squeal._id}" type="number" class="form-control">
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">🤮</span>
+          <input min=0 value="${squeal.reactions.disgust}" placeholder="${squeal.reactions.disgust}" id="disgust-input-${squeal._id}" type="number" class="form-control">
+        </div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">🙅‍♂️</span>
+          <input min=0 value="${squeal.reactions.disagree}" placeholder="${squeal.reactions.disagree}" id="disagree-input-${squeal._id}" type="number" class="form-control ">
+        </div>
+
+    </div>
+  </div>
+
+  <div  class="d-flex card-footer clickable position-bottom-card">
+      <div class=" mb-2 text-muted me-auto">
+        Created: ${new Date(squeal?.created_at).toLocaleString()} 
+      </div>
+      <a href="squeal/${squeal._id}" target="_blank"><i class="bi bi-box-arrow-up-right"></i></a>
+      <div class=" mb-2 text-muted ms-auto">
+        Last modified: ${new Date(squeal?.last_modified).toLocaleString()}
+      </div>
+    </div>
+</div>
 `;
 
 export const reported_squeal_card = (squeal) => {
@@ -105,7 +256,7 @@ export const reported_squeal_card = (squeal) => {
                     <div class="card-icons container">
                         <div class="row flex-nowrap justify-content-between d-flex align-items-center my-2">
                             <div class="col-5 px-1">
-                                <a  href="/squeal/${squeal._id}" target="_blank" id="commentButton" type="button"
+                                <a  href="/squeal/${squeal._id}" target="_blank" id="commentButton-${squeal._id}" type="button"
                                     class="btn btn-outline-secondary btn-outline-rounded px-2">
                                     <i class="bi bi-chat-dots-fill"></i>
                                     <p class="badge bg-danger ms-2 my-auto"> ${squeal.comments_count}</p>

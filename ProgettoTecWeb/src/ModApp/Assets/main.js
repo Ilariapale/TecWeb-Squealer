@@ -2,52 +2,8 @@
 import * as userTemplates from "./userTemplate.mjs";
 import * as squealTemplates from "./squealTemplate.mjs";
 import * as channelTemplates from "./channelTemplate.mjs";
-
 /*
-Il moderator dashboard è la parte dell'applicazione che permette agli
-amministratori di Squealer di gestire i dati degli utenti e abilitare e configurare i
-servizi e i prodotti. Può accedere solo un utente moderatore Squealer.
-
-E' un'applicazione web tradizionale, solo online, principalmente per PC.
-
-• Utenti. Il moderatore può elencare gli utenti e filtrarli per nome, tipo e popolarità.
-Può bloccare e riabilitare gli utenti a mano. Può aumentare a mano i caratteri residui
-per singoli utenti.
-
-• Squeal: il moderatore può elencare i post e filtrarli per mittente, data e destinatari.
-Può cambiare a mano i destinatari (ad esempio, aggiungere §CANALI ufficiali
-Squealer). Può cambiare a mano il numero di reazioni positive e/o negative.
-
-• §canali: il moderatore può elencare i §canali degli utenti e filtrarli per proprietari,
-numero di post e popolarità. Può cambiare a mano i proprietari ed il nome. Può
-bloccare un §canale.
-
-• §CANALI: il moderatore può elencare i §CANALI ufficiali Squealer, aggiungerne,
-toglierne e cambiarne la descrizione (utile per gli altri moderatori). Può aggiungere
-uno squeal ad un §CANALE o rimuoverlo in qualunque momento. Può aggiungere
-una regola che attribuisce automaticamente un post ad un canale se soddisfa un
-criterio.Il moderator dashboard è la parte dell'applicazione che permette agli
-amministratori di Squealer di gestire i dati degli utenti e abilitare e configurare i
-servizi e i prodotti. Può accedere solo un utente moderatore Squealer.
-E' un'applicazione web tradizionale, solo online, principalmente per PC.
-
-• Utenti. Il moderatore può elencare gli utenti e filtrarli per nome, tipo e popolarità.
-Può bloccare e riabilitare gli utenti a mano. Può aumentare a mano i caratteri residui
-per singoli utenti.
-
-• Squeal: il moderatore può elencare i post e filtrarli per mittente, data e destinatari.
-Può cambiare a mano i destinatari (ad esempio, aggiungere §CANALI ufficiali
-Squealer). Può cambiare a mano il numero di reazioni positive e/o negative.
-
-• §canali: il moderatore può elencare i §canali degli utenti e filtrarli per proprietari,
-numero di post e popolarità. Può cambiare a mano i proprietari ed il nome. Può
-bloccare un §canale.
-
-• §CANALI: il moderatore può elencare i §CANALI ufficiali Squealer, aggiungerne,
-toglierne e cambiarne la descrizione (utile per gli altri moderatori). Può aggiungere
-uno squeal ad un §CANALE o rimuoverlo in qualunque momento. Può aggiungere
-una regola che attribuisce automaticamente un post ad un canale se soddisfa un
-criterio.
+TODO il moderatore può elencare i §canali degli utenti
 */
 
 const user = {
@@ -124,6 +80,12 @@ const last_of_arrays = {
   last_reported_squeal: undefined,
   last_user_request: undefined,
   last_user_list: undefined,
+};
+
+const recipients = {
+  users: [],
+  channels: [],
+  keywords: [],
 };
 
 document.addEventListener("DOMContentLoaded", async function () {
@@ -268,7 +230,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   DOMelements.squealsLoadMoreButton.style.display = "none";
 });
 
-//CHANNELS
+//CHANNELS -------------------------------------------------------------------------------------
 async function loadChannel(channel) {
   await getChannel(channel).then(async (channel) => {
     if (!channel) throw new Error("Channel not found");
@@ -283,7 +245,7 @@ async function loadChannel(channel) {
     if (banButton) {
       banButton.addEventListener("click", async function () {
         await banChannel(channel._id, true).then(async () => {
-          await reloadChannel(channel);
+          await loadChannel(channel._id);
         });
       });
     }
@@ -291,7 +253,7 @@ async function loadChannel(channel) {
     if (unbanButton) {
       unbanButton.addEventListener("click", async function () {
         await banChannel(channel._id, false).then(async () => {
-          await reloadChannel(channel);
+          await loadChannel(channel._id);
         });
       });
     }
@@ -303,37 +265,19 @@ async function loadChannel(channel) {
         });
       });
     }
+    const changeNameButton = document.getElementById("newChannelName-" + channel._id);
+    const newNameInput = document.getElementById("newChannelNameInput-" + channel._id);
+    if (changeNameButton) {
+      changeNameButton.addEventListener("click", async function () {
+        await changeChannelName(channel._id, newNameInput.value).then(async () => {
+          await loadChannel(channel._id);
+          const resultDiv = document.getElementById("updateChannelResult");
+          if (resultDiv) resultDiv.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i><span class="text-success">Channel name updated successfully</span>`;
+        });
+      });
+    }
   });
   return channel;
-}
-
-async function reloadChannel(channel) {
-  await loadChannel(channel.name).then((channel) => {
-    const banButton = document.getElementById("banChannelButton-" + channel._id) || undefined;
-    const unbanButton = document.getElementById("unbanChannelButton-" + channel._id) || undefined;
-    const deleteButton = document.getElementById("deleteChannelButton-" + channel._id) || undefined;
-    if (banButton) {
-      banButton.addEventListener("click", async function () {
-        await banChannel(channel._id, true).then(async () => {
-          await reloadChannel(channel);
-        });
-      });
-    }
-    if (unbanButton) {
-      unbanButton.addEventListener("click", async function () {
-        await banChannel(channel._id, false).then(async () => {
-          await reloadChannel(channel);
-        });
-      });
-    }
-    if (deleteButton) {
-      deleteButton.addEventListener("click", async function () {
-        await deleteChannel(channel._id).then(async () => {
-          await reloadChannel(channel);
-        });
-      });
-    }
-  });
 }
 
 async function searchChannels(load_more = false) {
@@ -379,13 +323,13 @@ async function loadChannels(load_more = false) {
     });
     channels.forEach(async (channel) => {
       document.getElementById("channel_in_list-" + channel._id).addEventListener("click", async function () {
-        await reloadChannel(channel).catch((error) => alert(error));
+        await loadChannel(channel._id).catch((error) => alert(error));
       });
     });
   });
 }
 
-//USERS
+//USERS ----------------------------------------------------------------------------------------
 async function loadUser(username) {
   return await getUser(username).then(async (user) => {
     const vipsExist = user.managed_accounts?.length > 0;
@@ -455,23 +399,19 @@ async function loadUser(username) {
     } else {
       editorListDiv = "No channels edited by this user";
     }
-    return user;
-  });
-}
-
-async function reloadUser(username) {
-  await loadUser(username).then((user) => {
+    //EVENT LISTENERS
     const banButton = document.getElementById("banButton-" + user._id) || undefined;
     const unbanButton = document.getElementById("unbanButton-" + user._id) || undefined;
     const confirmChangesButton = document.getElementById("confirmChangesButton-" + user._id) || undefined;
     DOMelements.daily_input = document.getElementById("daily-input-" + user._id);
     DOMelements.weekly_input = document.getElementById("weekly-input-" + user._id);
     DOMelements.monthly_input = document.getElementById("monthly-input-" + user._id);
+
     if (banButton) {
       banButton.addEventListener("click", async function () {
         await banUser(user.username, true)
           .then(async () => {
-            await reloadUser(username);
+            await loadUser(username);
           })
           .catch((error) => {
             document.getElementById("userErrorMessage").innerHTML = error;
@@ -482,7 +422,7 @@ async function reloadUser(username) {
       unbanButton.addEventListener("click", async function () {
         await banUser(user.username, false)
           .then(async () => {
-            await reloadUser(username);
+            await loadUser(username);
           })
           .catch((error) => {
             document.getElementById("userErrorMessage").innerHTML = error;
@@ -495,13 +435,14 @@ async function reloadUser(username) {
         const professionalType = document.getElementById("professionalType-" + user._id).value;
         await confirmChanges(user, accountType, professionalType)
           .then(async () => {
-            await reloadUser(username);
+            await loadUser(username);
           })
           .catch((error) => {
             document.getElementById("userErrorMessage").innerHTML = error;
           });
       });
     }
+    return user;
   });
 }
 
@@ -550,7 +491,7 @@ async function loadUsers(load_more = false) {
     });
     users.forEach(async (user) => {
       document.getElementById("user_in_list-" + user._id).addEventListener("click", async function () {
-        await reloadUser(user.username).catch((error) => alert(error));
+        await loadUser(user.username).catch((error) => alert(error));
       });
     });
   });
@@ -558,11 +499,132 @@ async function loadUsers(load_more = false) {
 
 //SQUEALS ----------------------------------------------------------------------------------------
 async function loadSqueal(squeal) {
-  //TODO
+  return await getSqueal(squeal._id)
+    .then(async (full_squeal) => {
+      console.log(full_squeal);
+      DOMelements.squealCard.innerHTML = squealTemplates.squeal_card(full_squeal);
+      const userAccordion = document.getElementById("userRecipientsAccordion");
+      const channelAccordion = document.getElementById("channelRecipientsAccordion");
+      const keywordAccordion = document.getElementById("keywordRecipientsAccordion");
+      const deleteSquealButton = document.getElementById("deleteSquealButton-" + full_squeal._id);
+      const confirmChangesButton = document.getElementById("confirmChangesButton-" + full_squeal._id);
+      recipients.users = [];
+      recipients.channels = [];
+      recipients.keywords = [];
+      if (userAccordion) userAccordion.innerHTML = "";
+      if (channelAccordion) channelAccordion.innerHTML = "";
+      if (keywordAccordion) keywordAccordion.innerHTML = "";
+      const users = [];
+      full_squeal.recipients.users.forEach(async (user) => {
+        users.push(getUsername(user));
+      });
+      await Promise.all(users).then((users) => {
+        users.forEach((user) => {
+          console.log(userAccordion);
+          if (userAccordion) {
+            userAccordion.appendChild(squealTemplates.elementRecipientDiv(user, "user"));
+            recipients.users.push(user);
+            addEventListenerToListElements(user, "user");
+          }
+        });
+      });
+      const channels = [];
+      full_squeal.recipients.channels.forEach(async (channel) => {
+        channels.push(getChannel(channel));
+      });
+      await Promise.all(channels).then((channels) => {
+        channels.forEach((channel) => {
+          if (channelAccordion) {
+            channelAccordion.appendChild(squealTemplates.elementRecipientDiv(channel.name, "channel"));
+            recipients.channels.push(channel.name);
+            addEventListenerToListElements(channel.name, "channel");
+          }
+        });
+      });
+      full_squeal.recipients.keywords.forEach(async (keyword) => {
+        recipients.keywords.push(keyword);
+        if (keywordAccordion) {
+          keywordAccordion.appendChild(squealTemplates.elementRecipientDiv(keyword, "keyword"));
+          addEventListenerToListElements(keyword, "keyword");
+        }
+      });
+
+      //LISTENERS FOR ADDING/REMOVING RECIPIENTS
+      const addUserButton = document.getElementById("add-User-button");
+      const addChannelButton = document.getElementById("add-Channel-button");
+      const addKeywordButton = document.getElementById("add-Keyword-button");
+
+      if (addUserButton)
+        addUserButton.addEventListener("click", async function () {
+          const userInput = document.getElementById("add-User-input");
+          const username = userInput?.value;
+          if (recipients.users.includes(username) || username.replace(/\s/g, "") == "") {
+            userInput.value = "";
+            return;
+          }
+          userAccordion.appendChild(squealTemplates.elementRecipientDiv(username, "user", username));
+          recipients.users.push(username);
+          addEventListenerToListElements(username, "user");
+        });
+      if (addChannelButton)
+        addChannelButton.addEventListener("click", async function () {
+          const channelInput = document.getElementById("add-Channel-input");
+          const channel_name = channelInput?.value;
+          if (recipients.channels.includes(channel_name) || channel_name.replace(/\s/g, "") == "") {
+            channelInput.value = "";
+            return;
+          }
+          channelAccordion.appendChild(squealTemplates.elementRecipientDiv(channel_name, "channel", channel_name));
+          recipients.channels.push(channel_name);
+          addEventListenerToListElements(channel_name, "channel");
+        });
+      if (addKeywordButton)
+        addKeywordButton.addEventListener("click", async function () {
+          const keywordInput = document.getElementById("add-Keyword-input");
+          const keyword = keywordInput?.value;
+          if (recipients.keywords.includes(keyword) || keyword.replace(/\s/g, "") == "") {
+            keywordInput.value = "";
+            return;
+          }
+          keywordAccordion.appendChild(squealTemplates.elementRecipientDiv(keyword, "keyword", keyword));
+          recipients.keywords.push(keyword);
+          addEventListenerToListElements(keyword, "keyword");
+        });
+
+      //LISTENER FOR BUTTONS
+      if (deleteSquealButton) {
+        deleteSquealButton.addEventListener("click", async function () {
+          await deleteSqueal(full_squeal._id).then(async () => {
+            await loadSqueal(full_squeal);
+          });
+        });
+      }
+
+      if (confirmChangesButton) {
+        confirmChangesButton.addEventListener("click", async function () {
+          const reactions = {};
+          reactions.like = document.getElementById("like-input-" + full_squeal._id).value;
+          reactions.dislike = document.getElementById("dislike-input-" + full_squeal._id).value;
+          reactions.love = document.getElementById("love-input-" + full_squeal._id).value;
+          reactions.disgust = document.getElementById("disgust-input-" + full_squeal._id).value;
+          reactions.laugh = document.getElementById("laugh-input-" + full_squeal._id).value;
+          reactions.disagree = document.getElementById("disagree-input-" + full_squeal._id).value;
+          await updateSqueal(full_squeal._id, reactions).then(async () => {
+            await loadSqueal(full_squeal);
+            const resultDiv = document.getElementById("updateSquealResult");
+            if (resultDiv) resultDiv.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i><span class="text-success">Squeal updated successfully</span>`;
+          });
+        });
+      }
+    })
+    .catch((error) => console.log(error));
 }
 
-async function reloadSqueal(squeal) {
-  //TODO
+function addEventListenerToListElements(new_element, type) {
+  document.getElementById("remove-" + type + "-" + new_element).addEventListener("click", () => {
+    recipients[type + "s"].splice(recipients[type + "s"].indexOf(new_element), 1);
+    document.getElementById(`${type}Element-${new_element}`).remove();
+  });
 }
 
 async function searchSqueals(load_more = false) {
@@ -619,7 +681,7 @@ async function loadSqueals(load_more = false) {
     });
     squeals.forEach(async (squeal) => {
       document.getElementById("squeal_in_list-" + squeal._id).addEventListener("click", async function () {
-        await reloadSqueal(squeal).catch((error) => alert(error));
+        await loadSqueal(squeal).catch((error) => alert(error));
       });
     });
   });
@@ -694,7 +756,10 @@ async function loadRequests(loadMore = false) {
   }
 }
 
-//---------------------------------API REQUESTS----------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------API REQUESTS------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------
+
 //--------------------- GET --------------------//
 async function getUsername(user_id) {
   const apiUrl = "users/username/?identifier=" + user_id;
@@ -754,6 +819,27 @@ async function getChannel(channel) {
   return result;
 }
 
+async function getSqueal(squeal_id) {
+  if (!squeal_id || squeal_id == "") return undefined;
+  const apiUrl = "squeals/" + squeal_id;
+  let result;
+  // Make a GET request
+  await fetch(apiUrl, options(user.auth))
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response;
+    })
+
+    .then((response) => response.json())
+    .then((data) => {
+      data[0] ? (result = data[0]) : (result = data);
+    });
+
+  return result;
+}
+
 async function getReports(load_more = false, checked = false) {
   let apiUrl = "squeals/reported?checked=" + checked;
   if ((DOMelements.reportedSquealsSelectSortBy.value != "none") ^ (DOMelements.reportedSquealsSelectSortType.value != "none")) {
@@ -800,6 +886,58 @@ async function getRequests(loadMore = false) {
 }
 
 //-------------------- PATCH --------------------//
+
+async function updateSqueal(squealId, reactions) {
+  const apiUrl = `squeals/${squealId}`;
+  const body = {
+    recipients: recipients,
+    reactions: reactions,
+  };
+  let result;
+  const resultDiv = document.getElementById("updateSquealResult");
+
+  // Make a PATCH request
+  await fetch(apiUrl, options(user.auth, "PATCH", body))
+    .then(async (response) => {
+      if (!response.ok) {
+        const error = await response.text();
+        if (resultDiv) resultDiv.innerHTML = `<i class="bi bi-exclamation-circle-fill text-danger"></i><span class="text-danger">${JSON.parse(error).error}</span>`;
+        throw new Error(error || "Network response was not ok");
+      }
+      return response;
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      result = data;
+    });
+  return result;
+}
+
+async function changeChannelName(channelId, newName) {
+  const apiUrl = `channels/${channelId}`;
+  const body = {
+    new_name: newName,
+  };
+  let result;
+  const resultDiv = document.getElementById("updateChannelResult");
+
+  // Make a PATCH request
+  await fetch(apiUrl, options(user.auth, "PATCH", body))
+    .then(async (response) => {
+      if (!response.ok) {
+        const error = await response.text();
+        if (resultDiv) resultDiv.innerHTML = `<i class="bi bi-exclamation-circle-fill text-danger"></i><span class="text-danger">${JSON.parse(error).error}</span>`;
+        throw new Error(error || "Network response was not ok");
+      }
+      return response;
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      result = data;
+    });
+  return result;
+}
+
 async function resolveUserRequest(requestId, accepted) {
   const apiUrl = `users/request/${requestId}/${accepted}`;
   let result;
@@ -916,14 +1054,20 @@ async function confirmChanges(userToUpdate, accountType, professionalType) {
 }
 
 //-------------------- DELETE --------------------//
+
 async function deleteSqueal(squealId) {
   const apiUrl = `squeals/${squealId}`;
   let result;
+  const resultDiv = document.getElementById("updateSquealResult");
+
   await fetch(apiUrl, options(user.auth, "DELETE"))
-    .then((response) => {
+    .then(async (response) => {
       if (!response.ok) {
+        const error = await response.text();
+        if (resultDiv) resultDiv.innerHTML = `<i class="bi bi-exclamation-circle-fill text-danger"></i><span class="text-danger">${JSON.parse(error).error}</span>`;
         throw new Error("Network response was not ok");
       }
+
       return response;
     })
     .then((response) => response.json())
@@ -940,6 +1084,7 @@ async function deleteChannel(channelId) {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
+      DOMelements.channelsList?.removeChild(document.getElementById("channel_in_list-" + channelId));
       return response;
     })
     .then((response) => response.json())

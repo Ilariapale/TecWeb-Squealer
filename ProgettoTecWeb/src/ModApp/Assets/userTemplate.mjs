@@ -287,12 +287,12 @@ export const user_card = (user) => `
                       <div class="col-6 py-2">${owned_channels_accordion(user?.owned_channels)}</div>
                       <div class="vr p-0"></div>
                       <div class="col py-2">${editor_channels_accordion(user?.editor_channels)}</div>
-                    </div>
-                  </div>
-              </div>
           </div>
+        </div>
       </div>
-  </div>`;
+    </div>
+  </div>
+</div>`;
 
 export const request_card = (request) => {
   const div = document.createElement("div");

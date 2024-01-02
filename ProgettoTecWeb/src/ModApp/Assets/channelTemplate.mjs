@@ -88,16 +88,22 @@ export const channel_card = (channel, channel_owner, editor_list_html) => `
                     alt="squealer">
                 </div>
                 §${channel.name || "Channel Name"}
-                <div class="text-end col p-1">
+                <div class="text-end col p-2">
                     ${channel_ban_status(channel)}
-                </div>
-                <div class="col p-1">
+                
                     <button class="btn btn-danger" id="deleteChannelButton-${channel._id}">Delete Channel</button>
                 </div>
             </h3>
-            <input type="text" class="form-control form-control-lg" id="channelInput"
-                                placeholder="Channel" aria-label="Channel" aria-describedby="basic-addon1">
-            <h6 class="card-subtitle mb-2 text-muted">User since: ${new Date(channel?.created_at).toLocaleString()}</h6>
+
+            <div class="input-group mb-3 col-3">
+                <input type="text" class="form-control" 
+                id="newChannelNameInput-${channel._id}" placeholder="New Channel Name" aria-label="Channel" aria-describedby="button-addon2">
+                <button class="btn btn-outline-secondary" type="button" id="newChannelName-${channel._id}">Change Name</button>
+            </div>
+            <div id="updateChannelResult">
+            </div>
+
+            <h6 class="card-subtitle mb-2 text-muted pt-2">User since: ${new Date(channel?.created_at).toLocaleString()}</h6>
             <div class="row-1">
                 <p class="text-danger m-0" id="userErrorMessage"></p>
             </div>

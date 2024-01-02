@@ -12,7 +12,7 @@ export class LoginComponent {
   username: string = '';
   password: string = '';
   errorMessage: string = '';
-  rememberMe: boolean = false;
+  rememberMe: boolean = true;
   guestMode: boolean = false;
 
   constructor(

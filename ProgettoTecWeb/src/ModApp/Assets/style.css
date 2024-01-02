@@ -41,6 +41,55 @@ a.nopage:hover {
     overflow-x: hidden;
 }
 
+.of-auto {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+
+.recipient-list {
+    max-height: 23vh;
+    overflow-y: auto
+}
+
+.max-vh-10 {
+    max-height: 10vh;
+
+}
+
+.vh-25 {
+    height: 25vh;
+}
+
+.vh-20 {
+    height: 20vh;
+}
+
+.vh-15 {
+    height: 15vh;
+}
+
+.vh-10 {
+    height: 10vh;
+}
+
+.vh-5 {
+    height: 5vh;
+}
+
+.card-container {
+    position: relative;
+}
+
+.position-bottom-card {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -66,6 +115,13 @@ nav {
 
 main {
     padding: 20px;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
 }
 
 .vh-25 {

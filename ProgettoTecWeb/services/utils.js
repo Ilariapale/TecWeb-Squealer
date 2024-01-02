@@ -606,7 +606,8 @@ function checkIfArrayIsValid(input_array) {
 
 function checkIfReactionsAreValid(reactions) {
   try {
-    reactions = JSON.parse(reactions);
+    //check if reactions is already an object
+    if (typeof reactions !== "object") reactions = JSON.parse(reactions);
     var { like, love, laugh, dislike, disgust, disagree } = reactions;
     [like, love, laugh, dislike, disgust, disagree] = [like, love, laugh, dislike, disgust, disagree].map(Number);
     if (

@@ -196,6 +196,7 @@ async function postWeatherSqueals() {
   const data = await response.json();
 
   const cityname = data.name.charAt(0).toUpperCase() + data.name.slice(1); // Capitalize the first letter of the city
+  const newDate = new Date();
   if (!cityname || !data.weather[0].description || !data.main.temp || !data.main.temp_min || !data.main.temp_max) return console.log("Error while fetching weather data");
   const newSqueal = new Squeal({
     hex_id: admin.squeals.posted.length,
@@ -207,7 +208,8 @@ async function postWeatherSqueals() {
       keywords: ["weather", "random_weather", "random", "autoposting"],
     },
     owner: admin._id,
-    created_at: new Date(),
+    created_at: newDate,
+    last_modified: newDate,
     is_in_official_channel: true,
   });
   await newSqueal.save();
@@ -284,6 +286,7 @@ async function postRandomImage() {
   const channel = await Channel.findOne({ name: "RANDOM_IMAGES" });
   // Create a random number from 0 to 1084 (the number of images available on picsum.photos)
   const random = Math.floor(Math.random() * 1084);
+  const newDate = new Date();
   const squeal = new Squeal({
     hex_id: admin.squeals.posted.length,
     user_id: admin._id,
@@ -296,7 +299,8 @@ async function postRandomImage() {
     content_type: "image",
     is_in_official_channel: true,
     user_id: admin._id,
-    created_at: new Date(),
+    created_at: newDate,
+    last_modified: newDate,
   });
   await squeal.save();
   admin.squeals.posted.push(squeal._id);

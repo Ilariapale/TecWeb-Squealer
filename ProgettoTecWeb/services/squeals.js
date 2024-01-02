@@ -1223,7 +1223,6 @@ module.exports = {
     const { identifier, user_id } = options;
     const recipients = options.inlineReqJson.recipients;
     const reactions = options.inlineReqJson.reactions;
-    console.log(options);
     if (!identifier) {
       return {
         status: 400,
@@ -1281,7 +1280,7 @@ module.exports = {
       if (usersResponse.status >= 300) {
         return {
           status: usersResponse.status,
-          data: { error: usersResponse.error },
+          data: { error: usersResponse.data.error },
         };
       }
       squeal.recipients.users = usersResponse.data.usersArray;
@@ -1291,7 +1290,7 @@ module.exports = {
       if (channelsResponse.status >= 300) {
         return {
           status: channelsResponse.status,
-          data: { error: channelsResponse.error },
+          data: { error: channelsResponse.data.error },
         };
       }
 
