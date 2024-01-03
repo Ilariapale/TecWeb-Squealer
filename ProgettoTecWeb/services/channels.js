@@ -33,6 +33,7 @@ module.exports = {
   /**
    * Retrieve channels with optional filters
    * @param options.name Filter channels by name
+   * @param options.owner Filter channels by owner
    * @param options.created_after Filter channels created after the specified date
    * @param options.created_before Filter channels created before the specified date
    * @param options.is_official Filter channels by official status
@@ -50,6 +51,7 @@ module.exports = {
       is_token_valid,
       last_loaded,
       name,
+      owner,
       created_after,
       created_before,
       is_official,
@@ -114,6 +116,19 @@ module.exports = {
       pipeline.push({ $match: { name: { $regex: regex } } });
     }
 
+    if (owner && owner.replace(/\s/g, "").length > 0) {
+      //check if owner exists
+      let response = await findUser(owner);
+      if (response.status >= 300) {
+        //if the response is an error
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const ownerUser = response.data;
+      pipeline.push({ $match: { owner: ownerUser._id } });
+    }
     if (created_after) {
       const date = Date.parse(created_after);
       if (isNaN(date)) {
