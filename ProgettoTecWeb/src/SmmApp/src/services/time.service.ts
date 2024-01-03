@@ -39,12 +39,12 @@ export const isToday = (date: Date, now: Date) => {
 };
 
 export const formatTime = (date: Date) => {
-  // Personalizza il formato dell'orario in base alle tue esigenze
+  //customize time format based on your needs
   return `${date.getHours()}:${('0' + date.getMinutes()).slice(-2)}`;
 };
 
 export const formatDate = (date: Date) => {
-  // Personalizza il formato della data in base alle tue esigenze
+  // customize date format based on your needs
   return `${('0' + date.getDate()).slice(-2)}/${('0' + (date.getMonth() + 1)).slice(
     -2
   )}/${date.getFullYear()}`;

@@ -234,10 +234,10 @@ UserSchema.methods.Delete = async function () {
     await Promise.all(promises);
   }
 
-  if (this.pending_requests.VIP_requests != undefined && this.account_type == "professional" && professional_type == "VIP") {
+  if (this.pending_requests.VIP_requests != undefined && this.account_type == "professional" && this.professional_type == "VIP") {
     // Remove the reference of the user from the "pending_requests.VIP_requests" array of all the SMMs
     await User.updateMany({ _id: { $in: this.pending_requests.VIP_requests } }, { $pull: { "pending_requests.SMM_requests": this._id } });
-  } else if (this.pending_requests.SMM_requests != undefined && this.account_type == "professional" && professional_type == "SMM") {
+  } else if (this.pending_requests.SMM_requests != undefined && this.account_type == "professional" && this.professional_type == "SMM") {
     // Remove the reference of the user from the "pending_requests.SMM_requests" array of all the VIPs
     await User.updateMany({ _id: { $in: this.pending_requests.SMM_requests } }, { $pull: { "pending_requests.VIP_requests": this._id } });
   }

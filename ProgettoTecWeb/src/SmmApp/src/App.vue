@@ -64,7 +64,6 @@ export default {
       await this.getVip(username);
     },
     updateVipsArray(vips: any) {
-      console.log(vips);
       this.vips_usernames = vips;
     },
     async updateCharacters(tier: string) {

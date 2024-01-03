@@ -75,9 +75,10 @@
             <div id="recipients" class="collapse row justify-content-center tab-content pb-3">
                 <div class="col-4">
                     <div class="input-group mb-3">
-                        <span class="input-group-text col-3 justify-content-center" id="basic-addon1">@</span>
-                        <input v-model="tagInput['user']" v-on:keyup.space="addTag('user')" type="text" class="form-control"
-                            placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
+                        <span class="input-group-text col-3 justify-content-center" id="userSpecialChar">@</span>
+                        <input name="userInput" v-model="tagInput['user']" v-on:keyup.space="addTag('user')" type="text"
+                            class="form-control" placeholder="Username" aria-label="Username"
+                            aria-describedby="userSpecialChar">
                     </div>
                     <div class="overflow-auto scroll unselectable mb-3 border-primary rounded"
                         :class="{ 'border': tags['user'].length > 0 }">
@@ -90,10 +91,10 @@
                 </div>
                 <div class="col-4">
                     <div class="input-group mb-3">
-                        <span class="input-group-text col-3 justify-content-center" id="basic-addon1">§</span>
-                        <input v-model="tagInput['channel']" v-on:keyup.space="addTag('channel')" type="text"
-                            class="form-control" placeholder="Channel" aria-label="Username"
-                            aria-describedby="basic-addon1">
+                        <span class="input-group-text col-3 justify-content-center" id="channelSpecialChar">§</span>
+                        <input name="channelInput" v-model="tagInput['channel']" v-on:keyup.space="addTag('channel')"
+                            type="text" class="form-control" placeholder="Channel" aria-label="Username"
+                            aria-describedby="channelSpecialChar">
                     </div>
 
                     <div class="overflow-auto scroll unselectable mb-3 border-primary rounded"
@@ -106,10 +107,10 @@
                 </div>
                 <div class="col-4">
                     <div class="input-group mb-3">
-                        <span class="input-group-text col-3 justify-content-center" id="basic-addon1">#</span>
-                        <input v-model="tagInput['keyword']" v-on:keyup.space="addTag('keyword')" type="text"
-                            class="form-control" placeholder="Keyword" aria-label="Username"
-                            aria-describedby="basic-addon1">
+                        <span class="input-group-text col-3 justify-content-center" id="keywordSpecialChar">#</span>
+                        <input name="keywordInput" v-model="tagInput['keyword']" v-on:keyup.space="addTag('keyword')"
+                            type="text" class="form-control" placeholder="Keyword" aria-label="Username"
+                            aria-describedby="keywordSpecialChar">
                     </div>
 
                     <div class="overflow-auto scroll unselectable mb-3 border-primary rounded"
@@ -350,7 +351,7 @@ export default {
             const tagInput = this.tagInput[type];
             if (this.tagInput && !tags.includes(tagInput) && tagInput.trim() !== '') {
                 const tag = tagInput.replace(/\s/g, '');
-                //se il tag è già presente non aggiungerlo e svuota l'input
+                //if the tag is already present don't add it and empty the input
                 if (tags.includes(tag)) {
                     this.tagInput[type] = '';
                     return;

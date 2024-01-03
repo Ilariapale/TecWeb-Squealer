@@ -24,7 +24,7 @@ module.exports = {
       await mongoose.connect(mongouri, { useNewUrlParser: true, useUnifiedTopology: true });
       mongoose.set("strictQuery", false);
 
-      console.log(`Connected to ${credentials?.site}'s MongoDB instance using Mongoose...`);
+      console.log(`Connected to ${credentials ? credentials.site : "local"} MongoDB instance using Mongoose...`);
 
       await initializeDB();
 

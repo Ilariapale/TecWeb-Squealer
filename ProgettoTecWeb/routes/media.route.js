@@ -1,7 +1,6 @@
 const express = require("express");
 const media = require("../services/media");
 const router = new express.Router();
-const app = express();
 const path = require("path");
 const multer = require("multer");
 const fs = require("fs");
@@ -87,7 +86,7 @@ router.post("/upload/video", verifyToken, media.setVideoInReq, checkChar, upload
       if (err) {
         console.error("An error occurred:", err);
       } else {
-        console.log("Done! ", thumbnailPath);
+        console.log("Thumbnail generated! ", thumbnailPath);
       }
     });
 

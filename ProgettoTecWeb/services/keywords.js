@@ -1,17 +1,6 @@
 const mongoose = require("mongoose");
-const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
-const {
-  usernameRegex,
-  channelNameRegex,
-  officialChannelNameRegex,
-  keywordRegex,
-  mongooseObjectIdRegex,
-  findUser,
-  findSqueal,
-  findChannel,
-  findKeyword,
-  findNotification,
-} = require("./utils");
+const { Squeal, Keyword } = require("./schemas");
+const { keywordRegex, findUser, findKeyword } = require("./utils");
 module.exports = {
   /**
    * Create a new keyword

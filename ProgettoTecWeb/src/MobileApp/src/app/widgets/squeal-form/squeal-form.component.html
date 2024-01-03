@@ -49,32 +49,27 @@
             </ul>
             <!--Delayed squeals-->
             <div class="accordion-item">
-              <div id="delayedSqueal" class="accordion-collapse collapse" aria-label="Delayed squeal settings"
-                data-bs-parent="#accordionExample">
+              <div id="delayedSqueal" class="accordion-collapse collapse" aria-label="Delayed squeal settings">
                 <div class="accordion-body">
                   <!--body-->
-                  <!--TODO cambiare #accordionExample-->
                   <label for="delayedSquealType" class="form-label m-0 mt-2">Type of delayed squeal</label>
-                  <div class="input-group">
-                    <select #delayedSquealType id="delayedSquealType" class="form-select"
-                      aria-label="Default select example">
-                      <option value="postPeriodicallyForLimitedTimes" default>Post
-                        every 'tickRate' for a 'repeat' number
-                        of times
-                      </option>
-                      <option value="postAtIntervalsUntilDate">Post every
-                        'tickRate' until a 'scheduled date'</option>
-                      <option value="postAfterDelay">Post after a
-                        'delay' time
-                      </option>
-                      <option value="postAtDate">Post in a specific
-                        'scheduled
-                        date'</option>
+                  <select #delayedSquealType (change)="selectedDelayedSquealType()" id="delayedSquealType"
+                    class="form-select" aria-label="Delayed squeal type select">
+                    <option value="postPeriodicallyForLimitedTimes" default>Post
+                      every 'tickRate' for a 'repeat' number
+                      of times
+                    </option>
+                    <option value="postAtIntervalsUntilDate">Post every
+                      'tickRate' until a 'scheduled date'</option>
+                    <option value="postAfterDelay">Post after a
+                      'delay' time
+                    </option>
+                    <option value="postAtDate">Post in a specific
+                      'scheduled
+                      date'</option>
 
-                    </select>
-                    <button class="btn btn-outline-secondary" type="button"
-                      (click)="selectedDelayedSquealType()">Select</button>
-                  </div>
+                  </select>
+
 
 
                   <!--postPeriodicallyForLimitedTimes tick_rate, repeat-->
@@ -87,7 +82,7 @@
                     </div>
                     <div class="col-4 px-1">
                       <label for="rate" class="form-label m-0 mt-2"> Rate</label>
-                      <select #rate id="rate" class="form-select px-1" aria-label="Default select example">
+                      <select #rate id="rate" class="form-select px-1" aria-label="rate select">
                         <option value="mins" selected>mins</option>
                         <option value="hours">hours</option>
                       </select>
@@ -109,7 +104,7 @@
                     </div>
                     <div class="col-3 px-1">
                       <label for="rate" class="form-label m-0 mt-2"> Rate</label>
-                      <select #rate id="rate" class="form-select px-1" aria-label="Default select example">
+                      <select #rate id="rate" class="form-select px-1" aria-label="rate select">
                         <option value="mins" selected>mins</option>
                         <option value="hours">hours</option>
                       </select>
@@ -129,7 +124,7 @@
                     </div>
                     <div class="col-5">
                       <label for="rate" class="form-label m-0 mt-2"> Rate</label>
-                      <select #rate id="rate" class="form-select" aria-label="Default select example">
+                      <select #rate id="rate" class="form-select" aria-label="rate select">
                         <option value="mins" selected>mins</option>
                         <option value="hours">hours</option>
                       </select>
@@ -138,7 +133,7 @@
                   <!--postAtDate scheduled_date-->
                   <div class="row" #postAtDateForm *ngIf='selectedDelayedSquealTypeValue == "postAtDate"'>
                     <div class="col-12">
-                      <label for="date" class="form-label">Date</label>
+                      <label for="date" class="form-label m-0 mt-2">Date</label>
                       <input #date id="date" type="datetime-local" class="form-control" name="delayedSquealDate">
                     </div>
                   </div>
@@ -166,7 +161,7 @@
             <div class="tab-pane fade" id="pills-image" role="tabpanel" aria-labelledby="pills-image-tab" tabindex="0">
               <!--image-->
               <div class="mb-3">
-                <label for="imageInput" class="form-label">Image input</label>
+                <label for="imageInput" class="form-label m-0 mt-2">Image input</label>
                 <input class="form-control" placeholder="Upload Image here" title="image input" type="file" #imageInput
                   id="imageInput" accept="image/*" name="image" (change)="onFileSelected($event)">
               </div>
@@ -175,7 +170,7 @@
             <div class="tab-pane fade" id="pills-video" role="tabpanel" aria-labelledby="pills-video-tab" tabindex="0">
               <!--video-->
               <div class="mb-3">
-                <label for="videoInput" class="form-label">Video input</label>
+                <label for="videoInput" class="form-label m-0 mt-2">Video input</label>
                 <input class="form-control" placeholder="Upload Video here" title="video input" type="file" #videoInput
                   id="videoInput" accept="video/*" name="video" (change)="onFileSelected($event)">
               </div>
@@ -184,7 +179,9 @@
             <div class="tab-pane fade" id="pills-position" role="tabpanel" aria-labelledby="pills-position-tab"
               tabindex="0">
               <!--position-->
-              <app-map class="pb-3"></app-map>
+              <div class="my-3">
+                <app-map class="pb-3"></app-map>
+              </div>
               <!--End position-->
             </div>
           </div>

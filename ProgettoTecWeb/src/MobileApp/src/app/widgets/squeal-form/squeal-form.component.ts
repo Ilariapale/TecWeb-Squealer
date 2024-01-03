@@ -41,7 +41,6 @@ export class SquealFormComponent {
 
   showSquealPostResponse: boolean = false;
   postResponse: string = '';
-  private socket: any;
 
   recipients: Recipients = {
     users: [],
@@ -240,9 +239,6 @@ export class SquealFormComponent {
     if (this.squealForm.valid) {
       this.getRecipients();
       const squeal_content = this.squealForm.value.text;
-      //-----------------------------------------------------------
-      console.log(squeal_content);
-      //-----------------------------------------------------------
       const schedule_options = {
         tick_rate: this.getTickRate(),
         repeat: this.getRepeat(),
@@ -258,7 +254,6 @@ export class SquealFormComponent {
           schedule_options
         )
         .then((response: any) => {
-          //this.squealSubmitted.emit(response);
           this.userService.setUserData(this.user);
           sessionStorage.getItem('user')
             ? sessionStorage.setItem('user', JSON.stringify(this.user))
@@ -272,6 +267,7 @@ export class SquealFormComponent {
           this.showSquealPostResponse = true;
           this.request_outcome = true;
           this.extra_chars = this.char_left.extra_daily;
+          this.lastMessage = '';
         })
         .catch((error: any) => {
           this.postResponse = error.error.error;
@@ -287,7 +283,7 @@ export class SquealFormComponent {
           }
         });
     } else {
-      console.log('Form non valido');
+      console.log('Form not valid');
     }
   }
   createImageSqueal() {
@@ -451,7 +447,7 @@ export class SquealFormComponent {
         });
     } else {
       // Handle the case where the form is not valid
-      console.log('Form non valido');
+      console.log('Form not valid');
     }
   }
 

@@ -1,16 +1,12 @@
 const mongoose = require("mongoose");
-const { Notification, User, Squeal, Channel, Keyword } = require("./schemas");
+const { Notification, User, Channel } = require("./schemas");
 const {
-  usernameRegex,
   channelNameRegex,
   officialChannelNameRegex,
-  keywordRegex,
   mongooseObjectIdRegex,
   findUser,
   findSqueal,
   findChannel,
-  findKeyword,
-  findNotification,
   checkForAllUsers,
   addedAndRemoved,
   checkIfArrayIsValid,

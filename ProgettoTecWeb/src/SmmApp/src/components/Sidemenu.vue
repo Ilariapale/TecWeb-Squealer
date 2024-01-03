@@ -1,5 +1,5 @@
 <script  lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink } from 'vue-router'
 export default {
     setup() {
 
@@ -25,12 +25,8 @@ export default {
             sessionStorage.removeItem('Authorization');
             localStorage.removeItem('user');
             sessionStorage.removeItem('user');
-            //reindirizzo al sito /login
             window.location.href = "/login";
         },
-        link() {
-            console.log(this.$route);
-        }
     },
 };
 
@@ -39,7 +35,7 @@ export default {
 <template>
     <div id="menu-desktop"
         class="d-flex flex-column flex-shrink-0 p-3 unselectable text-white bg-dark elements-height desktop-menu">
-        <a @click="link" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <a class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
             <svg class="bi me-2" width="40" height="32">
             </svg>
             <span class="fs-4">Menu</span>
@@ -108,33 +104,36 @@ export default {
             <span class="visually-hidden">Icon-only</span>
         </a>
         <ul class="nav nav-pills nav-flush flex-column text-center mb-auto" role="tablist" aria-orientation="vertical">
-            <li class="nav-item nav-link active border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-home"
-                type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
+            <li class="nav-item nav-link border-bottom" :class="{ active: $route.name == 'dashboard' }"
+                data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home"
+                aria-selected="true">
                 <RouterLink :to="{ name: 'dashboard' }" title="dashboard" class="nav-link  py-3  text-white">
                     <i class="bi bi-house-door  m-0"></i>
                 </RouterLink>
             </li>
-            <li class="nav-item nav-link  border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-VIPrequests"
-                type="button" role="tab" aria-controls="v-pills-VIPrequests" aria-selected="false">
+            <li class="nav-item nav-link  border-bottom" :class="{ active: $route.name == 'vip-requests' }"
+                data-bs-toggle="pill" data-bs-target="#v-pills-VIPrequests" type="button" role="tab"
+                aria-controls="v-pills-VIPrequests" aria-selected="false">
                 <RouterLink :to="{ name: 'vip-requests' }" title="VIP requests" class="nav-link py-3 text-white">
                     <i class="bi bi-people-fill m-0"></i>
                 </RouterLink>
             </li>
-            <li class="nav-item nav-link  border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-shop" type="button"
-                role="tab" aria-controls="v-pills-shop" aria-selected="false">
+            <li class="nav-item nav-link  border-bottom" :class="{ active: $route.name == 'shop' }" data-bs-toggle="pill"
+                data-bs-target="#v-pills-shop" type="button" role="tab" aria-controls="v-pills-shop" aria-selected="false">
                 <RouterLink :to="{ name: 'shop' }" title="shop" class="nav-link py-3 text-white">
                     <i class="bi bi-shop  m-0"></i>
                 </RouterLink>
             </li>
-            <li class="nav-item nav-link  border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button"
-                role="tab" aria-controls="v-pills-home" aria-selected="false">
-                <a :href="'profile/' + user.username" title="profile smm" class="nav-link py-3 text-white">
+            <li class="nav-item nav-link  border-bottom" data-bs-toggle="pill" data-bs-target="#v-pills-SMMprofile"
+                type="button" role="tab" aria-controls="v-pills-SMMprofile" aria-selected="false">
+                <a :href="'/profile/' + user.username" title="profile smm" class="nav-link py-3 text-white">
                     <i class="bi bi-person-fill  m-0"></i>
                 </a>
             </li>
             <li v-if="vip.username" class="nav-item nav-link border-bottom" data-bs-toggle="pill"
-                data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home" aria-selected="false">
-                <a :href="'profile/' + vip.username" title="pofile vip" class="nav-link py-3 text-white">
+                data-bs-target="#v-pills-VIPprofile" type="button" role="tab" aria-controls="v-pills-VIPprofile"
+                aria-selected="false">
+                <a :href="'/profile/' + vip.username" title="pofile vip" class="nav-link py-3 text-white">
                     <i class="bi bi-arrow-90deg-left  m-0"></i>
                 </a>
             </li>

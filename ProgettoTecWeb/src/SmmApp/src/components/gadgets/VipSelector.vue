@@ -2,11 +2,12 @@
     <div class="p-1">You're now managing:</div>
     <div class="d-flex input-group">
         <select class="form-select form-select-lg  clickable" v-model="select_form" name="vip selector"
-            aria-label=".form-select-lg example" v-on:change="updateVip">
+            aria-label=".vips form selector" v-on:change="updateVip">
             <option :value="'none'" selected>Select a VIP</option>
             <option v-for="user in usernames" :value="user">{{ user }}</option>
         </select>
-        <button class="btn btn-danger text-white input-group-text" @click="removeVIPfromSMM"> Remove VIP</button>
+        <button class="btn btn-danger text-white input-group-text" type="button" @click="removeVIPfromSMM"> Remove
+            VIP</button>
     </div>
     <div v-if="select_form == 'none'" class="text-muted"><i class="bi bi-info-circle-fill"></i> Select a user to view
         squeals

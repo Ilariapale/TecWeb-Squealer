@@ -1,6 +1,6 @@
 const express = require("express");
 const chats = require("../services/chats");
-const { verifyToken, jwt } = require("../services/utils");
+const { verifyToken } = require("../services/utils");
 const router = new express.Router();
 
 router.get("/", verifyToken, async (req, res, next) => {

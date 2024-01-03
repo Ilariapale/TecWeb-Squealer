@@ -94,7 +94,6 @@ export class SearchComponent {
 
   sendSearch(last_loaded?: string, tab?: string) {
     this.loading = true;
-    console.log(last_loaded);
     if (!last_loaded) {
       this.userResults = [];
       this.channelResults = [];
@@ -107,7 +106,6 @@ export class SearchComponent {
         .getUsers(this.userQuery)
         .then((users) => {
           users.length >= this.RESULT_LIMIT ? (this.loadMoreUsersButton = true) : (this.loadMoreUsersButton = false);
-          console.log(users.length);
           users.forEach((user: User) => {
             this.userResults.push(user);
           });
@@ -139,7 +137,6 @@ export class SearchComponent {
           channels.length >= this.RESULT_LIMIT
             ? (this.loadMoreChannelsButton = true)
             : (this.loadMoreChannelsButton = false);
-          console.log(channels.length);
           channels.forEach((channel: Channel) => {
             this.channelResults.push(channel);
           });
@@ -172,7 +169,6 @@ export class SearchComponent {
           squeals.length >= this.RESULT_LIMIT
             ? (this.loadMoreSquealsButton = true)
             : (this.loadMoreSquealsButton = false);
-          console.log(squeals.length);
           squeals.forEach((squeal: Squeal) => {
             this.keywordResults.push(squeal);
           });

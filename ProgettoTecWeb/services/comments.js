@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
-const { Notification, User, Squeal, Channel, Keyword, CommentSection } = require("./schemas");
+const { Notification, Squeal, CommentSection } = require("./schemas");
 const { mongooseObjectIdRegex, findUser, findSqueal, findCommentSection } = require("./utils");
 const { COMMENTS_TO_LOAD } = require("./constants");
 
-const { mentionNotification, squealInOfficialChannel, someoneCommentedYourSqueal } = require("./messages");
+const { someoneCommentedYourSqueal } = require("./messages");
 
 module.exports = {
   getCommentSection: async (options) => {

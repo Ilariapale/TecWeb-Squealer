@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { Notification, User, Squeal, Channel, Keyword, CommentSection, Request } = require("./schemas");
+const { Notification, User, Squeal, CommentSection, Request } = require("./schemas");
 const { bcrypt, usernameRegex, mongooseObjectIdRegex, securityLvl, findUser, checkForAllNotifications, checkIfArrayIsValid } = require("./utils");
 const {
   welcomeNotification,
@@ -94,7 +94,6 @@ module.exports = {
     }
 
     if (last_loaded) {
-      console.log(last_loaded);
       if (!mongooseObjectIdRegex.test(last_loaded)) {
         return {
           status: 400,
@@ -538,7 +537,7 @@ module.exports = {
 
     const dateString = new Date().toLocaleString("it-IT", { timeZone: "CET" });
     // Distribute content types: dataDistribution
-    // Puoi generare un grafico a torta o un diagramma a barre // A graph showing the distribution of content types
+    // A graph showing the distribution of content types
     // To show the distribution of content types
     // (text, image, video, position, deleted) in a person's posts.
 
@@ -1045,7 +1044,7 @@ module.exports = {
 
     if (action === "decline") {
       await Request.findByIdAndDelete(request_id);
-      //mandiamo notifica allo user
+      //send notification to the user
       const newNotification = new Notification({
         user_ref: request.user_id,
         created_at: Date.now(),
@@ -1289,7 +1288,7 @@ module.exports = {
       };
     }
 
-    //controlli di coerenza
+    //coherence checks
     if (account_type === "professional" && (!professional_type || professional_type === "none")) {
       return {
         status: 400,
@@ -2043,7 +2042,7 @@ module.exports = {
     const isSMM = reqSender.account_type === "professional" && reqSender.professional_type === "SMM" && reqSender.managed_accounts.includes(user._id);
 
     if (!isThemselves && !isModerator && !isSMM) {
-      //caso qualcuno che vuole updateare il profilo di un altro utente // Case:  someone who wants to update another user's profile
+      // Case:  someone who wants to update another user's profile
       return {
         status: 400,
         data: { error: "You don't have the permissions to update this user's character quota" },

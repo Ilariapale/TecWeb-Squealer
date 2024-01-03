@@ -52,7 +52,7 @@ export default {
         acceptRequest(id: string) {
             const added = document.getElementById(`added-${id}`);
             manageSMMrequest(id, "accept").then((response: any) => {
-                //rimuovo la richiesta dalla lista
+                //remove request from list
                 added?.classList.remove("d-none");
                 document.getElementById(`removed-${id}`)?.classList.add("d-none");
                 document.getElementById(`button-div-${id}`)?.classList.add("d-none");

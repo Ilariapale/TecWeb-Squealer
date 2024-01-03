@@ -50,20 +50,23 @@
                             <tbody>
                                 <tr>
                                     <td class="p-2 px-0" style="white-space: pre;"><b>Daily</b>{{ '\t' }}<i
-                                            class="bi bi-arrow-right"></i> <button :disabled="vip.username == undefined"
-                                            class="btn btn-primary p-1 px-2" @click="buyChars('daily')">Buy 50</button>
+                                            class="bi bi-arrow-right"></i> <button type="button"
+                                            :disabled="vip.username == undefined" class="btn btn-primary p-1 px-2"
+                                            @click="buyChars('daily')">Buy 50</button>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="p-2 px-0" style="white-space: pre;"><b>Weekly</b>{{ '\t' }}<i
-                                            class="bi bi-arrow-right"></i> <button :disabled="vip.username == undefined"
-                                            class="btn btn-primary p-1 px-2" @click="buyChars('weekly')">Buy 150</button>
+                                            class="bi bi-arrow-right"></i> <button type="button"
+                                            :disabled="vip.username == undefined" class="btn btn-primary p-1 px-2"
+                                            @click="buyChars('weekly')">Buy 150</button>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="p-2 px-0" style="white-space: pre;"><b>Monthly</b>{{ '\t' }}<i
-                                            class="bi bi-arrow-right"></i> <button :disabled="vip.username == undefined"
-                                            class="btn btn-primary p-1 px-2" @click="buyChars('monthly')">Buy 500</button>
+                                            class="bi bi-arrow-right"></i> <button type="button"
+                                            :disabled="vip.username == undefined" class="btn btn-primary p-1 px-2"
+                                            @click="buyChars('monthly')">Buy 500</button>
                                     </td>
                                 </tr>
                             </tbody>

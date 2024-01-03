@@ -202,9 +202,9 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
   }
   ngAfterViewChecked() {
     if (!this.listenerSet) {
-      const exampleModal = document.getElementById('deleteConfirm') as HTMLElement;
+      const deleteConfirmModal = document.getElementById('deleteConfirm') as HTMLElement;
 
-      exampleModal?.addEventListener('show.bs.modal', (event: any) => {
+      deleteConfirmModal?.addEventListener('show.bs.modal', (event: any) => {
         const button = event.relatedTarget;
         const squealId = button.getAttribute('data-bs-squealId');
         this.squealToDelete = squealId;

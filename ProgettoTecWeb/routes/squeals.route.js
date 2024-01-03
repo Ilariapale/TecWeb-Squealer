@@ -1,8 +1,7 @@
 const express = require("express");
 const squeals = require("../services/squeals");
-const comments = require("../services/comments");
 const { scheduleSqueals } = require("../services/schedule_utils");
-const { verifyToken, jwt } = require("../services/utils");
+const { verifyToken } = require("../services/utils");
 const router = new express.Router();
 
 router.get("/", verifyToken, async (req, res, next) => {
@@ -122,7 +121,6 @@ router.get("/home", verifyToken, async (req, res, next) => {
     last_loaded: req.query.last_loaded,
     pag_size: req.query.pag_size,
   };
-  console.log("options: ", options);
 
   try {
     const result = await squeals.getHomeSqueals(options);

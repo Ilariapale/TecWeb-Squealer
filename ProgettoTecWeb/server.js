@@ -1,5 +1,3 @@
-//TODO immagini
-
 const express = require("express"),
   cookieParser = require("cookie-parser"),
   db = require("./db"),
@@ -16,10 +14,7 @@ const express = require("express"),
 const server = http.createServer(app);
 const io = socketIo(server);
 const connectedUsers = {};
-const { check_init } = require("./services/reaction_check.js");
-const { character_reset_init } = require("./services/character_reset.js");
 const { postPositionScheduledSqueal, deleteFromSendingPositionObject } = require("./services/schedule_utils");
-const { initializeDB, postWeatherSqueals } = require("./services/generator.js");
 
 app.set("port", PORT);
 app.set("env", NODE_ENV);
@@ -108,13 +103,13 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   const msg = err.error || err.message;
-  console.error(`Error ${status} (${msg}) on ${req.method} ${req.url} with payload ${"req.body"}.`);
+  console.error(`Error ${status} (${msg}) on ${req.method} ${req.url}.`);
   res.status(status).send({ status, error: msg });
 });
 
 server.listen(PORT, () => {
   console.log(`Express Server started on Port ${app.get("port")} | Environment : ${app.get("env")}`);
-  console.log("" + __dirname + "/src/MobileApp");
+  console.log(__dirname);
 });
 
 db.dbconnect();

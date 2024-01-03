@@ -2,8 +2,6 @@ const express = require("express");
 const users = require("../services/users");
 const { verifyToken, jwt } = require("../services/utils");
 const router = new express.Router();
-const path = require("path");
-const { stringify } = require("querystring");
 
 //Gives your username back if no identifier in query, otherwise gives back the username of the user with the given identifier
 router.get("/username", verifyToken, async (req, res, next) => {

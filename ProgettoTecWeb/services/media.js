@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-//const { Media } = require("./schemas");
 const ffmpeg = require("fluent-ffmpeg");
 const fs = require("fs");
 const path = require("path");

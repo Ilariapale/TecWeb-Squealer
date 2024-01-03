@@ -3,11 +3,6 @@
   <div class="row justify-content-center of-vis">
     <div class="col-12 col-md-6 of-vis">
       <div class="squeal card text-center shadow-0 of-vis" [class]="getDarkMode()">
-        <!-- <div class=" bg-image hover-overlay ripple">
-          <a href="#!">
-            <div class="mask" style="background-color: rgba(251, 251, 251, 0.15)"></div>
-          </a>
-        </div> -->
 
         <div class="card-header">
           <div class="row">
@@ -147,9 +142,10 @@
 
             <form class="input-group mb-3">
               <input type="text" [(ngModel)]="newCommentText" class="form-control" name="squeal comment"
-                placeholder="Insert your comment..." aria-label="Recipient's username" aria-describedby="button-addon2">
+                placeholder="Insert your comment..." aria-label="Recipient's username"
+                aria-describedby="comment post button">
               <button class="btn btn-outline-secondary" type="submit" (click)="addComment()"
-                id="button-addon2">Post</button>
+                id="commentPostButton">Post</button>
             </form>
           </div>
 

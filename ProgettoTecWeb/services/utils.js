@@ -748,7 +748,6 @@ function generateToken(user_data, expireTime = config.tokenExpireTime) {
   const payload = { user };
   const secretKey = config.secretKey; // Substituted with a robust and random secret key
 
-  // Create token with an expiration date (1 hour in this example)
   const token = jwt.sign(payload, secretKey, { expiresIn: expireTime });
 
   return token;
@@ -759,7 +758,6 @@ function generateGuestToken(guest, expireTime = "32d") {
   const payload = { guest };
   const secretKey = config.secretKey; // Substituted with a robust and random secret key
 
-  // Create token with an expiration date (1 hour in this example)
   const token = jwt.sign(payload, secretKey, { expiresIn: expireTime });
 
   return token;

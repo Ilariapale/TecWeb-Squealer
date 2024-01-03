@@ -102,7 +102,6 @@ module.exports = {
     //check if the request has specified created_after or created_before
     if (created_after) {
       const date = Date.parse(created_after);
-      console.log("gte", date);
 
       if (isNaN(date)) {
         return {

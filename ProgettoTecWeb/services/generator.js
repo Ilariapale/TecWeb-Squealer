@@ -1,8 +1,6 @@
-const mongoose = require("mongoose");
 const { Notification, User, Squeal, Channel, CommentSection } = require("./schemas");
 const { bcrypt, securityLvl } = require("./utils");
 const { squealInOfficialChannel } = require("./messages");
-const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TIERS } = require("./constants");
 const cron = require("node-cron");
 
 async function initializeDB() {

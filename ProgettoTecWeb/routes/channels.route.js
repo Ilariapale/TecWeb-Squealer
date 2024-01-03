@@ -1,6 +1,6 @@
 const express = require("express");
 const channels = require("../services/channels");
-const { verifyToken, jwt } = require("../services/utils");
+const { verifyToken } = require("../services/utils");
 const router = new express.Router();
 
 router.get("/", verifyToken, async (req, res, next) => {

@@ -128,7 +128,6 @@ export class SquealsService {
     let requestOptions;
     if (guest) requestOptions = this.guestHeadersGenerator();
     else requestOptions = this.headersGenerator(true);
-    console.log(requestOptions);
     return firstValueFrom(this.http.patch(`${this.apiUrl}/${squeal_id}/reaction/${reaction}`, {}, requestOptions));
   }
 

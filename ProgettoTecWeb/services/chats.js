@@ -1,5 +1,4 @@
-const mongoose = require("mongoose");
-const { Notification, User, Squeal, Channel, Keyword, Chat } = require("./schemas");
+const { Chat } = require("./schemas");
 const { findUser, findChat, mongooseObjectIdRegex } = require("./utils");
 const { DIRECT_MESSAGE_MAX_LENGTH, MESSAGES_TO_LOAD } = require("./constants");
 
