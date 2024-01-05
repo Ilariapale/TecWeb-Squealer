@@ -26,6 +26,7 @@ const DOMelements = {
 
   usersForm: undefined,
   usernameInput: undefined,
+  usersSearchError: undefined,
   userCard: undefined,
   usersList: undefined,
   usersSelectSortType: undefined,
@@ -38,6 +39,7 @@ const DOMelements = {
 
   channelsForm: undefined,
   channelInput: undefined,
+  channelsSearchError: undefined,
   channelCard: undefined,
   channelsList: undefined,
   channelsSelectSortType: undefined,
@@ -50,6 +52,7 @@ const DOMelements = {
 
   squealsForm: undefined,
   squealInput: undefined,
+  squealsSearchError: undefined,
   squealSenderInput: undefined,
   squealRecipientInput: undefined,
   squealHexInput: undefined,
@@ -64,6 +67,7 @@ const DOMelements = {
   squealsLoadMoreButton: undefined,
 
   requestTab: undefined,
+  reportsSearchError: undefined,
   reportsLoadMoreButton: undefined,
   reportedSquealsTab: undefined,
   requestsLoadMoreButton: undefined,
@@ -117,14 +121,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   //DOM ELEMENTS ----------------------------------------------------------------------------------------
-  DOMelements.iframe = document.getElementById("iframe");
-
-  DOMelements.requestTab = document.getElementById("nav-requests-tab");
-  DOMelements.reportedSquealsTab = document.getElementById("nav-reports-tab");
 
   DOMelements.reportsLoadMoreButton = document.getElementById("reportsLoadMoreButton");
-  DOMelements.requestsLoadMoreButton = document.getElementById("requestsLoadMoreButton");
-
+  DOMelements.reportedSquealsTab = document.getElementById("nav-reports-tab");
+  DOMelements.reportsSearchError = document.getElementById("reports-search-error");
   DOMelements.reportedSquealCards = document.getElementById("reportedSquealCards");
   DOMelements.reportedSquealsForm = document.getElementById("reportedSquealsForm");
   DOMelements.reportedSquealsSelectSortType = document.getElementById("reportedSquealsSelectSortType");
@@ -132,9 +132,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   DOMelements.usersForm = document.getElementById("usersForm");
   DOMelements.usernameInput = document.getElementById("usernameInput");
-
   DOMelements.userCard = document.getElementById("userCard");
   DOMelements.usersList = document.getElementById("usersList");
+  DOMelements.usersSearchError = document.getElementById("users-search-error");
   DOMelements.usersSelectSortType = document.getElementById("usersSelectSortType");
   DOMelements.usersSelectSortBy = document.getElementById("usersSelectSortBy");
   DOMelements.usersVipRadio = document.getElementById("vip-radio");
@@ -145,6 +145,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   DOMelements.channelsForm = document.getElementById("channelsForm");
   DOMelements.channelInput = document.getElementById("channelInput");
+  DOMelements.channelsSearchError = document.getElementById("channels-search-error");
   DOMelements.channelCard = document.getElementById("channelCard");
   DOMelements.channelsList = document.getElementById("channelsList");
   DOMelements.channelsSelectSortType = document.getElementById("channelsSelectSortType");
@@ -157,6 +158,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   DOMelements.squealsForm = document.getElementById("squealsForm");
   DOMelements.squealInput = document.getElementById("squealInput");
+  DOMelements.squealsSearchError = document.getElementById("squeals-search-error");
   DOMelements.squealCard = document.getElementById("squealCard");
   DOMelements.squealsList = document.getElementById("squealsList");
   DOMelements.squealSenderInput = document.getElementById("squealSenderInput");
@@ -169,6 +171,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   DOMelements.squealsUnofficialRadio = document.getElementById("squeals-unofficial-radio");
   DOMelements.squealsAllRadio = document.getElementById("squeals-all-radio");
   DOMelements.squealsLoadMoreButton = document.getElementById("squealsLoadMoreButton");
+
+  DOMelements.requestTab = document.getElementById("nav-requests-tab");
+  DOMelements.requestsLoadMoreButton = document.getElementById("requestsLoadMoreButton");
+  DOMelements.iframe = document.getElementById("iframe");
 
   DOMelements.logoutButton = document.getElementById("logout-button");
 
@@ -235,37 +241,37 @@ document.addEventListener("DOMContentLoaded", async function () {
   });
 
   DOMelements.requestTab.addEventListener("click", async function (e) {
-    await loadRequests().catch((error) => alert(error));
+    await loadRequests().catch((error) => console.log(error));
   });
 
   DOMelements.reportedSquealsTab.addEventListener("click", async function (e) {
-    await loadReportedSqueals().catch((error) => alert(error));
+    await loadReportedSqueals().catch((error) => console.log(error));
   });
 
   DOMelements.reportsLoadMoreButton.addEventListener("click", async function (e) {
-    await loadReportedSqueals(true).catch((error) => alert(error));
+    await loadReportedSqueals(true).catch((error) => console.log(error));
   });
 
   DOMelements.requestsLoadMoreButton.addEventListener("click", async function (e) {
-    await loadRequests(true).catch((error) => alert(error));
+    await loadRequests(true).catch((error) => console.log(error));
   });
 
   DOMelements.usersLoadMoreButton.addEventListener("click", async function (e) {
-    await loadUsers(true).catch((error) => alert(error));
+    await loadUsers(true).catch((error) => console.log(error));
   });
 
   DOMelements.channelsLoadMoreButton.addEventListener("click", async function (e) {
-    await loadChannels(true).catch((error) => alert(error));
+    await loadChannels(true).catch((error) => console.log(error));
   });
 
   DOMelements.squealsLoadMoreButton.addEventListener("click", async function (e) {
-    await loadSqueals(true).catch((error) => alert(error));
+    await loadSqueals(true).catch((error) => console.log(error));
   });
 
   DOMelements.reportedSquealsForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     DOMelements.reportsLoadMoreButton.style.display = "block";
-    await loadReportedSqueals().catch((error) => alert(error));
+    await loadReportedSqueals().catch((error) => console.log(error));
   });
 
   DOMelements.logoutButton.addEventListener("click", async function (e) {
@@ -281,6 +287,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   DOMelements.usersLoadMoreButton.style.display = "none";
   DOMelements.channelsLoadMoreButton.style.display = "none";
   DOMelements.squealsLoadMoreButton.style.display = "none";
+  DOMelements.usersSearchError.style.display = "none";
+  DOMelements.channelsSearchError.style.display = "none";
+  DOMelements.squealsSearchError.style.display = "none";
+  DOMelements.reportsSearchError.style.display = "none";
 });
 
 //CHANNELS -------------------------------------------------------------------------------------
@@ -368,22 +378,29 @@ async function searchChannels(load_more = false) {
 
 async function loadChannels(load_more = false) {
   DOMelements.channelsLoadMoreButton.style.display = "block";
-  await searchChannels(load_more).then(async (channels) => {
-    if (!channels || !channels.length || channels.length <= 0) {
-      if (!load_more) DOMelements.channelsList.innerHTML = "<div class='text-center text-danger h5 pt-3'>No channels found</div>";
-      DOMelements.channelsLoadMoreButton.style.display = "none";
-      return;
-    }
-    if (!load_more) DOMelements.channelsList.innerHTML = "";
-    channels.forEach(async (channel) => {
-      DOMelements.channelsList.appendChild(channelTemplates.channel_in_list(channel));
-    });
-    channels.forEach(async (channel) => {
-      document.getElementById("channel_in_list-" + channel._id).addEventListener("click", async function () {
-        await loadChannel(channel._id).catch((error) => alert(error));
+  await searchChannels(load_more)
+    .then(async (channels) => {
+      if (!channels || !channels.length || channels.length <= 0) {
+        if (!load_more) DOMelements.channelsList.innerHTML = "<div class='text-center text-danger h5 pt-3'>No channels found</div>";
+        DOMelements.channelsLoadMoreButton.style.display = "none";
+        return;
+      }
+      if (!load_more) DOMelements.channelsList.innerHTML = "";
+      channels.forEach(async (channel) => {
+        DOMelements.channelsList.appendChild(channelTemplates.channel_in_list(channel));
       });
+      channels.forEach(async (channel) => {
+        document.getElementById("channel_in_list-" + channel._id).addEventListener("click", async function () {
+          await loadChannel(channel._id).catch((error) => alert(error));
+        });
+      });
+      DOMelements.channelsSearchError.style.display = "none";
+    })
+    .catch((error) => {
+      DOMelements.channelsSearchError.style.display = "block";
+      DOMelements.channelsLoadMoreButton.style.display = "none";
+      DOMelements.channelsSearchError.innerHTML = error;
     });
-  });
 }
 
 //USERS ----------------------------------------------------------------------------------------
@@ -536,22 +553,29 @@ async function searchUsers(load_more = false) {
 
 async function loadUsers(load_more = false) {
   DOMelements.usersLoadMoreButton.style.display = "block";
-  await searchUsers(load_more).then(async (users) => {
-    if (!users || !users.length || users.length <= 0) {
-      if (!load_more) DOMelements.usersList.innerHTML = "<div class='text-center text-danger h5 pt-3'>No users found</div>";
-      DOMelements.usersLoadMoreButton.style.display = "none";
-      return;
-    }
-    if (!load_more) DOMelements.usersList.innerHTML = "";
-    users.forEach(async (user) => {
-      DOMelements.usersList.appendChild(userTemplates.user_in_list(user));
-    });
-    users.forEach(async (user) => {
-      document.getElementById("user_in_list-" + user._id).addEventListener("click", async function () {
-        await loadUser(user.username).catch((error) => alert(error));
+  await searchUsers(load_more)
+    .then(async (users) => {
+      if (!users || !users.length || users.length <= 0) {
+        if (!load_more) DOMelements.usersList.innerHTML = "<div class='text-center text-danger h5 pt-3'>No users found</div>";
+        DOMelements.usersLoadMoreButton.style.display = "none";
+        return;
+      }
+      if (!load_more) DOMelements.usersList.innerHTML = "";
+      users.forEach(async (user) => {
+        DOMelements.usersList.appendChild(userTemplates.user_in_list(user));
       });
+      users.forEach(async (user) => {
+        document.getElementById("user_in_list-" + user._id).addEventListener("click", async function () {
+          await loadUser(user.username).catch((error) => alert(error));
+        });
+      });
+      DOMelements.usersSearchError.style.display = "none";
+    })
+    .catch((error) => {
+      DOMelements.usersSearchError.style.display = "block";
+      DOMelements.usersLoadMoreButton.style.display = "none";
+      DOMelements.usersSearchError.innerHTML = error;
     });
-  });
 }
 
 //SQUEALS ----------------------------------------------------------------------------------------
@@ -687,13 +711,15 @@ async function searchSqueals(load_more = false) {
   if (DOMelements.squealHexInputCheckbox.checked) {
     //hex and sender request
     const squeal_hex = DOMelements.squealHexInput.value;
-    if (!squeal_hex || squeal_hex == "") return;
     const sender = DOMelements.squealSenderInput.value;
+
+    if (!squeal_hex || squeal_hex == "" || sender.replace(/\s/g, "") == "") throw new Error("You must enter a hex and a sender");
     apiUrl = `squeals/user_id/${sender}/hex/${squeal_hex}`;
   } else {
     //normal request
     apiUrl = "squeals?";
     if ((DOMelements.squealsSelectSortBy.value != "none") ^ (DOMelements.squealsSelectSortType.value != "none")) {
+      DOMelements.squealsList.innerHTML = "";
       throw new Error("You must select both sort by and sort type");
     }
 
@@ -735,22 +761,30 @@ async function searchSqueals(load_more = false) {
 
 async function loadSqueals(load_more = false) {
   DOMelements.squealsLoadMoreButton.style.display = "block";
-  await searchSqueals(load_more).then(async (squeals) => {
-    if (!squeals || !squeals.length || squeals.length <= 0) {
-      if (!load_more) DOMelements.squealsList.innerHTML = "<div class='text-center text-danger h5 pt-3'>No squeals found</div>";
-      DOMelements.squealsLoadMoreButton.style.display = "none";
-      return;
-    }
-    if (!load_more) DOMelements.squealsList.innerHTML = "";
-    squeals.forEach(async (squeal) => {
-      DOMelements.squealsList.appendChild(squealTemplates.squeal_in_list(squeal));
-    });
-    squeals.forEach(async (squeal) => {
-      document.getElementById("squeal_in_list-" + squeal._id).addEventListener("click", async function () {
-        await loadSqueal(squeal).catch((error) => alert(error));
+  await searchSqueals(load_more)
+    .then(async (squeals) => {
+      if (!squeals || !squeals.length || squeals.length <= 0) {
+        if (!load_more) DOMelements.squealsList.innerHTML = "<div class='text-center text-danger h5 pt-3'>No squeals found</div>";
+        DOMelements.squealsLoadMoreButton.style.display = "none";
+        DOMelements.squealsSearchError.style.display = "none";
+        return;
+      }
+      if (!load_more) DOMelements.squealsList.innerHTML = "";
+      squeals.forEach(async (squeal) => {
+        DOMelements.squealsList.appendChild(squealTemplates.squeal_in_list(squeal));
       });
+      squeals.forEach(async (squeal) => {
+        document.getElementById("squeal_in_list-" + squeal._id).addEventListener("click", async function () {
+          await loadSqueal(squeal).catch((error) => alert(error));
+        });
+      });
+      DOMelements.squealsSearchError.style.display = "none";
+    })
+    .catch((error) => {
+      DOMelements.squealsSearchError.style.display = "block";
+      DOMelements.squealsLoadMoreButton.style.display = "none";
+      DOMelements.squealsSearchError.innerHTML = error;
     });
-  });
 }
 //-----------------------------------------------------------------------------------------------------------------------------
 //REPORTED SQUEALS
@@ -758,13 +792,29 @@ async function loadReportedSqueals(load_more = false) {
   let squeals;
   if (!load_more) {
     DOMelements.reportedSquealCards.innerHTML = "";
-    squeals = await getReports(false);
+    squeals = await getReports(false)
+      .then(() => {
+        DOMelements.reportsSearchError.style.display = "none";
+      })
+      .catch((error) => {
+        DOMelements.reportsSearchError.style.display = "block";
+        DOMelements.requestsLoadMoreButton.style.display = "none";
+        DOMelements.reportsSearchError.innerHTML = error;
+      });
   } else {
-    squeals = await getReports(true);
+    squeals = await getReports(true)
+      .then(() => {
+        DOMelements.reportsSearchError.style.display = "none";
+      })
+      .catch((error) => {
+        DOMelements.reportsSearchError.style.display = "block";
+        DOMelements.requestsLoadMoreButton.style.display = "none";
+        DOMelements.reportsSearchError.innerHTML = error;
+      });
   }
   if (!squeals || squeals.length <= 0) {
     const noSquealsMessage = document.createElement("div");
-    noSquealsMessage.className = "text-white text-center";
+    noSquealsMessage.className = "text-white text-center pb-3";
     noSquealsMessage.innerHTML = "No squeals reported";
     DOMelements.reportedSquealCards.appendChild(noSquealsMessage);
     DOMelements.reportsLoadMoreButton.style.display = "none";

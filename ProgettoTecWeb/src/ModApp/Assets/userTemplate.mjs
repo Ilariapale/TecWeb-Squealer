@@ -167,17 +167,17 @@ export const user_in_list = (user) => {
           <div class="col-md-4 align-items-center d-flex">
               <img src="./../media/propic/${
                 user?.profile_picture || "squealer.png"
-              }" class="img-fluid rounded-start propic " onerror="if (this.src != 'Assets/logo.png') this.src = 'assets/logo.png'"
+              }" class="img-fluid rounded propic " onerror="if (this.src != 'Assets/logo.png') this.src = 'assets/logo.png'"
                   alt="${user?.profile_picture || ""}">
           </div>
           <div class="col">
               <div class="card-body">
-                  <div ><b>@${user?.username || "username"}</b></div>
+                  <div><b>@${user?.username || "username"}</b></div>
                   <div class="text-muted">User since: ${new Date(user?.created_at).toLocaleString()}</div>
-                  <div ><b>Number of Squeals:</b> ${user.squeals_count || "0"}  </div>
-                  <div ><b>Popularity score:</b> ${user.reaction_metrics?.popularity_score || "0"}</div>
-                  <div ><b>Account type:</b> ${user.account_type}</div>
-                  <div ><b>Professional type:</b> ${user.professional_type}</div>
+                  <div><b>Number of Squeals:</b> ${user.squeals_count || "0"}  </div>
+                  <div><b>Popularity score:</b> ${user.reaction_metrics?.popularity_score || "0"}</div>
+                  <div><b>Account type:</b> ${user.account_type}</div>
+                  <div><b>Professional type:</b> ${user.professional_type}</div>
               </div>
           </div>
         </div>

@@ -98,6 +98,8 @@
                     </form>
                     <div class="col-3"></div>
                 </div>
+                <div class="text-danger text-center pt-2" id="reports-search-error"></div>
+
                 <div class="row mt-4">
                     <div class="m-2"></div>
 
@@ -178,7 +180,7 @@
                     </form>
                     <div class="col-3"></div>
                 </div>
-
+                <div class="text-danger text-center" id="users-search-error"></div>
                 <div class="row h-100">
                     <div class="col-4 mb-5">
                         <div id="usersList" class="row d-flex justify-content-center "></div>
@@ -259,28 +261,27 @@
                                 <label class="btn btn-outline-primary" for="channels-all-radio">All</label>
                             </div>
                         </div>
-
                     </form>
                     <div class="col-3"></div>
-                    <div class="row h-100">
-                        <div class="col-4 mb-5">
-                            <div id="channelsList" class="row d-flex justify-content-center "></div>
-                            <div class="row">
-                                <div class="col-5"></div>
-                                <button type="button" title="Load Channel requests" id="channelsLoadMoreButton"
-                                    class="mb-4 btn btn-secondary btn-rounded px-4 py-2 col">
-                                    <i class="bi bi-arrow-down-circle-fill text-white"></i></button>
-                                <div class="col-5"></div>
-                            </div>
-
+                </div>
+                <div class="text-danger text-center" id="channels-search-error"></div>
+                <div class="row h-100">
+                    <div class="col-4 mb-5">
+                        <div id="channelsList" class="row d-flex justify-content-center "></div>
+                        <div class="row">
+                            <div class="col-5"></div>
+                            <button type="button" title="Load Channel requests" id="channelsLoadMoreButton"
+                                class="mb-4 btn btn-secondary btn-rounded px-4 py-2 col">
+                                <i class="bi bi-arrow-down-circle-fill text-white"></i></button>
+                            <div class="col-5"></div>
                         </div>
-                        <div class="vr p-0 m-0"></div>
-                        <div class="col d-flex justify-content-center">
-                            <div id="channelCard" class="row d-flex justify-content-center position-fixed">
-                            </div>
+
+                    </div>
+                    <div class="vr p-0 m-0"></div>
+                    <div class="col d-flex justify-content-center">
+                        <div id="channelCard" class="row d-flex justify-content-center position-fixed">
                         </div>
                     </div>
-
                 </div>
             </div>
             <!-- Squeals Tab -->
@@ -367,27 +368,27 @@
 
                     </form>
                     <div class="col-3"></div>
-                    <div class="row h-100">
-                        <div class="col-4 mb-5">
-                            <div id="squealsList" class="row d-flex justify-content-center "></div>
-                            <div class="row">
-                                <div class="col-5"></div>
-                                <button type="button" title="Load more Squeals" id="squealsLoadMoreButton"
-                                    class="mb-4 btn btn-secondary btn-rounded px-4 py-2 col">
-                                    <i class="bi bi-arrow-down-circle-fill text-white"></i></button>
-                                <div class="col-5"></div>
-                            </div>
-
-                        </div>
-                        <div class="vr p-0 m-0"></div>
-                        <div class="col d-flex justify-content-center h-100">
-                            <div id="squealCard" class="row d-flex justify-content-center position-fixed h-65">
-                            </div>
+                </div>
+                <div class="text-danger text-center" id="squeals-search-error"></div>
+                <div class="row h-100">
+                    <div class="col-4 mb-5">
+                        <div id="squealsList" class="row d-flex justify-content-center "></div>
+                        <div class="row">
+                            <div class="col-5"></div>
+                            <button type="button" title="Load more Squeals" id="squealsLoadMoreButton"
+                                class="mb-4 btn btn-secondary btn-rounded px-4 py-2 col">
+                                <i class="bi bi-arrow-down-circle-fill text-white"></i></button>
+                            <div class="col-5"></div>
                         </div>
                     </div>
-
+                    <div class="vr p-0 m-0"></div>
+                    <div class="col d-flex justify-content-center h-100">
+                        <div id="squealCard" class="row d-flex justify-content-center position-fixed h-65">
+                        </div>
+                    </div>
                 </div>
             </div>
+
             <!-- Request Tab -->
             <div class="tab-pane " id="nav-requests" role="tabpanel" aria-labelledby="nav-requests-tab" tabindex="4">
 
@@ -426,6 +427,9 @@
         <div class="footer-text col">
             &copy; Copyright &copy; 2023-2024 &mdash; Team 08
         </div>
+        <a class="text-white col-1 text-align-center py-3 clickable" href="/home">
+            <i id="home-button" class="bi bi-house-down-fill h4 btn btn-primary mb-0"></i>
+        </a>
     </footer>
 </body>
 
