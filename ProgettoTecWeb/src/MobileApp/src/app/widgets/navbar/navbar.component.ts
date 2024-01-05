@@ -50,7 +50,8 @@ export class NavbarComponent {
     if (page === 'profile') {
       this.user = this.userService.getUserData()?.username || '';
       const destination = this.user ? `/${page}/${this.user}` : '/login';
-      this.router.navigate([destination]);
+      //this.router.navigate([destination]);
+      window.location.href = destination;
     } else if (page === 'smm-dashboard') {
       window.location.href = '/smm-dashboard';
     } else if (page === 'mod-dashboard') {
