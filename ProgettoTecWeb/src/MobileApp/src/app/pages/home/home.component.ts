@@ -31,10 +31,10 @@ export class HomeComponent {
     this.user = {} as User;
 
     this.user = this.userService.getUserData();
-    if (this.user.account_type == 'guest') {
+    if (this.user?.account_type == 'guest') {
       this.isGuest = true;
     } else {
-      if (['standard', 'moderator', 'professional', 'verified'].includes(this.user.account_type)) {
+      if (['standard', 'moderator', 'professional', 'verified'].includes(this.user?.account_type)) {
         this.isGuest = false;
         this.usersService
           .getUser(this.user.username as string)

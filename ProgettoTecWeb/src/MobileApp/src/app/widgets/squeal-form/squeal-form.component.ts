@@ -11,6 +11,7 @@ import { MediaService } from 'src/app/services/api/media.service';
 import { MapComponent } from '../map/map.component';
 import { PositionService } from 'src/app/services/position.service';
 import { UsersService } from 'src/app/services/api/users.service';
+import { AuthService } from 'src/app/services/api/auth.service';
 @Component({
   selector: 'app-squeal-form',
   templateUrl: './squeal-form.component.html',
@@ -103,7 +104,8 @@ export class SquealFormComponent {
     private router: Router,
     private mediaService: MediaService,
     private positionService: PositionService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    public authService: AuthService
   ) {
     this.userFromSessionStorage = this.userService.getUserData();
     if (this.userFromSessionStorage.account_type == 'guest') {
@@ -125,14 +127,24 @@ export class SquealFormComponent {
       text: ['', Validators.required],
     });
     if (this.user && this.user._id) {
-      this.usersService.getUser(this.user._id as string).then((response: any) => {
-        this.isGuest = false;
-        this.user = response;
-        this.char_left.daily = this.user.char_quota?.daily ?? 0;
-        this.char_left.weekly = this.user.char_quota?.weekly ?? 0;
-        this.char_left.monthly = this.user.char_quota?.monthly ?? 0;
-        this.char_left.extra_daily = this.user.char_quota?.extra_daily ?? 0;
-      });
+      this.usersService
+        .getUser(this.user._id as string)
+        .then((response: any) => {
+          this.isGuest = false;
+          this.user = response;
+          if (this.user == undefined || this.user.char_quota == undefined) {
+            this.authService.logout();
+          } else {
+            this.char_left.daily = this.user.char_quota.daily;
+            this.char_left.weekly = this.user.char_quota.weekly;
+            this.char_left.monthly = this.user.char_quota.monthly;
+            this.char_left.extra_daily = this.user.char_quota.extra_daily;
+          }
+        })
+        .catch((error: any) => {
+          console.log(error);
+          this.authService.logout();
+        });
     }
   }
 
