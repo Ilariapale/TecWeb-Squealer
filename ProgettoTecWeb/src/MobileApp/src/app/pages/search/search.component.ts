@@ -186,6 +186,7 @@ export class SearchComponent {
         .catch((err: any) => {
           console.log(err);
           this.loading = false;
+          this.keyword = '';
           this.loadMoreSquealsButton = false;
           this.searchError = err?.error?.error;
           if (err?.error?.error != undefined) this.searchErrorShown = true;
