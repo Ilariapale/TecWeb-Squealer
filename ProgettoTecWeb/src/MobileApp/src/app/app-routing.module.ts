@@ -17,6 +17,7 @@ import { SquealComponent } from './widgets/squeal/squeal.component';
 import { ChannelManagerComponent } from './pages/channel-manager/channel-manager.component';
 import { ErrorComponent } from './pages/error/error.component';
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
+import { KeywordComponent } from './pages/keyword/keyword.component';
 //import { PageLayoutComponent } from './pages/page-layout/page-layout.component';
 
 const routes: Routes = [
@@ -37,12 +38,12 @@ const routes: Routes = [
   { path: 'private-chats/user/:id/:recipient', component: ChatComponent },
   { path: 'private-chats/user/:user', component: ChatComponent },
   { path: 'channel/:identifier', component: ChannelComponent },
+  { path: 'keyword/:identifier', component: KeywordComponent },
   { path: 'squeal/:identifier', component: SquealComponent },
   { path: 'channel-manager', component: ChannelManagerComponent },
   { path: 'error/:code', component: ErrorComponent },
   { path: 'reactions-menu', component: ReactionsMenuComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
-  // { path: 'chat', component: ChatsComponent },
 ];
 
 @NgModule({

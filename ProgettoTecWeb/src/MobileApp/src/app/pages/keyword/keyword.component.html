@@ -1,0 +1,30 @@
+<div class="content" role="main">
+  <div class="m-2"><i class="clickable bi bi-arrow-left-circle-fill" (click)="goBack()"></i></div>
+
+  <div class="mt-4 sticky-top">
+    <div class="row p-3 " [ngClass]="bannerClass">
+      <div class="col-auto">
+        <h1 class="row">#{{identifier}}</h1>
+      </div>
+      <span class="col d-flex flex-row-reverse">
+
+
+      </span>
+    </div>
+  </div>
+  <hr class="mt-1">
+  <div class="pb-2">
+    <div *ngFor="let squeal of squeals">
+      <app-squeal [squeal]="squeal" class="of-vis"></app-squeal>
+    </div>
+
+    <div *ngIf="loadMore" class=" d-flex justify-content-center align-items-center py-2">
+      <button (click)="loadMoreSqueals()" type="button" title="load more"
+        class="btn btn-outline-secondary rounded-pill"><i class="bi bi-arrow-clockwise"></i></button>
+
+    </div>
+
+  </div>
+
+
+</div>

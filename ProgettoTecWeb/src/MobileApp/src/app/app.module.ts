@@ -27,6 +27,7 @@ import { ChannelComponent } from './pages/channel/channel.component';
 import { ErrorComponent } from './pages/error/error.component';
 import { ChannelManagerComponent } from './pages/channel-manager/channel-manager.component';
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
+import { KeywordComponent } from './pages/keyword/keyword.component';
 
 @NgModule({
   declarations: [
@@ -51,6 +52,7 @@ import { ResetPasswordComponent } from './pages/reset-password/reset-password.co
     ErrorComponent,
     ChannelManagerComponent,
     ResetPasswordComponent,
+    KeywordComponent,
   ],
   imports: [BrowserModule, AppRoutingModule, ReactiveFormsModule, FormsModule, HttpClientModule],
   providers: [],

@@ -16,6 +16,8 @@ export class SearchComponent {
   RESULT_LIMIT = 5;
   isGuest: boolean = true;
 
+  nameFixRegex = /[\x00-\x1F\x7F<>&"'#]/g;
+
   searchInput: string = '';
   selectedOption: string = 'user-search';
   professional_type: string = 'none';
@@ -52,6 +54,8 @@ export class SearchComponent {
   loadMoreUsersButton: boolean = false;
   loadMoreChannelsButton: boolean = false;
   loadMoreSquealsButton: boolean = false;
+
+  keyword: string = '';
 
   searchErrorShown: boolean = false;
   searchError: string = '';
@@ -195,7 +199,7 @@ export class SearchComponent {
 
     this.account_type != 'professional' ? (this.professional_type = 'none') : null;
 
-    this.searchInput != '' ? (this.userQuery.username = this.searchInput) : null;
+    this.searchInput != '' ? (this.userQuery.username = this.searchInput.replace(this.nameFixRegex, '')) : null;
     this.created_before != null ? (this.userQuery.created_before = this.created_before.toString()) : null;
     this.created_after != null ? (this.userQuery.created_after = this.created_after.toString()) : null;
     this.max_squeals ? (this.userQuery.max_squeals = this.max_squeals) : null;
@@ -212,7 +216,7 @@ export class SearchComponent {
   }
 
   createChannelQuery(pag_size?: number, last_loaded?: string) {
-    this.searchInput != '' ? (this.channelQuery.name = this.searchInput) : null;
+    this.searchInput != '' ? (this.channelQuery.name = this.searchInput.replace(this.nameFixRegex, '')) : null;
     this.created_before != null ? (this.channelQuery.created_before = this.created_before.toString()) : null;
     this.created_after != null ? (this.channelQuery.created_after = this.created_after.toString()) : null;
     this.max_subscribers ? (this.channelQuery.max_subscribers = this.max_subscribers) : null;
@@ -248,7 +252,9 @@ export class SearchComponent {
     const matches = input.match(regex);
 
     if (matches) {
-      return matches.map((match) => match.substring(1));
+      let array = matches.map((match) => match.substring(1));
+      this.keyword = array[0];
+      return array;
     } else {
       return [];
     }
@@ -268,6 +274,9 @@ export class SearchComponent {
     if (squeal) {
       this.router.navigate([`/squeal/${squeal}`]);
     }
+  }
+  visitKeyword() {
+    this.router.navigate([`/keyword/${this.keyword}`]);
   }
   sendDM(user: String) {
     this.router.navigate([`/private-chats/user/${user}`]);
