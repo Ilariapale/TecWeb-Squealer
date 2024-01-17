@@ -153,6 +153,50 @@ export class SquealComponent implements OnInit {
     }
   }
 
+  parseTextLong(text: String | undefined) {
+    let newText = '';
+    text = text || '';
+    newText = text.replace(/@(\w+)/g, '<a href="/profile/$1">@$1</a>');
+    newText = newText.replace(/§(\w+)/g, '<a href="/channel/$1">§$1</a>');
+    newText = newText.replace(/#(\w+)/g, '<a href="/keyword/$1">#$1</a>');
+    newText += `${
+      this.squeal.content && this.squeal.content.length > this.TRUNCATE_LENGTH && !this.showMore ? '...' : ''
+    }`;
+    return newText;
+  }
+
+  parseTextShort(text: String | undefined) {
+    text = text || '';
+    let shortText = text?.substring(0, this.TRUNCATE_LENGTH) || '';
+
+    let userTags: string[] = text?.match(/@(\w+)/g) || [];
+    let channelTags: string[] = text?.match(/§(\w+)/g) || [];
+    let keywordsTags: string[] = text?.match(/#(\w+)/g) || [];
+
+    var index = 0;
+    let newText = shortText.replace(/@(\w+)/g, function (match) {
+      var fullTag = userTags[index++]?.substring(1);
+      return fullTag != undefined ? `<a href="/profile/${fullTag}">${match}</a>` : match;
+    });
+
+    index = 0;
+    newText = newText.replace(/§(\w+)/g, function (match) {
+      var fullTag = channelTags[index++]?.substring(1);
+      return fullTag != undefined ? `<a href="/channel/${fullTag}">${match}</a>` : match;
+    });
+
+    index = 0;
+    newText = newText.replace(/#(\w+)/g, function (match) {
+      var fullTag = keywordsTags[index++]?.substring(1);
+      return fullTag != undefined ? `<a href="/keyword/${fullTag}">${match}</a>` : match;
+    });
+
+    newText += `${
+      this.squeal.content && this.squeal.content.length > this.TRUNCATE_LENGTH && !this.showMore ? '...' : ''
+    }`;
+    return newText;
+  }
+
   getLon(coord: String | undefined) {
     return Number(coord?.split(' ')[0]);
   }

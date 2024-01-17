@@ -190,12 +190,15 @@ async function postWeatherSqueals() {
   const random = Math.floor(Math.random() * cities.length);
   const city = cities[random].charAt(0).toUpperCase() + cities[random].slice(1); // Capitalize the first letter of the city
   const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
-  const response = await fetch(url).catch((err) => console.log(err));
+  const response = await fetch(url).catch((err) => {
+    console.log(err);
+    return;
+  });
   const data = await response.json();
 
   const cityname = data.name.charAt(0).toUpperCase() + data.name.slice(1); // Capitalize the first letter of the city
   const newDate = new Date();
-  if (!cityname || !data.weather[0].description || !data.main.temp || !data.main.temp_min || !data.main.temp_max) return console.log("Error while fetching weather data");
+  if (!cityname || !data.weather[0]?.description || !data.main.temp || !data.main.temp_min || !data.main.temp_max) return console.log("Error while fetching weather data");
   const newSqueal = new Squeal({
     hex_id: admin.squeals.posted.length,
     user_id: admin._id,
