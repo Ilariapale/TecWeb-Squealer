@@ -194,7 +194,15 @@ async function postWeatherSqueals() {
     console.log(err);
     return;
   });
-  const data = await response.json();
+  if (!response) return;
+  let dataRaw;
+  try {
+    dataRaw = await response.json();
+    if (!dataRaw) return;
+  } catch (err) {
+    return;
+  }
+  const data = dataRaw;
 
   const cityname = data.name.charAt(0).toUpperCase() + data.name.slice(1); // Capitalize the first letter of the city
   const newDate = new Date();
