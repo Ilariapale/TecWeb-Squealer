@@ -20,6 +20,11 @@ const options = (auth, type, body) => ({
 });
 
 const DOMelements = {
+  dailyResetButton: undefined,
+  weeklyResetButton: undefined,
+  monthlyResetButton: undefined,
+  rewardResetButton: undefined,
+
   usersForm: undefined,
   usernameInput: undefined,
   usersSearchError: undefined,
@@ -94,6 +99,12 @@ const recipients = {
   keywords: [],
 };
 
+const selected = {
+  user: undefined,
+  channel: undefined,
+  squeal: undefined,
+};
+
 document.addEventListener("DOMContentLoaded", async function () {
   var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
   if (screenWidth <= 1200) {
@@ -121,6 +132,11 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   //DOM ELEMENTS ----------------------------------------------------------------------------------------
+
+  DOMelements.dailyResetButton = document.getElementById("daily-reset-button");
+  DOMelements.weeklyResetButton = document.getElementById("weekly-reset-button");
+  DOMelements.monthlyResetButton = document.getElementById("monthly-reset-button");
+  DOMelements.rewardResetButton = document.getElementById("reward-reset-button");
 
   DOMelements.reportsLoadMoreButton = document.getElementById("reportsLoadMoreButton");
   DOMelements.reportedSquealsTab = document.getElementById("nav-reports-tab");
@@ -179,6 +195,23 @@ document.addEventListener("DOMContentLoaded", async function () {
   DOMelements.logoutButton = document.getElementById("logout-button");
 
   //EVENT LISTENERS -------------------------------------------------------------------------------------
+
+  DOMelements.dailyResetButton.addEventListener("click", async function (e) {
+    await resetCharacter("daily").catch((error) => console.log(error));
+  });
+
+  DOMelements.weeklyResetButton.addEventListener("click", async function (e) {
+    await resetCharacter("weekly").catch((error) => console.log(error));
+  });
+
+  DOMelements.monthlyResetButton.addEventListener("click", async function (e) {
+    await resetCharacter("monthly").catch((error) => console.log(error));
+  });
+
+  DOMelements.rewardResetButton.addEventListener("click", async function (e) {
+    await resetCharacter("reward").catch((error) => console.log(error));
+  });
+
   DOMelements.usersForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     await loadUsers();
@@ -405,6 +438,7 @@ async function loadChannels(load_more = false) {
 
 //USERS ----------------------------------------------------------------------------------------
 async function loadUser(username) {
+  selected.user = username;
   return await getUser(username).then(async (user) => {
     const vipsExist = user.managed_accounts?.length > 0;
     const channelsExist = user.owned_channels?.length > 0;
@@ -1151,10 +1185,10 @@ async function banChannel(channelId, setBan) {
 async function confirmChanges(userToUpdate, accountType, professionalType) {
   const apiUrl = `users/${userToUpdate.username}/type`;
   const charUpdateUrl = `users/characters`;
-  if (accountType && professionalType) {
+  if (accountType && professionalType && (accountType != userToUpdate.account_type || professionalType != userToUpdate.professional_type)) {
     const body = {};
-    accountType ? (body.account_type = accountType) : null;
-    professionalType ? (body.professional_type = professionalType) : null;
+    body.account_type = accountType;
+    body.professional_type = professionalType;
 
     //modifying account type
     await fetch(apiUrl, options(user.auth, "PATCH", body))
@@ -1171,12 +1205,14 @@ async function confirmChanges(userToUpdate, accountType, professionalType) {
         document.getElementById("professional_type_in_list-" + userToUpdate._id).innerHTML = professionalType || userToUpdate.professional_type;
       });
   }
+  console.log(DOMelements.daily_input, DOMelements.weekly_input, DOMelements.monthly_input);
   if (DOMelements.daily_input != undefined && DOMelements.weekly_input != undefined && DOMelements.monthly_input != undefined) {
     //updating characters
     const daily_changed = DOMelements.daily_input.value != userToUpdate.char_quota.daily;
     const weekly_changed = DOMelements.weekly_input.value != userToUpdate.char_quota.weekly;
     const monthly_changed = DOMelements.monthly_input.value != userToUpdate.char_quota.monthly;
-    //if nothing changed, return
+    //if something changed, update it
+    console.log(daily_changed, weekly_changed, monthly_changed);
     if (daily_changed || weekly_changed || monthly_changed) {
       const body_char = {
         identifier: userToUpdate._id,
@@ -1195,7 +1231,28 @@ async function confirmChanges(userToUpdate, accountType, professionalType) {
   if (DOMelements.popularity_score_input != undefined && DOMelements.popularity_score_input.value != userToUpdate.popularity_score) {
     await updatePopularityScore(userToUpdate._id, DOMelements.popularity_score_input.value);
   }
+  //button become green for 2 seconds
+
   return;
+}
+
+async function resetCharacter(type) {
+  const apiUrl = `users/default-quota/${type}`;
+  let result;
+  await fetch(apiUrl, options(user.auth, "PATCH"))
+    .then(async (response) => {
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "Network response was not ok");
+      }
+      return response;
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      result = data;
+      loadUser(selected.user);
+    });
+  return result;
 }
 
 //-------------------- DELETE --------------------//

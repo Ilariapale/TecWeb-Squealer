@@ -216,6 +216,28 @@ router.delete("/SMM", verifyToken, async (req, res, next) => {
   }
 });
 
+router.patch("/default-quota/:type", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      user_id: req.user_id,
+      type: req.params.type,
+    };
+
+    try {
+      const result = await users.setDefaultQuota(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    console.error(err);
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
 //users/request/43412131231321/accept   /decline
 router.patch("/request/:request_id/:action", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {

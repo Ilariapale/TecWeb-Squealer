@@ -18,6 +18,8 @@ const {
   requestAcceptedNotification,
   requestRejectedNotification,
 } = require("./messages");
+const { daily_reset, weekly_reset, monthly_reset } = require("./character_reset");
+const ReactionCheck = require("./reaction_check");
 
 const QuickChart = require("quickchart-js");
 const { PASSWORD_MIN_LENGTH, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, TIERS, PROHIBITED_USERNAMES, FULL_DAY_MINUS_ONE_MILLISECOND } = require("./constants");
@@ -2069,6 +2071,49 @@ module.exports = {
     };
   },
 
+  setDefaultQuota: async (options) => {
+    const { user_id, type } = options;
+    if (!["daily", "weekly", "monthly", "reward"].includes(type)) {
+      return {
+        status: 400,
+        data: { error: `'type' must be either 'daily', 'weekly', 'monthly' or 'reward'.` },
+      };
+    }
+
+    // Check if the user exists
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: response.error,
+      };
+    }
+    const user = response.data;
+
+    //check if moderator
+    if (user.account_type !== "moderator") {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to reset quota.` },
+      };
+    }
+
+    if (type === "daily") {
+      await daily_reset();
+    } else if (type === "weekly") {
+      await weekly_reset();
+    } else if (type === "monthly") {
+      await monthly_reset();
+    } else {
+      await ReactionCheck.check();
+    }
+    return {
+      status: 200,
+      data: { message: `Quota '${type}' reset successfully.` },
+    };
+  },
+
   /**
    * @param identifier User's identifier, can be either username or userId
    */
@@ -2097,7 +2142,7 @@ module.exports = {
       }
     }
     const user = response.data; //who needs the characters
-
+    let isCustom = false;
     const isThemselves = user.username == reqSender.username;
     const isModerator = reqSender.account_type === "moderator";
     const isSMM = reqSender.account_type === "professional" && reqSender.professional_type === "SMM" && reqSender.managed_accounts.includes(user._id);
@@ -2127,17 +2172,21 @@ module.exports = {
         user.char_quota.monthly += TIERS.monthly[tier.slice(7)];
         user.char_quota.bought_monthly += TIERS.monthly[tier.slice(7)];
       } else {
+        if (reqSender.account_type !== "moderator") {
+          return {
+            status: 400,
+            data: { error: "No valid tier field" },
+          };
+        }
+        isCustom = true;
+      }
+      if (!isCustom) {
+        await user.save();
         return {
-          status: 400,
-          data: { error: "No valid tier field" },
+          status: 200,
+          data: { message: "Character quota added successfully." },
         };
       }
-
-      await user.save();
-      return {
-        status: 200,
-        data: { message: "Character quota added successfully." },
-      };
     }
     if (isModerator) {
       if (!(char_quota_daily || char_quota_weekly || char_quota_monthly)) {

@@ -283,4 +283,5 @@ const findSpecificUsers = async () => {
 
 module.exports = {
   check_init,
+  check,
 };

@@ -203,7 +203,22 @@ export const user_card = (user) => `
           <button id="confirmChangesButton-${user._id}" class="btn btn-primary">CONFIRM CHANGES</button>
         </div>
       </h3>
-      <h6 class="card-subtitle mb-2 text-muted">User since: ${new Date(user?.created_at).toLocaleString()}</h6>
+      <div class="row">
+        <h6 class="col-4 card-subtitle mb-2 text-muted text-start">User since: ${new Date(user?.created_at).toLocaleString()}</h6>
+        <div class="col"></div>
+        <h6 class="col-auto card-subtitle mb-2 text-muted text-end row">
+          <div class='col-auto' title="Earned char quota">
+            <i class="bi bi-trophy"></i> ${user.char_quota.earned_daily} D<i class="bi bi-dot"></i>${user.char_quota.earned_weekly} W <i class="bi bi-trophy"></i>
+          </div>
+          <div class='col text-center'><i class="bi bi-dash-lg"></i></div>
+          <div class='col-auto' title="Bought char quota">
+            <i class="bi bi-coin"></i>
+            ${user.char_quota.bought_daily} D<i class="bi bi-dot"></i>
+            ${user.char_quota.bought_weekly} W<i class="bi bi-dot"></i>
+            ${user.char_quota.bought_monthly} M <i class="bi bi-coin"></i>
+          </div>
+        </h6>
+      </div>
       <div class="row-1">
         <p class="text-danger m-0" id="userErrorMessage"></p>
       </div>

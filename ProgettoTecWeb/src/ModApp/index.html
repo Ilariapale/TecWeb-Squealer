@@ -178,7 +178,31 @@
                             </div>
                         </div>
                     </form>
-                    <div class="col-3"></div>
+                    <div class="col-3">
+                        <div class="col d-flex align-items-center flex-column">
+                            <div class="text-white" title="Warning: these actions cannot be undone!">
+                                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                                Characters reset
+                                buttons
+                                <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                            </div>
+                            <div class="btn-group" role="group" aria-label="Characters reset buttons">
+                                <button type="button" class="btn btn-danger border border-dark" id="daily-reset-button"
+                                    title="Reset daily character quota to every user">Daily</button>
+                                <button type="button" class="btn btn-danger border border-dark" id="weekly-reset-button"
+                                    title="Reset weekly character quota to every user">Weekly</button>
+                                <button type="button" class="btn btn-danger border border-dark"
+                                    id="monthly-reset-button"
+                                    title="Reset monthly character quota to every user">Montly</button>
+                                <button type="button" class="btn btn-warning border border-dark"
+                                    id="reward-reset-button"
+                                    title="Run the reward procedure to update reward fields">Reward</button>
+                            </div>
+
+                        </div>
+
+
+                    </div>
                 </div>
                 <div class="text-danger text-center" id="users-search-error"></div>
                 <div class="row h-100">
@@ -247,18 +271,19 @@
                             <div class="p-2">
                                 <input type="radio" class="btn-check" name="channels-filter"
                                     id="channels-official-radio" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="channels-official-radio">Official</label>
+                                <label class="btn btn-outline-primary p-2"
+                                    for="channels-official-radio">Official</label>
                             </div>
                             <div class="p-2">
                                 <input type="radio" class="btn-check" name="channels-filter"
                                     id="channels-unofficial-radio" autocomplete="off">
-                                <label class="btn btn-outline-primary"
+                                <label class="btn btn-outline-primary p-2"
                                     for="channels-unofficial-radio">Unofficial</label>
                             </div>
                             <div class="p-2">
                                 <input type="radio" class="btn-check" name="channels-filter" id="channels-all-radio"
                                     autocomplete="off" checked>
-                                <label class="btn btn-outline-primary" for="channels-all-radio">All</label>
+                                <label class="btn btn-outline-primary p-2" for="channels-all-radio">All</label>
                             </div>
                         </div>
                     </form>
@@ -352,17 +377,18 @@
                             <div class="p-2">
                                 <input type="radio" class="btn-check" name="squeals-filter" id="squeals-official-radio"
                                     autocomplete="off">
-                                <label class="btn btn-outline-primary" for="squeals-official-radio">Official</label>
+                                <label class="btn btn-outline-primary p-2" for="squeals-official-radio">Official</label>
                             </div>
                             <div class="p-2">
                                 <input type="radio" class="btn-check" name="squeals-filter"
                                     id="squeals-unofficial-radio" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="squeals-unofficial-radio">Unofficial</label>
+                                <label class="btn btn-outline-primary p-2"
+                                    for="squeals-unofficial-radio">Unofficial</label>
                             </div>
                             <div class="p-2">
                                 <input type="radio" class="btn-check" name="squeals-filter" id="squeals-all-radio"
                                     autocomplete="off" checked>
-                                <label class="btn btn-outline-primary" for="squeals-all-radio">All</label>
+                                <label class="btn btn-outline-primary p-2" for="squeals-all-radio">All</label>
                             </div>
                         </div>
 
