@@ -20,10 +20,6 @@ const options = (auth, type, body) => ({
 });
 
 const DOMelements = {
-  daily_input: undefined,
-  weekly_input: undefined,
-  monthly_input: undefined,
-
   usersForm: undefined,
   usernameInput: undefined,
   usersSearchError: undefined,
@@ -36,6 +32,10 @@ const DOMelements = {
   usersVerifiedRadio: undefined,
   usersStandardRadio: undefined,
   usersLoadMoreButton: undefined,
+  daily_input: undefined,
+  weekly_input: undefined,
+  monthly_input: undefined,
+  popularity_score_input: undefined,
 
   channelsForm: undefined,
   channelInput: undefined,
@@ -480,6 +480,7 @@ async function loadUser(username) {
     DOMelements.daily_input = document.getElementById("daily-input-" + user._id);
     DOMelements.weekly_input = document.getElementById("weekly-input-" + user._id);
     DOMelements.monthly_input = document.getElementById("monthly-input-" + user._id);
+    DOMelements.popularity_score_input = document.getElementById("popularity-score-input-" + user._id);
 
     if (banButton) {
       banButton.addEventListener("click", async function () {
@@ -1029,6 +1030,28 @@ async function updateSqueal(squealId, reactions) {
   return result;
 }
 
+async function updatePopularityScore(userId, score) {
+  const apiUrl = `users/${userId}/popularity-score`;
+  let result;
+  const body = { popularity_score: score };
+  // Make a PATCH request
+  await fetch(apiUrl, options(user.auth, "PATCH", body))
+    .then(async (response) => {
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "Network response was not ok");
+      }
+      return response;
+    })
+
+    .then((response) => response.json())
+    .then((data) => {
+      document.getElementById("popularity_in_list-" + userId).innerHTML = score;
+      result = data;
+    });
+  return result;
+}
+
 async function changeChannelName(channelId, newName) {
   const apiUrl = `channels/${channelId}`;
   const body = {
@@ -1143,7 +1166,10 @@ async function confirmChanges(userToUpdate, accountType, professionalType) {
         return response;
       })
       .then((response) => response.json())
-      .then((data) => {});
+      .then((data) => {
+        document.getElementById("account_type_in_list-" + userToUpdate._id).innerHTML = accountType || userToUpdate.account_type;
+        document.getElementById("professional_type_in_list-" + userToUpdate._id).innerHTML = professionalType || userToUpdate.professional_type;
+      });
   }
   if (DOMelements.daily_input != undefined && DOMelements.weekly_input != undefined && DOMelements.monthly_input != undefined) {
     //updating characters
@@ -1151,19 +1177,23 @@ async function confirmChanges(userToUpdate, accountType, professionalType) {
     const weekly_changed = DOMelements.weekly_input.value != userToUpdate.char_quota.weekly;
     const monthly_changed = DOMelements.monthly_input.value != userToUpdate.char_quota.monthly;
     //if nothing changed, return
-    if (!daily_changed && !weekly_changed && !monthly_changed) return;
-    const body_char = {
-      identifier: userToUpdate._id,
-      char_quota_daily: daily_changed ? DOMelements.daily_input.value : undefined,
-      char_quota_weekly: weekly_changed ? DOMelements.weekly_input.value : undefined,
-      char_quota_monthly: monthly_changed ? DOMelements.monthly_input.value : undefined,
-    };
-    await fetch(charUpdateUrl, options(user.auth, "PATCH", body_char)).then(async (response) => {
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || "Network response was not ok");
-      }
-    });
+    if (daily_changed || weekly_changed || monthly_changed) {
+      const body_char = {
+        identifier: userToUpdate._id,
+        char_quota_daily: daily_changed ? DOMelements.daily_input.value : undefined,
+        char_quota_weekly: weekly_changed ? DOMelements.weekly_input.value : undefined,
+        char_quota_monthly: monthly_changed ? DOMelements.monthly_input.value : undefined,
+      };
+      await fetch(charUpdateUrl, options(user.auth, "PATCH", body_char)).then(async (response) => {
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(error || "Network response was not ok");
+        }
+      });
+    }
+  }
+  if (DOMelements.popularity_score_input != undefined && DOMelements.popularity_score_input.value != userToUpdate.popularity_score) {
+    await updatePopularityScore(userToUpdate._id, DOMelements.popularity_score_input.value);
   }
   return;
 }

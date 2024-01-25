@@ -2009,6 +2009,67 @@ module.exports = {
   },
 
   /**
+   * @param options.identifier User's identifier, can be either username or userId
+   * @param options.inlineReqJson.popularity_score New user's popularity score
+   **/
+  updatePopularityScore: async (options) => {
+    const { identifier, user_id } = options;
+    const { popularity_score } = options.inlineReqJson;
+
+    // Check if the required fields are present
+    if (!popularity_score) {
+      return {
+        status: 400,
+        data: { error: `No fields to update.` },
+      };
+    }
+    //check if popularity_score is valid
+    if (isNaN(popularity_score)) {
+      return {
+        status: 400,
+        data: { error: `'popularity_score' must be a number.` },
+      };
+    }
+
+    // Check if the user exists
+    let response = await findUser(user_id);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: `'user_id' in token is not valid.` },
+      };
+    }
+    const reqSender = response.data;
+
+    response = await findUser(identifier);
+    if (response.status >= 300) {
+      //if the response is an error
+      return {
+        status: response.status,
+        data: { error: response.error },
+      };
+    }
+    const userToUpdate = response.data;
+
+    if (reqSender.account_type !== "moderator") {
+      return {
+        status: 403,
+        data: { error: `You are not allowed to update another user.` },
+      };
+    }
+
+    userToUpdate.reaction_metrics.popularity_score = popularity_score;
+    const updatedUser = await userToUpdate.save();
+
+    // Return the result
+    return {
+      status: 200,
+      data: updatedUser,
+    };
+  },
+
+  /**
    * @param identifier User's identifier, can be either username or userId
    */
   addCharacters: async (options) => {

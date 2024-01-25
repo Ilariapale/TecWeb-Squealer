@@ -26,10 +26,9 @@ export const professional_type_row = (user) => `
   <b>Professional Type</b>
   ${user.professional_type || "professional_type"}
   <select id="professionalType-${user._id}" class="form-select" aria-label="Professional-type selector">
-          <option value="undefined" selected>CHANGE</option>
-          <option value="VIP">VIP</option>
-          <option value="SMM">SMM</option>
-          <option value="none">None</option>
+          <option value="VIP"  ${user.professional_type == "VIP" ? "selected" : ""}>VIP</option>
+          <option value="SMM"  ${user.professional_type == "SMM" ? "selected" : ""}>SMM</option>
+          <option value="none" ${user.professional_type == "none" ? "selected" : ""}>None</option>
       </select>
 `;
 
@@ -37,20 +36,21 @@ export const account_type_row = (user) => `
 
   <b>Account Type</b>
   ${user.account_type || "account_type"}
-  
     <select id="accountType-${user._id}" class="form-select" aria-label="Account-type selector">
-      <option value="undefined" selected>CHANGE</option>
-      <option value="standard">Standard</option>
-      <option value="professional">Professional</option>
-      <option value="verified">Verified</option>
-      <option value="moderator" class="text-danger">Moderator</option>
+      <option value="standard" ${user.account_type == "standard" ? "selected" : ""}>Standard</option>
+      <option value="professional" ${user.account_type == "professional" ? "selected" : ""}>Professional</option>
+      <option value="verified" ${user.account_type == "verified" ? "selected" : ""}>Verified</option>
+      <option value="moderator" class="text-danger" ${user.account_type == "moderator" ? "selected" : ""}>Moderator</option>
     </select>
 `;
 
-export const popularity_score_row = (user) =>
-  user.reaction_metrics?.popularity_score > 0
-    ? `<b>Popularity score:</b> <span class="text-success">${user.reaction_metrics?.popularity_score || "0"}</span>`
-    : `<b>Popularity score:</b> <span class="text-danger">${user.reaction_metrics?.popularity_score || "0"}</span>`;
+export const popularity_score_row = (user) => `<div class="input-group mb-3">
+  <span class="input-group-text" id="popularity_score_label">Popularity Score</span>
+  <input type="number" value="${user.reaction_metrics?.popularity_score || "0"}" placeholder="${
+  user.reaction_metrics?.popularity_score || "0"
+}"class="form-control" aria-label="Sizing example input" aria-describedby="popularity_score_label" id="popularity-score-input-${user._id}">
+</div>
+`;
 
 export const email_row = (email) => `
   <b>Email</b> ${email || "email"}
@@ -175,9 +175,9 @@ export const user_in_list = (user) => {
                   <div><b>@${user?.username || "username"}</b></div>
                   <div class="text-muted">User since: ${new Date(user?.created_at).toLocaleString()}</div>
                   <div><b>Number of Squeals:</b> ${user.squeals_count || "0"}  </div>
-                  <div><b>Popularity score:</b> ${user.reaction_metrics?.popularity_score || "0"}</div>
-                  <div><b>Account type:</b> ${user.account_type}</div>
-                  <div><b>Professional type:</b> ${user.professional_type}</div>
+                  <div><b>Popularity score:</b> <span id="popularity_in_list-${user._id}">${user.reaction_metrics?.popularity_score || "0"}</span></div>
+                  <div><b>Account type:</b> <span id="account_type_in_list-${user._id}">${user.account_type}</span></div>
+                  <div><b>Professional type:</b> <span id="professional_type_in_list-${user._id}">${user.professional_type}</span></div>
               </div>
           </div>
         </div>
@@ -196,7 +196,9 @@ export const user_card = (user) => `
             class="img-fluid rounded-start rounded" onerror="if (this.src != 'Assets/logo.png') this.src = 'assets/logo.png'"
             alt="${user?.profile_picture || "squealer"}">
         </div>
-        @${user?.username || "username"}
+        <div class="col d-flex align-items-center">
+          <a class="unstyled-a" href="/profile/${user.username}">@${user?.username || "username"}</a>
+        </div>
         <div class="text-end col p-1">
           <button id="confirmChangesButton-${user._id}" class="btn btn-primary">CONFIRM CHANGES</button>
         </div>
@@ -220,9 +222,9 @@ export const user_card = (user) => `
         </div>
         <hr class="m-0">
         <div class="row">
-          <div class="col-6 py-2">
+          <div class="col-6 py-0">
             <div class="py-2">${total_squeals_row(user?.squeals.posted.length)}</div>
-            <div class="py-2">${popularity_score_row(user)}</div>
+            <div class="py-0 mb-2">${popularity_score_row(user)}</div>
           </div>
           <div class="vr p-0"></div>
           <div class="col py-2">${char_quota_row(user)}</div>

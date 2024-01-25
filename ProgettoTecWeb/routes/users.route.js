@@ -435,6 +435,29 @@ router.patch("/:identifier/ban-status", verifyToken, async (req, res, next) => {
   }
 });
 
+router.patch("/:identifier/popularity-score", verifyToken, async (req, res, next) => {
+  if (req.isTokenValid) {
+    let options = {
+      identifier: req.params.identifier,
+      user_id: req.user_id,
+      inlineReqJson: req.body,
+    };
+
+    try {
+      const result = await users.updatePopularityScore(options);
+      res.status(result.status || 200).send(result.data);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({
+        error: err || "Something went wrong.",
+      });
+    }
+  } else {
+    console.error(err);
+    res.status(401).send("Token is either missing invalid or expired");
+  }
+});
+
 router.delete("/:identifier", verifyToken, async (req, res, next) => {
   if (req.isTokenValid) {
     let options = {
