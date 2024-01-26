@@ -54,6 +54,10 @@ const DOMelements = {
   channelOwnerInput: undefined,
   channelOwnerInputCheckbox: undefined,
   channelsLoadMoreButton: undefined,
+  minSubsInput: undefined,
+  minSubsCheckbox: undefined,
+  minPostsInput: undefined,
+  minPostsCheckbox: undefined,
 
   squealsForm: undefined,
   squealInput: undefined,
@@ -70,6 +74,10 @@ const DOMelements = {
   squealsUnofficialRadio: undefined,
   squealsAllRadio: undefined,
   squealsLoadMoreButton: undefined,
+  createdBeforeInput: undefined,
+  createdBeforeCheckbox: undefined,
+  createdAfterInput: undefined,
+  createdAfterCheckbox: undefined,
 
   requestTab: undefined,
   reportsSearchError: undefined,
@@ -171,6 +179,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   DOMelements.channelsLoadMoreButton = document.getElementById("channelsLoadMoreButton");
   DOMelements.channelOwnerInput = document.getElementById("channelOwnerInput");
   DOMelements.channelOwnerInputCheckbox = document.getElementById("channelOwnerInputCheckbox");
+  DOMelements.minSubsInput = document.getElementById("subscribersNumberInput");
+  DOMelements.minSubsCheckbox = document.getElementById("channelSubscribersInputCheckbox");
+  DOMelements.minPostsInput = document.getElementById("postsNumberInput");
+  DOMelements.minPostsCheckbox = document.getElementById("channelPostsInputCheckbox");
 
   DOMelements.squealsForm = document.getElementById("squealsForm");
   DOMelements.squealInput = document.getElementById("squealInput");
@@ -187,6 +199,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   DOMelements.squealsUnofficialRadio = document.getElementById("squeals-unofficial-radio");
   DOMelements.squealsAllRadio = document.getElementById("squeals-all-radio");
   DOMelements.squealsLoadMoreButton = document.getElementById("squealsLoadMoreButton");
+  DOMelements.createdBeforeInput = document.getElementById("dateBeforeInput");
+  DOMelements.createdAfterInput = document.getElementById("dateAfterInput");
+  DOMelements.createdBeforeCheckbox = document.getElementById("beforeDateCheckbox");
+  DOMelements.createdAfterCheckbox = document.getElementById("afterDateCheckbox");
 
   DOMelements.requestTab = document.getElementById("nav-requests-tab");
   DOMelements.requestsLoadMoreButton = document.getElementById("requestsLoadMoreButton");
@@ -251,6 +267,16 @@ document.addEventListener("DOMContentLoaded", async function () {
 
       DOMelements.squealsAllRadio.checked = true;
       DOMelements.squealsAllRadio.disabled = true;
+
+      DOMelements.createdAfterCheckbox.checked = false;
+      DOMelements.createdAfterCheckbox.disabled = true;
+      DOMelements.createdAfterInput.disabled = true;
+      DOMelements.createdAfterInput.value = "";
+
+      DOMelements.createdBeforeCheckbox.checked = false;
+      DOMelements.createdBeforeCheckbox.disabled = true;
+      DOMelements.createdBeforeInput.disabled = true;
+      DOMelements.createdBeforeInput.value = "";
     } else {
       DOMelements.squealHexInput.value = "";
       DOMelements.squealHexInput.disabled = true;
@@ -261,6 +287,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       DOMelements.squealsOfficialRadio.disabled = false;
       DOMelements.squealsUnofficialRadio.disabled = false;
       DOMelements.squealsAllRadio.disabled = false;
+      DOMelements.createdAfterCheckbox.disabled = false;
+      DOMelements.createdBeforeCheckbox.disabled = false;
+      DOMelements.createdAfterInput.disabled = false;
+      DOMelements.createdBeforeInput.disabled = false;
     }
   });
 
@@ -270,6 +300,42 @@ document.addEventListener("DOMContentLoaded", async function () {
     } else {
       DOMelements.channelOwnerInput.value = "";
       DOMelements.channelOwnerInput.disabled = true;
+    }
+  });
+
+  DOMelements.minSubsCheckbox.addEventListener("change", async function (e) {
+    if (DOMelements.minSubsCheckbox.checked) {
+      DOMelements.minSubsInput.disabled = false;
+    } else {
+      DOMelements.minSubsInput.value = "";
+      DOMelements.minSubsInput.disabled = true;
+    }
+  });
+
+  DOMelements.minPostsCheckbox.addEventListener("change", async function (e) {
+    if (DOMelements.minPostsCheckbox.checked) {
+      DOMelements.minPostsInput.disabled = false;
+    } else {
+      DOMelements.minPostsInput.value = "";
+      DOMelements.minPostsInput.disabled = true;
+    }
+  });
+
+  DOMelements.createdBeforeCheckbox.addEventListener("change", async function (e) {
+    if (DOMelements.createdBeforeCheckbox.checked) {
+      DOMelements.createdBeforeInput.disabled = false;
+    } else {
+      DOMelements.createdBeforeInput.value = "";
+      DOMelements.createdBeforeInput.disabled = true;
+    }
+  });
+
+  DOMelements.createdAfterCheckbox.addEventListener("change", async function (e) {
+    if (DOMelements.createdAfterCheckbox.checked) {
+      DOMelements.createdAfterInput.disabled = false;
+    } else {
+      DOMelements.createdAfterInput.value = "";
+      DOMelements.createdAfterInput.disabled = true;
     }
   });
 
@@ -390,6 +456,14 @@ async function searchChannels(load_more = false) {
   if (DOMelements.channelsSelectSortType.value != "none") apiUrl += "sort_order=" + DOMelements.channelsSelectSortType.value + "&";
   if (DOMelements.channelsOfficialRadio.checked) apiUrl += "is_official=true&";
   else if (DOMelements.channelsUnofficialRadio.checked) apiUrl += "is_official=false&";
+  if (DOMelements.minSubsCheckbox.checked) {
+    let min_subs = DOMelements.minSubsInput.value;
+    if (min_subs.replace(/\s/g, "") != "") apiUrl += "min_subscribers=" + min_subs + "&";
+  }
+  if (DOMelements.minPostsCheckbox.checked) {
+    let min_posts = DOMelements.minPostsInput.value;
+    if (min_posts.replace(/\s/g, "") != "") apiUrl += "min_squeals=" + min_posts + "&";
+  }
 
   if (load_more) apiUrl += "last_loaded=" + last_of_arrays.last_user_list + "&";
   apiUrl = apiUrl.slice(0, -1);
@@ -773,6 +847,15 @@ async function searchSqueals(load_more = false) {
     if (DOMelements.squealsOfficialRadio.checked) apiUrl += "is_in_official_channel=true&";
     else if (DOMelements.squealsUnofficialRadio.checked) apiUrl += "is_in_official_channel=false&";
     if (load_more) apiUrl += "last_loaded=" + last_of_arrays.last_user_list + "&";
+    if (DOMelements.createdAfterCheckbox.checked) {
+      const date = DOMelements.createdAfterInput.value;
+      if (date != undefined && date.replace(/\s/g, "") != "") apiUrl += "created_after=" + date + "&";
+    }
+    if (DOMelements.createdBeforeCheckbox.checked) {
+      const date = DOMelements.createdBeforeInput.value;
+      if (date != undefined && date.replace(/\s/g, "") != "") apiUrl += "created_before=" + date + "&";
+    }
+
     apiUrl = apiUrl.slice(0, -1);
   }
   let result;

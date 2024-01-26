@@ -148,7 +148,7 @@ async function postPeriodicallyForLimitedTimes(tick_rate, repeat, options) {
       message: "Invalid input. Please check the format of the tick rate and repeat fields.",
     };
   }
-  if (rep > MAX_REPEAT || rep <= 1) {
+  if (rep > MAX_REPEAT || rep < 1) {
     return {
       status: 400,
       message: `Invalid input. Repeat must be less than ${MAX_REPEAT}.`,

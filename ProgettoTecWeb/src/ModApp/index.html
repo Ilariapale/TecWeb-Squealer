@@ -141,7 +141,6 @@
                                     <option value="popularity">Popularity</option>
                                     <option value="username">Username</option>
                                     <option value="date">Date</option>
-                                    <option value="squeals">Squeals</option>
                                 </select>
                             </div>
                             <div class="p-2">
@@ -227,7 +226,38 @@
             <!-- Channels Tab -->
             <div class="tab-pane " id="nav-channels" role="tabpanel" aria-labelledby="nav-channels-tab" tabindex="2">
                 <div class="row">
-                    <div class="col-3"></div>
+                    <div class="col-3">
+                        <div class="row">
+                            <div class="col"></div>
+                            <div class="col-7">
+                                <div class="input-group row py-2">
+                                    <div class="input-group-text col-auto">
+                                        <input class="form-check-input mt-0" type="checkbox" value=false
+                                            aria-label="Checkbox for min subscribers input"
+                                            id="channelSubscribersInputCheckbox">
+                                    </div>
+                                    <div class="input-group-text col-5 px-2" id="channel-subscribers-input">
+                                        <span class="m-0 pe-1"> Min Subs</span>
+                                    </div>
+                                    <input type="number" min="0" placeholder="any" class="form-control col"
+                                        id="subscribersNumberInput" aria-label="subscribers count"
+                                        aria-describedby="channel number of subscribers" disabled>
+                                </div>
+                                <div class="input-group row">
+                                    <div class="input-group-text col-auto">
+                                        <input class="form-check-input mt-0" type="checkbox" value=false
+                                            aria-label="Checkbox for min posts input" id="channelPostsInputCheckbox">
+                                    </div>
+                                    <div class="input-group-text col-5 px-2" id="channel-posts-input">
+                                        <span class="m-0 pe-1">Min Posts</span>
+                                    </div>
+                                    <input type="number" min="0" placeholder="any" class="form-control col"
+                                        id="postsNumberInput" aria-label="channel posts"
+                                        aria-describedby="channel number of posts" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <form id="channelsForm" class="container-fluid col">
                         <div class="input-group">
                             <div class="input-group-text" id="channels-input"><span class="h4 m-0 px-1">§</span></div>
@@ -256,9 +286,7 @@
                                 <select class="form-select" id="channelsSelectSortBy" aria-label="Sort-by selector">
                                     <option value="none" selected>Sort By</option>
                                     <option value="name">Name</option>
-                                    <option value="subscribers">Subscribers</option>
                                     <option value="date">Date</option>
-                                    <option value="squeals">Squeals</option>
                                 </select>
                             </div>
                             <div class="p-2">
@@ -312,7 +340,35 @@
             <!-- Squeals Tab -->
             <div class="tab-pane " id="nav-squeals" role="tabpanel" aria-labelledby="nav-squeals-tab" tabindex="3">
                 <div class="row">
-                    <div class="col-3"></div>
+                    <div class="col-3">
+                        <div class="row">
+                            <div class="col"></div>
+                            <div class="col-8">
+                                <div class="input-group row py-2">
+                                    <div class="input-group-text col-auto">
+                                        <input class="form-check-input mt-0" type="checkbox" value=false
+                                            aria-label="Checkbox for before date input" id="beforeDateCheckbox">
+                                    </div>
+                                    <div class="input-group-text col-3" id="squeals-date-before-input">
+                                        <span class="m-0 px-1">Before</span>
+                                    </div>
+                                    <input type="date" class="form-control col" id="dateBeforeInput"
+                                        aria-label="Created Before" aria-describedby="squeals created before" disabled>
+                                </div>
+                                <div class="input-group row">
+                                    <div class="input-group-text col-auto">
+                                        <input class="form-check-input mt-0" type="checkbox" value=false
+                                            aria-label="Checkbox for after date input" id="afterDateCheckbox">
+                                    </div>
+                                    <div class="input-group-text col-3" id="squeals-date-after-input">
+                                        <span class="m-0 px-1">After</span>
+                                    </div>
+                                    <input type="date" class="form-control col" id="dateAfterInput"
+                                        aria-label="Created After" aria-describedby="squeals created after" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <form id="squealsForm" class="container-fluid col">
                         <div class="input-group">
                             <div class="input-group-text" id="squeals-input">
@@ -362,8 +418,6 @@
                             <div class="p-2">
                                 <select class="form-select" id="squealsSelectSortBy" aria-label="Sort-by selector">
                                     <option value="none" selected>Sort By</option>
-                                    <option value="reactions">Reactions</option>
-                                    <option value="impressions">Impressions</option>
                                     <option value="date">Date</option>
                                 </select>
                             </div>

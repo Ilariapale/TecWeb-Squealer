@@ -102,8 +102,79 @@ module.exports = {
           data: { error: `'last_loaded' must be a valid ObjectId.` },
         };
       }
-      if (sort_order == "desc") pipeline.push({ $match: { _id: { $lt: new mongoose.Types.ObjectId(last_loaded) } } });
-      else pipeline.push({ $match: { _id: { $gt: new mongoose.Types.ObjectId(last_loaded) } } });
+
+      let response = await findUser(last_loaded);
+      if (response.status >= 300) {
+        //if the response is an error
+        return {
+          status: response.status,
+          data: { error: response.error },
+        };
+      }
+      const lastLoadedUser = response.data;
+      let field_name = "_id";
+      let lastLoadedUserField = new mongoose.Types.ObjectId(last_loaded);
+      if (sort_by != undefined) {
+        if (sort_by === "username") {
+          field_name = "username";
+          lastLoadedUserField = lastLoadedUser.username;
+        } else if (sort_by === "date") {
+          field_name = "created_at";
+          lastLoadedUserField = lastLoadedUser.created_at;
+        } else if (sort_by === "squeals") {
+          pipeline.push({
+            $project: {
+              account_type: 1,
+              professional_type: 1,
+              email: 1,
+              username: 1,
+              created_at: 1,
+              squeals: 1,
+              char_quota: 1,
+              reaction_metrics: 1,
+              direct_chats: 1,
+              subscribed_channels: 1,
+              owned_channels: 1,
+              editor_channels: 1,
+              profile_info: 1,
+              profile_picture: 1,
+              smm: 1,
+              managed_accounts: 1,
+              pending_requests: 1,
+              preferences: 1,
+              notifications: 1,
+              is_active: 1,
+              squeals_count: { $size: "$squeals.posted" },
+            },
+          });
+          field_name = "squeals_count";
+          lastLoadedUserField = lastLoadedUser.squeals.posted.length;
+        } else if (sort_by === "popularity") {
+          field_name = "reaction_metrics.popularity_score";
+          lastLoadedUserField = lastLoadedUser.reaction_metrics.popularity_score;
+        }
+      }
+      if (sort_order == "desc") {
+        if (sort_by !== "squeals") pipeline.push({ $match: { [field_name]: { $lt: lastLoadedUserField } } });
+        else {
+          pipeline.push({
+            $match: {
+              _id: { $ne: new mongoose.Types.ObjectId(last_loaded) },
+              [field_name]: { $lte: lastLoadedUserField },
+            },
+          });
+        }
+      } else {
+        if (sort_by !== "squeals") pipeline.push({ $match: { [field_name]: { $gt: lastLoadedUserField } } });
+        else {
+          pipeline.push({
+            $match: {
+              _id: { $ne: new mongoose.Types.ObjectId(last_loaded) },
+              [field_name]: { $gte: lastLoadedUserField },
+            },
+          });
+        }
+      }
     }
 
     //ACCOUNT TYPE
@@ -237,10 +308,10 @@ module.exports = {
     if (sort_order && sort_by) {
       const order = sort_order === "asc" ? 1 : -1;
 
-      if (sort_by === "username") pipeline.push({ $sort: { username: order } });
-      else if (sort_by === "date") pipeline.push({ $sort: { created_at: order } });
-      else if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order } });
-      else if (sort_by === "popularity") pipeline.push({ $sort: { "reaction_metrics.popularity_score": order } });
+      if (sort_by === "username") pipeline.push({ $sort: { username: order, _id: 1 } });
+      else if (sort_by === "date") pipeline.push({ $sort: { created_at: order, _id: 1 } });
+      else if (sort_by === "squeals") pipeline.push({ $sort: { squeals_count: order, _id: 1 } });
+      else if (sort_by === "popularity") pipeline.push({ $sort: { "reaction_metrics.popularity_score": order, _id: 1 } });
     }
 
     //PAGE SIZE
@@ -258,7 +329,7 @@ module.exports = {
     pipeline.push({ $limit: pag_size });
     //execute the query
     const data = await User.aggregate(pipeline).exec();
-
+    console.log(pipeline);
     //check if the query returned any result
     if (data.length <= 0) {
       return {

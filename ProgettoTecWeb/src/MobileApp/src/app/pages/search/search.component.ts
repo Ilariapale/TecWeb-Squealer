@@ -205,7 +205,9 @@ export class SearchComponent {
     this.created_after != null ? (this.userQuery.created_after = this.created_after.toString()) : null;
     this.max_squeals ? (this.userQuery.max_squeals = this.max_squeals) : null;
     this.min_squeals ? (this.userQuery.min_squeals = this.min_squeals) : null;
-    this.account_type != 'none' ? (this.userQuery.account_type = this.account_type as AccountType) : null;
+    this.account_type != 'none'
+      ? (this.userQuery.account_type = this.account_type as AccountType)
+      : (this.userQuery.account_type = undefined);
     this.professional_type != 'none'
       ? (this.userQuery.professional_type = this.professional_type as ProfessionalType)
       : null;
@@ -217,6 +219,8 @@ export class SearchComponent {
   }
 
   createChannelQuery(pag_size?: number, last_loaded?: string) {
+    this.channelQuery = {};
+
     this.searchInput != '' ? (this.channelQuery.name = this.searchInput.replace(this.nameFixRegex, '')) : null;
     this.created_before != null ? (this.channelQuery.created_before = this.created_before.toString()) : null;
     this.created_after != null ? (this.channelQuery.created_after = this.created_after.toString()) : null;
@@ -233,8 +237,12 @@ export class SearchComponent {
   }
 
   createKeywordQuery(pag_size?: number, last_loaded?: string) {
+    this.keywordQuery = {};
+
     this.searchInput != '' ? (this.keywordQuery.keywords = this.extractKeywords(this.searchInput)) : null;
-    this.content_type != 'none' ? (this.keywordQuery.content_type = this.content_type) : null;
+    this.content_type != 'none'
+      ? (this.keywordQuery.content_type = this.content_type)
+      : (this.keywordQuery.content_type = undefined);
     this.created_before != null ? (this.keywordQuery.created_before = this.created_before.toString()) : null;
     this.created_after != null ? (this.keywordQuery.created_after = this.created_after.toString()) : null;
     this.is_scheduled ? (this.keywordQuery.is_scheduled = this.is_scheduled) : null;

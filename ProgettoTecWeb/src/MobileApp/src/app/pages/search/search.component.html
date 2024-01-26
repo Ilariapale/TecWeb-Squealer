@@ -44,7 +44,7 @@
         <div id="advancedSearch" class="accordion-collapse collapse" aria-labelledby="advancedSearchLabel"
           data-bs-parent="#advancedSearchAccordion">
           <div class="accordion-body px-2">
-
+            <!--User search-->
             <div class="card col" *ngIf="selectedOption === 'user-search'">
               <ul class="list-group list-group-flush">
                 <li class="list-group-item p-2">
@@ -111,13 +111,13 @@
                       <option value="none" selected>Sort By</option>
                       <option value="username">Username</option>
                       <option value="date">Date</option>
-                      <option value="squeals">Squeals</option>
                     </select>
                   </div>
                 </li>
               </ul>
             </div>
 
+            <!--Channel search-->
             <div class="card col" *ngIf="selectedOption === 'channel-search'">
               <ul class="list-group list-group-flush">
                 <li class="list-group-item p-2">
@@ -177,8 +177,6 @@
                       <option value="none" selected>Sort By</option>
                       <option value="name">Name</option>
                       <option value="date">Date</option>
-                      <option value="squeals">Squeals</option>
-                      <option value="subscribers">Subscribers</option>
                     </select>
                   </div>
                 </li>
@@ -192,6 +190,7 @@
               </ul>
             </div>
 
+            <!--Keyword search-->
             <div class="card col" *ngIf="selectedOption === 'keyword-search'">
               <ul class="list-group list-group-flush">
 
@@ -266,8 +265,6 @@
                     <select class="form-select form-select-sm" name="sort by" aria-label="Sort by"
                       aria-describedby="Search in the database ordering by:" [(ngModel)]="sort_by">
                       <option value="none" selected>Sort By</option>
-                      <option value="reactions">Reactions</option>
-                      <option value="impressions">Impressions</option>
                       <option value="date">Date</option>
                     </select>
                   </div>
