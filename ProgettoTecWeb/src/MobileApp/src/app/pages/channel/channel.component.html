@@ -6,7 +6,7 @@
       <div class="col-auto">
         <h1 class="row">{{channel.name}}</h1>
       </div>
-      <span class="col d-flex flex-row-reverse">
+      <span class="col d-flex flex-row-reverse" *ngIf="!error">
 
 
         <div class="row">
@@ -28,7 +28,7 @@
 
       </span>
     </div>
-    <div class="pt-3 ps-2">
+    <div class="pt-3 ps-2" *ngIf="!error">
       <i class="bi bi-hourglass"></i> Online since {{timeService.getRelativeTime(channel.created_at)}}
       <p class="mt-4">{{channel.description}}</p>
     </div>

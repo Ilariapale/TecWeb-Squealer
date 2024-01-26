@@ -18,6 +18,7 @@ export class ChannelComponent {
   loading: boolean = false;
   lastSquealLoaded = -1;
   MAX_SQUEALS = 5;
+  error = false;
 
   channel: Channel = {
     _id: '',
@@ -79,6 +80,8 @@ export class ChannelComponent {
             this.loading = false;
           })
           .catch((error: any) => {
+            this.error = true;
+            this.channel.name = 'Channel not found';
             console.log(error);
           });
       }
