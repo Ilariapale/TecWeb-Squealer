@@ -1,0 +1,15 @@
+.error-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.error-image {
+  max-width: 75%;
+  height: auto;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.link {
+  color: rgb(207, 114, 0);
+}

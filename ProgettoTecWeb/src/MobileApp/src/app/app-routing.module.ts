@@ -41,9 +41,10 @@ const routes: Routes = [
   { path: 'keyword/:identifier', component: KeywordComponent },
   { path: 'squeal/:identifier', component: SquealComponent },
   { path: 'channel-manager', component: ChannelManagerComponent },
-  { path: 'error/:code', component: ErrorComponent },
+  { path: 'not-found', component: ErrorComponent },
   { path: 'reactions-menu', component: ReactionsMenuComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
+  { path: '**', redirectTo: '/not-found' },
 ];
 
 @NgModule({

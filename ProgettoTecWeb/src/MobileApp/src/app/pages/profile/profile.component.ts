@@ -65,7 +65,7 @@ export class ProfileComponent implements OnInit, AfterViewInit, AfterViewChecked
     professional_type: ProfessionalType.none,
     email: 'email@email.com',
     username: 'Username',
-    profile_info: 'I am a boring person',
+    profile_info: 'Profile not found',
     created_at: new Date(),
     is_active: true,
     char_quota: {

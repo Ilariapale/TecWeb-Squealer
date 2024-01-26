@@ -1423,6 +1423,8 @@ module.exports = {
       userToUpdate.notifications.push(notification._id);
     }
     const updatedUser = await userToUpdate.save();
+    //remove the password from the response
+    updatedUser.password ? (updatedUser.password = undefined) : null;
 
     // Return the result
     return {
