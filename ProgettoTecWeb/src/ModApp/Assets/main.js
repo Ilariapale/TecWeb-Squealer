@@ -907,58 +907,45 @@ async function loadSqueals(load_more = false) {
 //-----------------------------------------------------------------------------------------------------------------------------
 //REPORTED SQUEALS
 async function loadReportedSqueals(load_more = false) {
-  let squeals;
-  if (!load_more) {
-    DOMelements.reportedSquealCards.innerHTML = "";
-    squeals = await getReports(false)
-      .then(() => {
-        DOMelements.reportsSearchError.style.display = "none";
-      })
-      .catch((error) => {
-        DOMelements.reportsSearchError.style.display = "block";
-        DOMelements.requestsLoadMoreButton.style.display = "none";
-        DOMelements.reportsSearchError.innerHTML = error;
+  if (!load_more) DOMelements.reportedSquealCards.innerHTML = "";
+  getReports(load_more)
+    .then((squeals) => {
+      DOMelements.reportsSearchError.style.display = "none";
+      if (!squeals || squeals.length <= 0) {
+        const noSquealsMessage = document.createElement("div");
+        noSquealsMessage.className = "text-white text-center pb-3";
+        noSquealsMessage.innerHTML = "No squeals reported";
+        DOMelements.reportedSquealCards.appendChild(noSquealsMessage);
+        DOMelements.reportsLoadMoreButton.style.display = "none";
+        return;
+      }
+      last_of_arrays.last_reported_squeal = squeals[squeals.length - 1]._id;
+      squeals.forEach(async (squeal) => {
+        DOMelements.reportedSquealCards.appendChild(squealTemplates.reported_squeal_card(squeal));
       });
-  } else {
-    squeals = await getReports(true)
-      .then(() => {
-        DOMelements.reportsSearchError.style.display = "none";
-      })
-      .catch((error) => {
-        DOMelements.reportsSearchError.style.display = "block";
-        DOMelements.requestsLoadMoreButton.style.display = "none";
-        DOMelements.reportsSearchError.innerHTML = error;
+      squeals.forEach(async (squeal) => {
+        document.getElementById("squealSafeButton-" + squeal._id).addEventListener("click", async function () {
+          await markAsSafe(squeal._id).then(() => {
+            document.getElementById("squeal-" + squeal._id).remove();
+          });
+        });
+        document.getElementById("deleteSquealButton-" + squeal._id).addEventListener("click", async function () {
+          await deleteSqueal(squeal._id).then(() => {
+            document.getElementById("squeal-" + squeal._id).remove();
+          });
+        });
+        document.getElementById("banButton-" + squeal._id).addEventListener("click", async function () {
+          await banUser(squeal.username, true).then(() => {
+            document.getElementById("squeal-" + squeal._id).remove();
+          });
+        });
       });
-  }
-  if (!squeals || squeals.length <= 0) {
-    const noSquealsMessage = document.createElement("div");
-    noSquealsMessage.className = "text-white text-center pb-3";
-    noSquealsMessage.innerHTML = "No squeals reported";
-    DOMelements.reportedSquealCards.appendChild(noSquealsMessage);
-    DOMelements.reportsLoadMoreButton.style.display = "none";
-  } else {
-    last_of_arrays.last_reported_squeal = squeals[squeals.length - 1]._id;
-    squeals.forEach(async (squeal) => {
-      DOMelements.reportedSquealCards.appendChild(squealTemplates.reported_squeal_card(squeal));
+    })
+    .catch((error) => {
+      DOMelements.reportsSearchError.style.display = "block";
+      DOMelements.requestsLoadMoreButton.style.display = "none";
+      DOMelements.reportsSearchError.innerHTML = error;
     });
-    squeals.forEach(async (squeal) => {
-      document.getElementById("squealSafeButton-" + squeal._id).addEventListener("click", async function () {
-        await markAsSafe(squeal._id).then(() => {
-          document.getElementById("squeal-" + squeal._id).remove();
-        });
-      });
-      document.getElementById("deleteSquealButton-" + squeal._id).addEventListener("click", async function () {
-        await deleteSqueal(squeal._id).then(() => {
-          document.getElementById("squeal-" + squeal._id).remove();
-        });
-      });
-      document.getElementById("banButton-" + squeal._id).addEventListener("click", async function () {
-        await banUser(squeal.username, true).then(() => {
-          document.getElementById("squeal-" + squeal._id).remove();
-        });
-      });
-    });
-  }
 }
 
 //ACCOUNT CHANGE REQUESTS
