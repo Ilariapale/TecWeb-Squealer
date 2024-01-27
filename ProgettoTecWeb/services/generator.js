@@ -190,16 +190,14 @@ async function postWeatherSqueals() {
   const random = Math.floor(Math.random() * cities.length);
   const city = cities[random].charAt(0).toUpperCase() + cities[random].slice(1); // Capitalize the first letter of the city
   const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
-  const response = await fetch(url).catch((err) => {
-    console.log(err);
-    return;
-  });
-  if (!response) return;
-  let dataRaw;
+  let response, dataRaw;
   try {
+    response = await fetch(url);
+    if (!response) return;
     dataRaw = await response.json();
     if (!dataRaw) return;
   } catch (err) {
+    console.log(err);
     return;
   }
   const data = dataRaw;

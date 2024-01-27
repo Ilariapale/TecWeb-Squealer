@@ -47,7 +47,8 @@ io.on("connect", (socket) => {
   });
 });
 app.use(cors());
-app.use(log("tiny"));
+//app.use(log("tiny"));
+app.use(log(":date[clf] - :method  (:status) - :response-time ms :url (:res[content-length] byte)"));
 
 // parse application/json
 app.use(express.json());
