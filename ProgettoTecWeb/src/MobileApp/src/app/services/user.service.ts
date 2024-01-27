@@ -12,7 +12,7 @@ export class UserService {
 
   getUserData(): any {
     if (!this.userData) {
-      const savedUserData = sessionStorage.getItem('user') || localStorage.getItem('user');
+      const savedUserData = localStorage.getItem('user') || sessionStorage.getItem('user');
       if (savedUserData) {
         this.setUserData(JSON.parse(savedUserData));
       } else {

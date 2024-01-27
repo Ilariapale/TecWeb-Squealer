@@ -649,7 +649,7 @@ module.exports = {
    * @param pag_size      Number of squeals to retrieve
    */
   getHomeSqueals: async (options) => {
-    const { user_id, is_logged_in, token_error, guest_uuid } = options;
+    const { user_id, is_logged_in, token_error, guest_uuid, is_guest_token_valid } = options;
     let { last_loaded, pag_size } = options;
     const query = {};
     let user;
@@ -677,7 +677,7 @@ module.exports = {
     }
     if (!is_logged_in) {
       // User not logged in, can only see squeals in official channels
-      if (token_error == "noToken") query.is_in_official_channel = true;
+      if (token_error == "noToken" || is_guest_token_valid) query.is_in_official_channel = true;
       else if (token_error == "invalidTokenFormat")
         return {
           status: 400,
@@ -714,7 +714,7 @@ module.exports = {
     }
     let squeals_array = await Squeal.find(query).sort({ created_at: -1 }).limit(pag_size).exec();
     squeals_array = await addCommentsCountToSqueals(squeals_array);
-
+    console.log(query);
     // Add a "is_liked" field to each squeal and a field that says why it was selected
     if (user) {
       for (const squeal of squeals_array) {
