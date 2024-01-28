@@ -329,7 +329,6 @@ module.exports = {
     pipeline.push({ $limit: pag_size });
     //execute the query
     const data = await User.aggregate(pipeline).exec();
-    console.log(pipeline);
     //check if the query returned any result
     if (data.length <= 0) {
       return {

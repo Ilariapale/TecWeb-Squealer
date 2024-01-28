@@ -714,7 +714,6 @@ module.exports = {
     }
     let squeals_array = await Squeal.find(query).sort({ created_at: -1 }).limit(pag_size).exec();
     squeals_array = await addCommentsCountToSqueals(squeals_array);
-    console.log(query);
     // Add a "is_liked" field to each squeal and a field that says why it was selected
     if (user) {
       for (const squeal of squeals_array) {

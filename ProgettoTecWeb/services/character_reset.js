@@ -4,7 +4,7 @@ const { User, Guest } = require("./schemas");
 const { EXTRA_DAILY_CHAR_QUOTA, DAILY_CHAR_QUOTA, WEEKLY_CHAR_QUOTA, MONTHLY_CHAR_QUOTA } = require("./constants");
 
 const daily = "0 0 * * *";
-const weekly = "0 0 * * 0";
+const weekly = "0 0 * * 1";
 const monthly = "0 0 1 * *";
 const annual = "0 0 1 1 *";
 
