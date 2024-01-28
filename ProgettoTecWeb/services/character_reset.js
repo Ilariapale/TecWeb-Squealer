@@ -30,28 +30,28 @@ const character_reset_init = (req, res) => {
 };
 
 const daily_reset = async () => {
-  console.log("daily reset..");
+  console.log(`${new Date().toISOString()} - Daily reset..`);
   const users = await User.find({});
   const promises = users.map((user) => {
     const newDailyQuota = DAILY_CHAR_QUOTA + user.char_quota.earned_daily + user.char_quota.bought_daily - (EXTRA_DAILY_CHAR_QUOTA - user.char_quota.extra_daily);
     return User.updateOne({ _id: user._id }, { $set: { "char_quota.daily": newDailyQuota, "char_quota.extra_daily": EXTRA_DAILY_CHAR_QUOTA } });
   });
   await Promise.all(promises);
-  console.log("daily reset done");
+  console.log(`${new Date().toISOString()} - Daily reset done.`);
 };
 const weekly_reset = async () => {
-  console.log("weekly reset..");
+  console.log(`${new Date().toISOString()} - Weekly reset..`);
   const users = await User.find({});
   const promises = users.map((user) => {
     const newWeeklyQuota = WEEKLY_CHAR_QUOTA + user.char_quota.earned_weekly + user.char_quota.bought_weekly;
     return User.updateOne({ _id: user._id }, { $set: { "char_quota.weekly": newWeeklyQuota } });
   });
   await Promise.all(promises);
-  console.log("weekly reset done");
+  console.log(`${new Date().toISOString()} - Weekly reset done.`);
 };
 
 const monthly_reset = async () => {
-  console.log("monthly reset..");
+  console.log(`${new Date().toISOString()} - Monthly reset..`);
   const users = await User.find({});
   const promises = users.map((user) => {
     const newMonthlyQuota = MONTHLY_CHAR_QUOTA + user.char_quota.bought_monthly;
@@ -67,11 +67,11 @@ const monthly_reset = async () => {
     );
   });
   await Promise.all(promises);
-  console.log("monthly reset done");
+  console.log(`${new Date().toISOString()} - Monthly reset done.`);
 };
 
 const annual_reset = async () => {
-  console.log("annual reset..");
+  console.log(`${new Date().toISOString()} - Annual reset..`);
   await User.updateMany(
     {},
     {
@@ -88,7 +88,7 @@ const annual_reset = async () => {
       },
     }
   );
-  console.log("annual reset done");
+  console.log(`${new Date().toISOString()} - Annual reset done.`);
 };
 
 const resetGuests = async () => {
