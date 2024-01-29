@@ -112,7 +112,7 @@
               class="bi col-2 d-flex justify-content-center align-items-center clickable" (click)="log()"
               data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar"></i>
           </li>
-          <li class="nav-item row py-3">
+          <li class="nav-item row py-3" *ngIf="log_button!='Login'">
             <a class="col"></a>
             <a class="nav-link col-auto text-danger clickable" data-bs-toggle="offcanvas"
               data-bs-target="#offcanvasDarkNavbar" data-bs-toggle="collapse" data-bs-target="#deleteProfile"
