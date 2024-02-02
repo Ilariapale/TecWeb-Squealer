@@ -197,6 +197,7 @@ async function postWeatherSqueals() {
     dataRaw = await response.json();
     if (!dataRaw) return;
   } catch (err) {
+    console.log("Error fetching from: " + url + "\nError date:" + new Date().toISOString());
     console.log(err);
     return;
   }
