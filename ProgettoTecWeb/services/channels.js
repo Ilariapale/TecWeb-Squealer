@@ -649,7 +649,7 @@ module.exports = {
 
       let data = await checkForAllUsers(parsedEditors_array);
       if (!data.usersOutcome) {
-        e; // If they don't exist, return an error
+        // If they don't exist, return an error
         return {
           status: 404,
           data: { error: `Users not valid.` },
