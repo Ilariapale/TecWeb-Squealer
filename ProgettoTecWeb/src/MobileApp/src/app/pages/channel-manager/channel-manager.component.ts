@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 import { TimeService } from 'src/app/services/time.service';
 import { UsersService } from 'src/app/services/api/users.service';
 import { UserService } from 'src/app/services/user.service';
-import { forkJoin } from 'rxjs';
 import { DarkModeService } from 'src/app/services/dark-mode.service';
 import { Channel } from 'src/app/models/channel.interface';
 import { ChannelsService } from 'src/app/services/api/channels.services';
@@ -45,6 +44,7 @@ export class ChannelManagerComponent {
     is_blocked: false,
   };
   selectedEditors: string[] = [];
+  oldSelectedEditors: string[] = [];
 
   newChannel = {
     name: '',
@@ -141,20 +141,22 @@ export class ChannelManagerComponent {
 
     this.selectedChannel = JSON.parse(JSON.stringify(channel));
     this.selectedEditors = [];
+    this.oldSelectedEditors = [];
     // Request to get the names of the editors
     // Get the username of the owner
     this.selectedChannel.owner = '';
     const editorsRequests = this.selectedChannel.editors.map((editorId) =>
       this.usersService.getUsername('' + editorId)
     );
-    forkJoin(editorsRequests).subscribe({
-      next: (editors) => {
+
+    Promise.all(editorsRequests)
+      .then((editors) => {
         this.selectedEditors = editors.map((editor) => editor.username);
-      },
-      error: (err) => {
+        this.oldSelectedEditors = [...this.selectedEditors];
+      })
+      .catch((err) => {
         console.error('Error fetching editors:', err);
-      },
-    });
+      });
   }
 
   updateOwnedChannel() {
@@ -163,7 +165,6 @@ export class ChannelManagerComponent {
     const oldChannel = this.channelsOwned.find((channel) => channel._id === this.selectedChannel._id);
     const updatedChannel = this.selectedChannel;
     const newEditors = this.editorComponent1.getTags();
-
     const body: any = {
       identifier: updatedChannel._id,
     };
@@ -171,14 +172,15 @@ export class ChannelManagerComponent {
     if (oldChannel?.name !== updatedChannel.name) body.new_name = updatedChannel.name;
     if (oldChannel?.description !== updatedChannel.description) body.new_description = updatedChannel.description;
     if (oldChannel?.owner !== updatedChannel.owner && updatedChannel.owner != '') body.new_owner = updatedChannel.owner;
-    if (oldChannel?.editors !== newEditors) body.editors_array = newEditors;
+    if (JSON.stringify(this.oldSelectedEditors) !== JSON.stringify(newEditors)) body.editors_array = newEditors;
 
     this.channelsService
       .updateChannel(body)
       .then((channel: any) => {
+        this.oldSelectedEditors = [...newEditors];
         this.channelsOwned = this.channelsOwned.map((channel) => {
           if (channel._id === updatedChannel._id) {
-            return updatedChannel;
+            return { ...updatedChannel };
           }
           return channel;
         });
@@ -210,14 +212,14 @@ export class ChannelManagerComponent {
 
     if (oldChannel?.name !== updatedChannel.name) body.new_name = updatedChannel.name;
     if (oldChannel?.description !== updatedChannel.description) body.new_description = updatedChannel.description;
-    if (oldChannel?.editors !== newEditors) body.editors_array = newEditors;
+    if (JSON.stringify(this.oldSelectedEditors) !== JSON.stringify(newEditors)) body.editors_array = newEditors;
 
     this.channelsService
       .updateChannel(body)
       .then((channel: any) => {
         this.channelsEditor = this.channelsEditor.map((channel) => {
           if (channel._id === updatedChannel._id) {
-            return updatedChannel;
+            return { ...updatedChannel };
           }
           return channel;
         });

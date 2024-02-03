@@ -73,8 +73,8 @@ export const channel_card = (channel, channel_owner, editor_list_html) => `
                 </div>
                 <hr class="m-0">
                 <div class="row">
-                    <ul class="list-group list-group-flush">
-                    ${editor_list_html == "" ? `<li class="list-group-item">No Editors</li>` : editor_list_html}
+                    <ul class="list-group list-group-flush of-scroll max-vh-20">
+                    ${editor_list_html == "" ? `<li class="list-group-item">No Editors</li>` : `<li class="list-group-item"><b>Editors:</b></li>` + editor_list_html}
                     </ul>
                 </div>
                 </div>
