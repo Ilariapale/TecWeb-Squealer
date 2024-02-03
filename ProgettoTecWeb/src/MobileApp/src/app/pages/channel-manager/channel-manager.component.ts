@@ -86,15 +86,20 @@ export class ChannelManagerComponent {
           ...this.channelsEditorIds.map((channelId) => this.channelsService.getChannel(channelId)),
         ];
 
-        forkJoin(channelsRequests).subscribe({
-          next: (channels) => {
-            this.channelsOwned = channels.filter((channel) => this.channelsOwnedIds.includes(channel._id));
-            this.channelsEditor = channels.filter((channel) => this.channelsEditorIds.includes(channel._id));
-          },
-          error: (err) => {
-            console.log('Error fetching channels:', err);
-          },
-        });
+        Promise.all(channelsRequests.map((request) => Promise.resolve(request).catch((error) => error)))
+          .then((channels) => {
+            this.channelsOwned =
+              channels?.filter((channel) =>
+                channel instanceof Error ? false : this.channelsOwnedIds.includes(channel._id)
+              ) || [];
+            this.channelsEditor =
+              channels?.filter((channel) =>
+                channel instanceof Error ? false : this.channelsEditorIds.includes(channel._id)
+              ) || [];
+          })
+          .catch((error) => {
+            //Error
+          });
       })
       .catch((err) => {
         console.log('Error fetching user data:', err);
