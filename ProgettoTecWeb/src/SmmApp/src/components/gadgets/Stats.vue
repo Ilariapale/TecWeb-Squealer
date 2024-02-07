@@ -17,7 +17,7 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link fs-3" title="histoy tab" id="pills-history-tab" data-bs-toggle="pill"
+                    <button class="nav-link fs-3" title="history tab" id="pills-history-tab" data-bs-toggle="pill"
                         data-bs-target="#pills-history" type="button" role="tab" aria-controls="pills-history"
                         aria-selected="false">
                         <i class="bi bi-calendar2-week"></i><!--Yearly activity-->
