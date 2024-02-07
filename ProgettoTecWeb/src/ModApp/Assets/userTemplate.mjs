@@ -80,7 +80,7 @@ export const char_quota_row = (user) => `
 export const smm_row = (smm) => `
   <div class="p-3">
     <b>Social Media Manager: </b>
-    <div>${smm ? " @" : ""}${smm || "none"}</div>
+    <span>${smm ? " @" : ""}${smm || "none"}</span>
   </div>`;
 
 export const VIPDiv = (VIP) => `
