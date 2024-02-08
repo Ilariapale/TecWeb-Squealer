@@ -33,17 +33,18 @@ const daily_reset = async () => {
   console.log(`${new Date().toISOString()} - Daily reset..`);
   const users = await User.find({});
   const promises = users.map((user) => {
-    const newDailyQuota = DAILY_CHAR_QUOTA + user.char_quota.earned_daily + user.char_quota.bought_daily - (EXTRA_DAILY_CHAR_QUOTA - user.char_quota.extra_daily);
+    const newDailyQuota = Math.max(DAILY_CHAR_QUOTA + user.char_quota.earned_daily + user.char_quota.bought_daily - (EXTRA_DAILY_CHAR_QUOTA - user.char_quota.extra_daily), 0);
     return User.updateOne({ _id: user._id }, { $set: { "char_quota.daily": newDailyQuota, "char_quota.extra_daily": EXTRA_DAILY_CHAR_QUOTA } });
   });
   await Promise.all(promises);
   console.log(`${new Date().toISOString()} - Daily reset done.`);
 };
+
 const weekly_reset = async () => {
   console.log(`${new Date().toISOString()} - Weekly reset..`);
   const users = await User.find({});
   const promises = users.map((user) => {
-    const newWeeklyQuota = WEEKLY_CHAR_QUOTA + user.char_quota.earned_weekly + user.char_quota.bought_weekly;
+    const newWeeklyQuota = Math.max(WEEKLY_CHAR_QUOTA + user.char_quota.earned_weekly + user.char_quota.bought_weekly, 0);
     return User.updateOne({ _id: user._id }, { $set: { "char_quota.weekly": newWeeklyQuota } });
   });
   await Promise.all(promises);
@@ -54,7 +55,7 @@ const monthly_reset = async () => {
   console.log(`${new Date().toISOString()} - Monthly reset..`);
   const users = await User.find({});
   const promises = users.map((user) => {
-    const newMonthlyQuota = MONTHLY_CHAR_QUOTA + user.char_quota.bought_monthly;
+    const newMonthlyQuota = Math.max(MONTHLY_CHAR_QUOTA + user.char_quota.bought_monthly, 0);
     return User.updateOne(
       { _id: user._id },
       {

@@ -58,6 +58,11 @@ a.nopage:hover {
 
 }
 
+.max-vh-20 {
+    max-height: 20vh;
+
+}
+
 .vh-25 {
     height: 25vh;
 }

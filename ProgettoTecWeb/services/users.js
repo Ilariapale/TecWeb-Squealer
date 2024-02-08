@@ -812,7 +812,10 @@ module.exports = {
     // Calculate the percentage of interactions over impressions
     const interactionPercentage =
       ((interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot + commentsTot[0].comments_tot) /
-        interactionsImpressions[0].impressions_tot) *
+        Math.max(
+          interactionsImpressions[0].impressions_tot,
+          interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot + commentsTot[0].comments_tot
+        )) *
       100;
 
     // Calculate the percentage of non-interactions over impressions
@@ -820,10 +823,12 @@ module.exports = {
 
     // Calculate the percentage of reactions over impressions
     const reactionsPercentage =
-      ((interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot) / interactionsImpressions[0].impressions_tot) * 100;
+      ((interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot) /
+        Math.max(interactionsImpressions[0].impressions_tot, interactionsImpressions[0].positive_reactions_tot + interactionsImpressions[0].negative_reactions_tot)) *
+      100;
 
     // Calculate the percentage of comments over impressions
-    const commentsPercentage = (commentsTot[0].comments_tot / interactionsImpressions[0].impressions_tot) * 100;
+    const commentsPercentage = (commentsTot[0].comments_tot / Math.max(interactionsImpressions[0].impressions_tot, commentsTot[0].comments_tot)) * 100;
 
     // Create the bar chart
     const interactionsImpressionsChart = new QuickChart();
@@ -2133,7 +2138,9 @@ module.exports = {
       };
     }
 
-    userToUpdate.reaction_metrics.popularity_score = popularity_score;
+    userToUpdate.reaction_metrics.popularity_score = popularity_score > 2 ? 2 : popularity_score < -1 ? -1 : popularity_score;
+    if (userToUpdate.reaction_metrics.popularity_score == -1) userToUpdate.is_active = false;
+    else userToUpdate.is_active = true;
     const updatedUser = await userToUpdate.save();
 
     // Return the result
@@ -2341,7 +2348,9 @@ module.exports = {
 
     //change the "is_active" field: if the user is banned, he's not active
     userToUpdate.is_active = ban_status === "true" ? false : true;
-
+    userToUpdate.reaction_metrics.popularity_score = ban_status === "true" ? -1 : 0;
+    userToUpdate.char_quota.earned_daily = 0;
+    userToUpdate.char_quota.earned_weekly = 0;
     const notification = new Notification({
       user_ref: userToUpdate._id,
       created_at: Date.now(),

@@ -110,105 +110,55 @@ const setRewards = async () => {
 
     const enoughPositive = positiveSqueals >= POSITIVE_THRESHOLD && minPositivePercentage;
     const enoughNegative = negativeSqueals >= NEGATIVE_THRESHOLD && minNegativePercentage;
-    const enoughVeryPositive = positiveSqueals >= VERY_POSITIVE_THRESHOLD && minPositivePercentage;
-    const enoughVeryNegative = negativeSqueals >= VERY_NEGATIVE_THRESHOLD && minNegativePercentage;
 
+    let tempPopularityScore = user.reaction_metrics.popularity_score + (positiveSqueals - negativeSqueals) / (totalSqueals !== 0 ? totalSqueals : 1);
+    const newPopularityScore = tempPopularityScore < -1 ? -1 : tempPopularityScore > 2 ? 2 : tempPopularityScore; //popularity from -1 to 2
     let reward;
-
-    if (enoughVeryPositive) {
-      if (enoughVeryNegative) {
-        // ++ --
-        reward = {
-          daily: 0,
-          weekly: 0,
-          monthly: 0,
-        };
-      } else if (enoughNegative) {
-        // ++ -
-        const fact = BIG_CHAR_QUOTA_REWARD - CHAR_QUOTA_REWARD;
-        reward = {
-          daily: fact * DAILY_CHAR_QUOTA,
-          weekly: fact * WEEKLY_CHAR_QUOTA,
-          monthly: fact * MONTHLY_CHAR_QUOTA,
-        };
-      } else {
-        // ++
-        const fact = BIG_CHAR_QUOTA_REWARD;
-        reward = {
-          daily: fact * DAILY_CHAR_QUOTA,
-          weekly: fact * WEEKLY_CHAR_QUOTA,
-          monthly: fact * MONTHLY_CHAR_QUOTA,
-        };
-      }
-    } else if (enoughVeryNegative) {
-      if (enoughPositive) {
-        //-- +
-        const fact = CHAR_QUOTA_REWARD - BIG_CHAR_QUOTA_REWARD;
-        reward = {
-          daily: fact * DAILY_CHAR_QUOTA,
-          weekly: fact * WEEKLY_CHAR_QUOTA,
-          monthly: fact * MONTHLY_CHAR_QUOTA,
-        };
-      } else {
-        //--
-        reward = {
-          daily: -BIG_CHAR_QUOTA_REWARD * DAILY_CHAR_QUOTA,
-          weekly: -BIG_CHAR_QUOTA_REWARD * WEEKLY_CHAR_QUOTA,
-          monthly: -BIG_CHAR_QUOTA_REWARD * MONTHLY_CHAR_QUOTA,
-        };
-      }
-    } else if (enoughPositive) {
-      if (enoughNegative) {
-        // + -
-        reward = {
-          daily: 0,
-          weekly: 0,
-          monthly: 0,
-        };
-      } else {
-        // +
-        reward = {
-          daily: CHAR_QUOTA_REWARD * DAILY_CHAR_QUOTA,
-          weekly: CHAR_QUOTA_REWARD * WEEKLY_CHAR_QUOTA,
-          monthly: CHAR_QUOTA_REWARD * MONTHLY_CHAR_QUOTA,
-        };
-      }
-    } else if (enoughNegative) {
-      // -
+    if (enoughPositive || enoughNegative) {
       reward = {
-        daily: -CHAR_QUOTA_REWARD * DAILY_CHAR_QUOTA,
-        weekly: -CHAR_QUOTA_REWARD * WEEKLY_CHAR_QUOTA,
-        monthly: -CHAR_QUOTA_REWARD * MONTHLY_CHAR_QUOTA,
+        daily: Math.floor(DAILY_CHAR_QUOTA * newPopularityScore),
+        weekly: Math.floor(WEEKLY_CHAR_QUOTA * newPopularityScore),
+        monthly: Math.floor(MONTHLY_CHAR_QUOTA * newPopularityScore),
       };
-    } else {
-      if (totalSqueals >= RESET_THRESHOLD) {
-        reward = {
-          daily: 0,
-          weekly: 0,
-          monthly: 0,
-        };
-      }
-    }
+    } else return {};
 
-    if (!reward) return {};
+    reward.inc_daily = reward.daily;
+    reward.inc_weekly = reward.weekly;
+    reward.inc_monthly = reward.monthly;
+
+    let banUser = false;
+    if (user.char_quota.daily + reward.inc_daily < 0) {
+      //reward.daily = -user.char_quota.daily;
+      reward.inc_daily = -user.char_quota.daily;
+      banUser = true;
+    }
+    if (user.char_quota.weekly + reward.inc_weekly < 0) {
+      reward.inc_weekly = -user.char_quota.weekly;
+      banUser = true;
+    }
+    if (user.char_quota.monthly + reward.inc_monthly < 0) {
+      reward.inc_monthly = -user.char_quota.monthly;
+      banUser = true;
+    }
 
     return {
       updateOne: {
         filter: { _id: user._id },
         update: {
           $inc: {
-            "char_quota.daily": reward.daily,
-            "char_quota.weekly": reward.weekly,
-            "char_quota.monthly": reward.monthly,
+            "char_quota.daily": reward.inc_daily,
+            "char_quota.weekly": reward.inc_weekly,
+            "char_quota.monthly": reward.inc_monthly,
             "char_quota.earned_daily": reward.daily,
             "char_quota.earned_weekly": reward.weekly,
-            "reaction_metrics.popularity_score": (positiveSqueals - negativeSqueals) / totalSqueals,
           },
           $set: {
+            "reaction_metrics.popularity_score": newPopularityScore,
             "reaction_metrics.last_checkpoint": new Date(),
             "reaction_metrics.positive_squeals": 0,
             "reaction_metrics.negative_squeals": 0,
             "reaction_metrics.total_squeals": 0,
+            is_active: !banUser,
           },
         },
       },

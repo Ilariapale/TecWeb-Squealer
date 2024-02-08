@@ -46,7 +46,7 @@ export const account_type_row = (user) => `
 
 export const popularity_score_row = (user) => `<div class="input-group mb-3">
   <span class="input-group-text" id="popularity_score_label">Popularity Score</span>
-  <input type="number" value="${user.reaction_metrics?.popularity_score || "0"}" placeholder="${
+  <input type="number" min=-1 max=2 value="${user.reaction_metrics?.popularity_score || "0"}" placeholder="${
   user.reaction_metrics?.popularity_score || "0"
 }"class="form-control" aria-label="Sizing example input" aria-describedby="popularity_score_label" id="popularity-score-input-${user._id}">
 </div>
